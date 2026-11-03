@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://5min.heanbian.com/sitemap.xml
