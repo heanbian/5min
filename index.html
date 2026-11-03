@@ -261,6 +261,13 @@
     overflow:hidden;clip:rect(0,0,0,0);
     white-space:nowrap;border:0;
   }
+  /* 藏文：优先系统 / 本机藏文字体 */
+  html[lang="bo"] body,
+  html[lang="bo"] button,
+  html[lang="bo"] select{
+    font-family:"Noto Sans Tibetan","Kailasa","Microsoft Himalaya","Jomolhari","Noto Sans SC",system-ui,sans-serif;
+    line-height:1.7;
+  }
 
   .stage{
     flex:1 1 auto;
