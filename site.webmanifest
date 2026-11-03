@@ -1,7 +1,7 @@
 {
   "name": "如厕计时器 · 五分钟",
-  "short_name": "五分钟",
-  "description": "上厕所玩手机容易超时。点一下，五分钟倒计时，到点提醒你起来。无需注册，页面无广告。计时与提醒均在本机完成，不会上传。",
+  "short_name": "5min",
+  "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：本机倒计时提醒，3 / 5 / 10 分钟预设，到点提醒起身。无需注册，页面无广告。计时与提醒均在本机完成，不会上传。",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f6f4ef",
