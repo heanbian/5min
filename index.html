@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Copyright 2026 学记宝 / heanbian
+  Copyright 2026 学记宝 / xuejibao.com
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -360,7 +360,7 @@
     <img src="img/logo.svg" width="44" height="44" alt="5min">
     <div class="brand-copy">
       <h1>如厕计时器</h1>
-      <p>5min · 端侧提醒 · 无广告</p>
+      <p>5min · 端侧提醒</p>
     </div>
   </header>
 
@@ -388,9 +388,9 @@
   </section>
 
   <p class="footnote">
-    公开资料常建议将单次如厕时间控制在约 5 分钟以内；使用移动设备易削弱时长感知。<br>
-    本工具仅供习惯提醒，不构成医疗建议。正式站点
-    <a href="https://5min.xuejibao.dev/">5min.xuejibao.dev</a>
+    公开资料常建议将单次如厕时间控制在约 5 分钟以内；<br>
+    使用移动设备易削弱时长感知。<br>
+    本工具仅供习惯提醒，不构成医疗建议。
   </p>
 </main>
 
@@ -398,9 +398,10 @@
 (function(){
   const CIRC = 2 * Math.PI * 54; // 与 SVG r=54 对应
   const PRESET_MINS = [3, 5, 10];
-  // 支持 ?sec=2 做短时联调；正常访问默认 5 分钟
-  const bootSec = Math.max(1, Math.min(3600, parseInt(new URLSearchParams(location.search).get('sec'), 10) || 0));
-  const DEFAULT_MIN = bootSec ? bootSec / 60 : 5;
+  // 支持 ?sec=2 做短时联调；无参数时默认 5 分钟（勿对缺失参数 Math.max(1,…)）
+  const secRaw = parseInt(new URLSearchParams(location.search).get('sec'), 10);
+  const bootSec = Number.isFinite(secRaw) ? Math.max(1, Math.min(3600, secRaw)) : 0;
+  const DEFAULT_MIN = bootSec > 0 ? bootSec / 60 : 5;
 
   const progress = document.getElementById('progress');
   const timeText = document.getElementById('timeText');
