@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>如厕计时器 · 五分钟</title>
+<meta name="description" content="上厕所玩手机容易超时。点一下，五分钟倒计时，到点提醒你起来，别让腿麻成为日常。">
+<style>
+  :root{
+    --bg:#f6f4ef;
+    --card:#ffffff;
+    --ink:#2b2b2b;
+    --muted:#8a8578;
+    --ring:#d8d2c4;
+    --safe:#4a9d6e;
+    --warn:#d9a13b;
+    --danger:#d05a4a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100dvh;
+    padding:24px;
+    transition:background .4s ease;
+  }
+  body.warn{background:#fbf3e2}
+  body.danger{background:#fbe9e6}
+
+  h1{
+    font-size:15px;
+    font-weight:500;
+    letter-spacing:.08em;
+    color:var(--muted);
+    margin:0 0 28px;
+    text-transform:uppercase;
+  }
+
+  .dial{
+    position:relative;
+    width:min(78vw,300px);
+    aspect-ratio:1;
+    display:grid;
+    place-items:center;
+  }
+  .dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+  .track{fill:none;stroke:var(--ring);stroke-width:10}
+  .progress{
+    fill:none;
+    stroke:var(--safe);
+    stroke-width:10;
+    stroke-linecap:round;
+    transition:stroke .4s ease;
+  }
+  .time{
+    font-size:clamp(48px,14vw,72px);
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;
+    line-height:1;
+  }
+  .time small{font-size:.4em;font-weight:400;color:var(--muted);margin-left:4px}
+  .status{
+    margin-top:10px;
+    font-size:14px;
+    color:var(--muted);
+    min-height:20px;
+    text-align:center;
+    padding:0 12px;
+    transition:color .3s ease;
+  }
+
+  .controls{
+    display:flex;
+    gap:12px;
+    margin-top:36px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  button{
+    font-family:inherit;
+    font-size:16px;
+    padding:14px 32px;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .2s ease, background .2s ease;
+    min-width:112px;
+  }
+  button:active{transform:scale(.97)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .primary{background:var(--ink);color:#fff}
+  .ghost{background:transparent;color:var(--muted);border:1px solid var(--ring)}
+
+  .presets{
+    display:flex;
+    gap:8px;
+    margin-top:20px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .presets button{
+    min-width:auto;
+    padding:6px 14px;
+    font-size:13px;
+    background:transparent;
+    border:1px solid var(--ring);
+    color:var(--muted);
+  }
+  .presets button.active{
+    background:var(--ink);
+    color:#fff;
+    border-color:var(--ink);
+  }
+
+  .footnote{
+    margin-top:40px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.7;
+    max-width:420px;
+  }
+  .footnote a{color:var(--muted)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<h1>五分钟 · 如厕计时</h1>
+
+<div class="dial">
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <circle class="track" cx="60" cy="60" r="54"></circle>
+    <circle class="progress" id="progress" cx="60" cy="60" r="54"></circle>
+  </svg>
+  <div class="time" id="timeText" aria-live="polite">5:00</div>
+</div>
+
+<div class="status" id="status">点击开始，到点提醒你起来</div>
+
+<div class="controls">
+  <button class="primary" id="startBtn">开始</button>
+  <button class="ghost" id="resetBtn" disabled>重置</button>
+</div>
+
+<div class="presets" id="presets">
+  <button data-min="3">3 分钟</button>
+  <button data-min="5" class="active">5 分钟</button>
+  <button data-min="10">10 分钟</button>
+</div>
+
+<p class="footnote">
+  医学建议如厕时间控制在 5 分钟内，带手机会让你对时间的感知变钝。<br>
+  本工具只做提醒，不替代任何医疗建议。
+</p>
+
+<script>
+(function(){
+  const DEFAULT_MIN = 5;
+  const CIRC = 2 * Math.PI * 54; // 与 SVG r=54 对应
+
+  const progress = document.getElementById('progress');
+  const timeText = document.getElementById('timeText');
+  const statusEl = document.getElementById('status');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const presets  = document.getElementById('presets');
+
+  let totalMs = DEFAULT_MIN * 60 * 1000;
+  let remainMs = totalMs;
+  let endAt = null;        // 运行时的目标时间戳
+  let running = false;
+  let tickId = null;
+  let finished = false;
+
+  progress.style.strokeDasharray = CIRC;
+  progress.style.strokeDashoffset = 0;
+
+  function fmt(ms){
+    const total = Math.max(0, Math.ceil(ms/1000));
+    const m = Math.floor(total/60);
+    const s = total % 60;
+    return m + ':' + String(s).padStart(2,'0');
+  }
+
+  function render(){
+    timeText.textContent = fmt(remainMs);
+    const ratio = totalMs > 0 ? remainMs / totalMs : 0;
+    progress.style.strokeDashoffset = CIRC * (1 - ratio);
+    document.title = (running || remainMs < totalMs)
+      ? fmt(remainMs) + ' · 五分钟'
+      : '如厕计时器 · 五分钟';
+
+    // 状态与配色
+    document.body.classList.remove('warn','danger');
+    if(finished){
+      document.body.classList.add('danger');
+      progress.style.stroke = 'var(--danger)';
+      statusEl.textContent = '超时了，起来走两步';
+      statusEl.style.color = 'var(--danger)';
+    } else if(remainMs <= 60 * 1000){
+      document.body.classList.add('warn');
+      progress.style.stroke = 'var(--warn)';
+      statusEl.textContent = '最后 1 分钟，准备收尾';
+      statusEl.style.color = 'var(--warn)';
+    } else {
+      progress.style.stroke = 'var(--safe)';
+      statusEl.textContent = running ? '计时中，别刷太投入' : '点击开始，到点提醒你起来';
+      statusEl.style.color = 'var(--muted)';
+    }
+  }
+
+  function tick(){
+    if(!running) return;
+    remainMs = endAt - Date.now();
+    if(remainMs <= 0){
+      remainMs = 0;
+      finish();
+      return;
+    }
+    render();
+    // 用 setTimeout 对齐整秒，避免 setInterval 漂移
+    const delay = remainMs % 1000 || 1000;
+    tickId = setTimeout(tick, delay);
+  }
+
+  function finish(){
+    running = false;
+    finished = true;
+    clearTimeout(tickId);
+    render();
+    startBtn.textContent = '再来一次';
+    startBtn.disabled = false;
+    resetBtn.disabled = false;
+    if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+    // 页面可见时给一个轻提示
+    if(document.visibilityState === 'visible'){
+      // 用标题闪烁已足够，避免 alert 打断
+    }
+  }
+
+  function start(){
+    if(running) { // 暂停
+      running = false;
+      clearTimeout(tickId);
+      remainMs = Math.max(0, endAt - Date.now());
+      startBtn.textContent = '继续';
+      render();
+      return;
+    }
+    // 开始 / 继续
+    if(remainMs <= 0) remainMs = totalMs;
+    finished = false;
+    endAt = Date.now() + remainMs;
+    running = true;
+    startBtn.textContent = '暂停';
+    resetBtn.disabled = false;
+    render();
+    tickId = setTimeout(tick, remainMs % 1000 || 1000);
+  }
+
+  function reset(){
+    running = false;
+    finished = false;
+    clearTimeout(tickId);
+    remainMs = totalMs;
+    startBtn.textContent = '开始';
+    startBtn.disabled = false;
+    resetBtn.disabled = true;
+    render();
+  }
+
+  function setPreset(min){
+    totalMs = min * 60 * 1000;
+    [...presets.children].forEach(b => b.classList.toggle('active', +b.dataset.min === min));
+    reset();
+  }
+
+  startBtn.addEventListener('click', start);
+  resetBtn.addEventListener('click', reset);
+  presets.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-min]');
+    if(btn) setPreset(+btn.dataset.min);
+  });
+
+  // 切回标签页时校准（后台 setTimeout 可能被节流）
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible' && running){
+      remainMs = endAt - Date.now();
+      if(remainMs <= 0){ remainMs = 0; finish(); }
+      else render();
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
