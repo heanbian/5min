@@ -22,6 +22,8 @@
 
 使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环。
 
+多语言（`i18n/locales.js`）：简体中文、繁体中文、English，以及日本語、한국어、Español。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
+
 可部署至任意静态托管（对象存储、CDN、Nginx 等）。本地预览建议使用 HTTP 服务，避免 `file://` 下通知等 API 受限。
 
 字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL Open Font License 1.1](https://scripts.sil.org/OFL)，可免费商用），不依赖第三方字体 CDN。
@@ -38,6 +40,8 @@
 ```
 5min/
 ├── index.html              # 页面、SEO 与计时逻辑
+├── i18n/
+│   └── locales.js          # 多语言文案与语言探测
 ├── fonts.css               # @font-face（Noto Sans SC）
 ├── fonts/                  # 自托管 woff2 + OFL.txt
 ├── site.json               # 站点元数据与页面文案
@@ -67,7 +71,10 @@ python3 -m http.server 8080
 
 浏览器访问终端提示的本地地址（例如 `http://localhost:3000`）。
 
-开发联调短时结束可使用查询参数：`?sec=2`（单位：秒）。
+开发联调：
+
+- 短时结束：`?sec=2`（单位：秒）
+- 指定语言：`?lang=en` / `zh-CN` / `zh-TW` / `ja` / `ko` / `es`
 
 ## 部署
 

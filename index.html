@@ -14,7 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="license" content="Apache-2.0">
@@ -189,14 +189,22 @@
     gap:var(--space-3);
   }
 
+  .topbar{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    gap:var(--space-2);
+    width:100%;
+    flex-shrink:0;
+  }
   .brand{
     display:flex;
     flex-direction:row;
     align-items:center;
-    justify-content:center;
+    justify-content:flex-start;
     gap:10px;
     margin:0;
-    flex-shrink:0;
+    min-width:0;
     line-height:1;
   }
   .brand img{
@@ -205,7 +213,6 @@
     aspect-ratio:108 / 32;
     display:block;
     flex-shrink:0;
-    /* 与标题同字号基准，保证垂直居中 */
     font-size:var(--fs-lg);
   }
   .brand h1{
@@ -218,6 +225,42 @@
     line-height:1;
     display:flex;
     align-items:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .lang{
+    justify-self:end;
+    margin:0;
+  }
+  .lang select{
+    appearance:none;
+    font-family:inherit;
+    font-size:var(--fs-sm);
+    font-weight:600;
+    color:var(--ink);
+    background:var(--surface)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235f6f66' d='M1.1 1.2 6 6.1l4.9-4.9 1.1 1.1L6 8.3.0 2.3z'/%3E%3C/svg%3E")
+      no-repeat right 10px center;
+    background-size:10px 7px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    height:36px;
+    padding:0 28px 0 12px;
+    max-width:42vw;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .lang select:focus-visible{
+    outline:2px solid var(--brand);
+    outline-offset:2px;
+  }
+  .visually-hidden{
+    position:absolute;
+    width:1px;height:1px;
+    padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);
+    white-space:nowrap;border:0;
   }
 
   .stage{
@@ -384,6 +427,7 @@
     }
     .brand img,
     .brand h1{font-size:1.25rem}
+    .topbar{grid-template-columns:1fr auto}
     .time{font-size:clamp(3.25rem, 10vw, 4.25rem)}
     .status{font-size:var(--fs-base)}
   }
@@ -408,6 +452,7 @@
     .brand{gap:12px}
     .brand img,
     .brand h1{font-size:1.35rem}
+    .lang select{height:38px; font-size:0.9375rem}
     .time{font-size:clamp(3.5rem, 7vh, 4.75rem)}
     .status{font-size:var(--fs-base); max-width:22em}
     .footnote{font-size:0.8125rem; max-width:36em; margin-inline:auto}
@@ -457,12 +502,18 @@
 <body>
 
 <main class="app">
-  <header class="brand">
-    <img src="img/logo.svg" width="108" height="32" alt="5min">
-    <h1>如厕计时器</h1>
+  <header class="topbar">
+    <div class="brand">
+      <img src="img/logo.svg" width="108" height="32" alt="5min">
+      <h1 id="brandTitle">Toilet Timer</h1>
+    </div>
+    <label class="lang">
+      <span class="visually-hidden" id="langLabel">Language</span>
+      <select id="langSelect" aria-labelledby="langLabel"></select>
+    </label>
   </header>
 
-  <section class="stage" aria-label="计时区域">
+  <section class="stage" id="stageSection" aria-label="Timer">
     <div class="dial" role="timer" aria-atomic="true" aria-live="polite">
       <svg viewBox="0 0 120 120" aria-hidden="true">
         <circle class="track" cx="60" cy="60" r="54"></circle>
@@ -470,53 +521,62 @@
       </svg>
       <div class="time" id="timeText">5:00</div>
     </div>
-    <p class="status" id="status">点击开始，到期将提醒起身活动</p>
+    <p class="status" id="status">Tap start — we’ll remind you to get up when time is up</p>
   </section>
 
-  <section class="actions" aria-label="操作">
+  <section class="actions" id="actionsSection" aria-label="Controls">
     <div class="controls">
-      <button class="primary" id="startBtn" type="button" aria-keyshortcuts="Space">开始</button>
-      <button class="ghost" id="resetBtn" type="button" disabled>重置</button>
+      <button class="primary" id="startBtn" type="button" aria-keyshortcuts="Space">Start</button>
+      <button class="ghost" id="resetBtn" type="button" disabled>Reset</button>
     </div>
-    <div class="presets" id="presets" role="group" aria-label="时长预设">
-      <button type="button" data-min="3">3 分钟</button>
-      <button type="button" data-min="5" class="active">5 分钟</button>
-      <button type="button" data-min="10">10 分钟</button>
+    <div class="presets" id="presets" role="group" aria-label="Duration presets">
+      <button type="button" data-min="3">3 min</button>
+      <button type="button" data-min="5" class="active">5 min</button>
+      <button type="button" data-min="10">10 min</button>
     </div>
   </section>
 
-  <p class="footnote">
-    公开资料常建议将单次如厕时间控制在约 5 分钟以内；使用移动设备易削弱时长感知。本工具仅供习惯提醒，不构成医疗建议。
-  </p>
+  <p class="footnote" id="footnote"></p>
 </main>
 
 <script type="module">
 /**
- * 5min · 如厕计时器
- * HTML5 + 现代原生 JavaScript（无框架、无构建、无第三方运行时依赖）
+ * 5min · Toilet Timer
+ * HTML5 + modern native JavaScript (no framework / bundler / runtime deps)
  */
+import {
+  LOCALES,
+  LOCALE_CODES,
+  STORAGE_KEY,
+  detectLocale,
+  resolveLocale,
+  t,
+} from './i18n/locales.js';
+
 const CIRC = 2 * Math.PI * 54;
 const PRESET_MINS = Object.freeze([3, 5, 10]);
 const VIBRATE_PATTERN = Object.freeze([220, 100, 220, 100, 420, 140, 320]);
-const TITLE_IDLE = '如厕计时器 · 五分钟';
 
-/** @type {HTMLElement} */
 const progress = document.querySelector('#progress');
-/** @type {HTMLElement} */
 const timeText = document.querySelector('#timeText');
-/** @type {HTMLElement} */
 const statusEl = document.querySelector('#status');
-/** @type {HTMLButtonElement} */
 const startBtn = document.querySelector('#startBtn');
-/** @type {HTMLButtonElement} */
 const resetBtn = document.querySelector('#resetBtn');
-/** @type {HTMLElement} */
 const presets = document.querySelector('#presets');
+const brandTitle = document.querySelector('#brandTitle');
+const footnote = document.querySelector('#footnote');
+const langSelect = document.querySelector('#langSelect');
+const langLabel = document.querySelector('#langLabel');
+const stageSection = document.querySelector('#stageSection');
+const actionsSection = document.querySelector('#actionsSection');
+const metaDescription = document.querySelector('meta[name="description"]');
 
 const secRaw = Number.parseInt(new URLSearchParams(location.search).get('sec') ?? '', 10);
 const bootSec = Number.isFinite(secRaw) ? Math.min(3600, Math.max(1, secRaw)) : 0;
 const defaultMin = bootSec > 0 ? bootSec / 60 : 5;
 
+const langParam = new URLSearchParams(location.search).get('lang');
+let locale = resolveLocale(langParam) ?? detectLocale();
 let totalMs = defaultMin * 60 * 1000;
 let remainMs = totalMs;
 let endAt = 0;
@@ -535,11 +595,66 @@ progress.style.strokeDasharray = String(CIRC);
 progress.style.strokeDashoffset = '0';
 progress.classList.add('is-safe');
 
+const tr = (key, vars) => t(locale, key, vars);
+
 const fmt = (ms) => {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+const syncStartLabel = () => {
+  if (finished && !running) startBtn.textContent = tr('again');
+  else if (running) startBtn.textContent = tr('pause');
+  else if (remainMs < totalMs && remainMs > 0) startBtn.textContent = tr('resume');
+  else startBtn.textContent = tr('start');
+};
+
+const applyStaticI18n = () => {
+  const pack = LOCALES[locale];
+  document.documentElement.lang = pack.htmlLang;
+  brandTitle.textContent = pack.brandTitle;
+  langLabel.textContent = pack.langLabel;
+  langSelect.setAttribute('aria-label', pack.langLabel);
+  stageSection.setAttribute('aria-label', pack.stageLabel);
+  actionsSection.setAttribute('aria-label', pack.actionsLabel);
+  presets.setAttribute('aria-label', pack.presetsLabel);
+  resetBtn.textContent = pack.reset;
+  footnote.textContent = pack.footnote;
+  if (metaDescription) metaDescription.setAttribute('content', pack.metaDescription);
+
+  for (const btn of presets.querySelectorAll('button[data-min]')) {
+    const n = Number(btn.dataset.min);
+    btn.textContent = tr('minutes', { n });
+  }
+
+  syncStartLabel();
+  if (!titleBlinkId) {
+    document.title = (running || remainMs < totalMs)
+      ? `${fmt(remainMs)} · ${pack.titleSuffix}`
+      : pack.titleIdle;
+  }
+};
+
+const fillLangSelect = () => {
+  langSelect.replaceChildren();
+  for (const code of LOCALE_CODES) {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = LOCALES[code].nativeName;
+    langSelect.append(opt);
+  }
+  langSelect.value = locale;
+};
+
+const setLocale = (next) => {
+  const resolved = resolveLocale(next) ?? locale;
+  locale = resolved;
+  try { localStorage.setItem(STORAGE_KEY, locale); } catch { /* ignore */ }
+  langSelect.value = locale;
+  applyStaticI18n();
+  render();
 };
 
 const stopTitleBlink = () => {
@@ -552,14 +667,13 @@ const startTitleBlink = () => {
   stopTitleBlink();
   let flip = false;
   titleBlinkId = window.setInterval(() => {
-    document.title = flip ? '时间到 · 请起身活动' : '0:00 · 五分钟';
+    document.title = flip ? tr('titleDoneBlink') : tr('titleDoneZero');
     flip = !flip;
   }, 800);
 };
 
 const supportsVibrate = () => typeof navigator.vibrate === 'function';
 
-/** Vibration API；定时器回调可能被拦截，故配合通知震动与回前台补震 */
 const pulseVibrate = (pattern = VIBRATE_PATTERN) => {
   if (!supportsVibrate()) return false;
   try {
@@ -601,7 +715,7 @@ const playToneSeries = async (notes) => {
       osc.stop(t0 + (note.dur ?? 0.32) + 0.02);
     }
   } catch {
-    /* 忽略音频失败 */
+    /* ignore audio failures */
   }
 };
 
@@ -611,7 +725,6 @@ const playChime = () => playToneSeries([
   { freq: 783.99, at: 0.24, peak: 0.18, dur: 0.35 },
 ]);
 
-/** 无 Vibration API 时用低频脉冲音近似触感 */
 const playBuzzFallback = () => playToneSeries([
   { freq: 160, type: 'square', at: 0, peak: 0.1, dur: 0.14 },
   { freq: 160, type: 'square', at: 0.2, peak: 0.1, dur: 0.14 },
@@ -622,8 +735,8 @@ const maybeNotify = () => {
   if (!('Notification' in globalThis)) return;
   if (Notification.permission !== 'granted') return;
   try {
-    const n = new Notification('五分钟 · 时间到', {
-      body: '计时已结束，请起身活动。',
+    const n = new Notification(tr('notifyTitle'), {
+      body: tr('notifyBody'),
       icon: 'img/logo.png',
       tag: '5min-toilet-timer',
       renotify: true,
@@ -637,7 +750,7 @@ const maybeNotify = () => {
     });
     window.setTimeout(() => n.close(), 8000);
   } catch {
-    /* Safari 等限制 */
+    /* ignore */
   }
 };
 
@@ -696,22 +809,24 @@ const render = () => {
 
   if (!titleBlinkId) {
     document.title = (running || remainMs < totalMs)
-      ? `${fmt(remainMs)} · 五分钟`
-      : TITLE_IDLE;
+      ? `${fmt(remainMs)} · ${tr('titleSuffix')}`
+      : tr('titleIdle');
   }
 
   if (finished) {
     setTone('danger');
-    statusEl.textContent = '已超时，请起身活动';
+    statusEl.textContent = tr('statusDone');
   } else if (remainMs <= 60_000 && (running || remainMs < totalMs)) {
     setTone('warn');
-    statusEl.textContent = '最后 1 分钟，请准备结束';
+    statusEl.textContent = tr('statusWarn');
   } else {
     setTone('safe');
-    if (running) statusEl.textContent = '计时进行中';
-    else if (remainMs < totalMs) statusEl.textContent = '已暂停，点击继续以恢复计时';
-    else statusEl.textContent = '点击开始，到期将提醒起身活动';
+    if (running) statusEl.textContent = tr('statusRunning');
+    else if (remainMs < totalMs) statusEl.textContent = tr('statusPaused');
+    else statusEl.textContent = tr('statusIdle');
   }
+
+  syncStartLabel();
 };
 
 const clearTick = () => {
@@ -745,7 +860,6 @@ const finish = () => {
   clearTick();
   releaseWakeLock();
   render();
-  startBtn.textContent = '再来一次';
   startBtn.disabled = false;
   resetBtn.disabled = false;
   setPresetsEnabled(true);
@@ -760,7 +874,6 @@ const start = () => {
     clearTick();
     remainMs = Math.max(0, endAt - Date.now());
     endAt = 0;
-    startBtn.textContent = '继续';
     releaseWakeLock();
     setPresetsEnabled(true);
     render();
@@ -779,7 +892,6 @@ const start = () => {
   endAt = Date.now() + remainMs;
   running = true;
   finished = false;
-  startBtn.textContent = '暂停';
   resetBtn.disabled = false;
   setPresetsEnabled(false);
   render();
@@ -795,7 +907,6 @@ const reset = () => {
   stopTitleBlink();
   releaseWakeLock();
   remainMs = totalMs;
-  startBtn.textContent = '开始';
   startBtn.disabled = false;
   resetBtn.disabled = true;
   setPresetsEnabled(true);
@@ -810,6 +921,13 @@ const setPreset = (min) => {
   }
   reset();
 };
+
+fillLangSelect();
+applyStaticI18n();
+
+langSelect.addEventListener('change', () => {
+  setLocale(langSelect.value);
+});
 
 startBtn.addEventListener('click', start);
 resetBtn.addEventListener('click', reset);
