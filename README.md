@@ -42,17 +42,28 @@
 - `site.json` 的 `description` 须包含正式域名 `5min.xuejibao.dev`，以及「无广告」与「不向服务端上传 / 不会上传」语义；修改后同步 `index.html` 的 `meta` / Open Graph / Twitter / JSON-LD 与 `site.webmanifest`。
 - `site.json` 的 `origin` 为 `https://5min.xuejibao.dev`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
 
+### GEO（生成式引擎优化）
+
+面向 AI 检索与引用，需提供可独立引用的说明与问答，且与结构化数据一致：
+
+- `llms.txt`：站点摘要与关键链接（[llmstxt.org](https://llmstxt.org/) 约定），置于站点根路径。
+- `about.html`：「关于」与「常见问题」独立页（`lang="zh-CN"`），供爬虫与模型直接读取；首页脚注链向该页。
+- JSON-LD：`about.html` 使用 `AboutPage` + `FAQPage`；问题与答案须与页面可见文案逐字一致；修改 FAQ 时同步 `site.json` 对应页的 `faqs`。
+- 回答中保留正式域名、无广告、本地计时不上传、非医疗建议等关键事实。
+
 ## 目录结构
 
 ```
 5min/
-├── index.html              # 页面、SEO 与计时逻辑（ES module）
+├── index.html              # 计时主页、SEO 与计时逻辑（ES module）
+├── about.html              # 关于 / FAQ（GEO 说明页）
 ├── i18n/
 │   └── locales.js          # 多语言文案（ES module export）
 ├── fonts.css               # @font-face（Noto Sans SC）
 ├── fonts/                  # 自托管 woff2 + OFL.txt
-├── site.json               # 站点元数据与页面文案
+├── site.json               # 站点元数据、页面文案与 faqs
 ├── site.webmanifest        # PWA 清单
+├── llms.txt                # 面向大模型的站点说明
 ├── robots.txt
 ├── sitemap.xml
 ├── favicon.ico

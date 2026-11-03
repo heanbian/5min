@@ -633,7 +633,13 @@ const applyStaticI18n = () => {
   actionsSection.setAttribute('aria-label', pack.actionsLabel);
   presets.setAttribute('aria-label', pack.presetsLabel);
   resetBtn.textContent = pack.reset;
-  footnote.textContent = pack.footnote;
+  footnote.replaceChildren(
+    document.createTextNode(`${pack.footnote} `),
+    Object.assign(document.createElement('a'), {
+      href: 'about.html',
+      textContent: pack.aboutLabel,
+    }),
+  );
   metaDescription?.setAttribute('content', pack.metaDescription);
 
   for (const btn of presets.querySelectorAll('button[data-min]')) {

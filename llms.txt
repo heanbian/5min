@@ -1,0 +1,15 @@
+# 如厕计时器 · 五分钟（5min）
+
+> 端侧倒计时提醒工具（https://5min.xuejibao.dev/）。如厕时使用移动设备易导致时长感知失准；提供 3 / 5 / 10 分钟预设，到期通过震动、提示音与系统通知提醒起身活动。无需注册，页面无广告；计时与提醒均在浏览器本地完成，不向服务端上传用户数据。本工具仅供习惯提醒，不构成医疗建议。
+
+公开资料常建议将单次如厕时间控制在约 5 分钟以内，具体因人而异。正式站点为 5min.xuejibao.dev，由学记宝（xuejibao.com）发布，源码以 Apache License 2.0 开源。
+
+## 页面
+
+- [如厕计时器 · 五分钟](https://5min.xuejibao.dev/)：主应用。一键开始 / 暂停 / 重置；状态由进行中（绿）变为最后 1 分钟（琥珀）再变为超时（红）；计时中可申请 Screen Wake Lock；以绝对时间戳结算，减轻后台节流漂移。
+- [关于 · 常见问题](https://5min.xuejibao.dev/about.html)：产品说明与 FAQ（隐私、使用方式、是否需安装等）。
+
+## 可选阅读
+
+- [源码仓库](https://github.com/heanbian/5min)：HTML5 + 原生 JavaScript（ES modules），无框架、无打包。
+- [学记宝](https://xuejibao.com/)：发布方站点。
