@@ -4,8 +4,8 @@
   "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：本机倒计时提醒，3 / 5 / 10 分钟预设，到点提醒起身。无需注册，页面无广告。计时与提醒均在本机完成，不会上传。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#f6f4ef",
+  "background_color": "#eef6f1",
+  "theme_color": "#2f9a68",
   "lang": "zh-CN",
   "icons": [
     {

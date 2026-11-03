@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f6f4ef">
+<meta name="theme-color" content="#eef6f1">
 <title>如厕计时器 · 五分钟</title>
+<link rel="stylesheet" href="fonts.css">
 <meta name="description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：面向日常健康习惯的本机倒计时提醒。提供 3 / 5 / 10 分钟预设，支持开始、暂停与重置；到点以震动、提示音与系统通知提醒起身，减少久坐如厕导致的腿麻与不适。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不会上传。">
 <meta name="keywords" content="如厕计时器,五分钟,5min,5min.xuejibao.dev,倒计时,如厕时间,健康习惯,久坐提醒,本机计时,无广告,学记宝">
 <meta name="author" content="学记宝">
@@ -75,183 +76,307 @@
 </script>
 <style>
   :root{
-    --bg:#f6f4ef;
-    --card:#ffffff;
-    --ink:#2b2b2b;
-    --muted:#8a8578;
-    --ring:#d8d2c4;
-    --safe:#4a9d6e;
-    --warn:#d9a13b;
-    --danger:#d05a4a;
+    --brand:#2f9a68;
+    --brand-strong:#248556;
+    --brand-soft:#e5f5ec;
+    --bg:#eef6f1;
+    --bg-2:#f7faf8;
+    --surface:#ffffff;
+    --ink:#1f2a24;
+    --muted:#5f6f66;
+    --line:#d7e5dc;
+    --ring:#cfe0d6;
+    --safe:#2f9a68;
+    --warn:#c9862d;
+    --warn-soft:#fff6e8;
+    --danger:#d2554a;
+    --danger-soft:#ffefed;
+    --radius-sm:10px;
+    --radius:12px;
+    --radius-lg:20px;
+    --space:8px;
+    --space-2:12px;
+    --space-3:16px;
+    --space-4:24px;
+    --space-5:32px;
+    --space-6:48px;
+    --fs-xs:0.75rem;
+    --fs-sm:0.8125rem;
+    --fs-base:0.9375rem;
+    --fs-md:1rem;
+    --fs-lg:1.125rem;
+    --lh-tight:1.25;
+    --lh-body:1.65;
+    --font:"Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
+    --shadow-soft:0 10px 30px rgba(31, 90, 58, 0.07);
+    --control-h:48px;
+    color-scheme:light;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%}
+  html,body{min-height:100%}
   body{
     margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    background:var(--bg);
+    font-family:var(--font);
+    font-size:var(--fs-base);
+    line-height:var(--lh-body);
     color:var(--ink);
+    background:
+      radial-gradient(1200px 560px at 50% -10%, #dff0e6 0%, transparent 58%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 48%, #f4f8f5 100%);
+    transition:background-color .35s ease;
+  }
+  body.warn{
+    background:
+      radial-gradient(1200px 560px at 50% -10%, #ffe9c8 0%, transparent 58%),
+      linear-gradient(180deg, var(--warn-soft) 0%, #fffaf2 100%);
+  }
+  body.danger{
+    background:
+      radial-gradient(1200px 560px at 50% -10%, #ffd7d2 0%, transparent 58%),
+      linear-gradient(180deg, var(--danger-soft) 0%, #fff7f6 100%);
+  }
+
+  .app{
+    width:min(100%, 440px);
+    margin:0 auto;
+    min-height:100dvh;
+    padding:clamp(24px, 5vw, 40px) var(--space-4) var(--space-5);
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    min-height:100dvh;
-    padding:24px;
-    transition:background .4s ease;
+    gap:var(--space-4);
   }
-  body.warn{background:#fbf3e2}
-  body.danger{background:#fbe9e6}
 
   .brand{
     display:flex;
     align-items:center;
-    gap:10px;
-    margin:0 0 28px;
+    gap:var(--space-2);
+    margin:0;
   }
   .brand img{
-    width:36px;
-    height:36px;
+    width:44px;
+    height:44px;
     display:block;
+    border-radius:12px;
+    box-shadow:var(--shadow-soft);
   }
+  .brand-copy{display:flex;flex-direction:column;gap:2px}
   .brand h1{
-    font-size:15px;
-    font-weight:500;
-    letter-spacing:.08em;
-    color:var(--muted);
     margin:0;
-    text-transform:uppercase;
+    font-size:var(--fs-lg);
+    font-weight:600;
+    letter-spacing:0.01em;
+    color:var(--ink);
+    line-height:var(--lh-tight);
+  }
+  .brand p{
+    margin:0;
+    font-size:var(--fs-sm);
+    color:var(--muted);
+    font-weight:500;
   }
 
+  .stage{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:var(--space-3);
+    padding:var(--space-4) var(--space-3) var(--space-3);
+    background:color-mix(in srgb, var(--surface) 82%, transparent);
+    border:1px solid color-mix(in srgb, var(--line) 80%, white);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-soft);
+    backdrop-filter:blur(8px);
+    animation:rise .55s ease both;
+  }
   .dial{
     position:relative;
-    width:min(78vw,300px);
+    width:min(72vw, 268px);
     aspect-ratio:1;
     display:grid;
     place-items:center;
   }
-  .dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-  .track{fill:none;stroke:var(--ring);stroke-width:10}
+  .dial svg{
+    position:absolute;inset:0;width:100%;height:100%;
+    transform:rotate(-90deg);
+  }
+  .track{fill:none;stroke:var(--ring);stroke-width:9}
   .progress{
     fill:none;
     stroke:var(--safe);
-    stroke-width:10;
+    stroke-width:9;
     stroke-linecap:round;
-    transition:stroke .4s ease;
+    transition:stroke .35s ease;
   }
   .time{
-    font-size:clamp(48px,14vw,72px);
-    font-weight:600;
+    font-size:clamp(2.75rem, 12vw, 3.75rem);
+    font-weight:700;
     font-variant-numeric:tabular-nums;
-    letter-spacing:-.02em;
+    letter-spacing:-0.03em;
     line-height:1;
+    color:var(--ink);
   }
   .status{
-    margin-top:10px;
-    font-size:14px;
+    margin:0;
+    min-height:1.5em;
+    font-size:var(--fs-base);
+    font-weight:500;
     color:var(--muted);
-    min-height:20px;
     text-align:center;
-    padding:0 12px;
+    padding:0 var(--space);
     transition:color .3s ease;
   }
 
-  .controls{
+  .actions{
+    width:100%;
     display:flex;
-    gap:12px;
-    margin-top:36px;
-    flex-wrap:wrap;
-    justify-content:center;
+    flex-direction:column;
+    align-items:stretch;
+    gap:var(--space-3);
+    animation:rise .55s ease .06s both;
+  }
+  .controls{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:var(--space-2);
   }
   button{
     font-family:inherit;
-    font-size:16px;
-    padding:14px 32px;
-    border-radius:999px;
-    border:none;
+    font-size:var(--fs-md);
+    font-weight:600;
+    height:var(--control-h);
+    padding:0 var(--space-4);
+    border-radius:var(--radius);
+    border:1px solid transparent;
     cursor:pointer;
-    transition:transform .1s ease, opacity .2s ease, background .2s ease;
-    min-width:112px;
+    transition:background .2s ease, border-color .2s ease, color .2s ease, transform .12s ease, box-shadow .2s ease;
   }
-  button:active{transform:scale(.97)}
-  button:disabled{opacity:.4;cursor:not-allowed}
+  button:active:not(:disabled){transform:translateY(1px)}
+  button:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
   button:focus-visible{
-    outline:2px solid var(--ink);
+    outline:2px solid var(--brand);
     outline-offset:3px;
   }
-  .primary{background:var(--ink);color:#fff}
-  .ghost{background:transparent;color:var(--muted);border:1px solid var(--ring)}
+  .primary{
+    background:linear-gradient(180deg, #3aaa74 0%, var(--brand) 100%);
+    color:#fff;
+    box-shadow:0 8px 18px rgba(47, 154, 104, 0.22);
+  }
+  .primary:hover:not(:disabled){
+    background:linear-gradient(180deg, #36a26e 0%, var(--brand-strong) 100%);
+  }
+  .ghost{
+    background:var(--surface);
+    color:var(--ink);
+    border-color:var(--line);
+  }
+  .ghost:hover:not(:disabled){
+    background:var(--brand-soft);
+    border-color:color-mix(in srgb, var(--brand) 28%, var(--line));
+    color:var(--brand-strong);
+  }
 
   .presets{
-    display:flex;
-    gap:8px;
-    margin-top:20px;
-    font-size:13px;
-    color:var(--muted);
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:4px;
+    padding:4px;
+    background:color-mix(in srgb, var(--surface) 70%, var(--brand-soft));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
   }
   .presets button{
-    min-width:auto;
-    padding:6px 14px;
-    font-size:13px;
-    background:transparent;
-    border:1px solid var(--ring);
+    height:40px;
+    min-width:0;
+    padding:0 var(--space);
+    font-size:var(--fs-sm);
+    font-weight:600;
     color:var(--muted);
+    background:transparent;
+    border:none;
+    border-radius:calc(var(--radius-sm) - 1px);
+    box-shadow:none;
+  }
+  .presets button:hover:not(:disabled):not(.active){
+    color:var(--ink);
+    background:color-mix(in srgb, var(--surface) 80%, transparent);
   }
   .presets button.active{
-    background:var(--ink);
-    color:#fff;
-    border-color:var(--ink);
+    background:var(--surface);
+    color:var(--brand-strong);
+    box-shadow:0 1px 2px rgba(31, 42, 36, 0.06), 0 4px 12px rgba(47, 154, 104, 0.08);
   }
-  .presets button:disabled{
-    opacity:.45;
-  }
+  .presets button:disabled{opacity:.4}
 
   .footnote{
-    margin-top:40px;
-    font-size:12px;
+    margin:var(--space) 0 0;
+    max-width:36em;
+    font-size:var(--fs-xs);
     color:var(--muted);
     text-align:center;
-    line-height:1.7;
-    max-width:420px;
+    line-height:1.75;
+    animation:rise .55s ease .12s both;
   }
-  .footnote a{color:var(--muted)}
+  .footnote a{
+    color:var(--brand-strong);
+    text-decoration:none;
+  }
+  .footnote a:hover{text-decoration:underline}
 
+  @keyframes rise{
+    from{opacity:0;transform:translateY(10px)}
+    to{opacity:1;transform:none}
+  }
   @media (prefers-reduced-motion: reduce){
-    *{transition:none!important}
+    *,*::before,*::after{
+      animation:none!important;
+      transition:none!important;
+    }
   }
 </style>
 </head>
 <body>
 
-<header class="brand">
-  <img src="img/logo.svg" width="40" height="40" alt="5min">
-  <h1>五分钟 · 如厕计时</h1>
-</header>
+<main class="app">
+  <header class="brand">
+    <img src="img/logo.svg" width="44" height="44" alt="5min">
+    <div class="brand-copy">
+      <h1>如厕计时器</h1>
+      <p>5min · 本机提醒 · 无广告</p>
+    </div>
+  </header>
 
-<div class="dial" role="timer" aria-atomic="true" aria-live="polite">
-  <svg viewBox="0 0 120 120" aria-hidden="true">
-    <circle class="track" cx="60" cy="60" r="54"></circle>
-    <circle class="progress" id="progress" cx="60" cy="60" r="54"></circle>
-  </svg>
-  <div class="time" id="timeText">5:00</div>
-</div>
+  <section class="stage" aria-label="计时区域">
+    <div class="dial" role="timer" aria-atomic="true" aria-live="polite">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="track" cx="60" cy="60" r="54"></circle>
+        <circle class="progress" id="progress" cx="60" cy="60" r="54"></circle>
+      </svg>
+      <div class="time" id="timeText">5:00</div>
+    </div>
+    <p class="status" id="status">点击开始，到点提醒你起来</p>
+  </section>
 
-<div class="status" id="status">点击开始，到点提醒你起来</div>
+  <section class="actions" aria-label="操作">
+    <div class="controls">
+      <button class="primary" id="startBtn" type="button" aria-keyshortcuts="Space">开始</button>
+      <button class="ghost" id="resetBtn" type="button" disabled>重置</button>
+    </div>
+    <div class="presets" id="presets" role="group" aria-label="时长预设">
+      <button type="button" data-min="3">3 分钟</button>
+      <button type="button" data-min="5" class="active">5 分钟</button>
+      <button type="button" data-min="10">10 分钟</button>
+    </div>
+  </section>
 
-<div class="controls">
-  <button class="primary" id="startBtn" type="button" aria-keyshortcuts="Space">开始</button>
-  <button class="ghost" id="resetBtn" type="button" disabled>重置</button>
-</div>
-
-<div class="presets" id="presets" role="group" aria-label="时长预设">
-  <button type="button" data-min="3">3 分钟</button>
-  <button type="button" data-min="5" class="active">5 分钟</button>
-  <button type="button" data-min="10">10 分钟</button>
-</div>
-
-<p class="footnote">
-  医学建议如厕时间控制在 5 分钟内，<br>带手机会让你对时间的感知变钝。<br>
-  本工具只做提醒，不替代任何医疗建议。
-</p>
+  <p class="footnote">
+    医学建议如厕时间控制在 5 分钟内，带手机会让你对时间的感知变钝。<br>
+    本工具只做提醒，不替代任何医疗建议。正式站点
+    <a href="https://5min.xuejibao.dev/">5min.xuejibao.dev</a>
+  </p>
+</main>
 
 <script>
 (function(){

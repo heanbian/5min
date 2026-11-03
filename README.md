@@ -24,11 +24,15 @@
 
 技术栈：单页 `index.html`（内联 CSS / JS）。无构建步骤。
 
+字体使用自托管 **Noto Sans SC**（[SIL Open Font License 1.1](https://scripts.sil.org/OFL)，免费可商用），与学记宝小工具一致；不依赖 Google Fonts 等第三方字体 CDN。
+
 ## 目录
 
 ```
 5min/
 ├── index.html              # 页面、SEO meta / JSON-LD 与全部逻辑
+├── fonts.css               # @font-face（Noto Sans SC / OFL）
+├── fonts/                  # 自托管 woff2
 ├── site.json               # 站点名、origin、页面 title / description
 ├── site.webmanifest
 ├── robots.txt
