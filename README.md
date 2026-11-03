@@ -18,7 +18,9 @@
 
 ## 技术栈
 
-静态 Web 前端：单页 `index.html`（内联样式与脚本），无构建、无后端运行时。
+纯 **HTML5 + 现代原生 JavaScript**（ES modules）：单页 `index.html`，无框架、无打包、无第三方运行时依赖。
+
+使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环。
 
 可部署至任意静态托管（对象存储、CDN、Nginx 等）。本地预览建议使用 HTTP 服务，避免 `file://` 下通知等 API 受限。
 
