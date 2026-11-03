@@ -284,7 +284,7 @@
     display:grid;
     place-items:center;
   }
-  .dial svg{
+  .dial > svg{
     position:absolute;inset:0;width:100%;height:100%;
     transform:rotate(-90deg);
   }
@@ -297,12 +297,21 @@
     transition:stroke .35s ease;
   }
   .time{
-    font-size:clamp(3rem, 15vw, 4rem);
-    font-weight:700;
-    font-variant-numeric:tabular-nums;
-    letter-spacing:-0.03em;
-    line-height:1;
+    position:relative;
+    z-index:1;
+    width:min(64%, 220px);
+    aspect-ratio:144 / 48;
+    line-height:0;
+    pointer-events:none;
     color:var(--ink);
+    transition:color .3s ease;
+  }
+  body.warn .time{color:var(--warn)}
+  body.danger .time{color:var(--danger)}
+  .time svg{
+    display:block;
+    width:100%;
+    height:auto;
   }
   .status{
     margin:0;
@@ -430,7 +439,7 @@
     .brand img,
     .brand h1{font-size:1.25rem}
     .topbar{grid-template-columns:1fr auto}
-    .time{font-size:clamp(3.25rem, 10vw, 4.25rem)}
+    .time{width:min(58%, 220px)}
     .status{font-size:var(--fs-base)}
   }
 
@@ -455,7 +464,7 @@
     .brand img,
     .brand h1{font-size:1.35rem}
     .lang select{height:38px; font-size:0.9375rem}
-    .time{font-size:clamp(3.5rem, 7vh, 4.75rem)}
+    .time{width:min(56%, 240px)}
     .status{font-size:var(--fs-base); max-width:22em}
     .footnote{font-size:0.8125rem; max-width:36em; margin-inline:auto}
     .presets button{height:42px; font-size:0.9375rem}
@@ -489,7 +498,7 @@
     .brand img,
     .brand h1{font-size:1rem}
     .stage{padding:0; gap:var(--space-2); flex:0 0 auto}
-    .time{font-size:clamp(2rem, 10vh, 2.75rem)}
+    .time{width:min(58%, 160px)}
     .footnote{display:none}
   }
 
@@ -521,7 +530,8 @@
         <circle class="track" cx="60" cy="60" r="54"></circle>
         <circle class="progress" id="progress" cx="60" cy="60" r="54"></circle>
       </svg>
-      <div class="time" id="timeText">5:00</div>
+      <div class="time" id="timeText" aria-hidden="true"></div>
+      <span class="visually-hidden" id="timeLabel">05:00</span>
     </div>
     <p class="status" id="status">Tap start — we’ll remind you to get up when time is up</p>
   </section>
@@ -569,6 +579,7 @@ const VIBRATE_RETRY_MS = Object.freeze([0, 280, 900, 1800, 3200]);
 
 const progress = document.querySelector('#progress');
 const timeText = document.querySelector('#timeText');
+const timeLabel = document.querySelector('#timeLabel');
 const statusEl = document.querySelector('#status');
 const startBtn = document.querySelector('#startBtn');
 const resetBtn = document.querySelector('#resetBtn');
@@ -613,7 +624,90 @@ const fmt = (ms) => {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
+/** 七段电子表：a 顶 / b 右上 / c 右下 / d 底 / e 左下 / f 左上 / g 中 */
+const DIGIT_SEGS = Object.freeze([
+  'abcdef', 'bc', 'abged', 'abgcd', 'fgbc',
+  'afgcd', 'afgcde', 'abc', 'abcdefg', 'abfgcd',
+]);
+const ALL_SEGS = 'abcdefg';
+
+const svgN = (v) => Math.round(Number(v) * 10) / 10;
+
+const hBar = (x, y, w, t) =>
+  `M${svgN(x)} ${svgN(y + t / 2)} L${svgN(x + t / 2)} ${svgN(y)} H${svgN(x + w - t / 2)} L${svgN(x + w)} ${svgN(y + t / 2)} L${svgN(x + w - t / 2)} ${svgN(y + t)} H${svgN(x + t / 2)} Z`;
+
+const vBar = (x, y, h, t) =>
+  `M${svgN(x + t / 2)} ${svgN(y)} L${svgN(x + t)} ${svgN(y + t / 2)} V${svgN(y + h - t / 2)} L${svgN(x + t / 2)} ${svgN(y + h)} L${svgN(x)} ${svgN(y + h - t / 2)} V${svgN(y + t / 2)} Z`;
+
+const digitSegMap = (ox, oy) => {
+  const dw = 22;
+  const dh = 36;
+  const t = 4;
+  const gap = 1;
+  const mid = dh / 2;
+  return {
+    a: hBar(ox + 2.5, oy, dw - 5, t),
+    g: hBar(ox + 2.5, oy + mid - t / 2, dw - 5, t),
+    d: hBar(ox + 2.5, oy + dh - t, dw - 5, t),
+    f: vBar(ox, oy + t + gap, mid - t - gap * 2, t),
+    b: vBar(ox + dw - t, oy + t + gap, mid - t - gap * 2, t),
+    e: vBar(ox, oy + mid + gap, mid - t - gap * 2, t),
+    c: vBar(ox + dw - t, oy + mid + gap, mid - t - gap * 2, t),
+  };
+};
+
+const digitPaths = (d, ox, oy) => {
+  const segs = digitSegMap(ox, oy);
+  const on = DIGIT_SEGS[d] || '';
+  let out = '';
+  for (const k of ALL_SEGS) {
+    if (on.includes(k)) out += `<path fill="currentColor" d="${segs[k]}"/>`;
+    else out += `<path fill="currentColor" opacity="0.05" d="${segs[k]}"/>`;
+  }
+  return out;
+};
+
+const colonPaths = (ox, oy) => {
+  const cx = svgN(ox + 6);
+  return (
+    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 10)}" r="2.6"/>` +
+    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 26)}" r="2.6"/>`
+  );
+};
+
+/** 固定 MM:SS 五槽布局，切换 3/5/10 分钟时尺寸不变 */
+const WATCH_W = 144;
+const WATCH_H = 48;
+const WATCH_SLOTS = Object.freeze([
+  { kind: 'digit', x: 4 },
+  { kind: 'digit', x: 34 },
+  { kind: 'colon', x: 64 },
+  { kind: 'digit', x: 80 },
+  { kind: 'digit', x: 110 },
+]);
+
+/** 计时数字：电子表七段液晶风格（恒定画布） */
+const digitalWatchSvg = (text) => {
+  const raw = String(text).replace(/\D/g, '').padStart(4, '0').slice(-4);
+  const digits = [raw[0], raw[1], raw[2], raw[3]].map(Number);
+  const oy = 6;
+  let di = 0;
+  let glyphs = '';
+  for (const slot of WATCH_SLOTS) {
+    if (slot.kind === 'colon') {
+      glyphs += colonPaths(slot.x, oy);
+      continue;
+    }
+    glyphs += digitPaths(digits[di++], slot.x, oy);
+  }
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${WATCH_W}" height="${WATCH_H}" viewBox="0 0 ${WATCH_W} ${WATCH_H}" aria-hidden="true">` +
+    glyphs +
+    `</svg>`
+  );
 };
 
 const syncStartLabel = () => {
@@ -890,7 +984,9 @@ const setTone = (tone) => {
 };
 
 const render = () => {
-  timeText.textContent = fmt(remainMs);
+  const clock = fmt(remainMs);
+  timeLabel.textContent = clock;
+  timeText.innerHTML = digitalWatchSvg(clock);
   const ratio = totalMs > 0 ? Math.min(1, Math.max(0, remainMs / totalMs)) : 0;
   progress.style.strokeDashoffset = String(CIRC * (1 - ratio));
 
