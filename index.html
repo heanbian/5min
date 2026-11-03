@@ -48,6 +48,7 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="img/logo.svg">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -113,21 +114,16 @@
     --danger-soft:#ffefed;
     --radius-sm:12px;
     --radius:14px;
-    --radius-lg:24px;
     --space:8px;
     --space-2:12px;
     --space-3:16px;
     --space-4:20px;
-    --space-5:28px;
     --fs-xs:0.75rem;
     --fs-sm:0.875rem;
     --fs-base:1rem;
-    --fs-md:1.0625rem;
     --fs-lg:1.1875rem;
-    --lh-tight:1.2;
     --lh-body:1.55;
     --font:"Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
-    --shadow-soft:0 8px 24px rgba(31, 90, 58, 0.08);
     --control-h:52px;
     --safe-top:env(safe-area-inset-top, 0px);
     --safe-bottom:env(safe-area-inset-bottom, 0px);
@@ -532,7 +528,7 @@
 
   <section class="actions" id="actionsSection" aria-label="Controls">
     <div class="controls">
-      <button class="primary" id="startBtn" type="button" aria-keyshortcuts="Space">Start</button>
+      <button class="primary" id="startBtn" type="button">Start</button>
       <button class="ghost" id="resetBtn" type="button" disabled>Reset</button>
     </div>
     <div class="presets" id="presets" role="group" aria-label="Duration presets">
@@ -565,13 +561,6 @@ import {
   t,
 } from './i18n/locales.js';
 
-if (location.protocol === 'http:' || location.protocol === 'https:') {
-  const manifest = document.createElement('link');
-  manifest.rel = 'manifest';
-  manifest.href = 'site.webmanifest';
-  document.head.append(manifest);
-}
-
 const CIRC = 2 * Math.PI * 54;
 const PRESET_MINS = Object.freeze([3, 5, 10]);
 const VIBRATE_PATTERN = Object.freeze([220, 100, 220, 100, 420, 140, 320]);
@@ -590,12 +579,12 @@ const stageSection = document.querySelector('#stageSection');
 const actionsSection = document.querySelector('#actionsSection');
 const metaDescription = document.querySelector('meta[name="description"]');
 
-const secRaw = Number.parseInt(new URLSearchParams(location.search).get('sec') ?? '', 10);
+const qs = new URLSearchParams(location.search);
+const secRaw = Number.parseInt(qs.get('sec') ?? '', 10);
 const bootSec = Number.isFinite(secRaw) ? Math.min(3600, Math.max(1, secRaw)) : 0;
 const defaultMin = bootSec > 0 ? bootSec / 60 : 5;
 
-const langParam = new URLSearchParams(location.search).get('lang');
-let locale = resolveLocale(langParam) ?? detectLocale();
+let locale = resolveLocale(qs.get('lang')) ?? detectLocale();
 let totalMs = defaultMin * 60 * 1000;
 let remainMs = totalMs;
 let endAt = 0;
@@ -641,7 +630,7 @@ const applyStaticI18n = () => {
   presets.setAttribute('aria-label', pack.presetsLabel);
   resetBtn.textContent = pack.reset;
   footnote.textContent = pack.footnote;
-  if (metaDescription) metaDescription.setAttribute('content', pack.metaDescription);
+  metaDescription?.setAttribute('content', pack.metaDescription);
 
   for (const btn of presets.querySelectorAll('button[data-min]')) {
     const n = Number(btn.dataset.min);

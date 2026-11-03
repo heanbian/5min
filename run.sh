@@ -1,2 +1,15 @@
 #!/usr/bin/env bash
-npx --yes serve -l 3000 .
+# Local static preview for 5min (ES modules need http(s)).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+PORT="${1:-${PORT:-8080}}"
+
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || (( PORT < 1 || PORT > 65535 )); then
+  echo "Invalid port: $PORT (use 1–65535)" >&2
+  exit 1
+fi
+
+cd "$ROOT"
+echo "Serving $ROOT at http://127.0.0.1:${PORT}/"
+exec npx --yes serve -l "$PORT" .
