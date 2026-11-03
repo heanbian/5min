@@ -48,7 +48,6 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="img/logo.svg">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<link rel="manifest" href="site.webmanifest">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -539,10 +538,16 @@
   <p class="footnote" id="footnote"></p>
 </main>
 
+<script>
+/* ES module 无法在 file:// 下跨文件 import；仅作协议提示 */
+if (location.protocol === 'file:') {
+  console.warn('[5min] ES modules require http(s). Run: npx --yes serve .');
+}
+</script>
 <script type="module">
 /**
  * 5min · Toilet Timer
- * HTML5 + modern native JavaScript (no framework / bundler / runtime deps)
+ * HTML5 + modern native JavaScript (ES modules)
  */
 import {
   LOCALES,
@@ -552,6 +557,13 @@ import {
   resolveLocale,
   t,
 } from './i18n/locales.js';
+
+if (location.protocol === 'http:' || location.protocol === 'https:') {
+  const manifest = document.createElement('link');
+  manifest.rel = 'manifest';
+  manifest.href = 'site.webmanifest';
+  document.head.append(manifest);
+}
 
 const CIRC = 2 * Math.PI * 54;
 const PRESET_MINS = Object.freeze([3, 5, 10]);

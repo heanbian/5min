@@ -18,13 +18,20 @@
 
 ## 技术栈
 
-纯 **HTML5 + 现代原生 JavaScript**（ES modules）：单页 `index.html`，无框架、无打包、无第三方运行时依赖。
+纯 **HTML5 + 现代原生 JavaScript（ES modules）**：`index.html` + `i18n/locales.js`，无框架、无打包、无第三方运行时依赖。
 
 使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环。
 
 多语言（`i18n/locales.js`）：简体中文、繁体中文、English，以及日本語、한국어、Español。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
 
-可部署至任意静态托管（对象存储、CDN、Nginx 等）。本地预览建议使用 HTTP 服务，避免 `file://` 下通知等 API 受限。
+> **本地预览须用 HTTP 服务。** Chrome 等浏览器在 `file://` 下会拦截 ES module 的跨文件 `import`，请勿直接双击打开。
+
+```bash
+./run.sh        # 默认 8080
+./run.sh 3000   # 指定端口
+```
+
+可部署至任意静态托管（对象存储、CDN、Nginx 等）。
 
 字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL Open Font License 1.1](https://scripts.sil.org/OFL)，可免费商用），不依赖第三方字体 CDN。
 
@@ -39,9 +46,9 @@
 
 ```
 5min/
-├── index.html              # 页面、SEO 与计时逻辑
+├── index.html              # 页面、SEO 与计时逻辑（ES module）
 ├── i18n/
-│   └── locales.js          # 多语言文案与语言探测
+│   └── locales.js          # 多语言文案（ES module export）
 ├── fonts.css               # @font-face（Noto Sans SC）
 ├── fonts/                  # 自托管 woff2 + OFL.txt
 ├── site.json               # 站点元数据与页面文案
@@ -55,6 +62,7 @@
 │   └── apple-touch-icon.png
 ├── scripts/
 │   └── raster-logo.js      # SVG 栅格化为 PNG / ICO
+├── run.sh                  # 本地预览（可指定端口）
 ├── LICENSE                 # Apache License 2.0 全文
 ├── NOTICE                  # 署名、品牌与第三方声明
 ├── .gitignore
@@ -64,12 +72,10 @@
 ## 本地预览
 
 ```bash
-npx --yes serve .
-# 或
-python3 -m http.server 8080
+./run.sh           # 默认端口 8080 → http://127.0.0.1:8080/
+./run.sh 3000      # 指定端口
+PORT=9000 ./run.sh # 环境变量指定端口
 ```
-
-浏览器访问终端提示的本地地址（例如 `http://localhost:3000`）。
 
 开发联调：
 

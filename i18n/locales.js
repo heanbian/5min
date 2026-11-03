@@ -1,5 +1,5 @@
 /**
- * 5min locale packs — HTML5 / native ES module, no framework.
+ * 5min locale packs — ES module.
  * SPDX-License-Identifier: Apache-2.0
  */
 
