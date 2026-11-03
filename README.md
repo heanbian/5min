@@ -1,6 +1,6 @@
 # 5min · 如厕计时器
 
-端侧倒计时提醒工具。正式站点：[5min.xuejibao.dev](https://5min.xuejibao.dev/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
+端侧倒计时提醒工具。正式站点：[5min.chat](https://5min.chat/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
 
 如厕时使用移动设备易导致时长感知失准。本工具提供可预设的倒计时，到期通过震动、提示音与系统通知提醒起身活动。无需注册，页面无广告；计时与提醒均在浏览器本地完成，不向服务端上传用户数据。
 
@@ -39,8 +39,8 @@
 
 - 产品名：`如厕计时器`；品牌字标：`5min`；页面标题形如 `如厕计时器 · 五分钟`。
 - 对外说明优先使用书面用语：端侧处理、倒计时、系统通知、Screen Wake Lock、绝对时间戳等。
-- `site.json` 的 `description` 须包含正式域名 `5min.xuejibao.dev`，以及「无广告」与「不向服务端上传 / 不会上传」语义；修改后同步 `index.html` 的 `meta` / Open Graph / Twitter / JSON-LD 与 `site.webmanifest`。
-- `site.json` 的 `origin` 为 `https://5min.xuejibao.dev`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
+- `site.json` 的 `description` 须包含正式域名 `5min.chat`，以及「无广告」与「不向服务端上传 / 不会上传」语义；修改后同步 `index.html` 的 `meta` / Open Graph / Twitter / JSON-LD 与 `site.webmanifest`。
+- `site.json` 的 `origin` 为 `https://5min.chat`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
 
 ### GEO（生成式引擎优化）
 

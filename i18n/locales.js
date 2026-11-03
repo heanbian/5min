@@ -31,7 +31,7 @@ export const LOCALES = Object.freeze({
     titleDoneZero: '0:00 · 五分钟',
     notifyTitle: '五分钟 · 时间到',
     notifyBody: '计时已结束，请起身活动。',
-    metaDescription: '如厕计时器 · 五分钟（5min.xuejibao.dev）：面向日常健康习惯的端侧倒计时提醒。无需注册，页面无广告。计时与提醒在浏览器本地完成，不向服务端上传用户数据。',
+    metaDescription: '如厕计时器 · 五分钟（5min.chat）：面向日常健康习惯的端侧倒计时提醒。无需注册，页面无广告。计时与提醒在浏览器本地完成，不向服务端上传用户数据。',
   }),
   'zh-TW': Object.freeze({
     htmlLang: 'zh-TW',
@@ -60,7 +60,7 @@ export const LOCALES = Object.freeze({
     titleDoneZero: '0:00 · 五分鐘',
     notifyTitle: '五分鐘 · 時間到',
     notifyBody: '計時已結束，請起身活動。',
-    metaDescription: '如廁計時器 · 五分鐘（5min.xuejibao.dev）：面向日常健康習慣的端側倒計時提醒。無需註冊，頁面無廣告。計時與提醒在瀏覽器本地完成，不向伺服器上傳使用者資料。',
+    metaDescription: '如廁計時器 · 五分鐘（5min.chat）：面向日常健康習慣的端側倒計時提醒。無需註冊，頁面無廣告。計時與提醒在瀏覽器本地完成，不向伺服器上傳使用者資料。',
   }),
   en: Object.freeze({
     htmlLang: 'en',
@@ -89,7 +89,7 @@ export const LOCALES = Object.freeze({
     titleDoneZero: '0:00 · 5min',
     notifyTitle: '5min · Time’s up',
     notifyBody: 'The timer has finished. Please stand and move.',
-    metaDescription: 'Toilet Timer · 5min (5min.xuejibao.dev): an on-device countdown reminder for healthier bathroom habits. No sign-up, no ads. Timing stays in your browser and is never uploaded.',
+    metaDescription: 'Toilet Timer · 5min (5min.chat): an on-device countdown reminder for healthier bathroom habits. No sign-up, no ads. Timing stays in your browser and is never uploaded.',
   }),
   bo: Object.freeze({
     htmlLang: 'bo',
@@ -118,7 +118,7 @@ export const LOCALES = Object.freeze({
     titleDoneZero: '0:00 · 5min',
     notifyTitle: '5min · དུས་ཚོད་རྫོགས',
     notifyBody: 'དུས་ཚོད་རྫོགས་ཟིན། ལངས་ནས་འགུལ་སྐྱོད་བྱོས།',
-    metaDescription: 'གསང་སྤྱོད་དུས་ཚོད · 5min (5min.xuejibao.dev)：སྒྲིག་ཆས་ནང་གི་དུས་ཚོད་དྲན་སྐུལ། ཐོ་འགོད་མི་དགོས། ཁྱབ་བསྒྲགས་མེད། གཞི་གྲངས་ཡར་སྤྲོད་མི་བྱེད།',
+    metaDescription: 'གསང་སྤྱོད་དུས་ཚོད · 5min (5min.chat)：སྒྲིག་ཆས་ནང་གི་དུས་ཚོད་དྲན་སྐུལ། ཐོ་འགོད་མི་དགོས། ཁྱབ་བསྒྲགས་མེད། གཞི་གྲངས་ཡར་སྤྲོད་མི་བྱེད།',
   }),
   ja: Object.freeze({
     htmlLang: 'ja',
@@ -147,7 +147,7 @@ export const LOCALES = Object.freeze({
     titleDoneZero: '0:00 · 5min',
     notifyTitle: '5min · 時間です',
     notifyBody: 'タイマーが終了しました。立ち上がって体を動かしてください。',
-    metaDescription: 'トイレタイマー · 5min（5min.xuejibao.dev）：端末内で動くカウントダウンリマインダー。登録不要・広告なし。データはアップロードしません。',
+    metaDescription: 'トイレタイマー · 5min（5min.chat）：端末内で動くカウントダウンリマインダー。登録不要・広告なし。データはアップロードしません。',
   }),
 });
 
