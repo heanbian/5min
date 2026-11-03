@@ -1,7 +1,7 @@
 {
   "name": "如厕计时器 · 五分钟",
   "short_name": "5min",
-  "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：本机倒计时提醒，3 / 5 / 10 分钟预设，到点提醒起身。无需注册，页面无广告。计时与提醒均在本机完成，不会上传。",
+  "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：端侧倒计时提醒，支持 3 / 5 / 10 分钟预设，到期提醒起身活动。无需注册，页面无广告。计时与提醒在浏览器本地完成，不向服务端上传用户数据。",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#eef6f1",

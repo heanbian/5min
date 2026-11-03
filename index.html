@@ -1,13 +1,29 @@
 <!DOCTYPE html>
+<!--
+  Copyright 2026 学记宝 / heanbian
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta name="license" content="Apache-2.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#eef6f1">
 <title>如厕计时器 · 五分钟</title>
 <link rel="stylesheet" href="fonts.css">
-<meta name="description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：面向日常健康习惯的本机倒计时提醒。提供 3 / 5 / 10 分钟预设，支持开始、暂停与重置；到点以震动、提示音与系统通知提醒起身，减少久坐如厕导致的腿麻与不适。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不会上传。">
-<meta name="keywords" content="如厕计时器,五分钟,5min,5min.xuejibao.dev,倒计时,如厕时间,健康习惯,久坐提醒,本机计时,无广告,学记宝">
+<meta name="description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：面向日常健康习惯的端侧倒计时提醒工具。提供 3 / 5 / 10 分钟预设，支持开始、暂停与重置；到期通过震动、提示音与系统通知提醒起身活动。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不向服务端上传用户数据。">
+<meta name="keywords" content="如厕计时器,五分钟,5min,5min.xuejibao.dev,倒计时,如厕时间,健康习惯,久坐提醒,端侧计时,无广告,学记宝">
 <meta name="author" content="学记宝">
 <meta name="robots" content="index,follow">
 <meta name="application-name" content="5min">
@@ -16,13 +32,13 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:site_name" content="5min · 五分钟">
 <meta property="og:title" content="如厕计时器 · 五分钟">
-<meta property="og:description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：本机倒计时提醒，3 / 5 / 10 分钟预设，到点震动、提示音与系统通知。无需注册，页面无广告。计时与提醒均在本机完成，不会上传。">
+<meta property="og:description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：端侧倒计时提醒，3 / 5 / 10 分钟预设，到期震动、提示音与系统通知。无需注册，页面无广告。计时与提醒在浏览器本地完成，不向服务端上传用户数据。">
 <meta property="og:url" content="https://5min.xuejibao.dev/">
 <meta property="og:image" content="https://5min.xuejibao.dev/img/logo.png">
 <meta property="og:image:alt" content="5min · 如厕计时器">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="如厕计时器 · 五分钟">
-<meta name="twitter:description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：本机倒计时，3 / 5 / 10 分钟预设，到点提醒起身。无需注册，页面无广告。不会上传。">
+<meta name="twitter:description" content="如厕计时器 · 五分钟（5min.xuejibao.dev）：端侧倒计时，3 / 5 / 10 分钟预设，到期提醒起身活动。无需注册，页面无广告。不向服务端上传用户数据。">
 <meta name="twitter:image" content="https://5min.xuejibao.dev/img/logo.png">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="img/logo.svg">
@@ -55,7 +71,7 @@
       "operatingSystem": "Web",
       "inLanguage": "zh-CN",
       "isAccessibleForFree": true,
-      "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：面向日常健康习惯的本机倒计时提醒。提供 3 / 5 / 10 分钟预设，到点以震动、提示音与系统通知提醒起身。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不会上传。",
+      "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：面向日常健康习惯的端侧倒计时提醒工具。提供 3 / 5 / 10 分钟预设，到期通过震动、提示音与系统通知提醒起身活动。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不向服务端上传用户数据。",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -67,7 +83,7 @@
       "@id": "https://5min.xuejibao.dev/#webpage",
       "url": "https://5min.xuejibao.dev/",
       "name": "如厕计时器 · 五分钟",
-      "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：本机倒计时提醒。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不会上传。",
+      "description": "如厕计时器 · 五分钟（5min.xuejibao.dev）：端侧倒计时提醒工具。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不向服务端上传用户数据。",
       "isPartOf": { "@id": "https://5min.xuejibao.dev/#webapp" },
       "inLanguage": "zh-CN"
     }
@@ -344,7 +360,7 @@
     <img src="img/logo.svg" width="44" height="44" alt="5min">
     <div class="brand-copy">
       <h1>如厕计时器</h1>
-      <p>5min · 本机提醒 · 无广告</p>
+      <p>5min · 端侧提醒 · 无广告</p>
     </div>
   </header>
 
@@ -356,7 +372,7 @@
       </svg>
       <div class="time" id="timeText">5:00</div>
     </div>
-    <p class="status" id="status">点击开始，到点提醒你起来</p>
+    <p class="status" id="status">点击开始，到期将提醒起身活动</p>
   </section>
 
   <section class="actions" aria-label="操作">
@@ -372,8 +388,8 @@
   </section>
 
   <p class="footnote">
-    医学建议如厕时间控制在 5 分钟内，带手机会让你对时间的感知变钝。<br>
-    本工具只做提醒，不替代任何医疗建议。正式站点
+    公开资料常建议将单次如厕时间控制在约 5 分钟以内；使用移动设备易削弱时长感知。<br>
+    本工具仅供习惯提醒，不构成医疗建议。正式站点
     <a href="https://5min.xuejibao.dev/">5min.xuejibao.dev</a>
   </p>
 </main>
@@ -425,7 +441,7 @@
     stopTitleBlink();
     let flip = false;
     titleBlinkId = setInterval(function(){
-      document.title = flip ? '时间到 · 起来走动' : '0:00 · 五分钟';
+      document.title = flip ? '时间到 · 请起身活动' : '0:00 · 五分钟';
       flip = !flip;
     }, 800);
   }
@@ -465,7 +481,7 @@
     if(Notification.permission !== 'granted') return;
     try{
       const n = new Notification('五分钟 · 时间到', {
-        body: '起来走两步，别坐太久。',
+        body: '计时已结束，请起身活动。',
         icon: 'img/logo.png',
         tag: '5min-toilet-timer',
         renotify: true
@@ -518,21 +534,21 @@
     if(finished){
       document.body.classList.add('danger');
       progress.style.stroke = 'var(--danger)';
-      statusEl.textContent = '超时了，起来走两步';
+      statusEl.textContent = '已超时，请起身活动';
       statusEl.style.color = 'var(--danger)';
     } else if(remainMs <= 60 * 1000 && (running || remainMs < totalMs)){
       document.body.classList.add('warn');
       progress.style.stroke = 'var(--warn)';
-      statusEl.textContent = '最后 1 分钟，准备收尾';
+      statusEl.textContent = '最后 1 分钟，请准备结束';
       statusEl.style.color = 'var(--warn)';
     } else {
       progress.style.stroke = 'var(--safe)';
       if(running){
-        statusEl.textContent = '计时中，别刷太投入';
+        statusEl.textContent = '计时进行中';
       } else if(remainMs < totalMs){
-        statusEl.textContent = '已暂停，点继续接着计';
+        statusEl.textContent = '已暂停，点击继续以恢复计时';
       } else {
-        statusEl.textContent = '点击开始，到点提醒你起来';
+        statusEl.textContent = '点击开始，到期将提醒起身活动';
       }
       statusEl.style.color = 'var(--muted)';
     }
