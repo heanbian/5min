@@ -1,0 +1,12 @@
+{
+  "name": "5min-harmony-app",
+  "version": "1.0.0",
+  "description": "如厕计时器 · 五分钟 HarmonyOS",
+  "main": "",
+  "author": "学记宝",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.19"
+  }
+}

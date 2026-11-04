@@ -1,0 +1,14 @@
+{
+  "codes": [
+    "zh-CN",
+    "zh-TW",
+    "en",
+    "bo",
+    "ja",
+    "ar",
+    "fr",
+    "ru",
+    "es"
+  ],
+  "defaultLocale": "zh-CN"
+}

@@ -1,0 +1,4 @@
+{
+  "files": ["**/*.ets"],
+  "ignore": ["**/src/ohosTest/**/*.ets", "**/src/test/**/*.ets", "**/node_modules/**/*"]
+}
