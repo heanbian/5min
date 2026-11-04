@@ -53,13 +53,20 @@ case "$TARGET" in
   hap)
     "$HVIGORW" --stop-daemon >/dev/null 2>&1 || true
     "$HVIGORW" assembleHap --mode module -p module=entry@default -p product=default -p buildMode=release --no-daemon
-    SRC="$(find entry/build -type f -name '*.hap' 2>/dev/null | head -1 || true)"
+    # 优先取已签名产物，避免误拷 unsigned
+    SRC="$(find entry/build -type f -name '*-signed.hap' 2>/dev/null | head -1 || true)"
+    if [[ -z "${SRC:-}" ]]; then
+      SRC="$(find entry/build -type f -name '*.hap' ! -name '*-unsigned.hap' 2>/dev/null | head -1 || true)"
+    fi
     OUT="store/release/5min-harmony-app-${VERSION}.hap"
     ;;
   app|bundle)
     "$HVIGORW" --stop-daemon >/dev/null 2>&1 || true
     "$HVIGORW" assembleApp -p product=default -p buildMode=release --no-daemon
-    SRC="$(find build/outputs -type f \( -name '*.app' -o -name '*.hap' \) 2>/dev/null | head -1 || true)"
+    SRC="$(find build/outputs -type f -name '*-signed.app' 2>/dev/null | head -1 || true)"
+    if [[ -z "${SRC:-}" ]]; then
+      SRC="$(find build/outputs -type f -name '*.app' ! -name '*-unsigned.app' 2>/dev/null | head -1 || true)"
+    fi
     OUT="store/release/5min-harmony-app-${VERSION}.app"
     ;;
   *)

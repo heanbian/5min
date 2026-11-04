@@ -65,8 +65,11 @@ chmod +x scripts/release.sh
 
 也可在 DevEco：`Build` → `Build Hap(s)/APP(s)` → `Build App(s)`。
 
+确认产物为 **`*-signed.app`**（不要上传 `*-unsigned.app`），且 `build-profile.json5` 里 product 的 `signingConfig` 指向**发布证书**（`signing/material/5min_chat.*`），不要用 `~/.ohos/config` 自动调试签名。
+
 3. **上架**  
-   AppGallery Connect 上传 APP/HAP，图标可用 `store/artwork/ic_launcher_512.png`。
+   AppGallery Connect → 软件包管理 上传 `.app`；图标可用 `store/artwork/ic_launcher_1024.png`。  
+   若提示「软件包解析失败」，到软件包管理列表点错误码查看（常见：未签名包、调试 Profile、证书不匹配）。
 
 ## 说明
 
