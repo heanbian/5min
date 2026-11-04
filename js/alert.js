@@ -27,8 +27,20 @@
  * - PC: vibration no-ops; Web Audio / HTMLAudio / Notification carry the alert.
  */
 
-const VIBRATE_PATTERN = Object.freeze([480, 140, 480, 140, 720, 180, 480]);
-const VIBRATE_RETRY_MS = Object.freeze([0, 220, 700, 1400, 2600, 4200]);
+/** Finish alert length: sound + vibration both run ~5 seconds. */
+const ALERT_DURATION_MS = 5_000;
+const ALERT_DURATION_SEC = ALERT_DURATION_MS / 1000;
+/**
+ * Vibration pattern totaling ~5000ms (vibrate/pause pairs).
+ * 8×(450 on + 150 off) + final 450 on = 8×600 + 450 = 5250 → trim last pause.
+ * 7×(500+150) + 500 = 7×650 + 500 = 5050ms.
+ */
+const VIBRATE_PATTERN = Object.freeze([
+  500, 150, 500, 150, 500, 150, 500, 150,
+  500, 150, 500, 150, 500, 150, 500,
+]);
+/** Early retries only — avoid stretching the cue well past 5s. */
+const VIBRATE_RETRY_MS = Object.freeze([0, 280]);
 const AUDIO_KEEPALIVE_MS = 8_000;
 const SAMPLE_RATE = 22_050;
 
@@ -110,9 +122,9 @@ const makeSilentUri = () => {
   return samplesToWavUri(samples);
 };
 
-/** Distinct finish cue: buzz + rising chime, ~1.35s (HTMLAudio fallback path). */
+/** Distinct finish cue: buzz + rising chime, ~5s (HTMLAudio fallback path). */
 const makeAlertUri = () => {
-  const duration = 1.35;
+  const duration = ALERT_DURATION_SEC;
   const n = Math.floor(SAMPLE_RATE * duration);
   const samples = new Float32Array(n);
   const tone = (t0, t1, freq, type, peak) => {
@@ -129,14 +141,18 @@ const makeAlertUri = () => {
       samples[i0 + i] += wave * peak * env;
     }
   };
-  // Low square buzz — stand-in for missing / unreliable vibration (iOS, some Android).
-  tone(0.00, 0.16, 140, 'square', 0.38);
-  tone(0.22, 0.38, 140, 'square', 0.38);
-  tone(0.44, 0.68, 175, 'square', 0.42);
-  // Rising chime
-  tone(0.72, 1.00, 523.25, 'sine', 0.55);
-  tone(0.86, 1.14, 659.25, 'sine', 0.55);
-  tone(1.00, 1.34, 783.99, 'sine', 0.58);
+  // Low square buzz pulses across ~5s — stand-in when vibration is missing.
+  for (let i = 0; i < 8; i += 1) {
+    const t0 = i * 0.62;
+    tone(t0, t0 + 0.2, i % 2 === 0 ? 140 : 175, 'square', 0.36);
+  }
+  // Rising chime cycles across ~5s
+  for (let cycle = 0; cycle < 4; cycle += 1) {
+    const base = 0.35 + cycle * 1.15;
+    tone(base, base + 0.28, 523.25, 'sine', 0.52);
+    tone(base + 0.14, base + 0.42, 659.25, 'sine', 0.52);
+    tone(base + 0.28, base + 0.58, 783.99, 'sine', 0.55);
+  }
   // Soft clip
   for (let i = 0; i < n; i += 1) {
     samples[i] = Math.max(-1, Math.min(1, samples[i]));
@@ -255,19 +271,35 @@ const playToneSeries = async (notes) => {
   }
 };
 
-const playChime = () => playToneSeries([
-  { freq: 523.25, at: 0, peak: 0.24, dur: 0.4 },
-  { freq: 659.25, at: 0.14, peak: 0.24, dur: 0.4 },
-  { freq: 783.99, at: 0.28, peak: 0.24, dur: 0.45 },
-]);
+const playChime = () => {
+  /** @type {{ freq: number, at: number, peak: number, dur: number }[]} */
+  const notes = [];
+  for (let cycle = 0; cycle < 4; cycle += 1) {
+    const base = cycle * 1.2;
+    notes.push(
+      { freq: 523.25, at: base, peak: 0.22, dur: 0.38 },
+      { freq: 659.25, at: base + 0.14, peak: 0.22, dur: 0.38 },
+      { freq: 783.99, at: base + 0.28, peak: 0.24, dur: 0.42 },
+    );
+  }
+  return playToneSeries(notes);
+};
 
-/** Audible stand-in when Vibration API is missing or a no-op. */
-const playBuzzFallback = () => playToneSeries([
-  { freq: 140, type: 'square', at: 0, peak: 0.16, dur: 0.18 },
-  { freq: 140, type: 'square', at: 0.26, peak: 0.16, dur: 0.18 },
-  { freq: 180, type: 'square', at: 0.52, peak: 0.18, dur: 0.28 },
-  { freq: 140, type: 'square', at: 0.9, peak: 0.14, dur: 0.18 },
-]);
+/** Audible stand-in when Vibration API is missing or a no-op (~5s). */
+const playBuzzFallback = () => {
+  /** @type {{ freq: number, type: OscillatorType, at: number, peak: number, dur: number }[]} */
+  const notes = [];
+  for (let i = 0; i < 8; i += 1) {
+    notes.push({
+      freq: i % 2 === 0 ? 140 : 175,
+      type: 'square',
+      at: i * 0.62,
+      peak: 0.16,
+      dur: 0.22,
+    });
+  }
+  return playToneSeries(notes);
+};
 
 /**
  * Fire Web Audio + HTMLAudio in parallel. HTMLAudio covers iOS silent-switch
@@ -309,7 +341,8 @@ const scheduleFinishHaptics = () => {
   for (const delay of VIBRATE_RETRY_MS) {
     const id = window.setTimeout(() => {
       if (document.visibilityState !== 'visible') return;
-      pulseVibrate(delay === 0 ? VIBRATE_PATTERN : [560, 120, 560, 120, 560]);
+      // Restart the full ~5s pattern; early retry covers flaky first calls only.
+      pulseVibrate(VIBRATE_PATTERN);
     }, delay);
     hapticTimerIds.push(id);
   }
@@ -387,7 +420,7 @@ export const alertFinish = (opts = {}) => {
   void playAllAudio();
   try { opts.notify?.(); } catch { /* ignore */ }
   // Drop the silent unlock loop after the cue finishes (avoids lingering iOS Now Playing).
-  window.setTimeout(() => stopSilentLoop(), 1800);
+  window.setTimeout(() => stopSilentLoop(), ALERT_DURATION_MS + 300);
 };
 
 /** Re-fire from a user gesture (tap dial) — critical on iOS / muted haptics. */
@@ -399,8 +432,8 @@ export const realertFromGesture = async () => {
   const unlockP = unlockAlertAudio();
   void playAllAudio();
   await unlockP;
-  // Extra haptic pulse after unlock on Android / HarmonyOS.
-  window.setTimeout(() => pulseVibrate([400, 100, 400]), 40);
+  // Re-arm full ~5s haptic after unlock on Android / HarmonyOS.
+  window.setTimeout(() => pulseVibrate(VIBRATE_PATTERN), 40);
 };
 
 /** Page became visible again after a backgrounded finish. */
