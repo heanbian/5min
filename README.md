@@ -9,12 +9,13 @@
 | [`5min-web`](./5min-web) | 网页端（HTML / CSS / JS），部署于 5min.chat |
 | [`5min-android-app`](./5min-android-app) | Android 原生（Kotlin · Compose），`applicationId`：`chat.5min.app` |
 | [`5min-harmony-app`](./5min-harmony-app) | HarmonyOS NEXT 原生（ArkTS），`bundleName`：`chat.5min.app` |
+| [`5min-ios-app`](./5min-ios-app) | iOS 原生（SwiftUI），`PRODUCT_BUNDLE_IDENTIFIER`：`chat.5min.app` |
 
-源码包名（Android / 文档中的 Kotlin 命名空间）：`chat.fivemin.app`（标识符段不能以数字开头）。
+源码包名（Android Kotlin 命名空间）：`chat.fivemin.app`（标识符段不能以数字开头）。
 
 ## 共享文案与场景
 
-在 Web 子项目中导出并同步到双端：
+在 Web 子项目中导出并同步到各原生端：
 
 ```bash
 cd 5min-web && node scripts/export-shared.mjs

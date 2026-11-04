@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Export scenes + locales for Android / Harmony apps.
+ * Export scenes + locales for Android / Harmony / iOS apps.
  */
 import { writeFileSync, mkdirSync, cpSync, existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -26,6 +26,7 @@ writeFileSync(join(exportDir, 'locales', 'index.json'), JSON.stringify({ codes: 
 const targets = [
   join(root, '..', '5min-android-app', 'app', 'src', 'main', 'assets', 'shared'),
   join(root, '..', '5min-harmony-app', 'entry', 'src', 'main', 'resources', 'rawfile', 'shared'),
+  join(root, '..', '5min-ios-app', 'FiveMin', 'Resources', 'shared'),
 ];
 for (const t of targets) {
   if (!existsSync(dirname(t))) {

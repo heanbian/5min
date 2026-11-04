@@ -155,4 +155,5 @@ Apache-2.0 **不授予**「5min」「五分钟」「如厕计时器」及官方�
 
 - Android：[`../5min-android-app`](../5min-android-app)（`applicationId`：`chat.5min.app`）
 - HarmonyOS：[`../5min-harmony-app`](../5min-harmony-app)（`bundleName`：`chat.5min.app`）
+- iOS：[`../5min-ios-app`](../5min-ios-app)（`chat.5min.app`）
 - 共享场景 / 文案导出：`node scripts/export-shared.mjs`

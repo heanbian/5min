@@ -18,3 +18,12 @@
 5min-harmony-app/.hvigor/
 5min-harmony-app/*.hap
 5min-harmony-app/oh-package-lock.json5
+
+# iOS
+5min-ios-app/build/
+5min-ios-app/DerivedData/
+5min-ios-app/*.xcuserdata/
+5min-ios-app/**/xcuserdata/
+5min-ios-app/*.xcworkspace/xcuserdata/
+5min-ios-app/.swiftpm/
+
