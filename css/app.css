@@ -227,12 +227,15 @@
   .menu-panel{
     position:absolute;
     top:calc(100% + 6px);
-    right:0;
+    inset-inline-end:0;
     z-index:20;
     display:flex;
     flex-direction:column;
     gap:2px;
     min-width:7.5rem;
+    max-height:min(70vh, 420px);
+    overflow:auto;
+    overscroll-behavior:contain;
     padding:4px;
     background:var(--surface);
     border:1px solid var(--line);
@@ -247,7 +250,7 @@
     display:flex;
     align-items:center;
     justify-content:flex-start;
-    text-align:left;
+    text-align:start;
     padding:0 10px;
     font-size:var(--fs-sm);
     font-weight:600;
@@ -274,6 +277,32 @@
   html[lang="bo"] select{
     font-family:"Noto Sans Tibetan","Kailasa","Microsoft Himalaya","Jomolhari","Noto Sans SC",system-ui,sans-serif;
     line-height:1.7;
+  }
+  /* 阿拉伯文：系统阿拉伯字体 + RTL 逻辑属性 */
+  html[lang="ar"] body,
+  html[lang="ar"] button,
+  html[lang="ar"] select{
+    font-family:"Noto Sans Arabic","Segoe UI","Tahoma","Noto Sans SC",system-ui,sans-serif;
+    line-height:1.65;
+  }
+  html[dir="rtl"] .topbar{
+    grid-template-columns:auto 1fr;
+  }
+  html[dir="rtl"] .brand{
+    order:2;
+    justify-self:end;
+    justify-content:flex-end;
+  }
+  html[dir="rtl"] .top-tools{
+    order:1;
+    justify-self:start;
+  }
+  html[dir="rtl"] .lang-trigger{
+    padding:0 6px 0 2px;
+  }
+  html[dir="rtl"] .scene-list button,
+  html[dir="rtl"] .menu-panel button{
+    text-align:right;
   }
 
   .stage{

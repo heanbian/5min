@@ -357,6 +357,7 @@ const syncBrandTitle = () => {
 const applyStaticI18n = () => {
   const pack = LOCALES[locale];
   document.documentElement.lang = pack.htmlLang;
+  document.documentElement.dir = pack.dir === 'rtl' ? 'rtl' : 'ltr';
   syncBrandTitle();
   if (langBtn) langBtn.setAttribute('aria-label', pack.langLabel);
   if (langPanel) langPanel.setAttribute('aria-label', pack.langLabel);
