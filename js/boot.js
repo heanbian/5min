@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2026 学记宝 / heanbian
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Font files under fonts/ (Noto Sans SC) are licensed separately under
- * the SIL Open Font License 1.1; see fonts/OFL.txt.
  */
-@font-face {
-  font-family: "Noto Sans SC";
-  src: url("fonts/NotoSansSC-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
 
-@font-face {
-  font-family: "Noto Sans SC";
-  src: url("fonts/NotoSansSC-Bold.woff2") format("woff2");
-  font-weight: 500 700;
-  font-style: normal;
-  font-display: swap;
+/* ES module 无法在 file:// 下跨文件 import；仅作协议提示 */
+if (location.protocol === 'file:') {
+  console.warn('[5min] ES modules require http(s). Run: npx --yes serve .');
 }

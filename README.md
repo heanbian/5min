@@ -18,11 +18,11 @@
 
 ## 技术栈
 
-纯 **HTML5 + 现代原生 JavaScript（ES modules）**：`index.html` + `i18n/locales.js`，无框架、无打包、无第三方运行时依赖。
+纯 **HTML5 + 现代原生 JavaScript（ES modules）**：HTML 只写结构与 SEO；样式在 `css/`，逻辑在 `js/`，无框架、无打包、无第三方运行时依赖。
 
 使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环。
 
-多语言（`i18n/locales.js`）：简体中文、繁体中文、English、བོད་ཡིག（藏文）、日本語。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
+多语言（`js/i18n/locales.js`）：简体中文、繁体中文、English、བོད་ཡིག（藏文）、日本語。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
 
 > **本地预览须用 HTTP 服务。** Chrome 等浏览器在 `file://` 下会拦截 ES module 的跨文件 `import`，请勿直接双击打开。
 
@@ -55,24 +55,30 @@
 
 ```
 5min/
-├── index.html              # 计时主页、SEO 与计时逻辑（ES module）
-├── about.html              # 关于 / FAQ（GEO 说明页）
-├── i18n/
-│   └── locales.js          # 多语言文案（ES module export）
-├── fonts.css               # @font-face（Noto Sans SC）
+├── index.html              # 计时主页（纯 HTML + SEO / JSON-LD）
+├── about.html              # 关于 / FAQ（纯 HTML + GEO）
+├── css/
+│   ├── fonts.css           # @font-face（Noto Sans SC）
+│   ├── app.css             # 计时页样式
+│   └── about.css           # 关于页样式
+├── js/
+│   ├── boot.js             # file:// 协议提示
+│   ├── app.js              # 计时逻辑（ES module）
+│   └── i18n/
+│       └── locales.js      # 多语言文案
 ├── fonts/                  # 自托管 woff2 + OFL.txt
-├── site.json               # 站点元数据、页面文案与 faqs
-├── site.webmanifest        # PWA 清单
-├── llms.txt                # 面向大模型的站点说明
-├── robots.txt
-├── sitemap.xml
-├── favicon.ico
 ├── img/
 │   ├── logo.svg            # 标识主源
 │   ├── logo.png
 │   └── apple-touch-icon.png
 ├── scripts/
 │   └── raster-logo.js      # SVG 栅格化为 PNG / ICO
+├── site.json               # 站点元数据、页面文案与 faqs
+├── site.webmanifest        # PWA 清单
+├── llms.txt                # 面向大模型的站点说明
+├── robots.txt
+├── sitemap.xml
+├── favicon.ico
 ├── run.sh                  # 本地预览（可指定端口）
 ├── LICENSE                 # Apache License 2.0 全文
 ├── NOTICE                  # 署名、品牌与第三方声明
