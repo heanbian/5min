@@ -1,7 +1,18 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+import java.io.File
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+// Release signing: copy keystore.properties.example → keystore.properties (gitignored)
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.inputStream().use { keystoreProps.load(it) }
 }
 
 android {
@@ -18,13 +29,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropsFile.exists()) {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (keystorePropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
@@ -41,6 +67,28 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+// 正式包文件名：5min-android-app-{versionName}.apk / .aab
+android.applicationVariants.configureEach {
+    val ver = versionName
+    outputs.configureEach {
+        (this as BaseVariantOutputImpl).outputFileName = "5min-android-app-$ver.apk"
+    }
+}
+
+afterEvaluate {
+    tasks.findByName("bundleRelease")?.doLast {
+        val ver = android.defaultConfig.versionName
+        val dir = layout.buildDirectory.dir("outputs/bundle/release").get().asFile
+        val wanted = File(dir, "5min-android-app-$ver.aab")
+        dir.listFiles()
+            ?.filter { it.isFile && it.extension == "aab" && it.absolutePath != wanted.absolutePath }
+            ?.forEach { src ->
+                if (wanted.exists()) wanted.delete()
+                src.renameTo(wanted)
+            }
     }
 }
 

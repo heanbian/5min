@@ -5,6 +5,7 @@
 *.key
 google-services.json
 keystore.properties
+/keystore/
 
 # Gradle
 /.gradle/
