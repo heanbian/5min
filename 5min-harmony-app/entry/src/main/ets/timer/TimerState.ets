@@ -29,11 +29,13 @@ export class TimerState {
 }
 
 export function formatMs(ms: number): string {
-  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  // Align with 5min-web / Android: ceil seconds, fixed MM:SS
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
+  const mm = m < 10 ? `0${m}` : `${m}`;
   const ss = s < 10 ? `0${s}` : `${s}`;
-  return `${m}:${ss}`;
+  return `${mm}:${ss}`;
 }
 
 export function phaseOf(state: TimerState): TimerPhase {

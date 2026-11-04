@@ -3,18 +3,25 @@
 *.p12
 *.pem
 *.key
+*.cer
+*.p7b
+*.csr
 material-icon.json
+signing.properties
+/signing/material/
 
 # Dependencies
 /node_modules/
 /oh_modules/
 oh-package-lock.json5
+**/oh_modules/
 
 # Build
 **/build/
 /.hvigor/
 /.cxx/
 .preview/
+/store/release/
 
 # IDE (DevEco / IDEA)
 /.idea/
@@ -33,3 +40,4 @@ oh-package-lock.json5
 .DS_Store
 *.log
 *.orig
+.tools-venv/

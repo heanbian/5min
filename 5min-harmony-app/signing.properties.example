@@ -1,0 +1,15 @@
+# Copy to signing.properties (gitignored) after downloading release materials
+# from AppGallery Connect → 用户与访问 / 证书指纹 / Profile.
+#
+# Then run:  python3 scripts/apply-signing.py
+# Or fill the same paths into DevEco: File → Project Structure → Signing Configs
+
+name=release
+type=HarmonyOS
+storeFile=signing/material/5min-release.p12
+storePassword=CHANGE_ME
+keyAlias=5min
+keyPassword=CHANGE_ME
+certpath=signing/material/5min-release.cer
+profile=signing/material/5min-release.p7b
+signAlg=SHA256withECDSA

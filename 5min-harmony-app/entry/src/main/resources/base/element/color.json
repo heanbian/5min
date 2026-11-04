@@ -5,10 +5,17 @@
     { "name": "brand_strong", "value": "#248556" },
     { "name": "brand_soft", "value": "#E5F5EC" },
     { "name": "bg", "value": "#EEF6F1" },
+    { "name": "bg2", "value": "#F7FAF8" },
+    { "name": "bg_bottom", "value": "#F4F8F5" },
+    { "name": "glow", "value": "#DFF0E6" },
+    { "name": "surface", "value": "#FFFFFF" },
     { "name": "ink", "value": "#1F2A24" },
     { "name": "muted", "value": "#5F6F66" },
+    { "name": "line", "value": "#D7E5DC" },
+    { "name": "ring", "value": "#CFE0D6" },
     { "name": "warn", "value": "#C9862D" },
+    { "name": "warn_soft", "value": "#FFF6E8" },
     { "name": "danger", "value": "#D2554A" },
-    { "name": "line", "value": "#D7E5DC" }
+    { "name": "danger_soft", "value": "#FFEFED" }
   ]
 }

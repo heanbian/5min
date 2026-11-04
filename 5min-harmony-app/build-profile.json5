@@ -1,22 +1,55 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/mahong/.ohos/config/release_5min-harmony-app_w6ytZQ4CU5znkdEu9LQSxfLXgBA7RJa0TZvceE6dNL4=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BE4D0A86AADA6ADD682314D5BB7C12A727C64C8E1EE1C2849925C4678609735A174E38CF36971C2",
+          "profile": "/Users/mahong/.ohos/config/release_5min-harmony-app_w6ytZQ4CU5znkdEu9LQSxfLXgBA7RJa0TZvceE6dNL4=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/mahong/.ohos/config/release_5min-harmony-app_w6ytZQ4CU5znkdEu9LQSxfLXgBA7RJa0TZvceE6dNL4=.p12",
+          "storePassword": "0000001BB4C12970E56E8FAC3D4324C6D426A020753F6C1936FD47F7FD4296809EA3872AA82091B2E98F06"
+        }
+      },
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/mahong/git/5min/5min-harmony-app/signing/material/5min_chat.cer",
+          "keyAlias": "5min_chat",
+          "keyPassword": "0000001EE533558945B80AF73CE4B4539218FD28CBF75BFB61CF5579E9403ECAB59F4D5FB09511E27962BC6237F5",
+          "profile": "/Users/mahong/git/5min/5min-harmony-app/signing/material/5min_chatRelease.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/mahong/git/5min/5min-harmony-app/signing/material/5min_chat.p12",
+          "storePassword": "0000001E01AC8EDB2CFA304602AEF18033D910970C1D31697BBAE122BADC838D71CBF1F33288D67EF093215B7D29"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",
-        "signingConfig": "default",
-        "compatibleSdkVersion": "5.0.0(12)",
+        "signingConfig": "release",
+        "compatibleSdkVersion": "26.0.0",
+        "targetSdkVersion": "26.0.0",
         "runtimeOS": "HarmonyOS",
         "buildOption": {
           "strictMode": {
-            "caseSensitiveCheck": true
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
           }
         }
       }
     ],
     "buildModeSet": [
-      { "name": "debug" },
-      { "name": "release" }
+      {
+        "name": "debug"
+      },
+      {
+        "name": "release"
+      }
     ]
   },
   "modules": [
@@ -26,7 +59,9 @@
       "targets": [
         {
           "name": "default",
-          "applyToProducts": ["default"]
+          "applyToProducts": [
+            "default"
+          ]
         }
       ]
     }

@@ -1,0 +1,5 @@
+# Keep default; enable obfuscation in build-profile when needed for release.
+-enable-property-obfuscation
+-enable-toplevel-obfuscation
+-enable-filename-obfuscation
+-enable-export-obfuscation
