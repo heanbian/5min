@@ -465,7 +465,7 @@ presets.addEventListener('click', (event) => {
   setPreset(min);
 });
 
-/* 结束后点表盘可再触发震动/提示音（用户手势；iOS 无 Vibration API 时靠声音） */
+/* 结束后轻触表盘可再次触发振动与提示音（用户手势；iOS 无 Vibration API 时依赖声音） */
 stageSection.addEventListener('pointerup', () => {
   if (!finished) return;
   needAlertOnVisible = false;
