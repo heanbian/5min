@@ -141,12 +141,9 @@
       <div class="time" id="timeText" aria-hidden="true"></div>
       <span class="visually-hidden" id="timeLabel">05:00</span>
     </div>
-    <div class="notice" id="notice" data-tone="safe">
-      <div class="notice-main">
-        <span class="notice-dot" aria-hidden="true"></span>
-        <p class="status" id="status">Press Start. You will be reminded to stand when the countdown ends.</p>
-      </div>
-      <div class="notice-meta" id="dailyStats" aria-live="polite"></div>
+    <div class="cue" id="notice" data-tone="safe">
+      <p class="status" id="status">点击开始，到期将提醒起身</p>
+      <div class="cue-meta" id="dailyStats" aria-live="polite"></div>
     </div>
   </section>
 
@@ -155,19 +152,21 @@
       <button class="primary" id="startBtn" type="button">Start</button>
       <button class="ghost" id="resetBtn" type="button" disabled>Reset</button>
     </div>
-    <div class="presets" id="presets" role="group" aria-label="Duration presets">
-      <button type="button" data-min="3">3 min</button>
-      <button type="button" data-min="5" class="active">5 min</button>
-      <button type="button" data-min="10">10 min</button>
-    </div>
-    <div class="scene-select" id="sceneSelect">
-      <button type="button" class="scene-trigger" id="sceneTrigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="sceneList">
-        <span class="scene-trigger-label" id="sceneTriggerLabel">选择场景</span>
-        <svg class="scene-caret" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
-          <path fill="currentColor" d="M1.1 1.2 6 6.1l4.9-4.9 1.1 1.1L6 8.3.0 2.3z"/>
-        </svg>
-      </button>
-      <ul class="scene-list" id="sceneList" role="listbox" hidden></ul>
+    <div class="setup">
+      <div class="presets" id="presets" role="group" aria-label="Duration presets">
+        <button type="button" data-min="3">3 min</button>
+        <button type="button" data-min="5" class="active">5 min</button>
+        <button type="button" data-min="10">10 min</button>
+      </div>
+      <div class="scene-select" id="sceneSelect">
+        <button type="button" class="scene-trigger" id="sceneTrigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="sceneList">
+          <span class="scene-trigger-label" id="sceneTriggerLabel">选择场景</span>
+          <svg class="scene-caret" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M1.1 1.2 6 6.1l4.9-4.9 1.1 1.1L6 8.3.0 2.3z"/>
+          </svg>
+        </button>
+        <ul class="scene-list" id="sceneList" role="listbox" hidden></ul>
+      </div>
     </div>
   </section>
 

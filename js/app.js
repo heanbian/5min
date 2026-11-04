@@ -224,39 +224,32 @@ const syncStartLabel = () => {
 const renderDailyStats = () => {
   if (!dailyStatsEl) return;
   const { count, totalMs: dayMs } = getTodayStats();
-  const label = Object.assign(document.createElement('span'), {
-    className: 'notice-meta-label',
-    textContent: tr('dailyStatsLabel'),
-  });
-  const vals = document.createElement('span');
-  vals.className = 'notice-meta-vals';
-
   if (count <= 0 || dayMs <= 0) {
     dailyStatsEl.classList.add('is-empty');
-    vals.textContent = tr('dailyStatsEmpty');
-    dailyStatsEl.replaceChildren(label, vals);
+    dailyStatsEl.textContent = `${tr('dailyStatsLabel')} · ${tr('dailyStatsEmpty')}`;
     return;
   }
 
   dailyStatsEl.classList.remove('is-empty');
-  const countEl = document.createElement('span');
-  countEl.append(
+  dailyStatsEl.replaceChildren();
+  const label = document.createElement('span');
+  label.className = 'cue-meta-label';
+  label.textContent = tr('dailyStatsLabel');
+  const vals = document.createElement('span');
+  vals.className = 'cue-meta-vals';
+  vals.append(
     Object.assign(document.createElement('strong'), { textContent: String(count) }),
     document.createTextNode(` ${tr('dailyStatsCountUnit')}`),
-  );
-  const sep = Object.assign(document.createElement('span'), {
-    className: 'notice-meta-sep',
-    textContent: '·',
-  });
-  const minsEl = document.createElement('span');
-  minsEl.append(
+    Object.assign(document.createElement('span'), {
+      className: 'cue-meta-sep',
+      textContent: ' · ',
+    }),
     Object.assign(document.createElement('strong'), {
       textContent: String(statsMinutes(dayMs)),
     }),
     document.createTextNode(` ${tr('dailyStatsMinutesUnit')}`),
   );
-  vals.replaceChildren(countEl, sep, minsEl);
-  dailyStatsEl.replaceChildren(label, vals);
+  dailyStatsEl.append(label, vals);
 };
 
 const syncAmbientI18n = () => {
