@@ -36,23 +36,66 @@ import {
   stopAudioKeepAlive,
   unlockAlertAudio,
 } from './alert.js';
+import {
+  getTodayStats,
+  recordCompletedSession,
+  statsMinutes,
+} from './stats.js';
+import {
+  getAmbientMode,
+  setAmbientMode,
+  stopAmbient,
+} from './ambient.js';
 
 const CIRC = 2 * Math.PI * 54;
 const PRESET_MINS = Object.freeze([3, 5, 10]);
+const SCENES = Object.freeze([
+  { id: 'noodles', min: 3, labelKey: 'sceneNoodles', titleKey: 'sceneNoodlesTitle' },
+  { id: 'brush', min: 3, labelKey: 'sceneBrush', titleKey: 'sceneBrushTitle' },
+  { id: 'tea', min: 5, labelKey: 'sceneTea', titleKey: 'sceneTeaTitle' },
+  { id: 'coffee', min: 5, labelKey: 'sceneCoffee', titleKey: 'sceneCoffeeTitle' },
+  { id: 'stretch', min: 5, labelKey: 'sceneStretch', titleKey: 'sceneStretchTitle' },
+  { id: 'egg', min: 8, labelKey: 'sceneEgg', titleKey: 'sceneEggTitle' },
+  { id: 'walk', min: 10, labelKey: 'sceneWalk', titleKey: 'sceneWalkTitle' },
+  { id: 'meditation', min: 10, labelKey: 'sceneMeditation', titleKey: 'sceneMeditationTitle' },
+  { id: 'eye', min: 10, labelKey: 'sceneEye', titleKey: 'sceneEyeTitle' },
+  { id: 'mask', min: 15, labelKey: 'sceneMask', titleKey: 'sceneMaskTitle' },
+  { id: 'nap', min: 15, labelKey: 'sceneNap', titleKey: 'sceneNapTitle' },
+  { id: 'meeting', min: 15, labelKey: 'sceneMeeting', titleKey: 'sceneMeetingTitle' },
+  { id: 'focus', min: 25, labelKey: 'sceneFocus', titleKey: 'sceneFocusTitle' },
+  { id: 'laundry', min: 30, labelKey: 'sceneLaundry', titleKey: 'sceneLaundryTitle' },
+]);
+const AMBIENT_LABEL_KEYS = Object.freeze({
+  off: 'ambientOff',
+  rain: 'ambientRain',
+  waves: 'ambientWaves',
+  clock: 'ambientClock',
+});
 
 const progress = document.querySelector('#progress');
 const timeText = document.querySelector('#timeText');
 const timeLabel = document.querySelector('#timeLabel');
+const noticeEl = document.querySelector('#notice');
 const statusEl = document.querySelector('#status');
+const dailyStatsEl = document.querySelector('#dailyStats');
 const startBtn = document.querySelector('#startBtn');
 const resetBtn = document.querySelector('#resetBtn');
 const presets = document.querySelector('#presets');
+const sceneSelect = document.querySelector('#sceneSelect');
+const sceneTrigger = document.querySelector('#sceneTrigger');
+const sceneTriggerLabel = document.querySelector('#sceneTriggerLabel');
+const sceneList = document.querySelector('#sceneList');
 const brandTitle = document.querySelector('#brandTitle');
 const footnote = document.querySelector('#footnote');
-const langSelect = document.querySelector('#langSelect');
-const langLabel = document.querySelector('#langLabel');
+const langWrap = document.querySelector('#langWrap');
+const langBtn = document.querySelector('#langBtn');
+const langBtnLabel = document.querySelector('#langBtnLabel');
+const langPanel = document.querySelector('#langPanel');
 const stageSection = document.querySelector('#stageSection');
 const actionsSection = document.querySelector('#actionsSection');
+const ambientBtn = document.querySelector('#ambientBtn');
+const ambientPanel = document.querySelector('#ambientPanel');
+const ambientWrap = document.querySelector('#ambientWrap');
 const metaDescription = document.querySelector('meta[name="description"]');
 
 const qs = new URLSearchParams(location.search);
@@ -68,6 +111,8 @@ let running = false;
 let finished = false;
 let tickId = 0;
 let titleBlinkId = 0;
+/** @type {string | null} */
+let activeScene = null;
 /** @type {WakeLockSentinel | null} */
 let wakeLock = null;
 let notifyAsked = false;
@@ -176,12 +221,109 @@ const syncStartLabel = () => {
   else startBtn.textContent = tr('start');
 };
 
+const renderDailyStats = () => {
+  if (!dailyStatsEl) return;
+  const { count, totalMs: dayMs } = getTodayStats();
+  const label = Object.assign(document.createElement('span'), {
+    className: 'notice-meta-label',
+    textContent: tr('dailyStatsLabel'),
+  });
+  const vals = document.createElement('span');
+  vals.className = 'notice-meta-vals';
+
+  if (count <= 0 || dayMs <= 0) {
+    dailyStatsEl.classList.add('is-empty');
+    vals.textContent = tr('dailyStatsEmpty');
+    dailyStatsEl.replaceChildren(label, vals);
+    return;
+  }
+
+  dailyStatsEl.classList.remove('is-empty');
+  const countEl = document.createElement('span');
+  countEl.append(
+    Object.assign(document.createElement('strong'), { textContent: String(count) }),
+    document.createTextNode(` ${tr('dailyStatsCountUnit')}`),
+  );
+  const sep = Object.assign(document.createElement('span'), {
+    className: 'notice-meta-sep',
+    textContent: '·',
+  });
+  const minsEl = document.createElement('span');
+  minsEl.append(
+    Object.assign(document.createElement('strong'), {
+      textContent: String(statsMinutes(dayMs)),
+    }),
+    document.createTextNode(` ${tr('dailyStatsMinutesUnit')}`),
+  );
+  vals.replaceChildren(countEl, sep, minsEl);
+  dailyStatsEl.replaceChildren(label, vals);
+};
+
+const syncAmbientI18n = () => {
+  if (!ambientBtn || !ambientPanel) return;
+  ambientBtn.setAttribute('aria-label', tr('ambientLabel'));
+  ambientPanel.setAttribute('aria-label', tr('ambientLabel'));
+  for (const btn of ambientPanel.querySelectorAll('button[data-ambient]')) {
+    const key = AMBIENT_LABEL_KEYS[btn.dataset.ambient];
+    if (key) btn.textContent = tr(key);
+  }
+};
+
+const setSceneListOpen = (open) => {
+  if (!sceneTrigger || !sceneList) return;
+  sceneList.hidden = !open;
+  sceneTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+
+const syncSceneSelect = () => {
+  if (!sceneSelect || !sceneTrigger || !sceneList || !sceneTriggerLabel) return;
+  sceneSelect.setAttribute('aria-label', tr('scenesLabel'));
+  sceneTrigger.setAttribute('aria-label', tr('scenesLabel'));
+  sceneList.setAttribute('aria-label', tr('scenesLabel'));
+
+  const selected = activeScene ? SCENES.find((s) => s.id === activeScene) : null;
+  if (selected) {
+    sceneTriggerLabel.textContent = tr(selected.labelKey);
+    sceneTrigger.classList.remove('is-placeholder');
+  } else {
+    sceneTriggerLabel.textContent = tr('scenePlaceholder');
+    sceneTrigger.classList.add('is-placeholder');
+  }
+
+  sceneList.replaceChildren();
+  for (const scene of SCENES) {
+    const li = document.createElement('li');
+    li.setAttribute('role', 'presentation');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.scene = scene.id;
+    btn.setAttribute('role', 'option');
+    btn.setAttribute('aria-selected', scene.id === activeScene ? 'true' : 'false');
+    btn.classList.toggle('active', scene.id === activeScene);
+    btn.textContent = tr(scene.labelKey);
+    li.append(btn);
+    sceneList.append(li);
+  }
+};
+
+const syncBrandTitle = () => {
+  if (activeScene) {
+    const scene = SCENES.find((s) => s.id === activeScene);
+    if (scene) {
+      brandTitle.textContent = tr(scene.titleKey);
+      return;
+    }
+  }
+  brandTitle.textContent = LOCALES[locale].brandTitle;
+};
+
 const applyStaticI18n = () => {
   const pack = LOCALES[locale];
   document.documentElement.lang = pack.htmlLang;
-  brandTitle.textContent = pack.brandTitle;
-  langLabel.textContent = pack.langLabel;
-  langSelect.setAttribute('aria-label', pack.langLabel);
+  syncBrandTitle();
+  if (langBtn) langBtn.setAttribute('aria-label', pack.langLabel);
+  if (langPanel) langPanel.setAttribute('aria-label', pack.langLabel);
+  syncLangSelect();
   stageSection.setAttribute('aria-label', pack.stageLabel);
   actionsSection.setAttribute('aria-label', pack.actionsLabel);
   presets.setAttribute('aria-label', pack.presetsLabel);
@@ -200,6 +342,9 @@ const applyStaticI18n = () => {
     btn.textContent = tr('minutes', { n });
   }
 
+  syncSceneSelect();
+  syncAmbientI18n();
+  renderDailyStats();
   syncStartLabel();
   if (!titleBlinkId) {
     document.title = (running || remainMs < totalMs)
@@ -208,22 +353,32 @@ const applyStaticI18n = () => {
   }
 };
 
-const fillLangSelect = () => {
-  langSelect.replaceChildren();
+const setLangPanelOpen = (open) => {
+  if (!langBtn || !langPanel) return;
+  langPanel.hidden = !open;
+  langBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+
+const syncLangSelect = () => {
+  if (!langPanel || !langBtnLabel) return;
+  langBtnLabel.textContent = LOCALES[locale]?.nativeName ?? locale;
+  langPanel.replaceChildren();
   for (const code of LOCALE_CODES) {
-    const opt = document.createElement('option');
-    opt.value = code;
-    opt.textContent = LOCALES[code].nativeName;
-    langSelect.append(opt);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.lang = code;
+    btn.setAttribute('role', 'option');
+    btn.setAttribute('aria-selected', code === locale ? 'true' : 'false');
+    btn.classList.toggle('active', code === locale);
+    btn.textContent = LOCALES[code].nativeName;
+    langPanel.append(btn);
   }
-  langSelect.value = locale;
 };
 
 const setLocale = (next) => {
   const resolved = resolveLocale(next) ?? locale;
   locale = resolved;
   try { localStorage.setItem(STORAGE_KEY, locale); } catch { /* ignore */ }
-  langSelect.value = locale;
   applyStaticI18n();
   render();
 };
@@ -299,6 +454,17 @@ const setPresetsEnabled = (enabled) => {
   for (const btn of presets.querySelectorAll('button[data-min]')) {
     btn.disabled = !enabled;
   }
+  if (sceneTrigger) sceneTrigger.disabled = !enabled;
+  if (!enabled) setSceneListOpen(false);
+};
+
+const syncPresetActive = () => {
+  const min = totalMs / 60_000;
+  for (const btn of presets.querySelectorAll('button[data-min]')) {
+    btn.classList.toggle('active', Number(btn.dataset.min) === min);
+  }
+  syncSceneSelect();
+  syncBrandTitle();
 };
 
 const setTone = (tone) => {
@@ -307,8 +473,7 @@ const setTone = (tone) => {
   progress.classList.toggle('is-safe', tone === 'safe');
   progress.classList.toggle('is-warn', tone === 'warn');
   progress.classList.toggle('is-danger', tone === 'danger');
-  statusEl.classList.toggle('is-warn', tone === 'warn');
-  statusEl.classList.toggle('is-danger', tone === 'danger');
+  if (noticeEl) noticeEl.dataset.tone = tone;
 };
 
 const render = () => {
@@ -369,6 +534,8 @@ const finish = () => {
   running = false;
   finished = true;
   clearTick();
+  recordCompletedSession(totalMs);
+  renderDailyStats();
   // Keep media channel warm through the alert; clear keepalive after fire.
   render();
   startBtn.disabled = false;
@@ -434,20 +601,47 @@ const reset = () => {
   render();
 };
 
-const setPreset = (min) => {
+const setPreset = (min, sceneId = null) => {
   if (!Number.isFinite(min) || min <= 0 || running) return;
   totalMs = min * 60 * 1000;
-  for (const btn of presets.querySelectorAll('button[data-min]')) {
-    btn.classList.toggle('active', Number(btn.dataset.min) === min);
-  }
+  activeScene = sceneId;
+  syncPresetActive();
   reset();
 };
 
-fillLangSelect();
-applyStaticI18n();
+const setAmbientPanelOpen = (open) => {
+  if (!ambientBtn || !ambientPanel) return;
+  ambientPanel.hidden = !open;
+  ambientBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
 
-langSelect.addEventListener('change', () => {
-  setLocale(langSelect.value);
+const syncAmbientUi = () => {
+  if (!ambientBtn || !ambientPanel) return;
+  const current = getAmbientMode();
+  ambientBtn.classList.toggle('is-on', current !== 'off');
+  for (const btn of ambientPanel.querySelectorAll('button[data-ambient]')) {
+    btn.classList.toggle('active', btn.dataset.ambient === current);
+  }
+};
+
+applyStaticI18n();
+syncPresetActive();
+syncAmbientUi();
+renderDailyStats();
+
+langBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  const open = langPanel?.hidden !== false;
+  setAmbientPanelOpen(false);
+  setSceneListOpen(false);
+  setLangPanelOpen(open);
+});
+
+langPanel?.addEventListener('click', (event) => {
+  const btn = event.target.closest('button[data-lang]');
+  if (!(btn instanceof HTMLButtonElement)) return;
+  setLocale(btn.dataset.lang);
+  setLangPanelOpen(false);
 });
 
 /* pointerdown：尽早占用用户手势，提升 iOS / 部分 WebView 音频解锁成功率 */
@@ -462,7 +656,60 @@ presets.addEventListener('click', (event) => {
   if (!(btn instanceof HTMLButtonElement) || btn.disabled) return;
   const min = Number(btn.dataset.min);
   if (!PRESET_MINS.includes(min)) return;
-  setPreset(min);
+  setSceneListOpen(false);
+  setPreset(min, null);
+});
+
+sceneTrigger?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  if (sceneTrigger.disabled) return;
+  const open = sceneList?.hidden !== false;
+  setAmbientPanelOpen(false);
+  setLangPanelOpen(false);
+  setSceneListOpen(open);
+});
+
+sceneList?.addEventListener('click', (event) => {
+  const btn = event.target.closest('button[data-scene]');
+  if (!(btn instanceof HTMLButtonElement) || btn.disabled) return;
+  const scene = SCENES.find((s) => s.id === btn.dataset.scene);
+  if (!scene) return;
+  setPreset(scene.min, scene.id);
+  setSceneListOpen(false);
+});
+
+ambientBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  const open = ambientPanel?.hidden !== false;
+  setSceneListOpen(false);
+  setLangPanelOpen(false);
+  setAmbientPanelOpen(open);
+});
+
+ambientPanel?.addEventListener('click', (event) => {
+  const btn = event.target.closest('button[data-ambient]');
+  if (!(btn instanceof HTMLButtonElement)) return;
+  const next = btn.dataset.ambient;
+  void (async () => {
+    if (next === 'off') stopAmbient();
+    else await setAmbientMode(/** @type {'rain'|'waves'|'clock'} */ (next));
+    syncAmbientUi();
+    setAmbientPanelOpen(false);
+  })();
+});
+
+document.addEventListener('pointerdown', (event) => {
+  const target = event.target;
+  if (!(target instanceof Node)) return;
+  if (ambientWrap && ambientPanel && !ambientPanel.hidden && !ambientWrap.contains(target)) {
+    setAmbientPanelOpen(false);
+  }
+  if (langWrap && langPanel && !langPanel.hidden && !langWrap.contains(target)) {
+    setLangPanelOpen(false);
+  }
+  if (sceneSelect && sceneList && !sceneList.hidden && !sceneSelect.contains(target)) {
+    setSceneListOpen(false);
+  }
 });
 
 /* 结束后轻触表盘可再次触发振动与提示音（用户手势；iOS 无 Vibration API 时依赖声音） */
@@ -473,6 +720,12 @@ stageSection.addEventListener('pointerup', () => {
 });
 
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    setSceneListOpen(false);
+    setAmbientPanelOpen(false);
+    setLangPanelOpen(false);
+    return;
+  }
   if (event.code !== 'Space' && event.key !== ' ') return;
   const tag = event.target instanceof Element ? event.target.tagName : '';
   if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(tag)) return;

@@ -22,17 +22,17 @@
 <meta name="theme-color" content="#eef6f1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="5min">
+<meta name="apple-mobile-web-app-title" content="如厕计时器">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
 <title>如厕计时器 · 五分钟</title>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/app.css">
 <meta name="description" content="如厕计时器 · 五分钟（5min.chat）：面向日常健康习惯的端侧倒计时提醒工具。提供 3 / 5 / 10 分钟预设，支持开始、暂停与重置；到期通过振动、提示音与系统通知提醒起身活动，以降低久坐如厕带来的不适风险。无需注册，页面无广告。计时与提醒均在浏览器本地完成，不向服务端上传用户数据。">
-<meta name="keywords" content="如厕计时器,五分钟,5min,5min.chat,倒计时,如厕时间,健康习惯,久坐提醒,端侧计时,无广告,学记宝">
+<meta name="keywords" content="如厕计时器,五分钟,5min,5min.chat,倒计时,如厕时间,泡面计时,敷面膜计时,专注工作计时,白噪音,健康习惯,久坐提醒,端侧计时,无广告,学记宝">
 <meta name="author" content="学记宝">
 <meta name="robots" content="index,follow">
-<meta name="application-name" content="5min">
+<meta name="application-name" content="如厕计时器 · 五分钟">
 <link rel="canonical" href="https://5min.chat/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="zh_CN">
@@ -104,12 +104,32 @@
   <header class="topbar">
     <div class="brand">
       <img src="img/logo.svg" width="108" height="32" alt="5min">
-      <h1 id="brandTitle">Toilet Timer</h1>
+      <h1 id="brandTitle">如厕计时器</h1>
     </div>
-    <label class="lang">
-      <span class="visually-hidden" id="langLabel">Language</span>
-      <select id="langSelect" aria-labelledby="langLabel"></select>
-    </label>
+    <div class="top-tools">
+      <div class="ambient" id="ambientWrap">
+        <button type="button" class="icon-btn" id="ambientBtn" aria-expanded="false" aria-controls="ambientPanel" aria-label="Ambient sound">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M4 9v6h3.2L12 19.5V4.5L7.2 9H4zm11.5 3a3.5 3.5 0 0 0-1.8-3.1v6.2A3.5 3.5 0 0 0 15.5 12zm-1.8-7.4v1.7a6 6 0 0 1 0 11.4v1.7a7.7 7.7 0 0 0 0-14.8z"/>
+          </svg>
+        </button>
+        <div class="menu-panel" id="ambientPanel" hidden role="group" aria-label="Ambient sound">
+          <button type="button" data-ambient="off" class="active">Off</button>
+          <button type="button" data-ambient="rain">Rain</button>
+          <button type="button" data-ambient="waves">Waves</button>
+          <button type="button" data-ambient="clock">Clock</button>
+        </div>
+      </div>
+      <div class="lang" id="langWrap">
+        <button type="button" class="lang-trigger" id="langBtn" aria-expanded="false" aria-haspopup="listbox" aria-controls="langPanel" aria-label="Language">
+          <span id="langBtnLabel">简体中文</span>
+          <svg class="lang-caret" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M1.1 1.2 6 6.1l4.9-4.9 1.1 1.1L6 8.3.0 2.3z"/>
+          </svg>
+        </button>
+        <div class="menu-panel" id="langPanel" hidden role="listbox" aria-label="Language"></div>
+      </div>
+    </div>
   </header>
 
   <section class="stage" id="stageSection" aria-label="Timer">
@@ -121,7 +141,13 @@
       <div class="time" id="timeText" aria-hidden="true"></div>
       <span class="visually-hidden" id="timeLabel">05:00</span>
     </div>
-    <p class="status" id="status">Press Start. You will be reminded to stand when the countdown ends.</p>
+    <div class="notice" id="notice" data-tone="safe">
+      <div class="notice-main">
+        <span class="notice-dot" aria-hidden="true"></span>
+        <p class="status" id="status">Press Start. You will be reminded to stand when the countdown ends.</p>
+      </div>
+      <div class="notice-meta" id="dailyStats" aria-live="polite"></div>
+    </div>
   </section>
 
   <section class="actions" id="actionsSection" aria-label="Controls">
@@ -133,6 +159,15 @@
       <button type="button" data-min="3">3 min</button>
       <button type="button" data-min="5" class="active">5 min</button>
       <button type="button" data-min="10">10 min</button>
+    </div>
+    <div class="scene-select" id="sceneSelect">
+      <button type="button" class="scene-trigger" id="sceneTrigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="sceneList">
+        <span class="scene-trigger-label" id="sceneTriggerLabel">选择场景</span>
+        <svg class="scene-caret" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M1.1 1.2 6 6.1l4.9-4.9 1.1 1.1L6 8.3.0 2.3z"/>
+        </svg>
+      </button>
+      <ul class="scene-list" id="sceneList" role="listbox" hidden></ul>
     </div>
   </section>
 
