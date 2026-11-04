@@ -118,8 +118,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         finishedHandled = false
         endAt = System.currentTimeMillis() + s.remainMs
         _state.update { it.copy(running = true, finished = false, phase = phaseFor(it.remainMs, true, false)) }
-        TimerScheduler.scheduleExact(getApplication(), endAt, s.totalMs)
-        TimerForegroundService.start(getApplication(), endAt, format(s.remainMs))
+        // Alarm + FGS must not crash the UI thread if OS denies permissions
+        runCatching { TimerScheduler.scheduleExact(getApplication(), endAt, s.totalMs) }
+        runCatching { TimerForegroundService.start(getApplication(), endAt, format(s.remainMs)) }
         startTicker()
     }
 
@@ -161,7 +162,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                         phase = phaseFor(remain, true, false),
                     )
                 }
-                TimerForegroundService.start(getApplication(), endAt, format(remain))
+                TimerForegroundService.update(getApplication(), format(remain))
                 delay(250)
             }
         }
@@ -210,10 +211,11 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun format(ms: Long): String {
-        val totalSec = (ms / 1000L).coerceAtLeast(0L)
+        // Match 5min-web: ceil seconds, fixed MM:SS for digital watch slots
+        val totalSec = ((ms + 999L) / 1000L).coerceAtLeast(0L)
         val m = totalSec / 60L
         val s = totalSec % 60L
-        return String.format(Locale.US, "%d:%02d", m, s)
+        return String.format(Locale.US, "%02d:%02d", m, s)
     }
 
     fun statsMinutes(): Int {

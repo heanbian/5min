@@ -1,8 +1,37 @@
+# Local SDK / machine config
+/local.properties
+*.keystore
+*.jks
+*.key
+google-services.json
+keystore.properties
+
+# Gradle
 /.gradle/
 /build/
-/local.properties
+**/build/
+.kotlin/
+
+# Native / NDK
+.cxx/
+.externalNativeBuild/
+
+# IDE
 /.idea/
 *.iml
 /captures/
-/app/build/
+.navigation/
+
+# Outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Misc
 .DS_Store
+*.log
+*.hprof
+*.orig
+.tools-venv/

@@ -1,0 +1,35 @@
+# Xcode user / machine state
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+
+# Build / Derived
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+Packages/
+Package.resolved
+.build/
+
+# CocoaPods / Carthage (if added later)
+Pods/
+Carthage/Build/
+
+# IDE / playground
+*.playground
+timeline.xctimeline
+playground.xcworkspace
+
+# Misc
+.DS_Store
+*.log
+*.orig
+*.swp
+*~

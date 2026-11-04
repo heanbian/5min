@@ -1,29 +1,22 @@
 .DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*~
+
+# IDE / editor (all platforms)
 .idea/
 *.iml
-*.log
+.vscode/
+*.code-workspace
+.fleet/
+.project
+.classpath
+.settings/
+.springBeans
+.sts4-cache
 
-# Android
-5min-android-app/.gradle/
-5min-android-app/build/
-5min-android-app/local.properties
-5min-android-app/app/build/
-5min-android-app/captures/
-
-# HarmonyOS
-5min-harmony-app/node_modules/
-5min-harmony-app/oh_modules/
-5min-harmony-app/local.properties
-5min-harmony-app/**/build/
-5min-harmony-app/.hvigor/
-5min-harmony-app/*.hap
-5min-harmony-app/oh-package-lock.json5
-
-# iOS
-5min-ios-app/build/
-5min-ios-app/DerivedData/
-5min-ios-app/*.xcuserdata/
-5min-ios-app/**/xcuserdata/
-5min-ios-app/*.xcworkspace/xcuserdata/
-5min-ios-app/.swiftpm/
-
+# OS / misc
+.workbuddy/
+*.cache

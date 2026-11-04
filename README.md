@@ -7,11 +7,11 @@
 | 目录 | 说明 |
 |------|------|
 | [`5min-web`](./5min-web) | 网页端（HTML / CSS / JS），部署于 5min.chat |
-| [`5min-android-app`](./5min-android-app) | Android 原生（Kotlin · Compose），`applicationId`：`chat.5min.app` |
+| [`5min-android-app`](./5min-android-app) | Android 原生（Kotlin · Compose），`applicationId`：`chat.fivemin.app` |
 | [`5min-harmony-app`](./5min-harmony-app) | HarmonyOS NEXT 原生（ArkTS），`bundleName`：`chat.5min.app` |
 | [`5min-ios-app`](./5min-ios-app) | iOS 原生（SwiftUI），`PRODUCT_BUNDLE_IDENTIFIER`：`chat.5min.app` |
 
-源码包名（Android Kotlin 命名空间）：`chat.fivemin.app`（标识符段不能以数字开头）。
+说明：Android 包名每一段不能以数字开头，因此 Android 使用 `chat.fivemin.app`；iOS / 鸿蒙仍可用 `chat.5min.app`。
 
 ## 共享文案与场景
 

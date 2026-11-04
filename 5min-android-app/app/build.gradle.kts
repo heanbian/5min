@@ -9,7 +9,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "chat.5min.app"
+        // Android package segments cannot start with a digit; use fivemin (not 5min).
+        applicationId = "chat.fivemin.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

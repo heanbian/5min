@@ -1,9 +1,35 @@
+# Local SDK / machine config
+/local.properties
+*.p12
+*.pem
+*.key
+material-icon.json
+
+# Dependencies
 /node_modules/
 /oh_modules/
-/local.properties
-/.idea/
+oh-package-lock.json5
+
+# Build
 **/build/
 /.hvigor/
-.DS_Store
+/.cxx/
+.preview/
+
+# IDE (DevEco / IDEA)
+/.idea/
+*.iml
+.clangd
+.clang-format
+.clang-tidy
+
+# Outputs
 *.hap
-oh-package-lock.json5
+*.app
+*.hsp
+*.har
+
+# Misc
+.DS_Store
+*.log
+*.orig

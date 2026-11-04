@@ -4,7 +4,31 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!--
+      Official 5min launcher mark.
+      Safe zone ~66dp centered in 108dp adaptive canvas.
+      Dial + bold「5」aligned with web brand (#2F9A68 / #1F2A24).
+    -->
+    <!-- Outer dial track -->
     <path
-        android:fillColor="#2F9A68"
-        android:pathData="M54,30c-13.2,0 -24,10.8 -24,24s10.8,24 24,24 24,-10.8 24,-24 -10.8,-24 -24,-24zM54,42c2.2,0 4,1.8 4,4v8h8c2.2,0 4,1.8 4,4s-1.8,4 -4,4h-8v8c0,2.2 -1.8,4 -4,4s-4,-1.8 -4,-4v-8h-8c-2.2,0 -4,-1.8 -4,-4s1.8,-4 4,-4h8v-8c0,-2.2 1.8,-4 4,-4z" />
+        android:fillColor="#00000000"
+        android:strokeColor="#CFE0D6"
+        android:strokeWidth="5.5"
+        android:pathData="M54,28a26,26 0 1,1 0,52a26,26 0 1,1 0,-52" />
+    <!-- Progress arc (approx 5/5 full brand ring) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#2F9A68"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,28a26,26 0 1,1 -0.01,0" />
+    <!-- Inner soft disc -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.92"
+        android:pathData="M54,36c-9.9,0 -18,8.1 -18,18s8.1,18 18,18 18,-8.1 18,-18 -8.1,-18 -18,-18z" />
+    <!-- Digit 5 (ink), geometric to match wordmark weight -->
+    <path
+        android:fillColor="#1F2A24"
+        android:pathData="M45.2,42.2h17.2c0.7,0 1.2,0.5 1.2,1.2v2.4c0,0.7 -0.5,1.2 -1.2,1.2H50.4v3.6h9.2c4.6,0 7.6,2.5 7.6,6.6 0,4.4 -3.4,7.3 -8.6,7.3H45.2v-3.1h11.2c2.7,0 4.4,-1.4 4.4,-3.7 0,-2.2 -1.6,-3.5 -4.4,-3.5H45.2v-12z" />
 </vector>

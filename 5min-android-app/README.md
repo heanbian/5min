@@ -2,8 +2,8 @@
 
 如厕计时器 · 五分钟 — Android 原生客户端。
 
-- **applicationId**：`chat.5min.app`
-- **源码包名**：`chat.fivemin.app`（Java/Kotlin 标识符不能以数字开头）
+- **applicationId / 源码包名**：`chat.fivemin.app`  
+  （Android 包名每一段不能以数字开头，故不能用 `chat.5min.app`；与 iOS/鸿蒙品牌 ID 对应关系见根 README）
 - **技术**：Kotlin · Jetpack Compose · Foreground Service · Exact Alarm
 
 ## 功能
