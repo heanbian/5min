@@ -62,6 +62,8 @@
 5min/
 ├── index.html              # 计时主页（纯 HTML + SEO / JSON-LD）
 ├── about.html              # 关于 / FAQ（纯 HTML + GEO）
+├── privacy.html            # 隐私政策（应用商店可引用）
+├── terms.html              # 用户协议
 ├── css/
 │   ├── fonts.css           # @font-face（Noto Sans SC）
 │   ├── app.css             # 计时页样式
