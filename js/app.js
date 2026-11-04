@@ -26,12 +26,19 @@ import {
   resolveLocale,
   t,
 } from './i18n/locales.js';
+import {
+  alertFinish,
+  alertOnVisible,
+  clearAlerts,
+  getVibratePattern,
+  realertFromGesture,
+  startAudioKeepAlive,
+  stopAudioKeepAlive,
+  unlockAlertAudio,
+} from './alert.js';
 
 const CIRC = 2 * Math.PI * 54;
 const PRESET_MINS = Object.freeze([3, 5, 10]);
-/** Longer pulses — short patterns are easy to miss on many phones. */
-const VIBRATE_PATTERN = Object.freeze([480, 140, 480, 140, 720, 180, 480]);
-const VIBRATE_RETRY_MS = Object.freeze([0, 280, 900, 1800, 3200]);
 
 const progress = document.querySelector('#progress');
 const timeText = document.querySelector('#timeText');
@@ -61,14 +68,10 @@ let running = false;
 let finished = false;
 let tickId = 0;
 let titleBlinkId = 0;
-let hapticTimerIds = [];
-let audioKeepAliveId = 0;
-/** @type {AudioContext | null} */
-let audioCtx = null;
 /** @type {WakeLockSentinel | null} */
 let wakeLock = null;
 let notifyAsked = false;
-let needHapticOnVisible = false;
+let needAlertOnVisible = false;
 
 progress.style.strokeDasharray = String(CIRC);
 progress.style.strokeDashoffset = '0';
@@ -240,124 +243,6 @@ const startTitleBlink = () => {
   }, 800);
 };
 
-const supportsVibrate = () => typeof navigator.vibrate === 'function';
-
-/**
- * Vibration API quirks:
- * - iOS / all WebKit: API absent → always rely on audio.
- * - Firefox Android: often returns true but does not haptic.
- * - cancel-then-start (`vibrate(0)` then pattern) races on some Chromium WebViews.
- * - Background / locked screen: vibrate is ignored until visible again.
- */
-const pulseVibrate = (pattern = VIBRATE_PATTERN) => {
-  if (!supportsVibrate()) return false;
-  if (document.visibilityState !== 'visible') return false;
-  try {
-    return navigator.vibrate([...pattern]) === true;
-  } catch {
-    return false;
-  }
-};
-
-const clearHapticTimers = () => {
-  for (const id of hapticTimerIds) clearTimeout(id);
-  hapticTimerIds = [];
-};
-
-const scheduleFinishHaptics = () => {
-  clearHapticTimers();
-  for (const delay of VIBRATE_RETRY_MS) {
-    const id = window.setTimeout(() => {
-      if (!finished || document.visibilityState !== 'visible') return;
-      pulseVibrate(delay === 0 ? VIBRATE_PATTERN : [520, 120, 520]);
-    }, delay);
-    hapticTimerIds.push(id);
-  }
-};
-
-const AudioCtx = globalThis.AudioContext ?? globalThis.webkitAudioContext;
-
-const ensureAudio = async () => {
-  if (!AudioCtx) return null;
-  audioCtx ??= new AudioCtx();
-  if (audioCtx.state === 'suspended') {
-    try { await audioCtx.resume(); } catch { /* ignore */ }
-  }
-  return audioCtx;
-};
-
-/** Unlock / keep Web Audio alive after the start gesture (needed for finish chime minutes later). */
-const unlockAudio = async () => {
-  try {
-    const ctx = await ensureAudio();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    gain.gain.value = 0.0001;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    const t0 = ctx.currentTime;
-    osc.start(t0);
-    osc.stop(t0 + 0.02);
-  } catch {
-    /* ignore */
-  }
-};
-
-const stopAudioKeepAlive = () => {
-  if (!audioKeepAliveId) return;
-  clearInterval(audioKeepAliveId);
-  audioKeepAliveId = 0;
-};
-
-const startAudioKeepAlive = () => {
-  stopAudioKeepAlive();
-  audioKeepAliveId = window.setInterval(() => {
-    if (!running || !audioCtx) return;
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
-  }, 12_000);
-};
-
-const playToneSeries = async (notes) => {
-  try {
-    const ctx = await ensureAudio();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    for (const note of notes) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = note.type ?? 'sine';
-      osc.frequency.value = note.freq;
-      const t0 = now + (note.at ?? 0);
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(note.peak ?? 0.16, t0 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (note.dur ?? 0.32));
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t0);
-      osc.stop(t0 + (note.dur ?? 0.32) + 0.02);
-    }
-  } catch {
-    /* ignore audio failures */
-  }
-};
-
-const playChime = () => playToneSeries([
-  { freq: 523.25, at: 0, peak: 0.22, dur: 0.4 },
-  { freq: 659.25, at: 0.14, peak: 0.22, dur: 0.4 },
-  { freq: 783.99, at: 0.28, peak: 0.22, dur: 0.45 },
-]);
-
-/** Audible stand-in when Vibration API is missing or a no-op (common on iOS / Firefox Android). */
-const playBuzzFallback = () => playToneSeries([
-  { freq: 140, type: 'square', at: 0, peak: 0.14, dur: 0.18 },
-  { freq: 140, type: 'square', at: 0.26, peak: 0.14, dur: 0.18 },
-  { freq: 180, type: 'square', at: 0.52, peak: 0.16, dur: 0.28 },
-  { freq: 140, type: 'square', at: 0.9, peak: 0.12, dur: 0.18 },
-]);
-
 const maybeNotify = () => {
   if (!('Notification' in globalThis)) return;
   if (Notification.permission !== 'granted') return;
@@ -368,12 +253,11 @@ const maybeNotify = () => {
       tag: '5min-toilet-timer',
       renotify: true,
       silent: false,
-      vibrate: [...VIBRATE_PATTERN],
+      vibrate: getVibratePattern(),
     });
     n.addEventListener('click', () => {
       globalThis.focus();
-      pulseVibrate();
-      playBuzzFallback();
+      void realertFromGesture();
       n.close();
     });
     window.setTimeout(() => n.close(), 10_000);
@@ -389,22 +273,10 @@ const requestNotifyOnce = async () => {
   try { await Notification.requestPermission(); } catch { /* ignore */ }
 };
 
-/** Always pair haptic attempts with audio — vibrate() success is unreliable. */
-const alertFinish = () => {
-  needHapticOnVisible = document.visibilityState !== 'visible';
-  scheduleFinishHaptics();
-  playBuzzFallback();
-  playChime();
-  maybeNotify();
-};
-
-/** User gesture re-trigger (iOS / muted haptic systems). */
-const realertFromGesture = () => {
-  if (!finished) return;
-  needHapticOnVisible = false;
-  pulseVibrate();
-  playBuzzFallback();
-  playChime();
+/** Fire sound + vibration (+ notification). Always pair channels — each API is flaky alone. */
+const fireFinishAlert = () => {
+  needAlertOnVisible = document.visibilityState !== 'visible';
+  alertFinish({ notify: maybeNotify });
 };
 
 const acquireWakeLock = async () => {
@@ -497,13 +369,14 @@ const finish = () => {
   running = false;
   finished = true;
   clearTick();
-  stopAudioKeepAlive();
+  // Keep media channel warm through the alert; clear keepalive after fire.
   render();
   startBtn.disabled = false;
   resetBtn.disabled = false;
   setPresetsEnabled(true);
-  // Haptic/audio first — releasing wake lock can briefly alter visibility on some devices.
-  alertFinish();
+  // Sound/haptic first — releasing wake lock can briefly alter visibility on some devices.
+  fireFinishAlert();
+  stopAudioKeepAlive();
   releaseWakeLock();
   startTitleBlink();
 };
@@ -513,7 +386,7 @@ const start = () => {
     running = false;
     clearTick();
     stopAudioKeepAlive();
-    clearHapticTimers();
+    clearAlerts();
     remainMs = Math.max(0, endAt - Date.now());
     endAt = 0;
     releaseWakeLock();
@@ -523,10 +396,11 @@ const start = () => {
   }
 
   stopTitleBlink();
-  clearHapticTimers();
-  needHapticOnVisible = false;
+  clearAlerts();
+  needAlertOnVisible = false;
   requestNotifyOnce();
-  unlockAudio();
+  // Must unlock inside this click gesture (iOS / Android / HarmonyOS autoplay).
+  void unlockAlertAudio();
   startAudioKeepAlive();
 
   if (remainMs <= 0 || finished) {
@@ -549,9 +423,8 @@ const reset = () => {
   finished = false;
   endAt = 0;
   clearTick();
-  stopAudioKeepAlive();
-  clearHapticTimers();
-  needHapticOnVisible = false;
+  clearAlerts();
+  needAlertOnVisible = false;
   stopTitleBlink();
   releaseWakeLock();
   remainMs = totalMs;
@@ -577,6 +450,10 @@ langSelect.addEventListener('change', () => {
   setLocale(langSelect.value);
 });
 
+/* pointerdown：尽早占用用户手势，提升 iOS / 部分 WebView 音频解锁成功率 */
+startBtn.addEventListener('pointerdown', () => {
+  void unlockAlertAudio();
+});
 startBtn.addEventListener('click', start);
 resetBtn.addEventListener('click', reset);
 
@@ -589,8 +466,10 @@ presets.addEventListener('click', (event) => {
 });
 
 /* 结束后点表盘可再触发震动/提示音（用户手势；iOS 无 Vibration API 时靠声音） */
-stageSection.addEventListener('click', () => {
-  realertFromGesture();
+stageSection.addEventListener('pointerup', () => {
+  if (!finished) return;
+  needAlertOnVisible = false;
+  void realertFromGesture();
 });
 
 document.addEventListener('keydown', (event) => {
@@ -613,16 +492,16 @@ document.addEventListener('visibilitychange', () => {
       render();
       scheduleTick();
       acquireWakeLock();
-      if (audioCtx?.state === 'suspended') audioCtx.resume().catch(() => {});
+      // Re-arm audio while still timing (lock screen often suspends AudioContext).
+      void unlockAlertAudio();
+      startAudioKeepAlive();
     }
     return;
   }
   if (!finished) return;
-  if (needHapticOnVisible) {
-    needHapticOnVisible = false;
-    scheduleFinishHaptics();
-    playBuzzFallback();
-    playChime();
+  if (needAlertOnVisible) {
+    needAlertOnVisible = false;
+    alertOnVisible();
   }
   startTitleBlink();
 });

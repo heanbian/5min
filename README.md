@@ -64,6 +64,7 @@
 ├── js/
 │   ├── boot.js             # file:// 协议提示
 │   ├── app.js              # 计时逻辑（ES module）
+│   ├── alert.js            # 跨端到期声音 / 振动
 │   └── i18n/
 │       └── locales.js      # 多语言文案
 ├── fonts/                  # 自托管 woff2 + OFL.txt
@@ -117,6 +118,12 @@ node scripts/raster-logo.js
 - 页面重新可见时按结束时间戳校准剩余时间；后台 `setTimeout` 被节流时，回到前台仍可正确结束。
 - 首次开始计时时按需请求通知权限；拒绝授权不影响计时。
 - 计时进行中禁用时长预设，降低误触；空格键可切换开始 / 暂停（焦点不在表单控件时）。
+- 到期提醒（`js/alert.js`）同时走多条通道，以覆盖各端差异：
+  - **声音**：Web Audio 提示音 + 内嵌 WAV 的 `HTMLAudioElement`；开始手势内解锁，计时中保活。
+  - **iPhone**：无 Vibration API；将 `navigator.audioSession.type` 设为 `playback`，避免静音键掐掉 Web Audio；旧系统辅以静音循环音频打开媒体通道；低频方波 buzz 代替振动体感。
+  - **Android / 鸿蒙**：`navigator.vibrate` 多段重试；熄屏/后台常忽略振动，回到前台会补发声音与振动。
+  - **PC**：振动接口空操作；靠扬声器与（若已授权）系统通知提醒。
+  - 结束后点按表盘可在用户手势下再次触发声音与振动（对 iOS / 部分机型尤其重要）。
 
 ## 许可
 
