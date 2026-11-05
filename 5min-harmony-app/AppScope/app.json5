@@ -1,7 +1,7 @@
 {
   "app": {
     "bundleName": "chat.5min.app",
-    "vendor": "xuejibao",
+    "vendor": "学记宝",
     "versionCode": 1000004,
     "versionName": "1.0.4",
     "icon": "$media:layered_image",
