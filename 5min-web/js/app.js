@@ -64,6 +64,9 @@ const SCENE_GROUPS = Object.freeze([
 const SCENES = Object.freeze([
   { id: 'brush', min: 3, group: 'daily', labelKey: 'sceneBrush', titleKey: 'sceneBrushTitle' },
   { id: 'toilet', min: 5, group: 'daily', labelKey: 'sceneToilet', titleKey: 'sceneToiletTitle' },
+  { id: 'lazy5', min: 5, group: 'daily', labelKey: 'sceneLazy5', titleKey: 'sceneLazy5Title' },
+  { id: 'lazy10', min: 10, group: 'daily', labelKey: 'sceneLazy10', titleKey: 'sceneLazy10Title' },
+  { id: 'smoke', min: 5, group: 'daily', labelKey: 'sceneSmoke', titleKey: 'sceneSmokeTitle' },
   { id: 'noodles', min: 3, group: 'kitchen', labelKey: 'sceneNoodles', titleKey: 'sceneNoodlesTitle' },
   { id: 'microwave', min: 3, group: 'kitchen', labelKey: 'sceneMicrowave', titleKey: 'sceneMicrowaveTitle' },
   { id: 'tea', min: 5, group: 'kitchen', labelKey: 'sceneTea', titleKey: 'sceneTeaTitle' },

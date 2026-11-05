@@ -77,6 +77,27 @@ module.exports = {
       "titleKey": "sceneToiletTitle"
     },
     {
+      "id": "lazy5",
+      "min": 5,
+      "group": "daily",
+      "labelKey": "sceneLazy5",
+      "titleKey": "sceneLazy5Title"
+    },
+    {
+      "id": "lazy10",
+      "min": 10,
+      "group": "daily",
+      "labelKey": "sceneLazy10",
+      "titleKey": "sceneLazy10Title"
+    },
+    {
+      "id": "smoke",
+      "min": 5,
+      "group": "daily",
+      "labelKey": "sceneSmoke",
+      "titleKey": "sceneSmokeTitle"
+    },
+    {
       "id": "noodles",
       "min": 3,
       "group": "kitchen",
