@@ -17,7 +17,7 @@
   "reset": "Reset",
   "again": "Start again",
   "minutes": "{n} min",
-  "footnote": "Built around five minutes: public guidance commonly recommends limiting a single toilet visit to about five minutes; mobile devices can impair time perception. This tool is intended solely as a habit reminder and does not constitute medical advice.",
+  "footnote": "Public guidance commonly recommends limiting a single toilet visit to about five minutes; mobile devices can impair time perception. This tool is intended solely as a habit reminder and does not constitute medical advice.",
   "aboutLabel": "About",
   "titleIdle": "Toilet Timer · 5min",
   "titleSuffix": "5min",
@@ -133,5 +133,5 @@
   "ambientRain": "Rain",
   "ambientWaves": "Ocean waves",
   "ambientClock": "Ticking clock",
-  "metaDescription": "Toilet Timer (5min.chat) focuses on a five-minute habit: public guidance often suggests keeping a single toilet visit to about five minutes. Default 5-minute preset (also 3 / 10); alerts via vibration, sound, and system notification. No registration or ads. Timing stays on-device; user data is not uploaded."
+  "metaDescription": "Toilet Timer (5min.chat): public guidance often suggests keeping a single toilet visit to about five minutes. Default 5-minute preset (also 3 / 10); alerts via vibration, sound, and system notification. No registration or ads. Timing stays on-device; user data is not uploaded."
 }

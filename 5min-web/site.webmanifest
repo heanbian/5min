@@ -1,7 +1,7 @@
 {
   "name": "如厕计时器",
   "short_name": "五分钟",
-  "description": "如厕计时器主打五分钟习惯提醒（5min.chat）：默认 5 分钟预设，亦可选 3 / 10 分钟；计时结束后提醒起身活动。无需注册，无广告；端侧本地完成，不上传用户数据。",
+  "description": "如厕计时器（5min.chat）：默认 5 分钟预设，亦可选 3 / 10 分钟；计时结束后提醒起身活动。无需注册，无广告；端侧本地完成，不上传用户数据。",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
