@@ -3,8 +3,8 @@
  Licensed under the Apache License, Version 2.0
  布局对齐 5min-android-app TimerApp
 -->
-<view class="page page-{{phase}} {{rtl ? 'rtl' : ''}}" style="padding-top: {{navPadTop}}px;">
-  <!-- 自定义顶栏：品牌 + 环境音 / 语言（避开右侧胶囊） -->
+<view class="page page-{{phase}}" style="padding-top: {{navPadTop}}px;">
+  <!-- 自定义顶栏：品牌 + 环境音（避开右侧胶囊） -->
   <view class="topbar" style="height: {{navBarHeight}}px; padding-right: {{navPadRight}}px;">
     <view class="brand">
       <image class="brand-logo" src="/assets/logo.png" mode="aspectFit" aria-label="5min" />
@@ -25,17 +25,6 @@
           />
         </view>
       </view>
-
-      <view class="tool-wrap">
-        <view
-          class="lang-btn {{langOpen ? 'tool-on' : ''}}"
-          bindtap="onLangToggle"
-          aria-label="{{langLabel}}"
-        >
-          <text class="lang-text">{{localeLabel}}</text>
-          <text class="lang-caret">▾</text>
-        </view>
-      </view>
     </view>
   </view>
 
@@ -43,7 +32,7 @@
     <view class="dial">
       <!-- 菜单打开时隐藏 canvas，避免原生层盖住下拉 -->
       <canvas
-        wx:if="{{!ambientOpen && !langOpen}}"
+        wx:if="{{!ambientOpen}}"
         type="2d"
         id="progressCanvas"
         class="dial-canvas"
@@ -102,31 +91,19 @@
     <text>{{footnote}}</text>
   </view>
 
-  <!-- 下拉层：普通 view，因菜单打开时 canvas 已卸载，不再被原生层遮挡 -->
-  <view class="menu-overlay" wx:if="{{ambientOpen || langOpen}}" catchtouchmove="noop">
+  <view class="menu-overlay" wx:if="{{ambientOpen}}" catchtouchmove="noop">
     <view class="mask" bindtap="onCloseMenus"></view>
     <view
-      class="menu-panel {{ambientOpen ? 'ambient-panel' : 'lang-panel'}}"
+      class="menu-panel ambient-panel"
       style="top: {{menuTop}}px; right: {{menuRight}}px;"
     >
-      <block wx:if="{{ambientOpen}}">
-        <view
-          wx:for="{{ambientOptions}}"
-          wx:key="id"
-          class="menu-item {{item.active ? 'menu-item-on' : ''}}"
-          data-id="{{item.id}}"
-          bindtap="onAmbientSelect"
-        >{{item.label}}</view>
-      </block>
-      <block wx:else>
-        <view
-          wx:for="{{localeOptions}}"
-          wx:key="code"
-          class="menu-item {{item.active ? 'menu-item-on' : ''}}"
-          data-code="{{item.code}}"
-          bindtap="onLangSelect"
-        >{{item.label}}</view>
-      </block>
+      <view
+        wx:for="{{ambientOptions}}"
+        wx:key="id"
+        class="menu-item {{item.active ? 'menu-item-on' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onAmbientSelect"
+      >{{item.label}}</view>
     </view>
   </view>
 </view>

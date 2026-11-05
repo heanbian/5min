@@ -45,12 +45,12 @@
 cd ../5min-web && node scripts/export-shared.mjs
 cp shared-export/scenes.json ../5min-mp/shared/scenes.json
 cp shared-export/locales/zh-CN.json ../5min-mp/shared/zh-CN.json
-# 小程序运行时读取 .js 模块（JSON 仅作同步源）
+# 小程序运行时读取 .js 模块（JSON 仅作同步源；界面固定简体中文）
 node -e "
 const fs=require('fs');
 const dir='../5min-mp/shared';
 fs.writeFileSync(dir+'/scenes.js','module.exports = '+fs.readFileSync(dir+'/scenes.json','utf8').trim()+';\\n');
-fs.writeFileSync(dir+'/zhCN.js','module.exports = '+fs.readFileSync(dir+'/zh-CN.json','utf8').trim()+';\\n');
+fs.writeFileSync(dir+'/locales/zh_CN.js','module.exports = '+fs.readFileSync(dir+'/zh-CN.json','utf8').trim()+';\\n');
 "
 ```
 

@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-const {
-  t,
-  initLocale,
-  setLocale,
-  getLocale,
-  localeOptions,
-  isRtl,
-  nativeName,
-} = require('../../utils/i18n');
+const { t } = require('../../utils/i18n');
 const {
   PRESET_MINS,
   DEFAULT_MIN,
@@ -127,7 +119,6 @@ Page({
     presetsLabel: '',
     footnote: '',
     ambientLabel: '',
-    langLabel: '',
     presets: PRESET_MINS,
     presetItems: [],
     activePreset: DEFAULT_MIN,
@@ -147,10 +138,6 @@ Page({
     ambient: 'off',
     ambientOpen: false,
     ambientOptions: [],
-    langOpen: false,
-    localeLabel: '',
-    localeOptions: [],
-    rtl: false,
   },
 
   totalMs: DEFAULT_MIN * 60 * 1000,
@@ -167,13 +154,12 @@ Page({
 
   onLoad() {
     const nav = readNavMetrics();
-    initLocale();
     const ambient = initAmbient();
     this.setData({
       ...nav,
       ambient,
     });
-    this.applyLocaleLabels(true);
+    this.applyLabels(true);
     this.refreshStats();
     this.refreshUi();
   },
@@ -251,19 +237,15 @@ Page({
     });
   },
 
-  applyLocaleLabels(rebuildScenes) {
+  applyLabels(rebuildScenes) {
     this.setData({
       stageLabel: t('stageLabel'),
       actionsLabel: t('actionsLabel'),
       presetsLabel: t('presetsLabel'),
       footnote: t('footnote'),
       ambientLabel: t('ambientLabel'),
-      langLabel: t('langLabel'),
-      localeLabel: nativeName(getLocale()),
-      localeOptions: localeOptions(),
       ambientOptions: this.buildAmbientOptions(),
       presetItems: this.buildPresetItems(),
-      rtl: isRtl(),
     });
     if (rebuildScenes) this.rebuildScenePicker(true);
   },
@@ -409,8 +391,8 @@ Page({
   },
 
   onCloseMenus() {
-    const wasOpen = this.data.ambientOpen || this.data.langOpen;
-    this.setData({ ambientOpen: false, langOpen: false });
+    const wasOpen = this.data.ambientOpen;
+    this.setData({ ambientOpen: false });
     if (wasOpen) this.reopenCanvasSoon();
   },
 
@@ -418,7 +400,6 @@ Page({
     const open = !this.data.ambientOpen;
     this.setData({
       ambientOpen: open,
-      langOpen: false,
       ambientOptions: this.buildAmbientOptions(),
     });
     if (!open) this.reopenCanvasSoon();
@@ -432,26 +413,6 @@ Page({
       ambientOpen: false,
       ambientOptions: this.buildAmbientOptions(),
     });
-    this.reopenCanvasSoon();
-  },
-
-  onLangToggle() {
-    const open = !this.data.langOpen;
-    this.setData({
-      langOpen: open,
-      ambientOpen: false,
-      localeOptions: localeOptions(),
-    });
-    if (!open) this.reopenCanvasSoon();
-  },
-
-  onLangSelect(e) {
-    const code = e.currentTarget.dataset.code;
-    setLocale(code);
-    this.setData({ langOpen: false });
-    this.applyLocaleLabels(true);
-    this.refreshStats();
-    this.refreshUi();
     this.reopenCanvasSoon();
   },
 
