@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTitleText": "如厕计时器",
+    "navigationBarBackgroundColor": "#eef6f1",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#eef6f1",
+    "backgroundTextStyle": "dark",
+    "handleWebviewPreload": "auto"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

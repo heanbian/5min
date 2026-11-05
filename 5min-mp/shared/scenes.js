@@ -1,0 +1,386 @@
+module.exports = {
+  "presetsMin": [
+    3,
+    5,
+    10
+  ],
+  "defaultMin": 5,
+  "alertDurationMs": 5000,
+  "vibratePatternMs": [
+    500,
+    150,
+    500,
+    150,
+    500,
+    150,
+    500,
+    150,
+    500,
+    150,
+    500,
+    150,
+    500,
+    150,
+    500
+  ],
+  "groups": [
+    {
+      "id": "daily",
+      "labelKey": "sceneGroupDaily"
+    },
+    {
+      "id": "kitchen",
+      "labelKey": "sceneGroupKitchen"
+    },
+    {
+      "id": "care",
+      "labelKey": "sceneGroupCare"
+    },
+    {
+      "id": "rest",
+      "labelKey": "sceneGroupRest"
+    },
+    {
+      "id": "study",
+      "labelKey": "sceneGroupStudy"
+    },
+    {
+      "id": "work",
+      "labelKey": "sceneGroupWork"
+    },
+    {
+      "id": "labor",
+      "labelKey": "sceneGroupLabor"
+    },
+    {
+      "id": "farm",
+      "labelKey": "sceneGroupFarm"
+    },
+    {
+      "id": "chores",
+      "labelKey": "sceneGroupChores"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "brush",
+      "min": 3,
+      "group": "daily",
+      "labelKey": "sceneBrush",
+      "titleKey": "sceneBrushTitle"
+    },
+    {
+      "id": "toilet",
+      "min": 5,
+      "group": "daily",
+      "labelKey": "sceneToilet",
+      "titleKey": "sceneToiletTitle"
+    },
+    {
+      "id": "noodles",
+      "min": 3,
+      "group": "kitchen",
+      "labelKey": "sceneNoodles",
+      "titleKey": "sceneNoodlesTitle"
+    },
+    {
+      "id": "microwave",
+      "min": 3,
+      "group": "kitchen",
+      "labelKey": "sceneMicrowave",
+      "titleKey": "sceneMicrowaveTitle"
+    },
+    {
+      "id": "tea",
+      "min": 5,
+      "group": "kitchen",
+      "labelKey": "sceneTea",
+      "titleKey": "sceneTeaTitle"
+    },
+    {
+      "id": "coffee",
+      "min": 5,
+      "group": "kitchen",
+      "labelKey": "sceneCoffee",
+      "titleKey": "sceneCoffeeTitle"
+    },
+    {
+      "id": "water",
+      "min": 5,
+      "group": "kitchen",
+      "labelKey": "sceneWater",
+      "titleKey": "sceneWaterTitle"
+    },
+    {
+      "id": "egg",
+      "min": 8,
+      "group": "kitchen",
+      "labelKey": "sceneEgg",
+      "titleKey": "sceneEggTitle"
+    },
+    {
+      "id": "pasta",
+      "min": 10,
+      "group": "kitchen",
+      "labelKey": "scenePasta",
+      "titleKey": "scenePastaTitle"
+    },
+    {
+      "id": "oven",
+      "min": 15,
+      "group": "kitchen",
+      "labelKey": "sceneOven",
+      "titleKey": "sceneOvenTitle"
+    },
+    {
+      "id": "rice",
+      "min": 30,
+      "group": "kitchen",
+      "labelKey": "sceneRice",
+      "titleKey": "sceneRiceTitle"
+    },
+    {
+      "id": "stew",
+      "min": 40,
+      "group": "kitchen",
+      "labelKey": "sceneStew",
+      "titleKey": "sceneStewTitle"
+    },
+    {
+      "id": "skincare",
+      "min": 10,
+      "group": "care",
+      "labelKey": "sceneSkincare",
+      "titleKey": "sceneSkincareTitle"
+    },
+    {
+      "id": "eye",
+      "min": 10,
+      "group": "care",
+      "labelKey": "sceneEye",
+      "titleKey": "sceneEyeTitle"
+    },
+    {
+      "id": "mask",
+      "min": 15,
+      "group": "care",
+      "labelKey": "sceneMask",
+      "titleKey": "sceneMaskTitle"
+    },
+    {
+      "id": "hair",
+      "min": 20,
+      "group": "care",
+      "labelKey": "sceneHair",
+      "titleKey": "sceneHairTitle"
+    },
+    {
+      "id": "stretch",
+      "min": 5,
+      "group": "rest",
+      "labelKey": "sceneStretch",
+      "titleKey": "sceneStretchTitle"
+    },
+    {
+      "id": "walk",
+      "min": 10,
+      "group": "rest",
+      "labelKey": "sceneWalk",
+      "titleKey": "sceneWalkTitle"
+    },
+    {
+      "id": "meditation",
+      "min": 10,
+      "group": "rest",
+      "labelKey": "sceneMeditation",
+      "titleKey": "sceneMeditationTitle"
+    },
+    {
+      "id": "nap",
+      "min": 15,
+      "group": "rest",
+      "labelKey": "sceneNap",
+      "titleKey": "sceneNapTitle"
+    },
+    {
+      "id": "reading",
+      "min": 20,
+      "group": "rest",
+      "labelKey": "sceneReading",
+      "titleKey": "sceneReadingTitle"
+    },
+    {
+      "id": "yoga",
+      "min": 20,
+      "group": "rest",
+      "labelKey": "sceneYoga",
+      "titleKey": "sceneYogaTitle"
+    },
+    {
+      "id": "eyeCare",
+      "min": 5,
+      "group": "study",
+      "labelKey": "sceneEyeCare",
+      "titleKey": "sceneEyeCareTitle"
+    },
+    {
+      "id": "classBreak",
+      "min": 10,
+      "group": "study",
+      "labelKey": "sceneClassBreak",
+      "titleKey": "sceneClassBreakTitle"
+    },
+    {
+      "id": "vocab",
+      "min": 15,
+      "group": "study",
+      "labelKey": "sceneVocab",
+      "titleKey": "sceneVocabTitle"
+    },
+    {
+      "id": "homework",
+      "min": 25,
+      "group": "study",
+      "labelKey": "sceneHomework",
+      "titleKey": "sceneHomeworkTitle"
+    },
+    {
+      "id": "call",
+      "min": 10,
+      "group": "work",
+      "labelKey": "sceneCall",
+      "titleKey": "sceneCallTitle"
+    },
+    {
+      "id": "meetingPrep",
+      "min": 10,
+      "group": "work",
+      "labelKey": "sceneMeetingPrep",
+      "titleKey": "sceneMeetingPrepTitle"
+    },
+    {
+      "id": "wrapUp",
+      "min": 10,
+      "group": "work",
+      "labelKey": "sceneWrapUp",
+      "titleKey": "sceneWrapUpTitle"
+    },
+    {
+      "id": "meeting",
+      "min": 15,
+      "group": "work",
+      "labelKey": "sceneMeeting",
+      "titleKey": "sceneMeetingTitle"
+    },
+    {
+      "id": "standDesk",
+      "min": 15,
+      "group": "work",
+      "labelKey": "sceneStandDesk",
+      "titleKey": "sceneStandDeskTitle"
+    },
+    {
+      "id": "email",
+      "min": 20,
+      "group": "work",
+      "labelKey": "sceneEmail",
+      "titleKey": "sceneEmailTitle"
+    },
+    {
+      "id": "focus",
+      "min": 25,
+      "group": "work",
+      "labelKey": "sceneFocus",
+      "titleKey": "sceneFocusTitle"
+    },
+    {
+      "id": "hydrate",
+      "min": 5,
+      "group": "labor",
+      "labelKey": "sceneHydrate",
+      "titleKey": "sceneHydrateTitle"
+    },
+    {
+      "id": "workBreak",
+      "min": 10,
+      "group": "labor",
+      "labelKey": "sceneWorkBreak",
+      "titleKey": "sceneWorkBreakTitle"
+    },
+    {
+      "id": "shiftHandover",
+      "min": 10,
+      "group": "labor",
+      "labelKey": "sceneShiftHandover",
+      "titleKey": "sceneShiftHandoverTitle"
+    },
+    {
+      "id": "toolCheck",
+      "min": 15,
+      "group": "labor",
+      "labelKey": "sceneToolCheck",
+      "titleKey": "sceneToolCheckTitle"
+    },
+    {
+      "id": "safetyWait",
+      "min": 15,
+      "group": "labor",
+      "labelKey": "sceneSafetyWait",
+      "titleKey": "sceneSafetyWaitTitle"
+    },
+    {
+      "id": "feed",
+      "min": 15,
+      "group": "farm",
+      "labelKey": "sceneFeed",
+      "titleKey": "sceneFeedTitle"
+    },
+    {
+      "id": "farmTools",
+      "min": 15,
+      "group": "farm",
+      "labelKey": "sceneFarmTools",
+      "titleKey": "sceneFarmToolsTitle"
+    },
+    {
+      "id": "grainTurn",
+      "min": 20,
+      "group": "farm",
+      "labelKey": "sceneGrainTurn",
+      "titleKey": "sceneGrainTurnTitle"
+    },
+    {
+      "id": "irrigation",
+      "min": 30,
+      "group": "farm",
+      "labelKey": "sceneIrrigation",
+      "titleKey": "sceneIrrigationTitle"
+    },
+    {
+      "id": "dishes",
+      "min": 15,
+      "group": "chores",
+      "labelKey": "sceneDishes",
+      "titleKey": "sceneDishesTitle"
+    },
+    {
+      "id": "laundry",
+      "min": 30,
+      "group": "chores",
+      "labelKey": "sceneLaundry",
+      "titleKey": "sceneLaundryTitle"
+    }
+  ],
+  "localeCodes": [
+    "zh-CN",
+    "zh-TW",
+    "en",
+    "bo",
+    "ja",
+    "ar",
+    "fr",
+    "ru",
+    "es"
+  ],
+  "defaultLocale": "zh-CN"
+};
