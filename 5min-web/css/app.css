@@ -655,6 +655,18 @@
     color:var(--brand-strong);
     text-decoration:none;
   }
+  .beian{
+    margin:4px 0 0;
+    flex-shrink:0;
+    font-size:0.75rem;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+  .beian a{
+    color:var(--muted);
+    text-decoration:none;
+  }
 
   /* 平板竖屏 */
   @media (min-width: 600px){
@@ -733,6 +745,7 @@
       background:transparent;
     }
     .footnote a:hover{text-decoration:underline}
+    .beian a:hover{text-decoration:underline; color:var(--brand-strong)}
   }
 
   /* 矮屏横屏手机：压缩纵向 */
