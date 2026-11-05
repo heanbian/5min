@@ -1,0 +1,17 @@
+# Copy to signing.properties (gitignored). Optional local notes for release.
+# Actual code signing is configured in Xcode → Signing & Capabilities
+# (Automatic) or via ExportOptions.plist for CLI export.
+
+# Apple Developer Team ID (10 characters, Membership details)
+teamID=YOUR_TEAM_ID
+
+# Bundle ID (must match App Store Connect / Xcode)
+bundleId=chat.5min.app
+
+# App Store Connect / App record name
+appName=如厕计时器
+
+# Optional: path to App Store Connect API key for altool / notary (if used later)
+# apiKeyPath=signing/material/AuthKey_XXXXXXXXXX.p8
+# apiKeyId=XXXXXXXXXX
+# apiIssuer=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

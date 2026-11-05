@@ -17,7 +17,7 @@
   "reset": "Réinitialiser",
   "again": "Recommencer",
   "minutes": "{n} min",
-  "footnote": "Les recommandations publiques indiquent souvent qu’il convient de limiter une visite aux toilettes à environ cinq minutes ; les appareils mobiles peuvent altérer la perception du temps. Cet outil est uniquement un rappel d’habitude ; il ne constitue pas un avis médical, ne remplace pas les soins professionnels et n’est pas un dispositif médical.",
+  "footnote": "Les recommandations publiques indiquent souvent qu’il convient de limiter une visite aux toilettes à environ cinq minutes ; les appareils mobiles peuvent altérer la perception du temps. Cet outil est uniquement un rappel d’habitude.",
   "aboutLabel": "À propos",
   "titleIdle": "Minuteur toilettes · 5min",
   "titleSuffix": "5min",
@@ -133,5 +133,5 @@
   "ambientRain": "Pluie",
   "ambientWaves": "Vagues",
   "ambientClock": "Tic-tac",
-  "metaDescription": "Minuteur toilettes · 5min (5min.chat) : rappel de compte à rebours sur l’appareil pour la gestion des habitudes quotidiennes. Préréglages de 3 / 5 / 10 minutes ; alerte par vibration, son et notification système à l’échéance. Sans inscription ni publicité. Le minutage et les alertes restent sur l’appareil ; aucune donnée utilisateur n’est envoyée à un serveur. Rappel d’habitude uniquement — pas un avis médical ni un dispositif médical."
+  "metaDescription": "Minuteur toilettes · 5min (5min.chat) : rappel de compte à rebours sur l’appareil pour la gestion des habitudes quotidiennes. Préréglages de 3 / 5 / 10 minutes ; alerte par vibration, son et notification système à l’échéance. Sans inscription ni publicité. Le minutage et les alertes restent sur l’appareil ; aucune donnée utilisateur n’est envoyée à un serveur. Rappel d’habitude uniquement."
 }

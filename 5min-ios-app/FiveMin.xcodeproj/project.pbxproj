@@ -7,31 +7,37 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FE95D03A6EA74FCBA58FE238 /* FiveMinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */; };
-		AE58305BC3834AC788440220 /* SharedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */; };
-		96713C72BB414EC69166AE38 /* PrefsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */; };
-		4B2A469DED8F439E8A35DDD6 /* I18n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335D646AD96E42DDBDB9959B /* I18n.swift */; };
-		C295C549153E4AABBA0F67CE /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5DD556C779942718E800FF8 /* AlertService.swift */; };
-		B1645718EB2145A4A1D50559 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB3123630D7407CA4D6CE8D /* NotificationService.swift */; };
-		97D1DB55C3F0481E807AF6C2 /* TimerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */; };
-		544F1D45EDDB430BA9517F85 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E9B8A4DDB45B9895F7698 /* TimerView.swift */; };
-		F1053CCDA8E841519E0597E6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB77B6B53FAC42049DFAC164 /* Assets.xcassets */; };
 		43792D06AA234887BEDE1E43 /* shared in Resources */ = {isa = PBXBuildFile; fileRef = CBB26D8D4A3F4970A417872E /* shared */; };
+		4B2A469DED8F439E8A35DDD6 /* I18n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335D646AD96E42DDBDB9959B /* I18n.swift */; };
+		544F1D45EDDB430BA9517F85 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E9B8A4DDB45B9895F7698 /* TimerView.swift */; };
+		6A11C0DE5E0E4F1A9B2C3D4E /* FiveMinTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F64789A0B1C2D3 /* FiveMinTheme.swift */; };
+		7B22D1EF6F1F502B0C3D4E5F /* DigitalWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7489B0C1D2E3F /* DigitalWatch.swift */; };
+		96713C72BB414EC69166AE38 /* PrefsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */; };
+		97D1DB55C3F0481E807AF6C2 /* TimerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */; };
+		AE58305BC3834AC788440220 /* SharedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */; };
+		B1645718EB2145A4A1D50559 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB3123630D7407CA4D6CE8D /* NotificationService.swift */; };
+		C295C549153E4AABBA0F67CE /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5DD556C779942718E800FF8 /* AlertService.swift */; };
+		F1053CCDA8E841519E0597E6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB77B6B53FAC42049DFAC164 /* Assets.xcassets */; };
+		FE95D03A6EA74FCBA58FE238 /* FiveMinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */; };
+		E8F9A0B1C2D34E5F6A7B8C9D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveMinApp.swift; sourceTree = "<group>"; };
-		8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCatalog.swift; sourceTree = "<group>"; };
-		4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefsStore.swift; sourceTree = "<group>"; };
-		335D646AD96E42DDBDB9959B /* I18n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = I18n.swift; sourceTree = "<group>"; };
-		C5DD556C779942718E800FF8 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
 		2DB3123630D7407CA4D6CE8D /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		30FFFF9EB0C34F948554807E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		335D646AD96E42DDBDB9959B /* I18n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = I18n.swift; sourceTree = "<group>"; };
+		3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveMinApp.swift; sourceTree = "<group>"; };
+		D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4CCA38C137CC41B7AC2668FF /* FiveMin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveMin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefsStore.swift; sourceTree = "<group>"; };
+		8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCatalog.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F64789A0B1C2D3 /* FiveMinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveMinTheme.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7489B0C1D2E3F /* DigitalWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalWatch.swift; sourceTree = "<group>"; };
+		C5DD556C779942718E800FF8 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
+		CBB26D8D4A3F4970A417872E /* shared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shared; path = Resources/shared; sourceTree = "<group>"; };
 		CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewModel.swift; sourceTree = "<group>"; };
 		E92E9B8A4DDB45B9895F7698 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
-		4CCA38C137CC41B7AC2668FF /* FiveMin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveMin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB77B6B53FAC42049DFAC164 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		30FFFF9EB0C34F948554807E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CBB26D8D4A3F4970A417872E /* shared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shared; path = Resources/shared; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,12 +51,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06EF70B2518541CDAB00EDD3 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C5DD556C779942718E800FF8 /* AlertService.swift */,
+				2DB3123630D7407CA4D6CE8D /* NotificationService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
 		20624BC2784341C5B5C024CB = {
 			isa = PBXGroup;
 			children = (
 				F0E9D2C7C24F4168BB6B8835 /* FiveMin */,
 				31BDDBFA53FE4CDE820B283C /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		2D2B45F88A9B48DFB2E0FA55 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				611D0ABC6745493D9098E99B /* Timer */,
+			);
+			path = Features;
 			sourceTree = "<group>";
 		};
 		31BDDBFA53FE4CDE820B283C /* Products */ = {
@@ -61,18 +84,13 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		F0E9D2C7C24F4168BB6B8835 /* FiveMin */ = {
+		611D0ABC6745493D9098E99B /* Timer */ = {
 			isa = PBXGroup;
 			children = (
-				3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */,
-				B87CE4030692464A85F0B819 /* Data */,
-				06EF70B2518541CDAB00EDD3 /* Services */,
-				2D2B45F88A9B48DFB2E0FA55 /* Features */,
-				FB77B6B53FAC42049DFAC164 /* Assets.xcassets */,
-				CBB26D8D4A3F4970A417872E /* shared */,
-				30FFFF9EB0C34F948554807E /* Info.plist */,
+				CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */,
+				E92E9B8A4DDB45B9895F7698 /* TimerView.swift */,
 			);
-			path = FiveMin;
+			path = Timer;
 			sourceTree = "<group>";
 		};
 		B87CE4030692464A85F0B819 /* Data */ = {
@@ -85,30 +103,29 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
-		06EF70B2518541CDAB00EDD3 /* Services */ = {
+		D4E5F6A7B8C94D0E1F2A3B4C /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				C5DD556C779942718E800FF8 /* AlertService.swift */,
-				2DB3123630D7407CA4D6CE8D /* NotificationService.swift */,
+				A1B2C3D4E5F64789A0B1C2D3 /* FiveMinTheme.swift */,
+				B2C3D4E5F6A7489B0C1D2E3F /* DigitalWatch.swift */,
 			);
-			path = Services;
+			path = UI;
 			sourceTree = "<group>";
 		};
-		2D2B45F88A9B48DFB2E0FA55 /* Features */ = {
+		F0E9D2C7C24F4168BB6B8835 /* FiveMin */ = {
 			isa = PBXGroup;
 			children = (
-				611D0ABC6745493D9098E99B /* Timer */,
+				3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */,
+				D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */,
+				B87CE4030692464A85F0B819 /* Data */,
+				06EF70B2518541CDAB00EDD3 /* Services */,
+				2D2B45F88A9B48DFB2E0FA55 /* Features */,
+				D4E5F6A7B8C94D0E1F2A3B4C /* UI */,
+				FB77B6B53FAC42049DFAC164 /* Assets.xcassets */,
+				CBB26D8D4A3F4970A417872E /* shared */,
+				30FFFF9EB0C34F948554807E /* Info.plist */,
 			);
-			path = Features;
-			sourceTree = "<group>";
-		};
-		611D0ABC6745493D9098E99B /* Timer */ = {
-			isa = PBXGroup;
-			children = (
-				CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */,
-				E92E9B8A4DDB45B9895F7698 /* TimerView.swift */,
-			);
-			path = Timer;
+			path = FiveMin;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,7 +156,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1600;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2720;
 			};
 			buildConfigurationList = C733477FC3DE491094E45C72 /* Build configuration list for PBXProject "FiveMin" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -178,6 +195,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FE95D03A6EA74FCBA58FE238 /* FiveMinApp.swift in Sources */,
+				E8F9A0B1C2D34E5F6A7B8C9D /* AppDelegate.swift in Sources */,
 				AE58305BC3834AC788440220 /* SharedCatalog.swift in Sources */,
 				96713C72BB414EC69166AE38 /* PrefsStore.swift in Sources */,
 				4B2A469DED8F439E8A35DDD6 /* I18n.swift in Sources */,
@@ -185,38 +203,53 @@
 				B1645718EB2145A4A1D50559 /* NotificationService.swift in Sources */,
 				97D1DB55C3F0481E807AF6C2 /* TimerViewModel.swift in Sources */,
 				544F1D45EDDB430BA9517F85 /* TimerView.swift in Sources */,
+				6A11C0DE5E0E4F1A9B2C3D4E /* FiveMinTheme.swift in Sources */,
+				7B22D1EF6F1F502B0C3D4E5F /* DigitalWatch.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		A8713981A3AF46F49733C91F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_MODULES = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_TESTABILITY = YES;
-				GCC_DYNAMIC_NO_PIC = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
 		266DAC39CC26488F996182AC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -227,6 +260,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -254,6 +288,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -276,23 +311,70 @@
 			};
 			name = Release;
 		};
+		A8713981A3AF46F49733C91F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C733477FC3DE491094E45C72 /* Build configuration list for PBXProject "FiveMin" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A8713981A3AF46F49733C91F /* Debug */,
-				266DAC39CC26488F996182AC /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		8EADDE83ECCB45A68AB3558B /* Build configuration list for PBXNativeTarget "FiveMin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2991224DA1E9465D82D0B1EA /* Debug */,
 				56F21168D8A24CFE8BF4EF77 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C733477FC3DE491094E45C72 /* Build configuration list for PBXProject "FiveMin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A8713981A3AF46F49733C91F /* Debug */,
+				266DAC39CC26488F996182AC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

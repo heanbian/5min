@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSUserNotificationsUsageDescription</key>
-	<string>用于在倒计时结束后发送本机通知，提醒您起身活动。本应用仅供习惯提醒，不构成医疗建议，亦非医疗器械。</string>
+	<string>用于在倒计时结束后发送本机通知，提醒您起身活动。本应用仅供习惯提醒。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

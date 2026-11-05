@@ -4,13 +4,26 @@ xcuserdata/
 *.xccheckout
 *.xcscmblueprint
 *.moved-aside
+*.xcuserdatad/
 
 # Build / Derived
 build/
 DerivedData/
 *.ipa
+*.xcarchive
 *.dSYM.zip
 *.dSYM
+/store/release/
+
+# Signing (local secrets — never commit)
+ExportOptions.plist
+signing.properties
+/signing/material/
+!/signing/README.md
+*.p12
+*.mobileprovision
+*.cer
+AuthKey_*.p8
 
 # Swift Package Manager
 .swiftpm/
@@ -33,3 +46,4 @@ playground.xcworkspace
 *.orig
 *.swp
 *~
+.tools-venv/

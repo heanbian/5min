@@ -4,6 +4,7 @@
     { "name": "EntryAbility_desc", "value": "计时主界面" },
     { "name": "EntryAbility_label", "value": "如厕计时器" },
     { "name": "perm_vibrate", "value": "用于倒计时结束后的振动提醒" },
-    { "name": "perm_bg", "value": "用于倒计时在后台继续运行，并在到期时发送提醒" }
+    { "name": "perm_bg", "value": "用于倒计时在后台继续运行，并在到期时发送提醒" },
+    { "name": "perm_reminder", "value": "用于在倒计时结束后由系统发送本机提醒通知" }
   ]
 }

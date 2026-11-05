@@ -42,36 +42,36 @@ cd ../5min-web && node scripts/export-shared.mjs
 
 1. 在 [AppGallery Connect](https://developer.huawei.com/consumer/cn/service/josp/agc/index.html) 创建应用（包名 `chat.5min.app`），申请发布证书 / Profile。
 2. 将 `.p12` / `.cer` / `.p7b` 放到 `signing/material/`（已 gitignore）。
-3. **在 DevEco 里配置签名（推荐）**  
-   `File` → `Project Structure` → `Signing Configs` → 取消「Automatically generate signature」  
-   填入 Store File / Cert / Profile / 密码 / Alias → `Apply`。  
-   IDE 会把 `storePassword` / `keyPassword` **加密**写入 `build-profile.json5`（明文密码长度不足 32 会报 `00303116`）。
+3. **在 DevEco 里配置签名（推荐）**
+ `File` → `Project Structure` → `Signing Configs` → 取消「Automatically generate signature」
+ 填入 Store File / Cert / Profile / 密码 / Alias → `Apply`。
+ IDE 会把 `storePassword` / `keyPassword` **加密**写入 `build-profile.json5`（明文密码长度不足 32 会报 `00303116`）。
 4. 可选：复制 `signing.properties.example` → `signing.properties` 仅作路径备忘；正式注入密码请用上一步 IDE，不要手写明文进 `build-profile.json5`。
 
 > `signing.properties`、`signing/material/`、注入后的本地 `build-profile.json5` 密钥信息勿提交 Git。
 
 ## 打包正式版（HAP / APP）
 
-1. **改版本号**（每次上架递增）  
-   编辑 `AppScope/app.json5` → `versionName` / `versionCode`。
+1. **改版本号**（每次上架递增）
+ 编辑 `AppScope/app.json5` → `versionName` / `versionCode`。
 
 2. **出包**
 
 ```bash
 chmod +x scripts/release.sh
-./scripts/release.sh hap   # → store/release/5min-harmony-app-1.0.0.hap
-./scripts/release.sh app   # → store/release/5min-harmony-app-1.0.0.app
+./scripts/release.sh hap # → store/release/5min-harmony-app-1.0.0.hap
+./scripts/release.sh app # → store/release/5min-harmony-app-1.0.0.app
 ```
 
 也可在 DevEco：`Build` → `Build Hap(s)/APP(s)` → `Build App(s)`。
 
 确认产物为 **`*-signed.app`**（不要上传 `*-unsigned.app`），且 `build-profile.json5` 里 product 的 `signingConfig` 指向**发布证书**（`signing/material/5min_chat.*`），不要用 `~/.ohos/config` 自动调试签名。
 
-3. **上架**  
-   AppGallery Connect → 软件包管理 上传 `.app`；图标可用 `store/artwork/ic_launcher_1024.png`。  
-   若提示「软件包解析失败」，到软件包管理列表点错误码查看（常见：未签名包、调试 Profile、证书不匹配）。
+3. **上架**
+ AppGallery Connect → 软件包管理 上传 `.app`；图标可用 `store/artwork/ic_launcher_1024.png`。
+ 若提示「软件包解析失败」，到软件包管理列表点错误码查看（常见：未签名包、调试 Profile、证书不匹配）。
 
 ## 说明
 
-- 后台杀进程后的精确提醒可按目标 API 继续接入 ReminderAgent / 后台任务（当前版本以前台 ticker + 通知/振动为主）。
-- 本工具仅供习惯提醒，不构成医疗建议，亦不替代专业诊疗意见；本产品非医疗器械；数据仅存本机。
+- 系统通知：首次开始计时时会申请通知授权；到期通过 `notificationManager.publish` 弹出本机通知；并尝试 `reminderAgentManager`（`PUBLISH_AGENT_REMINDER`）在后台/冻后仍提醒。若代理提醒受控未开通，前台结束通知仍可用。
+- 本工具仅供习惯提醒；数据仅存本机。

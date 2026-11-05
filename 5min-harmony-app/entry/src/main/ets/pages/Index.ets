@@ -4,7 +4,12 @@ import { PrefsStore } from '../common/PrefsStore';
 import { resolveLocale } from '../common/I18n';
 import { TimerState, formatMs, phaseOf } from '../timer/TimerState';
 import { FinishAlerter } from '../alert/FinishAlerter';
-import { showFinishNotification } from '../notify/FinishNotifier';
+import {
+  ensureNotificationPermission,
+  showFinishNotification,
+  scheduleFinishReminder,
+  cancelFinishReminder
+} from '../notify/FinishNotifier';
 import { DigitalWatchTime } from '../ui/DigitalWatch';
 import { i18n } from '@kit.LocalizationKit';
 
@@ -243,44 +248,50 @@ struct Index {
     this.showScenes = false;
   }
 
-  toggleStart(): void {
+  async toggleStart(): Promise<void> {
     if (this.state.finished && !this.state.running) {
       this.state.remainMs = this.state.totalMs;
       this.state.finished = false;
-      this.start();
+      await this.start();
       return;
     }
     if (this.state.running) {
-      this.pause();
+      await this.pause();
     } else {
-      this.start();
+      await this.start();
     }
   }
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.state.remainMs <= 0) {
       return;
     }
+    const ctx = getContext(this) as common.UIAbilityContext;
+    await ensureNotificationPermission(ctx);
     this.finishedHandled = false;
     this.state.endAt = Date.now() + this.state.remainMs;
     this.state.running = true;
     this.state.finished = false;
+    const secs = Math.max(1, Math.ceil(this.state.remainMs / 1000));
+    await scheduleFinishReminder(secs, this.t('notifyTitle'), this.t('notifyBody'));
     this.startTicker();
     this.refreshUi();
   }
 
-  pause(): void {
+  async pause(): Promise<void> {
     if (!this.state.running) {
       return;
     }
     this.state.remainMs = Math.max(0, this.state.endAt - Date.now());
     this.state.running = false;
     this.stopTicker();
+    await cancelFinishReminder();
     this.refreshUi();
   }
 
-  reset(): void {
+  async reset(): Promise<void> {
     this.stopTicker();
+    await cancelFinishReminder();
     this.finishedHandled = false;
     this.state.remainMs = this.state.totalMs;
     this.state.running = false;
@@ -318,6 +329,7 @@ struct Index {
     }
     this.finishedHandled = true;
     this.stopTicker();
+    await cancelFinishReminder();
     this.state.remainMs = 0;
     this.state.running = false;
     this.state.finished = true;

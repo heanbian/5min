@@ -41,8 +41,18 @@ class FiveMinApp : Application() {
                 getString(R.string.channel_finish),
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
+                description = getString(R.string.channel_finish)
                 enableVibration(true)
+                enableLights(true)
+                setShowBadge(true)
                 vibrationPattern = catalog.vibratePatternMs.map { it.toLong() }.toLongArray()
+                setSound(
+                    android.provider.Settings.System.DEFAULT_NOTIFICATION_URI,
+                    android.media.AudioAttributes.Builder()
+                        .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build(),
+                )
             },
         )
     }

@@ -32,6 +32,7 @@ final class TimerViewModel: ObservableObject {
     }
 
     func bootstrap() {
+        NotificationService.configure()
         NotificationService.requestPermission()
         let saved = prefs.locale
         locale = I18n.resolve(
@@ -85,10 +86,14 @@ final class TimerViewModel: ObservableObject {
         if finished && !running {
             remainMs = totalMs
             finished = false
-            start()
+            NotificationService.ensureAuthorized { [weak self] in self?.start() }
             return
         }
-        if running { pause() } else { start() }
+        if running {
+            pause()
+        } else {
+            NotificationService.ensureAuthorized { [weak self] in self?.start() }
+        }
     }
 
     func reset() {
@@ -172,6 +177,7 @@ final class TimerViewModel: ObservableObject {
         statsCount = stats.count
         statsMs = stats.ms
         if fromTicker {
+            NotificationService.presentNow(title: t("notifyTitle"), body: t("notifyBody"))
             AlertService.shared.play(durationMs: catalog.alertDurationMs)
         }
         refreshPhase()
