@@ -15,3 +15,5 @@ Thumbs.db
 node_modules/
 miniprogram_npm/
 .tea/
+private.*.key
+*.key
