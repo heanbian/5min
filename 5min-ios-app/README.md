@@ -8,7 +8,8 @@
 | 显示名 | 如厕计时器（`CFBundleDisplayName`） |
 | 版本 | `FiveMin/Info.plist` → `CFBundleShortVersionString` / `CFBundleVersion`（与工程 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 保持一致；当前 `1.0.0` / `1`） |
 | 技术 | SwiftUI · UserNotifications · AVAudioEngine · Core Haptics |
-| 最低系统 | iOS 17 |
+| 最低系统 | iOS 17（建议用 **Xcode 27.1+ / iOS 27.1 SDK** 构建以优化 iPhone Duo） |
+| 设备 | iPhone / iPad；支持 **iPhone Duo**（外屏紧凑 + 内屏宽布局自适应） |
 | 工程 | `FiveMin.xcodeproj` |
 | 许可 | [LICENSE](./LICENSE)（Apache-2.0） |
 
@@ -19,6 +20,15 @@
 - 今日累计、多语言（含阿语 RTL）
 - 计时中常亮（`isIdleTimerDisabled`）
 - 结束后轻触表盘可再次提醒
+- **iPhone Duo**：按窗口尺寸（非设备型号）自适应；外屏竖排，内屏/横屏/分屏采用左右双栏；支持多方向与非全屏（`UIRequiresFullScreen=false`）
+
+### iPhone Duo 说明
+
+依据 [Preparing your app for iPhone Duo](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)：
+
+- 布局依据 `GeometryReader` / size class，**不**用 `UIScreen.main` 或固定机型尺寸
+- 展开内屏或横屏时自动切到宽布局；折叠回外屏恢复紧凑布局
+- 正式优化建议使用 **Xcode 27.1** 构建；本工程最低仍兼容 iOS 17
 
 ---
 

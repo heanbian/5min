@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TimerView: View {
     @EnvironmentObject private var model: TimerViewModel
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showScenes = false
 
     private var ringColor: Color {
@@ -52,11 +53,14 @@ struct TimerView: View {
 
     var body: some View {
         let isRTL = model.locale.hasPrefix("ar")
-        ZStack {
-            LinearGradient(colors: bgColors, startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            let wide = shouldUseWideLayout(size: geo.size)
+            let dial = dialSize(for: geo.size, wide: wide)
 
-            GeometryReader { geo in
+            ZStack {
+                LinearGradient(colors: bgColors, startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
+
                 RadialGradient(
                     colors: [glowColor.opacity(0.95), .clear],
                     center: UnitPoint(x: 0.5, y: -0.02),
@@ -65,17 +69,15 @@ struct TimerView: View {
                 )
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
-            }
 
-            ScrollView {
-                VStack(spacing: FiveMinDimens.sectionGap) {
-                    topBar
-                    stage
-                    actions
-                    footnote
+                Group {
+                    if wide {
+                        wideContent(dial: dial, size: geo.size)
+                    } else {
+                        compactContent(dial: dial)
+                    }
                 }
-                .padding(.horizontal, FiveMinDimens.padX)
-                .padding(.vertical, FiveMinDimens.padY)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
@@ -86,7 +88,65 @@ struct TimerView: View {
         }
     }
 
-    // MARK: - Top bar（logo + title | ambient + locale）
+    /// Prefer scene / window bounds over device idiom — required for iPhone Duo resize.
+    private func shouldUseWideLayout(size: CGSize) -> Bool {
+        if horizontalSizeClass == .regular { return true }
+        // Unfolded / landscape / Split View: wider than tall with enough room for two columns.
+        return size.width > size.height && size.width >= 560
+    }
+
+    private func dialSize(for size: CGSize, wide: Bool) -> CGFloat {
+        if wide {
+            let side = min(size.height * 0.62, size.width * 0.42, 320)
+            return max(180, side)
+        }
+        let side = min(size.width - FiveMinDimens.padX * 2, size.height * 0.38, FiveMinDimens.dialSize)
+        return max(160, side)
+    }
+
+    // MARK: - Compact (outer display / portrait phone)
+
+    private func compactContent(dial: CGFloat) -> some View {
+        ScrollView {
+            VStack(spacing: FiveMinDimens.sectionGap) {
+                topBar
+                stage(dial: dial)
+                actions
+                footnote
+            }
+            .padding(.horizontal, FiveMinDimens.padX)
+            .padding(.vertical, FiveMinDimens.padY)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: - Wide (iPhone Duo inner / landscape / Split View)
+
+    private func wideContent(dial: CGFloat, size: CGSize) -> some View {
+        VStack(spacing: 0) {
+            topBar
+                .padding(.horizontal, FiveMinDimens.padX)
+                .padding(.top, FiveMinDimens.padY)
+                .padding(.bottom, 12)
+
+            HStack(alignment: .center, spacing: 28) {
+                stage(dial: dial)
+                    .frame(maxWidth: .infinity)
+
+                VStack(spacing: FiveMinDimens.sectionGap) {
+                    actions
+                    footnote
+                }
+                .frame(maxWidth: min(420, size.width * 0.46))
+            }
+            .padding(.horizontal, FiveMinDimens.padX)
+            .padding(.bottom, FiveMinDimens.padY)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - Top bar
 
     private var topBar: some View {
         HStack(spacing: 12) {
@@ -162,22 +222,23 @@ struct TimerView: View {
         }
     }
 
-    // MARK: - Stage（dial → status → stats）
+    // MARK: - Stage
 
-    private var stage: some View {
-        VStack(spacing: FiveMinDimens.stageGap) {
+    private func stage(dial: CGFloat) -> some View {
+        let stroke = dial * (8.5 / 120)
+        return VStack(spacing: FiveMinDimens.stageGap) {
             ZStack {
                 Circle()
-                    .stroke(FiveMinColor.ring, style: StrokeStyle(lineWidth: dialStroke, lineCap: .round))
+                    .stroke(FiveMinColor.ring, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                 Circle()
                     .trim(from: 0, to: model.progress)
-                    .stroke(ringColor, style: StrokeStyle(lineWidth: dialStroke, lineCap: .round))
+                    .stroke(ringColor, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 0.2), value: model.progress)
                 DigitalWatchTime(text: model.format(model.remainMs), color: timeColor)
-                    .frame(width: FiveMinDimens.dialSize * 0.64)
+                    .frame(width: dial * 0.64)
             }
-            .frame(width: FiveMinDimens.dialSize, height: FiveMinDimens.dialSize)
+            .frame(width: dial, height: dial)
             .onTapGesture {
                 if model.finished { model.realert() }
             }
@@ -195,10 +256,6 @@ struct TimerView: View {
             }
         }
         .frame(maxWidth: .infinity)
-    }
-
-    private var dialStroke: CGFloat {
-        FiveMinDimens.dialSize * (8.5 / 120)
     }
 
     private var statsRow: some View {
