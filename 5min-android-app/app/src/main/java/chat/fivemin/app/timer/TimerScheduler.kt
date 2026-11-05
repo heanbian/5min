@@ -11,6 +11,7 @@ object TimerScheduler {
     const val ACTION_FINISH = "chat.fivemin.app.action.TIMER_FINISH"
     const val EXTRA_END_AT = "end_at"
     const val EXTRA_ELAPSED = "elapsed_ms"
+    const val EXTRA_SCENE = "scene_name"
     private const val TAG = "TimerScheduler"
 
     fun canScheduleExact(context: Context): Boolean {
@@ -20,9 +21,14 @@ object TimerScheduler {
     }
 
     /** Schedule finish wake-up. Never throws — falls back when exact alarm is denied. */
-    fun scheduleExact(context: Context, endAt: Long, elapsedMs: Long) {
+    fun scheduleExact(
+        context: Context,
+        endAt: Long,
+        elapsedMs: Long,
+        sceneName: String = "",
+    ) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
-        val pi = pending(context, endAt, elapsedMs)
+        val pi = pending(context, endAt, elapsedMs, sceneName)
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endAt, pi)
@@ -49,17 +55,23 @@ object TimerScheduler {
     fun cancel(context: Context) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
         try {
-            am.cancel(pending(context, 0L, 0L))
+            am.cancel(pending(context, 0L, 0L, ""))
         } catch (_: Exception) {
             // ignore
         }
     }
 
-    private fun pending(context: Context, endAt: Long, elapsedMs: Long): PendingIntent {
+    private fun pending(
+        context: Context,
+        endAt: Long,
+        elapsedMs: Long,
+        sceneName: String,
+    ): PendingIntent {
         val intent = Intent(context, TimerAlarmReceiver::class.java).apply {
             action = ACTION_FINISH
             putExtra(EXTRA_END_AT, endAt)
             putExtra(EXTRA_ELAPSED, elapsedMs)
+            putExtra(EXTRA_SCENE, sceneName)
         }
         return PendingIntent.getBroadcast(
             context,

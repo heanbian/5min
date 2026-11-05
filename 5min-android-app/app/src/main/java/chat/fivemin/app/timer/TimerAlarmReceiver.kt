@@ -11,10 +11,11 @@ class TimerAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != TimerScheduler.ACTION_FINISH) return
         val elapsed = intent.getLongExtra(TimerScheduler.EXTRA_ELAPSED, 0L)
+        val scene = intent.getStringExtra(TimerScheduler.EXTRA_SCENE)
         if (elapsed > 0L) {
             FiveMinApp.instance.prefs.recordSession(elapsed)
         }
-        FinishNotifier.show(context, elapsed)
+        FinishNotifier.show(context, elapsed, scene)
         FinishAlerter.play(context)
         TimerForegroundService.stop(context)
         TimerBus.publishFinished()

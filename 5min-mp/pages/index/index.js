@@ -459,12 +459,24 @@ Page({
     recordCompletedSession(this.totalMs);
     this.refreshStats();
     this.refreshUi();
-    const n = Math.round(this.totalMs / 60000);
+    const vars = {
+      n: Math.max(1, Math.round(this.totalMs / 60000)),
+      scene: this.notifySceneName(),
+    };
     alertFinish({
-      title: t('notifyTitle', { n }),
-      body: t('notifyBody', { n }),
+      title: t('notifyTitle', vars),
+      body: t('notifyBody', vars),
       durationMs: ALERT_DURATION_MS,
     });
+  },
+
+  /** Scene title for finish notify; default system scene is toilet (如厕). */
+  notifySceneName() {
+    if (this.activeSceneId) {
+      const scene = sceneById(this.activeSceneId);
+      if (scene) return t(scene.titleKey);
+    }
+    return t('sceneToiletTitle');
   },
 
   setPreset(minutes, sceneId) {

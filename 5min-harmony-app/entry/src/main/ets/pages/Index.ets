@@ -163,6 +163,24 @@ struct Index {
     return vars;
   }
 
+  private varsNotify(n: string, scene: string): Record<string, string> {
+    const vars: Record<string, string> = {};
+    vars['n'] = n;
+    vars['scene'] = scene;
+    return vars;
+  }
+
+  /** Scene title for finish notify; default system scene is toilet (如厕). */
+  private notifySceneName(): string {
+    if (this.state.activeSceneId) {
+      const scene = this.scenes.find((s) => s.id === this.state.activeSceneId);
+      if (scene) {
+        return this.t(scene.titleKey);
+      }
+    }
+    return this.t('sceneToiletTitle');
+  }
+
   refreshUi(): void {
     this.state.phase = phaseOf(this.state);
     this.progress = this.state.progress();
@@ -284,11 +302,11 @@ struct Index {
     this.state.running = true;
     this.state.finished = false;
     const secs = Math.max(1, Math.ceil(this.state.remainMs / 1000));
-    const nMin = String(this.sessionMinutes());
+    const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
     await scheduleFinishReminder(
       secs,
-      this.t('notifyTitle', this.varsN(nMin)),
-      this.t('notifyBody', this.varsN(nMin))
+      this.t('notifyTitle', notifyVars),
+      this.t('notifyBody', notifyVars)
     );
     this.startTicker();
     this.refreshUi();
@@ -364,9 +382,9 @@ struct Index {
     this.state.statsCount = stats[0];
     this.state.statsMs = stats[1];
     this.refreshUi();
-    const nMin = String(this.sessionMinutes());
-    const title = this.t('notifyTitle', this.varsN(nMin));
-    const body = this.t('notifyBody', this.varsN(nMin));
+    const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
+    const title = this.t('notifyTitle', notifyVars);
+    const body = this.t('notifyBody', notifyVars);
     const ack = this.t('notifyAck');
     // System shade/banner notification (banner needs user toggle; often off by default).
     await showFinishNotification(title, body);

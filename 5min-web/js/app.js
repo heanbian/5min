@@ -461,13 +461,22 @@ const startTitleBlink = () => {
 
 const sessionMinutes = () => Math.max(1, Math.round(totalMs / 60_000));
 
+/** Scene title for finish notify; default system scene is toilet (如厕). */
+const notifySceneName = () => {
+  if (activeScene) {
+    const scene = SCENES.find((s) => s.id === activeScene);
+    if (scene) return tr(scene.titleKey);
+  }
+  return tr('sceneToiletTitle');
+};
+
 const maybeNotify = () => {
   if (!('Notification' in globalThis)) return;
   if (Notification.permission !== 'granted') return;
   try {
-    const nMin = String(sessionMinutes());
-    const n = new Notification(tr('notifyTitle', { n: nMin }), {
-      body: tr('notifyBody', { n: nMin }),
+    const vars = { n: String(sessionMinutes()), scene: notifySceneName() };
+    const n = new Notification(tr('notifyTitle', vars), {
+      body: tr('notifyBody', vars),
       icon: 'img/logo.png',
       tag: '5min-toilet-timer',
       renotify: true,

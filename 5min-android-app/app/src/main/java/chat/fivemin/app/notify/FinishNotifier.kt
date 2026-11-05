@@ -16,7 +16,11 @@ import kotlin.math.roundToInt
 object FinishNotifier {
     const val NOTIF_ID = 3001
 
-    fun show(context: Context, totalMs: Long = 5 * 60_000L) {
+    fun show(
+        context: Context,
+        totalMs: Long = 5 * 60_000L,
+        sceneName: String? = null,
+    ) {
         val appCtx = context.applicationContext
         val launch = PendingIntent.getActivity(
             appCtx,
@@ -31,7 +35,9 @@ object FinishNotifier {
         }
         val cat = FiveMinApp.instance.catalog
         val minutes = max(1, (totalMs / 60_000.0).roundToInt())
-        val vars = mapOf("n" to minutes.toString())
+        val scene = sceneName?.takeIf { it.isNotBlank() }
+            ?: cat.t(locale, "sceneToiletTitle")
+        val vars = mapOf("n" to minutes.toString(), "scene" to scene)
         val title = cat.t(locale, "notifyTitle", vars)
         val body = cat.t(locale, "notifyBody", vars)
         val pattern = cat.vibratePatternMs.map { it.toLong() }.toLongArray()

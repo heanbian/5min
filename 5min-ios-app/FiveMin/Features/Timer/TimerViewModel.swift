@@ -119,11 +119,11 @@ final class TimerViewModel: ObservableObject {
         running = true
         finished = false
         UIApplication.shared.isIdleTimerDisabled = true
-        let nMin = "\(sessionMinutes())"
+        let vars = notifyVars()
         NotificationService.scheduleFinish(
             at: end,
-            title: t("notifyTitle", ["n": nMin]),
-            body: t("notifyBody", ["n": nMin])
+            title: t("notifyTitle", vars),
+            body: t("notifyBody", vars)
         )
         startTicker()
         refreshPhase()
@@ -178,10 +178,10 @@ final class TimerViewModel: ObservableObject {
         statsCount = stats.count
         statsMs = stats.ms
         if fromTicker {
-            let nMin = "\(sessionMinutes())"
+            let vars = notifyVars()
             NotificationService.presentNow(
-                title: t("notifyTitle", ["n": nMin]),
-                body: t("notifyBody", ["n": nMin])
+                title: t("notifyTitle", vars),
+                body: t("notifyBody", vars)
             )
             AlertService.shared.play(durationMs: catalog.alertDurationMs)
         }
@@ -190,6 +190,19 @@ final class TimerViewModel: ObservableObject {
 
     func sessionMinutes() -> Int {
         max(1, Int((Double(totalMs) / 60_000.0).rounded()))
+    }
+
+    /// Scene title for finish notify; default system scene is toilet (如厕).
+    func notifySceneName() -> String {
+        if let id = activeSceneId,
+           let scene = catalog.scenes.first(where: { $0.id == id }) {
+            return t(scene.titleKey)
+        }
+        return t("sceneToiletTitle")
+    }
+
+    private func notifyVars() -> [String: String] {
+        ["n": "\(sessionMinutes())", "scene": notifySceneName()]
     }
 
     func format(_ ms: Int64) -> String {

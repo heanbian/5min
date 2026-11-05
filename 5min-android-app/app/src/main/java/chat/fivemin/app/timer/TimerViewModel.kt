@@ -119,7 +119,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         endAt = System.currentTimeMillis() + s.remainMs
         _state.update { it.copy(running = true, finished = false, phase = phaseFor(it.remainMs, true, false)) }
         // Alarm + FGS must not crash the UI thread if OS denies permissions
-        runCatching { TimerScheduler.scheduleExact(getApplication(), endAt, s.totalMs) }
+        runCatching {
+            TimerScheduler.scheduleExact(getApplication(), endAt, s.totalMs, notifySceneName())
+        }
         runCatching { TimerForegroundService.start(getApplication(), endAt, format(s.remainMs)) }
         startTicker()
     }
@@ -186,7 +188,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val total = _state.value.totalMs
         if (fromTicker) {
             prefs.recordSession(total)
-            FinishNotifier.show(getApplication(), total)
+            FinishNotifier.show(getApplication(), total, notifySceneName())
             FinishAlerter.play(getApplication())
         }
         val (count, ms) = prefs.todayStats()
@@ -208,6 +210,16 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         running -> TimerPhase.Running
         remain < _state.value.totalMs -> TimerPhase.Paused
         else -> TimerPhase.Idle
+    }
+
+    /** Scene title for finish notify; default system scene is toilet (如厕). */
+    fun notifySceneName(): String {
+        val id = _state.value.activeSceneId
+        if (!id.isNullOrBlank()) {
+            val scene = catalog.scenes.find { it.id == id }
+            if (scene != null) return t(scene.titleKey)
+        }
+        return t("sceneToiletTitle")
     }
 
     fun format(ms: Long): String {

@@ -23,8 +23,8 @@ module.exports = {
   "titleSuffix": "五分钟",
   "titleDoneBlink": "计时已结束 · 请起身活动",
   "titleDoneZero": "0:00 · {n} 分钟",
-  "notifyTitle": "{n} 分钟 · 计时结束",
-  "notifyBody": "{n} 分钟计时已结束，请起身活动。",
+  "notifyTitle": "{scene} · {n} 分钟 · 计时结束",
+  "notifyBody": "{scene} {n} 分钟计时已结束，请起身活动。",
   "scenesLabel": "场景预设",
   "scenePlaceholder": "请选择场景",
   "sceneGroupDaily": "日常起居",
@@ -134,4 +134,4 @@ module.exports = {
   "ambientWaves": "海浪声",
   "ambientClock": "钟声",
   "metaDescription": "如厕计时器（5min.chat）：端侧倒计时习惯提醒工具。公开资料通常建议将单次如厕时间控制在约 5 分钟以内。默认 5 分钟预设，亦可选 3 / 10 分钟；计时结束后通过振动、提示音与系统通知提醒起身活动。无需注册，无广告；计时与提醒在本机完成，不向服务端上传用户数据。仅供习惯提醒。"
-}
+};
