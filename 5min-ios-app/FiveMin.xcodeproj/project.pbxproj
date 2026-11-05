@@ -17,9 +17,9 @@
 		AE58305BC3834AC788440220 /* SharedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */; };
 		B1645718EB2145A4A1D50559 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB3123630D7407CA4D6CE8D /* NotificationService.swift */; };
 		C295C549153E4AABBA0F67CE /* AlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5DD556C779942718E800FF8 /* AlertService.swift */; };
+		E8F9A0B1C2D34E5F6A7B8C9D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */; };
 		F1053CCDA8E841519E0597E6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB77B6B53FAC42049DFAC164 /* Assets.xcassets */; };
 		FE95D03A6EA74FCBA58FE238 /* FiveMinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */; };
-		E8F9A0B1C2D34E5F6A7B8C9D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,6 @@
 		30FFFF9EB0C34F948554807E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		335D646AD96E42DDBDB9959B /* I18n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = I18n.swift; sourceTree = "<group>"; };
 		3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveMinApp.swift; sourceTree = "<group>"; };
-		D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4CCA38C137CC41B7AC2668FF /* FiveMin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveMin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefsStore.swift; sourceTree = "<group>"; };
 		8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCatalog.swift; sourceTree = "<group>"; };
@@ -36,6 +35,7 @@
 		C5DD556C779942718E800FF8 /* AlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertService.swift; sourceTree = "<group>"; };
 		CBB26D8D4A3F4970A417872E /* shared */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shared; path = Resources/shared; sourceTree = "<group>"; };
 		CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewModel.swift; sourceTree = "<group>"; };
+		D7E8F9A0B1C24D3E4F5A6B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E92E9B8A4DDB45B9895F7698 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		FB77B6B53FAC42049DFAC164 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -263,7 +263,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y248NURM5P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FiveMin/Info.plist;
@@ -291,7 +291,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y248NURM5P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FiveMin/Info.plist;
