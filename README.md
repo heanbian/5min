@@ -1,6 +1,11 @@
 # 5min
 
-如厕计时器 · 五分钟 — 多端仓库。正式站点：[5min.chat](https://5min.chat/)。
+**如厕计时器** — 多端仓库。正式站点：[5min.chat](https://5min.chat/)。
+
+- **定名**：如厕计时器  
+- **主打**：五分钟（公开资料通常建议将单次如厕控制在约 5 分钟以内）  
+- **品牌字标**：`5min`  
+- **SEO 标题常用**：如厕计时器 · 五分钟  
 
 ## 子项目
 
@@ -11,7 +16,7 @@
 | [`5min-harmony-app`](./5min-harmony-app) | HarmonyOS NEXT 原生（ArkTS），`bundleName`：`chat.5min.app` |
 | [`5min-ios-app`](./5min-ios-app) | iOS 原生（SwiftUI），`PRODUCT_BUNDLE_IDENTIFIER`：`chat.5min.app` |
 
-说明：Android 包名每一段不能以数字开头，因此 Android 使用 `chat.fivemin.app`；iOS / 鸿蒙仍可用 `chat.5min.app`。
+说明：Android 包名每一段不能以数字开头，因此 Android 使用 `chat.fivemin.app`；iOS / 鸿蒙仍可用 `chat.5min.app`。各端应用显示名均为「如厕计时器」。
 
 ## 共享文案与场景
 

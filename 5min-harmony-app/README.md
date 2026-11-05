@@ -1,6 +1,6 @@
 # 5min-harmony-app
 
-如厕计时器 · 五分钟 — HarmonyOS 原生客户端。
+**如厕计时器** — HarmonyOS 原生客户端。
 
 - **bundleName**：`chat.5min.app`
 - **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（与 Android `1.0.0` 对齐；`versionCode` 采用 `major*1000000+minor*1000+patch`）

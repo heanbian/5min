@@ -1,6 +1,6 @@
 # 5min-ios-app
 
-如厕计时器 · 五分钟 — iOS 原生客户端。
+**如厕计时器** — iOS 原生客户端。
 
 - **Bundle ID**：`chat.5min.app`
 - **技术**：SwiftUI · UserNotifications · AVAudioEngine · Core Haptics（NotificationFeedback）

@@ -1,6 +1,6 @@
 {
   "string": [
-    { "name": "module_desc", "value": "如厕计时器 · 五分钟" },
+    { "name": "module_desc", "value": "如厕计时器" },
     { "name": "EntryAbility_desc", "value": "计时主界面" },
     { "name": "EntryAbility_label", "value": "如厕计时器" },
     { "name": "perm_vibrate", "value": "用于计时结束振动提醒" },
