@@ -17,7 +17,7 @@
   "reset": "Restablecer",
   "again": "Empezar de nuevo",
   "minutes": "{n} min",
-  "footnote": "Las orientaciones públicas suelen recomendar limitar una visita al baño a unos cinco minutos; los dispositivos móviles pueden alterar la percepción del tiempo. Esta herramienta es únicamente un recordatorio de hábito y no constituye consejo médico.",
+  "footnote": "Las orientaciones públicas suelen recomendar limitar una visita al baño a unos cinco minutos; los dispositivos móviles pueden alterar la percepción del tiempo. Esta herramienta es únicamente un recordatorio de hábito; no constituye consejo médico, no sustituye la atención profesional y no es un producto sanitario.",
   "aboutLabel": "Acerca de",
   "titleIdle": "Temporizador de baño · 5min",
   "titleSuffix": "5min",
@@ -133,5 +133,5 @@
   "ambientRain": "Lluvia",
   "ambientWaves": "Olas del mar",
   "ambientClock": "Tictac del reloj",
-  "metaDescription": "Temporizador de baño · 5min (5min.chat): recordatorio de cuenta atrás en el dispositivo para hábitos de salud cotidianos. Presets de 3 / 5 / 10 minutos; alertas por vibración, sonido y notificación del sistema al finalizar. Sin registro ni anuncios. El temporizador y las alertas se ejecutan en el navegador; no se suben datos del usuario a un servidor."
+  "metaDescription": "Temporizador de baño · 5min (5min.chat): recordatorio de cuenta atrás en el dispositivo para la gestión de hábitos cotidianos. Presets de 3 / 5 / 10 minutos; alertas por vibración, sonido y notificación del sistema al finalizar. Sin registro ni anuncios. El temporizador y las alertas permanecen en el dispositivo; no se suben datos del usuario a un servidor. Solo recordatorio de hábito: no es consejo médico ni un producto sanitario."
 }

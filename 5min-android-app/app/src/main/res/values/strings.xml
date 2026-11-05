@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">如厕计时器</string>
-    <string name="channel_timer">计时进行中</string>
-    <string name="channel_finish">计时结束</string>
+    <string name="channel_timer">倒计时进行中</string>
+    <string name="channel_finish">计时已结束</string>
     <string name="notif_running">倒计时进行中</string>
     <string name="notif_finish_title">五分钟 · 计时结束</string>
     <string name="notif_finish_body">计时已结束，请起身活动。</string>

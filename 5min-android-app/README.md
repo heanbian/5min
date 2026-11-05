@@ -68,4 +68,4 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
 
 ## 隐私
 
-计时与统计仅存本机，无账号、无广告、不上传用户数据。本工具仅供习惯提醒，不构成医疗建议。
+计时与统计仅存本机，无账号、无广告、不上传用户数据。本工具仅供习惯提醒，不构成医疗建议，亦不替代专业诊疗意见；本产品非医疗器械。
