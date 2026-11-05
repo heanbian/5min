@@ -437,8 +437,8 @@ fun TimerApp(
                             .weight(1f)
                             .height(FiveMinDimens.controlH)
                             .clip(radius)
-                            .border(1.dp, FiveMinColors.line, radius)
-                            .background(Color.Transparent)
+                            .border(1.dp, FiveMinColors.ghostLine, radius)
+                            .background(FiveMinColors.ghostBg)
                             .then(
                                 if (resetEnabled) {
                                     Modifier.clickable { vm.reset() }
@@ -450,7 +450,7 @@ fun TimerApp(
                     ) {
                         Text(
                             text = vm.t("reset"),
-                            color = FiveMinColors.ink.copy(alpha = if (resetEnabled) 1f else 0.4f),
+                            color = FiveMinColors.ghostInk.copy(alpha = if (resetEnabled) 1f else 0.4f),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                         )

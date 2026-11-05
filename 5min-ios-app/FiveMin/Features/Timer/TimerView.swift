@@ -417,13 +417,13 @@ struct SecondaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.system(size: 16, weight: .semibold))
             .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH)
-            .background(Color.clear)
-            .foregroundStyle(FiveMinColor.ink.opacity(enabled ? 1 : 0.4))
+            .background(configuration.isPressed ? Color(red: 0xDD / 255, green: 0xE3 / 255, blue: 0xE0 / 255) : FiveMinColor.ghostBg)
+            .foregroundStyle(FiveMinColor.ghostInk.opacity(enabled ? 1 : 0.4))
             .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                    .stroke(FiveMinColor.line, lineWidth: 1)
+                    .stroke(FiveMinColor.ghostLine, lineWidth: 1)
             )
-            .opacity(configuration.isPressed ? 0.85 : 1)
+            .opacity(configuration.isPressed ? 0.92 : 1)
     }
 }

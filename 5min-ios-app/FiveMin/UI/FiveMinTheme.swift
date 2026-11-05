@@ -13,6 +13,10 @@ enum FiveMinColor {
     static let ink = Color(red: 0x1F / 255, green: 0x2A / 255, blue: 0x24 / 255)
     static let muted = Color(red: 0x5F / 255, green: 0x6F / 255, blue: 0x66 / 255)
     static let line = Color(red: 0xD7 / 255, green: 0xE5 / 255, blue: 0xDC / 255)
+    /// Reset / secondary — aligned with web `.ghost`
+    static let ghostBg = Color(red: 0xE8 / 255, green: 0xEC / 255, blue: 0xEA / 255)
+    static let ghostInk = Color(red: 0x6B / 255, green: 0x75 / 255, blue: 0x70 / 255)
+    static let ghostLine = Color(red: 0xD5 / 255, green: 0xDB / 255, blue: 0xD7 / 255)
     static let ring = Color(red: 0xCF / 255, green: 0xE0 / 255, blue: 0xD6 / 255)
     static let warn = Color(red: 0xC9 / 255, green: 0x86 / 255, blue: 0x2D / 255)
     static let warnSoft = Color(red: 0xFF / 255, green: 0xF6 / 255, blue: 0xE8 / 255)

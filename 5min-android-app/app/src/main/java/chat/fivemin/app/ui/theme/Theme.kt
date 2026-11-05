@@ -25,6 +25,10 @@ object FiveMinColors {
     val ink = Color(0xFF1F2A24)
     val muted = Color(0xFF5F6F66)
     val line = Color(0xFFD7E5DC)
+    /** Reset / secondary button — aligned with web `.ghost` */
+    val ghostBg = Color(0xFFE8ECEA)
+    val ghostInk = Color(0xFF6B7570)
+    val ghostLine = Color(0xFFD5DBD7)
     val ring = Color(0xFFCFE0D6)
     val warn = Color(0xFFC9862D)
     val warnSoft = Color(0xFFFFF6E8)

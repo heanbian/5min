@@ -457,14 +457,14 @@
     background:var(--brand-strong);
   }
   .ghost{
-    background:transparent;
-    color:var(--ink);
-    border-color:var(--line);
+    background:#e8ecea;
+    color:#6b7570;
+    border-color:#d5dbd7;
   }
   .ghost:active:not(:disabled){
-    background:var(--brand-soft);
-    border-color:color-mix(in srgb, var(--brand) 28%, var(--line));
-    color:var(--brand-strong);
+    background:#dde3e0;
+    border-color:#c8d0cc;
+    color:#4a554f;
   }
 
   /* 时长 + 场景：同一设置组，等高对齐 */
@@ -712,9 +712,9 @@
       background:var(--brand-strong);
     }
     .ghost:hover:not(:disabled){
-      background:var(--brand-soft);
-      border-color:color-mix(in srgb, var(--brand) 28%, var(--line));
-      color:var(--brand-strong);
+      background:#dde3e0;
+      border-color:#c8d0cc;
+      color:#4a554f;
     }
     .presets button:hover:not(:disabled):not(.active){
       color:var(--ink);

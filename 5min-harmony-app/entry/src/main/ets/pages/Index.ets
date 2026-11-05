@@ -581,10 +581,10 @@ struct Index {
                   .height(52)
                   .fontSize(16)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.ink'))
+                  .fontColor($r('app.color.ghost_ink'))
                   .textAlign(TextAlign.Center)
-                  .backgroundColor(Color.Transparent)
-                  .border({ width: 1, color: $r('app.color.line') })
+                  .backgroundColor($r('app.color.ghost_bg'))
+                  .border({ width: 1, color: $r('app.color.ghost_line') })
                   .borderRadius(14)
                   .opacity(this.resetEnabled ? 1 : 0.4)
                   .onClick(() => {
