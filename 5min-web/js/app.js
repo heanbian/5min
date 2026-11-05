@@ -452,17 +452,22 @@ const startTitleBlink = () => {
   stopTitleBlink();
   let flip = false;
   titleBlinkId = window.setInterval(() => {
-    document.title = flip ? tr('titleDoneBlink') : tr('titleDoneZero');
+    document.title = flip
+      ? tr('titleDoneBlink')
+      : tr('titleDoneZero', { n: String(sessionMinutes()) });
     flip = !flip;
   }, 800);
 };
+
+const sessionMinutes = () => Math.max(1, Math.round(totalMs / 60_000));
 
 const maybeNotify = () => {
   if (!('Notification' in globalThis)) return;
   if (Notification.permission !== 'granted') return;
   try {
-    const n = new Notification(tr('notifyTitle'), {
-      body: tr('notifyBody'),
+    const nMin = String(sessionMinutes());
+    const n = new Notification(tr('notifyTitle', { n: nMin }), {
+      body: tr('notifyBody', { n: nMin }),
       icon: 'img/logo.png',
       tag: '5min-toilet-timer',
       renotify: true,

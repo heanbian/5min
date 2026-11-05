@@ -119,10 +119,11 @@ final class TimerViewModel: ObservableObject {
         running = true
         finished = false
         UIApplication.shared.isIdleTimerDisabled = true
+        let nMin = "\(sessionMinutes())"
         NotificationService.scheduleFinish(
             at: end,
-            title: t("notifyTitle"),
-            body: t("notifyBody")
+            title: t("notifyTitle", ["n": nMin]),
+            body: t("notifyBody", ["n": nMin])
         )
         startTicker()
         refreshPhase()
@@ -177,10 +178,18 @@ final class TimerViewModel: ObservableObject {
         statsCount = stats.count
         statsMs = stats.ms
         if fromTicker {
-            NotificationService.presentNow(title: t("notifyTitle"), body: t("notifyBody"))
+            let nMin = "\(sessionMinutes())"
+            NotificationService.presentNow(
+                title: t("notifyTitle", ["n": nMin]),
+                body: t("notifyBody", ["n": nMin])
+            )
             AlertService.shared.play(durationMs: catalog.alertDurationMs)
         }
         refreshPhase()
+    }
+
+    func sessionMinutes() -> Int {
+        max(1, Int((Double(totalMs) / 60_000.0).rounded()))
     }
 
     func format(_ ms: Int64) -> String {

@@ -186,7 +186,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val total = _state.value.totalMs
         if (fromTicker) {
             prefs.recordSession(total)
-            FinishNotifier.show(getApplication())
+            FinishNotifier.show(getApplication(), total)
             FinishAlerter.play(getApplication())
         }
         val (count, ms) = prefs.todayStats()

@@ -14,7 +14,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         if (elapsed > 0L) {
             FiveMinApp.instance.prefs.recordSession(elapsed)
         }
-        FinishNotifier.show(context)
+        FinishNotifier.show(context, elapsed)
         FinishAlerter.play(context)
         TimerForegroundService.stop(context)
         TimerBus.publishFinished()

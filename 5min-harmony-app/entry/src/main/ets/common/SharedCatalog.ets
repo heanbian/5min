@@ -76,7 +76,11 @@ export class SharedCatalog {
       const keys = Object.keys(vars);
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
-        text = text.replace(`{${k}}`, vars[k]);
+        const token = `{${k}}`;
+        const value = vars[k];
+        while (text.indexOf(token) >= 0) {
+          text = text.replace(token, value);
+        }
       }
     }
     return text;

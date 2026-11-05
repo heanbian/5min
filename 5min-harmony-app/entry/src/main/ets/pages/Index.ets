@@ -273,7 +273,12 @@ struct Index {
     this.state.running = true;
     this.state.finished = false;
     const secs = Math.max(1, Math.ceil(this.state.remainMs / 1000));
-    await scheduleFinishReminder(secs, this.t('notifyTitle'), this.t('notifyBody'));
+    const nMin = String(this.sessionMinutes());
+    await scheduleFinishReminder(
+      secs,
+      this.t('notifyTitle', { n: nMin }),
+      this.t('notifyBody', { n: nMin })
+    );
     this.startTicker();
     this.refreshUi();
   }
@@ -338,8 +343,16 @@ struct Index {
     this.state.statsCount = stats[0];
     this.state.statsMs = stats[1];
     this.refreshUi();
-    await showFinishNotification(this.t('notifyTitle'), this.t('notifyBody'));
+    const nMin = String(this.sessionMinutes());
+    await showFinishNotification(
+      this.t('notifyTitle', { n: nMin }),
+      this.t('notifyBody', { n: nMin })
+    );
     await FinishAlerter.play(this.catalog.alertDurationMs);
+  }
+
+  sessionMinutes(): number {
+    return Math.max(1, Math.round(this.state.totalMs / 60000));
   }
 
   async setLocale(code: string): Promise<void> {

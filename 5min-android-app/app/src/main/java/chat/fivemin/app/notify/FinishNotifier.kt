@@ -10,11 +10,13 @@ import androidx.core.app.NotificationCompat
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.MainActivity
 import chat.fivemin.app.R
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 object FinishNotifier {
     const val NOTIF_ID = 3001
 
-    fun show(context: Context) {
+    fun show(context: Context, totalMs: Long = 5 * 60_000L) {
         val appCtx = context.applicationContext
         val launch = PendingIntent.getActivity(
             appCtx,
@@ -28,8 +30,10 @@ object FinishNotifier {
             FiveMinApp.instance.i18n.resolve(saved) ?: code
         }
         val cat = FiveMinApp.instance.catalog
-        val title = cat.t(locale, "notifyTitle")
-        val body = cat.t(locale, "notifyBody")
+        val minutes = max(1, (totalMs / 60_000.0).roundToInt())
+        val vars = mapOf("n" to minutes.toString())
+        val title = cat.t(locale, "notifyTitle", vars)
+        val body = cat.t(locale, "notifyBody", vars)
         val pattern = cat.vibratePatternMs.map { it.toLong() }.toLongArray()
         val notification = NotificationCompat.Builder(appCtx, FiveMinApp.CHANNEL_FINISH)
             .setSmallIcon(R.drawable.ic_stat_timer)
