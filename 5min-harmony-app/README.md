@@ -9,7 +9,7 @@
 ## 功能
 
 - 时长预设与分组场景（与 Web / Android 共享 `rawfile/shared`）
-- 绝对时间戳倒计时；到期本地通知 + 约 5 秒振动
+- 绝对时间戳倒计时；到期本地通知 + 约 5 秒报警音与振动
 - 今日累计、多语言
 - 计时页常亮（`setWindowKeepScreenOn`）
 
@@ -73,5 +73,5 @@ chmod +x scripts/release.sh
 
 ## 说明
 
-- 系统通知：首次开始计时时会申请通知授权；到期通过 `notificationManager.publish` 弹出本机通知；并尝试 `reminderAgentManager`（`PUBLISH_AGENT_REMINDER`）在后台/冻后仍提醒。若代理提醒受控未开通，前台结束通知仍可用。
+- 系统通知：首次开始计时时会申请通知授权；到期通过 `notificationManager.publish` 弹出本机通知（自定义 `alert.wav`）；并尝试 `reminderAgentManager`（`PUBLISH_AGENT_REMINDER`）在后台/冻后仍提醒。前台结束时另播放应用内报警音 + 振动（不依赖通知声道是否被静音）。
 - 本工具仅供习惯提醒；数据仅存本机。

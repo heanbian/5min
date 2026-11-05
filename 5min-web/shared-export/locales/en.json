@@ -25,6 +25,7 @@
   "titleDoneZero": "0:00 · {n} min",
   "notifyTitle": "{n} min · Countdown ended",
   "notifyBody": "The {n}-minute countdown has ended. Please stand and move.",
+  "notifyAck": "OK",
   "scenesLabel": "Scene presets",
   "scenePlaceholder": "Select a scene",
   "sceneGroupDaily": "Daily routines",

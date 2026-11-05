@@ -25,6 +25,7 @@
   "titleDoneZero": "0:00 · {n} min",
   "notifyTitle": "{n} min · Compte à rebours terminé",
   "notifyBody": "Le compte à rebours de {n} min est terminé. Veuillez vous lever et bouger.",
+  "notifyAck": "OK",
   "scenesLabel": "Scènes prédéfinies",
   "scenePlaceholder": "Sélectionnez une scène",
   "sceneGroupDaily": "Routine quotidienne",

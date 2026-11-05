@@ -25,6 +25,7 @@
   "titleDoneZero": "0:00 · {n} min",
   "notifyTitle": "{n} min · Cuenta atrás terminada",
   "notifyBody": "La cuenta atrás de {n} min ha finalizado. Levántese y muévase.",
+  "notifyAck": "OK",
   "scenesLabel": "Escenas predefinidas",
   "scenePlaceholder": "Seleccione una escena",
   "sceneGroupDaily": "Rutina diaria",

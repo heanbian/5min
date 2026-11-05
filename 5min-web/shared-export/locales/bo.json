@@ -25,6 +25,7 @@
   "titleDoneZero": "0:00 · {n} min",
   "notifyTitle": "སྐར་མ་ {n} · དུས་ཚོད་རྫོགས",
   "notifyBody": "སྐར་མ་ {n} དུས་ཚོད་རྫོགས་ཟིན། ལངས་ནས་འགུལ་སྐྱོད་བྱོས།",
+  "notifyAck": "ཤེས་སོང་།",
   "scenesLabel": "གནས་ཚུལ་གཏན་འབེབས",
   "scenePlaceholder": "གནས་ཚུལ་འདེམས་རོགས",
   "sceneGroupDaily": "ཉིན་རྒྱུན",

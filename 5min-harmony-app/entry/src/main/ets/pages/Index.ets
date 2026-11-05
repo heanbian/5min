@@ -7,6 +7,7 @@ import { FinishAlerter } from '../alert/FinishAlerter';
 import {
   ensureNotificationPermission,
   showFinishNotification,
+  showFinishDialog,
   scheduleFinishReminder,
   cancelFinishReminder
 } from '../notify/FinishNotifier';
@@ -114,6 +115,7 @@ struct Index {
 
   aboutToDisappear(): void {
     this.stopTicker();
+    FinishAlerter.stop();
   }
 
   async bootstrap(): Promise<void> {
@@ -152,6 +154,13 @@ struct Index {
 
   t(key: string, vars?: Record<string, string>): string {
     return this.catalog.t(this.locale, key, vars);
+  }
+
+  /** ArkTS forbids untyped object literals; build i18n vars via typed Record. */
+  private varsN(n: string): Record<string, string> {
+    const vars: Record<string, string> = {};
+    vars['n'] = n;
+    return vars;
   }
 
   refreshUi(): void {
@@ -250,6 +259,7 @@ struct Index {
 
   async toggleStart(): Promise<void> {
     if (this.state.finished && !this.state.running) {
+      await FinishAlerter.stop();
       this.state.remainMs = this.state.totalMs;
       this.state.finished = false;
       await this.start();
@@ -266,6 +276,7 @@ struct Index {
     if (this.state.remainMs <= 0) {
       return;
     }
+    await FinishAlerter.stop();
     const ctx = getContext(this) as common.UIAbilityContext;
     await ensureNotificationPermission(ctx);
     this.finishedHandled = false;
@@ -276,8 +287,8 @@ struct Index {
     const nMin = String(this.sessionMinutes());
     await scheduleFinishReminder(
       secs,
-      this.t('notifyTitle', { n: nMin }),
-      this.t('notifyBody', { n: nMin })
+      this.t('notifyTitle', this.varsN(nMin)),
+      this.t('notifyBody', this.varsN(nMin))
     );
     this.startTicker();
     this.refreshUi();
@@ -296,6 +307,7 @@ struct Index {
 
   async reset(): Promise<void> {
     this.stopTicker();
+    await FinishAlerter.stop();
     await cancelFinishReminder();
     this.finishedHandled = false;
     this.state.remainMs = this.state.totalMs;
@@ -303,6 +315,15 @@ struct Index {
     this.state.finished = false;
     this.state.phase = 'idle';
     this.refreshUi();
+  }
+
+  /** Re-fire finish cue from a tap (same gesture path as iOS / web). */
+  async realert(): Promise<void> {
+    if (!this.state.finished || !this.context) {
+      return;
+    }
+    await FinishAlerter.stop();
+    await FinishAlerter.play(this.context, this.catalog.alertDurationMs);
   }
 
   startTicker(): void {
@@ -344,11 +365,17 @@ struct Index {
     this.state.statsMs = stats[1];
     this.refreshUi();
     const nMin = String(this.sessionMinutes());
-    await showFinishNotification(
-      this.t('notifyTitle', { n: nMin }),
-      this.t('notifyBody', { n: nMin })
-    );
-    await FinishAlerter.play(this.catalog.alertDurationMs);
+    const title = this.t('notifyTitle', this.varsN(nMin));
+    const body = this.t('notifyBody', this.varsN(nMin));
+    const ack = this.t('notifyAck');
+    // System shade/banner notification (banner needs user toggle; often off by default).
+    await showFinishNotification(title, body);
+    // Guaranteed visible popup + alarm sound (do not await dialog before sound).
+    const soundP = this.context
+      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs)
+      : Promise.resolve();
+    const dialogP = showFinishDialog(title, body, ack);
+    await Promise.all([soundP, dialogP]);
   }
 
   sessionMinutes(): number {
@@ -526,6 +553,11 @@ struct Index {
               .width(260)
               .height(260)
               .alignSelf(ItemAlign.Center)
+              .onClick(() => {
+                if (this.state.finished) {
+                  this.realert();
+                }
+              })
 
               Column({ space: 6 }) {
                 Text(this.status)
@@ -598,7 +630,7 @@ struct Index {
               // segmented presets
               Row() {
                 ForEach(this.presets, (min: number) => {
-                  Text(this.t('minutes', { 'n': `${min}` }))
+                  Text(this.t('minutes', this.varsN(`${min}`)))
                     .layoutWeight(1)
                     .height(40)
                     .fontSize(14)

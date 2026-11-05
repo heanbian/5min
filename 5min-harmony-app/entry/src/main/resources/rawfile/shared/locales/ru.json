@@ -25,6 +25,7 @@
   "titleDoneZero": "0:00 · {n} min",
   "notifyTitle": "{n} мин · Отсчёт завершён",
   "notifyBody": "Обратный отсчёт на {n} мин завершён. Встаньте и подвигайтесь.",
+  "notifyAck": "OK",
   "scenesLabel": "Сценарии",
   "scenePlaceholder": "Выберите сценарий",
   "sceneGroupDaily": "Повседневные дела",
