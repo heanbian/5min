@@ -25,6 +25,22 @@
       {
         "value": "shared/zh-CN.json",
         "type": "file"
+      },
+      {
+        "value": "project.private.config.json",
+        "type": "file"
+      },
+      {
+        "type": "glob",
+        "value": "private.*.key"
+      },
+      {
+        "type": "glob",
+        "value": "**/*.key"
+      },
+      {
+        "type": "glob",
+        "value": "assets/*.svg"
       }
     ],
     "include": []
@@ -56,7 +72,7 @@
     "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
-  "libVersion": "3.7.12",
+  "libVersion": "3.17.4",
   "appid": "wx5644fe2cbfec0410",
   "projectname": "5min-mp",
   "condition": {},
