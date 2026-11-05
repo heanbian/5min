@@ -11,5 +11,5 @@ if ! [[ "$PORT" =~ ^[0-9]+$ ]] || (( PORT < 1 || PORT > 65535 )); then
 fi
 
 cd "$ROOT"
-echo "Serving $ROOT at http://127.0.0.1:${PORT}/"
+echo "Serving $ROOT at http://localhost:${PORT}/"
 exec npx --yes serve -l "$PORT" .
