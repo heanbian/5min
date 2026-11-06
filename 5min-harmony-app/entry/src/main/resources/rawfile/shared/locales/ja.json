@@ -185,5 +185,8 @@
   "privacyCheckLabel": "以下を読み同意します",
   "historySceneLine": "シーン：{scene}",
   "historyDurationLine": "時間：{n} 分",
-  "historyTimeLine": "日時：{time}"
+  "historyTimeLine": "日時：{time}",
+  "confirmLabel": "OK",
+  "cancelLabel": "キャンセル",
+  "closeLabel": "閉じる"
 }

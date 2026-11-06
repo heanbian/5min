@@ -162,7 +162,7 @@ struct MineView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button(model.t("backLabel")) { sheet = nil }
+                        Button(model.t("cancelLabel")) { sheet = nil }
                     }
                 }
             case .sound:
@@ -187,7 +187,7 @@ struct MineView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button(model.t("backLabel")) { sheet = nil }
+                        Button(model.t("cancelLabel")) { sheet = nil }
                     }
                 }
             case .duration:
@@ -198,6 +198,7 @@ struct MineView: View {
                         Button("-") { nudge(-1) }
                             .buttonStyle(SecondaryButtonStyle())
                             .frame(width: 64)
+                            .accessibilityLabel("-")
                         TextField("", text: $customText)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.center)
@@ -206,6 +207,7 @@ struct MineView: View {
                         Button("+") { nudge(1) }
                             .buttonStyle(SecondaryButtonStyle())
                             .frame(width: 64)
+                            .accessibilityLabel("+")
                     }
                     .padding(.horizontal, 20)
 
@@ -224,7 +226,7 @@ struct MineView: View {
                         }
                     }
 
-                    Button(model.t("customApply")) { applyCustom() }
+                    Button(model.t("confirmLabel")) { applyCustom() }
                         .buttonStyle(PrimaryButtonStyle())
                         .padding(.horizontal, 20)
                     Spacer()
@@ -234,7 +236,12 @@ struct MineView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button(model.t("backLabel")) { sheet = nil }
+                        Button(model.t("cancelLabel")) { sheet = nil }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(model.t("confirmLabel")) { applyCustom() }
+                            .fontWeight(.semibold)
+                            .foregroundStyle(FiveMinColor.brandStrong)
                     }
                 }
             }
@@ -294,8 +301,10 @@ struct AboutView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(model.t("backLabel")) { dismiss() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(model.t("confirmLabel")) { dismiss() }
+                        .fontWeight(.semibold)
+                        .foregroundStyle(FiveMinColor.brandStrong)
                 }
             }
         }

@@ -185,5 +185,8 @@
   "privacyCheckLabel": "我已阅读并同意",
   "historySceneLine": "场景：{scene}",
   "historyDurationLine": "时长：{n} 分钟",
-  "historyTimeLine": "时间：{time}"
+  "historyTimeLine": "时间：{time}",
+  "confirmLabel": "确定",
+  "cancelLabel": "取消",
+  "closeLabel": "关闭"
 }

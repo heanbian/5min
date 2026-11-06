@@ -380,7 +380,7 @@ struct ScenePickerView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { dismiss() }
+                    Button(model.t("confirmLabel")) { dismiss() }
                         .fontWeight(.semibold)
                         .foregroundStyle(FiveMinColor.brandStrong)
                 }

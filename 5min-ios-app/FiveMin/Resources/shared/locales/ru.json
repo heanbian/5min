@@ -185,5 +185,8 @@
   "privacyCheckLabel": "Я прочитал(а) и согласен(на) с",
   "historySceneLine": "Сцена: {scene}",
   "historyDurationLine": "Длительность: {n} мин",
-  "historyTimeLine": "Время: {time}"
+  "historyTimeLine": "Время: {time}",
+  "confirmLabel": "OK",
+  "cancelLabel": "Отмена",
+  "closeLabel": "Закрыть"
 }

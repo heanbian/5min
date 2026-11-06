@@ -186,5 +186,8 @@
   "privacyCheckLabel": "لقد قرأت وأوافق على",
   "historySceneLine": "المشهد: {scene}",
   "historyDurationLine": "المدة: {n} د",
-  "historyTimeLine": "الوقت: {time}"
+  "historyTimeLine": "الوقت: {time}",
+  "confirmLabel": "موافق",
+  "cancelLabel": "إلغاء",
+  "closeLabel": "إغلاق"
 }

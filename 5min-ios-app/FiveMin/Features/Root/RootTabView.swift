@@ -7,20 +7,26 @@ struct RootTabView: View {
 
     var body: some View {
         ZStack {
-            Group {
-                switch model.selectedTab {
-                case 0:
-                    RecordsView()
-                case 2:
-                    MineView()
-                default:
-                    TimerView()
-                }
+            TabView(selection: $model.selectedTab) {
+                RecordsView()
+                    .tabItem {
+                        Label(model.t("tabRecords"), systemImage: "list.bullet")
+                    }
+                    .tag(0)
+
+                TimerView()
+                    .tabItem {
+                        Label(model.t("tabHome"), systemImage: "house.fill")
+                    }
+                    .tag(1)
+
+                MineView()
+                    .tabItem {
+                        Label(model.t("tabMine"), systemImage: "person.fill")
+                    }
+                    .tag(2)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                fullWidthTabBar
-            }
+            .tint(FiveMinColor.brand)
 
             if !model.privacyAccepted {
                 privacyGate
@@ -34,46 +40,6 @@ struct RootTabView: View {
                 model.refreshTodayStats()
             }
         }
-    }
-
-    private var fullWidthTabBar: some View {
-        HStack(spacing: 0) {
-            tabButton(index: 0, title: model.t("tabRecords"), systemImage: "list.bullet")
-            tabButton(index: 1, title: model.t("tabHome"), systemImage: "house.fill")
-            tabButton(index: 2, title: model.t("tabMine"), systemImage: "person.fill")
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 58)
-        .background(
-            FiveMinColor.surface
-                .ignoresSafeArea(edges: .bottom)
-        )
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(FiveMinColor.line)
-                .frame(height: 1)
-        }
-    }
-
-    private func tabButton(index: Int, title: String, systemImage: String) -> some View {
-        let active = model.selectedTab == index
-        return Button {
-            model.selectedTab = index
-        } label: {
-            VStack(spacing: 2) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 20, weight: .regular))
-                Text(title)
-                    .font(.system(size: 11, weight: active ? .medium : .regular))
-            }
-            .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(active ? .isSelected : [])
     }
 
     private var privacyGate: some View {

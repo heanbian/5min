@@ -185,5 +185,8 @@
   "privacyCheckLabel": "J’ai lu et j’accepte",
   "historySceneLine": "Scène : {scene}",
   "historyDurationLine": "Durée : {n} min",
-  "historyTimeLine": "Heure : {time}"
+  "historyTimeLine": "Heure : {time}",
+  "confirmLabel": "OK",
+  "cancelLabel": "Annuler",
+  "closeLabel": "Fermer"
 }

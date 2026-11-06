@@ -185,5 +185,8 @@
   "privacyCheckLabel": "ཀློག་ཟིན་ཅིང་མོས་མཐུན།",
   "historySceneLine": "བརྙན་ཡུལ།：{scene}",
   "historyDurationLine": "དུས་ཚོད།：{n} སྐར་མ",
-  "historyTimeLine": "དུས།：{time}"
+  "historyTimeLine": "དུས།：{time}",
+  "confirmLabel": "འགྲིག",
+  "cancelLabel": "འདོར",
+  "closeLabel": "ཁ་རྒྱག"
 }
