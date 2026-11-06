@@ -41,3 +41,5 @@ oh-package-lock.json5
 *.log
 *.orig
 .tools-venv/
+.review-frames/
+.venv-img/

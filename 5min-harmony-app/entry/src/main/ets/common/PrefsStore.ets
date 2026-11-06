@@ -3,6 +3,7 @@ import { common } from '@kit.AbilityKit';
 
 const STORE = '5min_prefs';
 
+/** App settings only; session history lives in HistoryStore (RDB). */
 export class PrefsStore {
   private pref: preferences.Preferences | null = null;
 
@@ -28,37 +29,26 @@ export class PrefsStore {
     await this.pref?.flush();
   }
 
-  private todayKey(): string {
-    const d = new Date();
-    const m = (d.getMonth() + 1).toString().padStart(2, '0');
-    const day = d.getDate().toString().padStart(2, '0');
-    return `${d.getFullYear()}-${m}-${day}`;
+  async getCustomMin(fallback: number = 5): Promise<number> {
+    const n = Number(await this.pref?.get('custom_min', fallback) ?? fallback);
+    if (isNaN(n) || n < 1) {
+      return fallback;
+    }
+    return Math.min(120, Math.floor(n));
   }
 
-  async todayStats(): Promise<[number, number]> {
-    const day = this.todayKey();
-    const savedDay = String(await this.pref?.get('stats_day', '') ?? '');
-    if (savedDay !== day) {
-      return [0, 0];
-    }
-    const count = Number(await this.pref?.get('stats_count', 0) ?? 0);
-    const ms = Number(await this.pref?.get('stats_ms', 0) ?? 0);
-    return [count, ms];
+  async setCustomMin(min: number): Promise<void> {
+    const n = Math.max(1, Math.min(120, Math.floor(min)));
+    await this.pref?.put('custom_min', n);
+    await this.pref?.flush();
   }
 
-  async recordSession(elapsedMs: number): Promise<void> {
-    const day = this.todayKey();
-    const savedDay = String(await this.pref?.get('stats_day', '') ?? '');
-    if (savedDay !== day) {
-      await this.pref?.put('stats_day', day);
-      await this.pref?.put('stats_count', 1);
-      await this.pref?.put('stats_ms', Math.max(0, elapsedMs));
-    } else {
-      const count = Number(await this.pref?.get('stats_count', 0) ?? 0);
-      const ms = Number(await this.pref?.get('stats_ms', 0) ?? 0);
-      await this.pref?.put('stats_count', count + 1);
-      await this.pref?.put('stats_ms', ms + Math.max(0, elapsedMs));
-    }
+  async isPrivacyAccepted(): Promise<boolean> {
+    return Boolean(await this.pref?.get('privacy_accepted', false) ?? false);
+  }
+
+  async setPrivacyAccepted(ok: boolean): Promise<void> {
+    await this.pref?.put('privacy_accepted', ok);
     await this.pref?.flush();
   }
 }

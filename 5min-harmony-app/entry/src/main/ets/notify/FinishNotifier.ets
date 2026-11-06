@@ -105,22 +105,28 @@ function buildRequest(
 }
 
 /** Immediate system notification when countdown ends (foreground / process alive). */
-export async function showFinishNotification(title: string, body: string): Promise<void> {
+export async function showFinishNotification(
+  title: string,
+  body: string,
+  withSound: boolean = true
+): Promise<void> {
   try {
     try {
       await notificationManager.addSlot(notificationManager.SlotType.SERVICE_INFORMATION);
     } catch (_) {
     }
     const agent = await buildWantAgent();
-    try {
-      await notificationManager.publish(buildRequest(title, body, agent, true));
-      hilog.info(0x0000, TAG, 'publish ok (with sound)');
-      return;
-    } catch (e1) {
-      const err1 = e1 as BusinessError;
-      hilog.warn(0x0000, TAG, `publish+sound failed: ${err1.code} ${err1.message}`);
+    if (withSound) {
+      try {
+        await notificationManager.publish(buildRequest(title, body, agent, true));
+        hilog.info(0x0000, TAG, 'publish ok (with sound)');
+        return;
+      } catch (e1) {
+        const err1 = e1 as BusinessError;
+        hilog.warn(0x0000, TAG, `publish+sound failed: ${err1.code} ${err1.message}`);
+      }
     }
-    // Retry without custom sound — some devices reject invalid sound paths.
+    // Silent publish, or retry without custom sound when path rejected.
     await notificationManager.publish(buildRequest(title, body, agent, false));
     hilog.info(0x0000, TAG, 'publish ok (no custom sound)');
   } catch (e) {
@@ -160,7 +166,8 @@ export async function showFinishDialog(title: string, body: string, ack: string)
 export async function scheduleFinishReminder(
   seconds: number,
   title: string,
-  body: string
+  body: string,
+  withSound: boolean = true
 ): Promise<void> {
   await cancelFinishReminder();
   const secs = Math.max(1, Math.floor(seconds));
@@ -177,12 +184,14 @@ export async function scheduleFinishReminder(
         pkgName: BUNDLE,
         abilityName: ABILITY
       },
-      ringDuration: 5,
-      customRingUri: ALERT_RAW,
+      ringDuration: withSound ? 5 : 0,
       tapDismissed: true
     };
+    if (withSound) {
+      reminder.customRingUri = ALERT_RAW;
+    }
     scheduledReminderId = await reminderAgentManager.publishReminder(reminder);
-    hilog.info(0x0000, TAG, `reminder scheduled id=${scheduledReminderId} in ${secs}s`);
+    hilog.info(0x0000, TAG, `reminder scheduled id=${scheduledReminderId} in ${secs}s sound=${withSound}`);
   } catch (e) {
     const err = e as BusinessError;
     hilog.warn(0x0000, TAG, `publishReminder failed: ${err.code} ${err.message}`);

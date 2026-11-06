@@ -1,17 +1,18 @@
 import { SharedCatalog } from './SharedCatalog';
+import { normalizeAppLocale } from './AppLocales';
 
 export function resolveLocale(catalog: SharedCatalog, tag: string, systemTags: string[]): string {
   const direct = matchTag(catalog, tag);
   if (direct) {
-    return direct;
+    return normalizeAppLocale(direct, catalog.defaultLocale);
   }
   for (let i = 0; i < systemTags.length; i++) {
     const hit = matchTag(catalog, systemTags[i]);
     if (hit) {
-      return hit;
+      return normalizeAppLocale(hit, catalog.defaultLocale);
     }
   }
-  return catalog.defaultLocale;
+  return normalizeAppLocale(catalog.defaultLocale, 'zh-CN');
 }
 
 function matchTag(catalog: SharedCatalog, tag: string): string | null {

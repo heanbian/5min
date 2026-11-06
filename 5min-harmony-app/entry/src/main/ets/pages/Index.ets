@@ -1,7 +1,11 @@
 import { common } from '@kit.AbilityKit';
+import { window } from '@kit.ArkUI';
 import { SharedCatalog, SceneItem, SceneGroup } from '../common/SharedCatalog';
 import { PrefsStore } from '../common/PrefsStore';
+import { HistoryStore } from '../common/HistoryStore';
 import { resolveLocale } from '../common/I18n';
+import { normalizeAppLocale } from '../common/AppLocales';
+import { openExternalUrl } from '../common/OpenUrl';
 import { TimerState, formatMs, phaseOf } from '../timer/TimerState';
 import { FinishAlerter } from '../alert/FinishAlerter';
 import {
@@ -12,7 +16,12 @@ import {
   cancelFinishReminder
 } from '../notify/FinishNotifier';
 import { DigitalWatchTime } from '../ui/DigitalWatch';
+import { RecordsTab } from '../ui/RecordsTab';
+import { MineTab } from '../ui/MineTab';
 import { i18n } from '@kit.LocalizationKit';
+
+const PRIVACY_URL = 'https://5min.chat/privacy.html';
+const TERMS_URL = 'https://5min.chat/terms.html';
 
 @Component
 struct DialRing {
@@ -91,18 +100,24 @@ struct Index {
   @State resetEnabled: boolean = false;
   @State setupEnabled: boolean = true;
   @State showScenes: boolean = false;
-  @State showLang: boolean = false;
-  @State showAmbient: boolean = false;
-  @State ambient: string = 'off';
+  @StorageLink('appAmbient') @Watch('onAmbientLink') ambient: string = 'off';
+  @StorageLink('appLocale') @Watch('onLocaleLink') linkedLocale: string = 'zh-CN';
   @State presets: number[] = [3, 5, 10];
   @State groups: SceneGroup[] = [];
   @State scenes: SceneItem[] = [];
   @State localeCodes: string[] = [];
   @State footnote: string = '';
   @State dialKey: string = '1';
+  @State privacyAccepted: boolean = false;
+  @State privacyReady: boolean = false;
+  @State privacyChecked: boolean = false;
+  @State currentTab: number = 1;
+  @State recordsEpoch: number = 0;
+  @State localeTick: number = 0;
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
+  private history: HistoryStore = new HistoryStore();
   private state: TimerState = new TimerState();
   private tickId: number = -1;
   private finishedHandled: boolean = false;
@@ -113,9 +128,31 @@ struct Index {
     this.bootstrap();
   }
 
+  onPageShow(): void {
+    this.consumePendingCustomMin();
+    this.refreshTodayStats();
+  }
+
   aboutToDisappear(): void {
     this.stopTicker();
+    this.setKeepScreenOn(false);
     FinishAlerter.stop();
+  }
+
+  /** Only keep the screen on while countdown is running (battery / thermal). */
+  private setKeepScreenOn(on: boolean): void {
+    if (!this.context) {
+      return;
+    }
+    window.getLastWindow(this.context).then((win: window.Window) => {
+      win.setWindowKeepScreenOn(on);
+    }).catch(() => {
+    });
+  }
+
+  /** Finish alert ringtone enabled unless user chose 关闭 / mute. */
+  private alertSoundOn(): boolean {
+    return this.ambient !== 'off';
   }
 
   async bootstrap(): Promise<void> {
@@ -123,6 +160,7 @@ struct Index {
       return;
     }
     await this.prefs.init(this.context);
+    await this.history.init(this.context);
     this.catalog = await SharedCatalog.load(this.context);
     this.presets = this.catalog.presetsMin;
     this.groups = this.catalog.groups;
@@ -135,22 +173,104 @@ struct Index {
       systemTags.push(i18n.System.getSystemLanguage());
     } catch (_) {
     }
-    this.locale = resolveLocale(this.catalog, saved, systemTags);
-    if (!saved) {
+    this.locale = normalizeAppLocale(resolveLocale(this.catalog, saved, systemTags), 'zh-CN');
+    if (!saved || saved !== this.locale) {
       await this.prefs.setLocale(this.locale);
     }
     this.state.locale = this.locale;
     this.state.ambient = await this.prefs.getAmbient();
     this.ambient = this.state.ambient;
-    const total = this.catalog.defaultMin * 60 * 1000;
+    AppStorage.setOrCreate('appLocale', this.locale);
+    AppStorage.setOrCreate('appAmbient', this.ambient);
+    this.linkedLocale = this.locale;
+    this.localeTick = this.localeTick + 1;
+    const custom = await this.prefs.getCustomMin(this.catalog.defaultMin);
+    const total = custom * 60 * 1000;
     this.state.totalMs = total;
     this.state.remainMs = total;
-    const stats = await this.prefs.todayStats();
-    this.state.statsCount = stats[0];
-    this.state.statsMs = stats[1];
+    await this.refreshTodayStats();
+    this.privacyAccepted = await this.prefs.isPrivacyAccepted();
+    this.privacyReady = true;
     this.ready = true;
     this.refreshUi();
   }
+
+  onLocaleLink(): void {
+    if (!this.ready) {
+      return;
+    }
+    const next = normalizeAppLocale(this.linkedLocale, 'zh-CN');
+    if (this.locale !== next) {
+      this.locale = next;
+      this.state.locale = next;
+      this.linkedLocale = next;
+      this.localeTick = this.localeTick + 1;
+      this.refreshUi();
+    }
+  }
+
+  onAmbientLink(): void {
+    this.state.ambient = this.ambient;
+    if (this.ambient === 'off') {
+      FinishAlerter.stop();
+    }
+  }
+
+  onTabChange(index: number): void {
+    this.currentTab = index;
+    if (index === 0) {
+      this.recordsEpoch = this.recordsEpoch + 1;
+    } else if (index === 1) {
+      this.consumePendingCustomMin();
+      this.refreshTodayStats();
+    }
+  }
+
+  private async refreshTodayStats(): Promise<void> {
+    const stats = await this.history.todayStats();
+    this.state.statsCount = stats[0];
+    this.state.statsMs = stats[1];
+    if (this.ready) {
+      this.refreshUi();
+    }
+  }
+
+  /** Apply custom minutes chosen on Settings when returning to home. */
+  private consumePendingCustomMin(): void {
+    if (!this.ready || this.state.running) {
+      return;
+    }
+    const pending = AppStorage.get<number>('pendingCustomMin');
+    if (pending === undefined || pending === null || pending < 1) {
+      return;
+    }
+    AppStorage.delete('pendingCustomMin');
+    this.setPreset(pending, '');
+  }
+
+  async acceptPrivacy(): Promise<void> {
+    await this.prefs.setPrivacyAccepted(true);
+    this.privacyAccepted = true;
+  }
+
+  async declinePrivacy(): Promise<void> {
+    if (this.context) {
+      this.context.terminateSelf();
+    }
+  }
+
+  async openPrivacy(): Promise<void> {
+    if (this.context) {
+      await openExternalUrl(this.context, PRIVACY_URL);
+    }
+  }
+
+  async openTerms(): Promise<void> {
+    if (this.context) {
+      await openExternalUrl(this.context, TERMS_URL);
+    }
+  }
+
 
   t(key: string, vars?: Record<string, string>): string {
     return this.catalog.t(this.locale, key, vars);
@@ -306,9 +426,11 @@ struct Index {
     await scheduleFinishReminder(
       secs,
       this.t('notifyTitle', notifyVars),
-      this.t('notifyBody', notifyVars)
+      this.t('notifyBody', notifyVars),
+      this.alertSoundOn()
     );
     this.startTicker();
+    this.setKeepScreenOn(true);
     this.refreshUi();
   }
 
@@ -319,12 +441,14 @@ struct Index {
     this.state.remainMs = Math.max(0, this.state.endAt - Date.now());
     this.state.running = false;
     this.stopTicker();
+    this.setKeepScreenOn(false);
     await cancelFinishReminder();
     this.refreshUi();
   }
 
   async reset(): Promise<void> {
     this.stopTicker();
+    this.setKeepScreenOn(false);
     await FinishAlerter.stop();
     await cancelFinishReminder();
     this.finishedHandled = false;
@@ -341,7 +465,7 @@ struct Index {
       return;
     }
     await FinishAlerter.stop();
-    await FinishAlerter.play(this.context, this.catalog.alertDurationMs);
+    await FinishAlerter.play(this.context, this.catalog.alertDurationMs, this.alertSoundOn());
   }
 
   startTicker(): void {
@@ -373,408 +497,452 @@ struct Index {
     }
     this.finishedHandled = true;
     this.stopTicker();
+    this.setKeepScreenOn(false);
     await cancelFinishReminder();
     this.state.remainMs = 0;
     this.state.running = false;
     this.state.finished = true;
-    await this.prefs.recordSession(this.state.totalMs);
-    const stats = await this.prefs.todayStats();
-    this.state.statsCount = stats[0];
-    this.state.statsMs = stats[1];
-    this.refreshUi();
+    await this.history.recordSession(this.state.totalMs, this.state.activeSceneId);
+    await this.refreshTodayStats();
     const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
     const title = this.t('notifyTitle', notifyVars);
     const body = this.t('notifyBody', notifyVars);
     const ack = this.t('notifyAck');
-    // System shade/banner notification (banner needs user toggle; often off by default).
-    await showFinishNotification(title, body);
-    // Guaranteed visible popup + alarm sound (do not await dialog before sound).
+    const withSound = this.alertSoundOn();
+    // System shade/banner notification (respect mute: no custom ringtone when off).
+    await showFinishNotification(title, body, withSound);
+    // Guaranteed visible popup + optional alarm sound (stop tone when user acknowledges).
     const soundP = this.context
-      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs)
+      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs, withSound)
       : Promise.resolve();
-    const dialogP = showFinishDialog(title, body, ack);
+    const dialogP = this.ackFinishDialog(title, body, ack);
     await Promise.all([soundP, dialogP]);
+  }
+
+  private async ackFinishDialog(title: string, body: string, ack: string): Promise<void> {
+    await showFinishDialog(title, body, ack);
+    await FinishAlerter.stop();
   }
 
   sessionMinutes(): number {
     return Math.max(1, Math.round(this.state.totalMs / 60000));
   }
 
-  async setLocale(code: string): Promise<void> {
-    this.locale = code;
-    this.state.locale = code;
-    await this.prefs.setLocale(code);
-    this.showLang = false;
-    this.refreshUi();
-  }
-
-  async setAmbient(mode: string): Promise<void> {
-    this.ambient = mode;
-    this.state.ambient = mode;
-    await this.prefs.setAmbient(mode);
-    this.showAmbient = false;
-  }
-
   presetActive(min: number): boolean {
     return !this.state.activeSceneId && this.state.totalMs === min * 60000;
   }
 
-  ambientLabelOf(id: string): string {
-    if (id === 'rain') {
-      return this.t('ambientRain');
-    }
-    if (id === 'waves') {
-      return this.t('ambientWaves');
-    }
-    if (id === 'clock') {
-      return this.t('ambientClock');
-    }
-    return this.t('ambientOff');
-  }
-
   build() {
     Column() {
-      if (!this.ready) {
+      if (!this.privacyReady) {
+        Text('…')
+          .fontSize(18)
+          .fontColor($r('app.color.muted'))
+      } else if (!this.privacyAccepted) {
+        // First-launch privacy consent (AppGallery 7.5)
+        Column() {
+          Scroll() {
+            Column({ space: 16 }) {
+              Text(this.t('privacyTitle'))
+                .fontSize(22)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.ink'))
+                .width('100%')
+                .margin({ top: 8 })
+
+              Text(this.t('privacyMessage'))
+                .fontSize(14)
+                .fontColor($r('app.color.ink'))
+                .lineHeight(22)
+                .width('100%')
+            }
+            .width('100%')
+            .padding({ left: 24, right: 24, top: 28, bottom: 16 })
+            .alignItems(HorizontalAlign.Start)
+          }
+          .layoutWeight(1)
+          .width('100%')
+          .align(Alignment.TopStart)
+          .scrollBar(BarState.Off)
+
+          Column({ space: 16 }) {
+            Row({ space: 8 }) {
+              Stack({ alignContent: Alignment.Center }) {
+                Column()
+                  .width(18)
+                  .height(18)
+                  .borderRadius(4)
+                  .backgroundColor(this.privacyChecked ? $r('app.color.brand') : Color.Transparent)
+                  .border({
+                    width: 1.5,
+                    color: this.privacyChecked ? $r('app.color.brand') : '#8A9A90'
+                  })
+                if (this.privacyChecked) {
+                  Text('✓')
+                    .fontSize(12)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(Color.White)
+                }
+              }
+              .width(18)
+              .height(18)
+              .flexShrink(0)
+              .onClick(() => {
+                this.privacyChecked = !this.privacyChecked;
+              })
+
+              Flex({
+                wrap: FlexWrap.Wrap,
+                alignItems: ItemAlign.Center
+              }) {
+                Text(this.t('privacyCheckLabel'))
+                  .fontSize(14)
+                  .fontColor($r('app.color.ink'))
+                  .lineHeight(20)
+                  .margin({ right: 2 })
+                  .onClick(() => {
+                    this.privacyChecked = !this.privacyChecked;
+                  })
+                Text(this.t('privacyLink'))
+                  .fontSize(14)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.brand_strong'))
+                  .lineHeight(20)
+                  .onClick(() => this.openPrivacy())
+                Text(this.t('termsLink'))
+                  .fontSize(14)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.brand_strong'))
+                  .lineHeight(20)
+                  .onClick(() => this.openTerms())
+              }
+              .layoutWeight(1)
+            }
+            .width('100%')
+            .alignItems(VerticalAlign.Center)
+
+            Text(this.t('privacyAgree'))
+              .width('100%')
+              .height(50)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(Color.White)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(this.privacyChecked ? $r('app.color.brand') : '#A8C4B4')
+              .borderRadius(14)
+              .opacity(this.privacyChecked ? 1 : 0.7)
+              .onClick(() => {
+                if (this.privacyChecked) {
+                  this.acceptPrivacy();
+                }
+              })
+          }
+          .width('100%')
+          .padding({ left: 24, right: 24, top: 8, bottom: 28 })
+        }
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Start)
+        .alignItems(HorizontalAlign.Start)
+      } else if (!this.ready) {
         Text('…')
           .fontSize(18)
           .fontColor($r('app.color.muted'))
       } else {
-        Scroll() {
-          Column({ space: 20 }) {
-            // —— topbar ——
-            Row() {
-              Row({ space: 10 }) {
-                Image($r('app.media.logo'))
-                  .height(22)
-                  .objectFit(ImageFit.Contain)
-                Text(this.brandTitle)
-                  .fontSize(19)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.ink'))
-                  .layoutWeight(1)
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-              }
-              .layoutWeight(1)
-              .height(36)
-              .alignItems(VerticalAlign.Center)
-
-              Row({ space: 4 }) {
-                // Ambient — match Android VolumeUp 20dp in 36dp hit area
-                Row() {
-                  Image($r('app.media.ic_volume'))
-                    .width(20)
-                    .height(20)
-                    .objectFit(ImageFit.Contain)
-                    .fillColor(this.showAmbient ? '#248556' : '#5F6F66')
-                }
-                .width(36)
-                .height(36)
-                .justifyContent(FlexAlign.Center)
-                .onClick(() => {
-                  this.showAmbient = !this.showAmbient;
-                  this.showLang = false;
-                })
-
-                // Language — match Android: native name + expand caret
-                Row({ space: 6 }) {
-                  Text(this.localeLabel)
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor(this.showLang ? $r('app.color.brand_strong') : $r('app.color.muted'))
-                    .maxLines(1)
-                  Image($r('app.media.ic_expand'))
-                    .width(12)
-                    .height(12)
-                    .objectFit(ImageFit.Contain)
-                    .fillColor(this.showLang ? '#248556' : '#5F6F66')
-                }
-                .height(36)
-                .padding({ left: 6, right: 2 })
-                .alignItems(VerticalAlign.Center)
-                .onClick(() => {
-                  this.showLang = !this.showLang;
-                  this.showAmbient = false;
-                })
-              }
-              .height(36)
-              .alignItems(VerticalAlign.Center)
-            }
-            .width('100%')
-            .height(36)
-
-            if (this.showAmbient) {
-              Column({ space: 2 }) {
-                ForEach(['off', 'rain', 'waves', 'clock'], (id: string) => {
-                  Text(this.ambientLabelOf(id))
-                    .width('100%')
-                    .height(36)
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor(id === this.ambient ? $r('app.color.brand_strong') : $r('app.color.muted'))
-                    .backgroundColor(id === this.ambient ? $r('app.color.brand_soft') : Color.Transparent)
-                    .borderRadius(8)
-                    .padding({ left: 10, right: 10 })
-                    .textAlign(TextAlign.Start)
-                    .onClick(() => {
-                      this.setAmbient(id);
-                    })
-                }, (id: string) => id)
-              }
-              .width('100%')
-              .padding(4)
-              .backgroundColor($r('app.color.surface'))
-              .border({ width: 1, color: $r('app.color.line') })
-              .borderRadius(12)
-            }
-
-            if (this.showLang) {
-              Column({ space: 2 }) {
-                ForEach(this.localeCodes, (code: string) => {
-                  Text(this.catalog.t(code, 'nativeName'))
-                    .width('100%')
-                    .height(36)
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor(code === this.locale ? $r('app.color.brand_strong') : $r('app.color.muted'))
-                    .backgroundColor(code === this.locale ? $r('app.color.brand_soft') : Color.Transparent)
-                    .borderRadius(8)
-                    .padding({ left: 10, right: 10 })
-                    .textAlign(TextAlign.Start)
-                    .onClick(() => {
-                      this.setLocale(code);
-                    })
-                }, (code: string) => code)
-              }
-              .width('100%')
-              .padding(4)
-              .backgroundColor($r('app.color.surface'))
-              .border({ width: 1, color: $r('app.color.line') })
-              .borderRadius(12)
-            }
-
-            // —— stage: dial + cue ——
-            Column({ space: 18 }) {
-              Stack({ alignContent: Alignment.Center }) {
-                DialRing({
-                  progress: this.progress,
-                  ringColor: this.ringColor,
-                  syncKey: this.dialKey
-                })
-                  .width(260)
-                  .height(260)
-                // Android: dial 260，时间宽 64% → 166×55（viewBox 144×48）
-                DigitalWatchTime({ text: this.clock, color: this.timeColor })
-                  .width(166)
-                  .height(55)
-              }
-              .width(260)
-              .height(260)
-              .alignSelf(ItemAlign.Center)
-              .onClick(() => {
-                if (this.state.finished) {
-                  this.realert();
-                }
-              })
-
-              Column({ space: 6 }) {
-                Text(this.status)
-                  .fontSize(14)
-                  .fontWeight(this.state.phase === 'done' ? FontWeight.Medium : FontWeight.Regular)
-                  .fontColor(this.statusColor)
-                  .textAlign(TextAlign.Center)
-                  .lineHeight(21)
-                  .width('90%')
-                if (this.statsEmpty) {
-                  Text(this.statsText)
-                    .fontSize(12)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.muted'))
-                    .textAlign(TextAlign.Center)
-                } else {
-                  Row({ space: 6 }) {
-                    Text(this.t('dailyStatsLabel'))
-                      .fontSize(12)
-                      .fontWeight(FontWeight.Medium)
-                      .fontColor($r('app.color.muted'))
-                    Text('·')
-                      .fontSize(12)
-                      .fontColor($r('app.color.muted'))
-                    Text(this.statsText)
-                      .fontSize(12)
-                      .fontWeight(FontWeight.Medium)
-                      .fontColor($r('app.color.ink'))
-                  }
-                }
-              }
-              .width('100%')
-              .alignItems(HorizontalAlign.Center)
-            }
-            .width('100%')
-            .alignItems(HorizontalAlign.Center)
-
-            // —— actions ——
-            Column({ space: 10 }) {
-              Row({ space: 10 }) {
-                Text(this.startLabel)
-                  .layoutWeight(1)
-                  .height(52)
-                  .fontSize(16)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor(Color.White)
-                  .textAlign(TextAlign.Center)
-                  .backgroundColor($r('app.color.brand'))
-                  .borderRadius(14)
-                  .onClick(() => this.toggleStart())
-                Text(this.t('reset'))
-                  .layoutWeight(1)
-                  .height(52)
-                  .fontSize(16)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.ghost_ink'))
-                  .textAlign(TextAlign.Center)
-                  .backgroundColor($r('app.color.ghost_bg'))
-                  .border({ width: 1, color: $r('app.color.ghost_line') })
-                  .borderRadius(14)
-                  .opacity(this.resetEnabled ? 1 : 0.4)
-                  .onClick(() => {
-                    if (this.resetEnabled) {
-                      this.reset();
-                    }
-                  })
-              }
-              .width('100%')
-
-              // segmented presets
-              Row() {
-                ForEach(this.presets, (min: number) => {
-                  Text(this.t('minutes', this.varsN(`${min}`)))
-                    .layoutWeight(1)
-                    .height(40)
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor(this.presetActive(min) ? $r('app.color.brand_strong') : $r('app.color.muted'))
-                    .textAlign(TextAlign.Center)
-                    .backgroundColor(this.presetActive(min) ? $r('app.color.brand_soft') : $r('app.color.surface'))
-                    .opacity(this.setupEnabled ? 1 : 0.4)
-                    .onClick(() => {
-                      if (this.setupEnabled) {
-                        this.setPreset(min, '');
-                      }
-                    })
-                }, (min: number) => `${min}`)
-              }
-              .width('100%')
-              .height(40)
-              .border({ width: 1, color: $r('app.color.line') })
-              .borderRadius(14)
-              .clip(true)
-              .backgroundColor($r('app.color.surface'))
-
-              // scene trigger
-              Row() {
-                Text(this.sceneLabel)
-                  .layoutWeight(1)
-                  .fontSize(14)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor(this.scenePlaceholder ? $r('app.color.muted') : $r('app.color.ink'))
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                Text('▾')
-                  .fontSize(12)
-                  .fontColor(this.showScenes ? $r('app.color.brand_strong') : $r('app.color.muted'))
-              }
-              .width('100%')
-              .height(40)
-              .padding({ left: 14, right: 14 })
-              .backgroundColor($r('app.color.surface'))
-              .border({
-                width: 1,
-                color: this.showScenes ? $r('app.color.brand') : $r('app.color.line')
-              })
-              .borderRadius(14)
-              .opacity(this.setupEnabled ? 1 : 0.4)
-              .onClick(() => {
-                if (this.setupEnabled) {
-                  this.showScenes = !this.showScenes;
-                }
-              })
-
-              if (this.showScenes) {
-                Scroll() {
-                  Column({ space: 4 }) {
-                    ForEach(this.groups, (group: SceneGroup) => {
-                      Column({ space: 2 }) {
-                        Row({ space: 8 }) {
-                          Column()
-                            .width(3)
-                            .height(12)
-                            .borderRadius(2)
-                            .backgroundColor($r('app.color.brand'))
-                          Text(this.t(group.labelKey))
-                            .fontSize(11)
-                            .fontWeight(FontWeight.Bold)
-                            .fontColor($r('app.color.brand_strong'))
-                            .letterSpacing(0.8)
-                        }
-                        .width('100%')
-                        .padding({
-                          left: 10,
-                          right: 10,
-                          top: 7,
-                          bottom: 7
-                        })
-                        .backgroundColor('#E5F5ECB8')
-                        .border({ width: 1, color: '#2F9A6824' })
-                        .borderRadius(8)
-
-                        ForEach(this.scenes.filter((s) => s.group === group.id), (scene: SceneItem) => {
-                          Text(this.t(scene.labelKey))
-                            .width('100%')
-                            .fontSize(14)
-                            .fontWeight(FontWeight.Medium)
-                            .fontColor(scene.id === this.state.activeSceneId ?
-                              $r('app.color.brand_strong') : $r('app.color.muted'))
-                            .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-                            .borderRadius(11)
-                            .backgroundColor(scene.id === this.state.activeSceneId ?
-                              $r('app.color.brand_soft') : Color.Transparent)
-                            .onClick(() => this.selectScene(scene.id))
-                        }, (scene: SceneItem) => scene.id)
-                      }
-                      .width('100%')
-                    }, (group: SceneGroup) => group.id)
-                  }
-                  .width('100%')
-                  .padding(6)
-                }
-                .height(320)
-                .backgroundColor($r('app.color.surface'))
-                .border({ width: 1, color: $r('app.color.line') })
-                .borderRadius(14)
-              }
-            }
-            .width('100%')
-
-            Text(this.footnote)
-              .fontSize(12)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.muted'))
-              .textAlign(TextAlign.Center)
-              .lineHeight(20)
-              .width('100%')
-              .margin({ top: 4, bottom: 8 })
+        Tabs({ barPosition: BarPosition.End, index: this.currentTab }) {
+          TabContent() {
+            RecordsTab({ epoch: this.recordsEpoch })
           }
-          .width('100%')
-          .padding({ left: 20, right: 20, top: 18, bottom: 16 })
+          .tabBar(this.TabBarItem(0, $r('app.media.ic_tab_records'), 'tabRecords'))
+          .align(Alignment.TopStart)
+
+          TabContent() {
+            this.HomePane()
+          }
+          .tabBar(this.TabBarItem(1, $r('app.media.ic_tab_home'), 'tabHome'))
+          .align(Alignment.TopStart)
+
+          TabContent() {
+            MineTab()
+          }
+          .tabBar(this.TabBarItem(2, $r('app.media.ic_tab_mine'), 'tabMine'))
+          .align(Alignment.TopStart)
         }
         .width('100%')
         .height('100%')
-        .scrollBar(BarState.Off)
+        .barHeight(58)
+        .barBackgroundColor($r('app.color.surface'))
+        .onChange((i: number) => this.onTabChange(i))
+        .animationDuration(200)
       }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(this.bgColor)
+    .backgroundColor(this.privacyAccepted && this.ready ? this.bgColor : $r('app.color.bg'))
+  }
+
+  @Builder
+  TabBarItem(index: number, icon: Resource, labelKey: string) {
+    Column({ space: 2 }) {
+      Image(icon)
+        .width(22)
+        .height(22)
+        .objectFit(ImageFit.Contain)
+        .fillColor(this.currentTab === index ? '#248556' : '#5F6F66')
+      Text(this.t(labelKey))
+        .fontSize(11)
+        .fontWeight(this.currentTab === index ? FontWeight.Medium : FontWeight.Regular)
+        .fontColor(this.currentTab === index ? $r('app.color.brand_strong') : $r('app.color.muted'))
+        .key(`tab-label-${labelKey}-${this.localeTick}`)
+    }
+    .width('100%')
+    .height(58)
+    .justifyContent(FlexAlign.Center)
+  }
+
+  @Builder
+  HomePane() {
+    Scroll() {
+      Column({ space: 20 }) {
+        Row() {
+          Row({ space: 10 }) {
+            Image($r('app.media.logo'))
+              .height(22)
+              .objectFit(ImageFit.Contain)
+            Text(this.brandTitle)
+              .fontSize(19)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.ink'))
+              .layoutWeight(1)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+          }
+          .layoutWeight(1)
+          .height(36)
+          .alignItems(VerticalAlign.Center)
+
+          Image(this.ambient === 'off' ? $r('app.media.ic_volume_mute') : $r('app.media.ic_volume'))
+            .width(22)
+            .height(22)
+            .objectFit(ImageFit.Contain)
+            .fillColor(this.ambient === 'off' ? '#9AA89F' : '#5F6F66')
+            .opacity(this.ambient === 'off' ? 0.85 : 0.55)
+            .onClick(() => {
+              this.currentTab = 2;
+            })
+        }
+        .width('100%')
+        .height(36)
+        .alignItems(VerticalAlign.Center)
+
+        Column({ space: 18 }) {
+          Stack({ alignContent: Alignment.Center }) {
+            DialRing({
+              progress: this.progress,
+              ringColor: this.ringColor,
+              syncKey: this.dialKey
+            })
+              .width(260)
+              .height(260)
+            DigitalWatchTime({ text: this.clock, color: this.timeColor })
+              .width(166)
+              .height(55)
+          }
+          .width(260)
+          .height(260)
+          .alignSelf(ItemAlign.Center)
+          .onClick(() => {
+            if (this.state.finished) {
+              this.realert();
+            }
+          })
+
+          Column({ space: 6 }) {
+            Text(this.status)
+              .fontSize(14)
+              .fontWeight(this.state.phase === 'done' ? FontWeight.Medium : FontWeight.Regular)
+              .fontColor(this.statusColor)
+              .textAlign(TextAlign.Center)
+              .lineHeight(21)
+              .width('90%')
+            if (this.statsEmpty) {
+              Text(this.statsText)
+                .fontSize(12)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.muted'))
+                .textAlign(TextAlign.Center)
+            } else {
+              Row({ space: 6 }) {
+                Text(this.t('dailyStatsLabel'))
+                  .fontSize(12)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.muted'))
+                Text('·')
+                  .fontSize(12)
+                  .fontColor($r('app.color.muted'))
+                Text(this.statsText)
+                  .fontSize(12)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.ink'))
+              }
+            }
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Center)
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Center)
+
+        Column({ space: 10 }) {
+          Row({ space: 10 }) {
+            Text(this.startLabel)
+              .layoutWeight(1)
+              .height(52)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(Color.White)
+              .textAlign(TextAlign.Center)
+              .backgroundColor($r('app.color.brand'))
+              .borderRadius(14)
+              .onClick(() => this.toggleStart())
+            Text(this.t('reset'))
+              .layoutWeight(1)
+              .height(52)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.ghost_ink'))
+              .textAlign(TextAlign.Center)
+              .backgroundColor($r('app.color.ghost_bg'))
+              .border({ width: 1, color: $r('app.color.ghost_line') })
+              .borderRadius(14)
+              .opacity(this.resetEnabled ? 1 : 0.4)
+              .onClick(() => {
+                if (this.resetEnabled) {
+                  this.reset();
+                }
+              })
+          }
+          .width('100%')
+
+          Row() {
+            ForEach(this.presets, (min: number) => {
+              Text(this.t('minutes', this.varsN(`${min}`)))
+                .layoutWeight(1)
+                .height(40)
+                .fontSize(14)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(this.presetActive(min) ? $r('app.color.brand_strong') : $r('app.color.muted'))
+                .textAlign(TextAlign.Center)
+                .backgroundColor(this.presetActive(min) ? $r('app.color.brand_soft') : $r('app.color.surface'))
+                .opacity(this.setupEnabled ? 1 : 0.4)
+                .onClick(() => {
+                  if (this.setupEnabled) {
+                    this.setPreset(min, '');
+                  }
+                })
+            }, (min: number) => `${min}`)
+          }
+          .width('100%')
+          .height(40)
+          .border({ width: 1, color: $r('app.color.line') })
+          .borderRadius(14)
+          .clip(true)
+          .backgroundColor($r('app.color.surface'))
+
+          Row() {
+            Text(this.sceneLabel)
+              .layoutWeight(1)
+              .fontSize(14)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(this.scenePlaceholder ? $r('app.color.muted') : $r('app.color.ink'))
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+            Text('▾')
+              .fontSize(12)
+              .fontColor(this.showScenes ? $r('app.color.brand_strong') : $r('app.color.muted'))
+          }
+          .width('100%')
+          .height(40)
+          .padding({ left: 14, right: 14 })
+          .backgroundColor($r('app.color.surface'))
+          .border({
+            width: 1,
+            color: this.showScenes ? $r('app.color.brand') : $r('app.color.line')
+          })
+          .borderRadius(14)
+          .opacity(this.setupEnabled ? 1 : 0.4)
+          .onClick(() => {
+            if (this.setupEnabled) {
+              this.showScenes = !this.showScenes;
+            }
+          })
+
+          if (this.showScenes) {
+            Scroll() {
+              Column({ space: 4 }) {
+                ForEach(this.groups, (group: SceneGroup) => {
+                  Column({ space: 2 }) {
+                    Row({ space: 8 }) {
+                      Column()
+                        .width(3)
+                        .height(12)
+                        .borderRadius(2)
+                        .backgroundColor($r('app.color.brand'))
+                      Text(this.t(group.labelKey))
+                        .fontSize(11)
+                        .fontWeight(FontWeight.Bold)
+                        .fontColor($r('app.color.brand_strong'))
+                        .letterSpacing(0.8)
+                    }
+                    .width('100%')
+                    .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+                    .backgroundColor('#E5F5ECB8')
+                    .border({ width: 1, color: '#2F9A6824' })
+                    .borderRadius(8)
+
+                    ForEach(this.scenes.filter((s) => s.group === group.id), (scene: SceneItem) => {
+                      Text(this.t(scene.labelKey))
+                        .width('100%')
+                        .fontSize(14)
+                        .fontWeight(FontWeight.Medium)
+                        .fontColor(scene.id === this.state.activeSceneId ?
+                          $r('app.color.brand_strong') : $r('app.color.muted'))
+                        .padding({ left: 12, right: 12, top: 10, bottom: 10 })
+                        .borderRadius(11)
+                        .backgroundColor(scene.id === this.state.activeSceneId ?
+                          $r('app.color.brand_soft') : Color.Transparent)
+                        .onClick(() => this.selectScene(scene.id))
+                    }, (scene: SceneItem) => scene.id)
+                  }
+                  .width('100%')
+                }, (group: SceneGroup) => group.id)
+              }
+              .width('100%')
+              .padding(6)
+            }
+            .height(280)
+            .backgroundColor($r('app.color.surface'))
+            .border({ width: 1, color: $r('app.color.line') })
+            .borderRadius(14)
+          }
+        }
+        .width('100%')
+
+        Text(this.footnote)
+          .fontSize(12)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.muted'))
+          .textAlign(TextAlign.Center)
+          .lineHeight(20)
+          .width('100%')
+          .margin({ top: 4, bottom: 8 })
+      }
+      .width('100%')
+      .padding({ left: 20, right: 20, top: 18, bottom: 16 })
+    }
+    .width('100%')
+    .height('100%')
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
   }
 }

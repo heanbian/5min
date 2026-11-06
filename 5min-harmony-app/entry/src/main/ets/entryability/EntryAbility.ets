@@ -13,11 +13,7 @@ export default class EntryAbility extends UIAbility {
         hilog.error(0x0000, '5min', 'loadContent failed %{public}s', JSON.stringify(err));
         return;
       }
-      try {
-        const win = windowStage.getMainWindowSync();
-        win.setWindowKeepScreenOn(true);
-      } catch (_) {
-      }
+      // Keep-screen-on is toggled from Index only while the timer is running (battery/perf).
     });
   }
 }

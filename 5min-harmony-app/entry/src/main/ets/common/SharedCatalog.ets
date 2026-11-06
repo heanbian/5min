@@ -1,5 +1,6 @@
 import { util } from '@kit.ArkTS';
 import { common } from '@kit.AbilityKit';
+import { filterAppLocales } from './AppLocales';
 
 export interface SceneGroup {
   id: string;
@@ -35,8 +36,8 @@ export class SharedCatalog {
     cat.vibratePatternMs = root['vibratePatternMs'] as number[];
     cat.groups = root['groups'] as SceneGroup[];
     cat.scenes = root['scenes'] as SceneItem[];
-    cat.localeCodes = root['localeCodes'] as string[];
-    cat.defaultLocale = root['defaultLocale'] as string;
+    cat.localeCodes = filterAppLocales(root['localeCodes'] as string[]);
+    cat.defaultLocale = 'zh-CN';
     for (let i = 0; i < cat.localeCodes.length; i++) {
       const code = cat.localeCodes[i];
       const text = await SharedCatalog.readRaw(context, `shared/locales/${code}.json`);

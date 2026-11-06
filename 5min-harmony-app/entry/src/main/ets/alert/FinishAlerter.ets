@@ -18,9 +18,16 @@ export class FinishAlerter {
   private static stopRequested: boolean = false;
   private static vibActive: boolean = false;
 
-  static async play(context: common.UIAbilityContext, durationMs: number = 5000): Promise<void> {
+  /**
+   * @param withSound when false (user muted / ambient=off), skip WAV; vibration still runs.
+   */
+  static async play(
+    context: common.UIAbilityContext,
+    durationMs: number = 5000,
+    withSound: boolean = true
+  ): Promise<void> {
     FinishAlerter.stopRequested = false;
-    const soundP = FinishAlerter.playSound(context);
+    const soundP = withSound ? FinishAlerter.playSound(context) : Promise.resolve();
     const vibP = FinishAlerter.vibrate(durationMs);
     await Promise.all([soundP, vibP]);
   }
