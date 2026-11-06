@@ -1,20 +1,9 @@
 /**
  * Copyright 2026 学记宝 / xuejibao.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0
  */
 
-const { t } = require('../../utils/i18n');
+const { t, getLocale } = require('../../utils/i18n');
 const {
   PRESET_MINS,
   DEFAULT_MIN,
@@ -35,14 +24,15 @@ const {
   setAmbientMode,
   pauseAmbient,
 } = require('../../utils/ambient');
+const prefs = require('../../utils/prefs');
+const { readNavMetrics } = require('../../utils/navMetrics');
+const {
+  applyPrivacyState,
+  bindPrivacyHandlers,
+} = require('../../utils/privacyUi');
+const { updateTabBarLabels } = require('../../utils/tabBar');
 
 const WARN_MS = 60 * 1000;
-const AMBIENT_KEYS = Object.freeze([
-  { id: 'off', key: 'ambientOff' },
-  { id: 'rain', key: 'ambientRain' },
-  { id: 'waves', key: 'ambientWaves' },
-  { id: 'clock', key: 'ambientClock' },
-]);
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -69,56 +59,16 @@ function phaseColor(phase, kind) {
   return '#1f2a24';
 }
 
-function readNavMetrics() {
-  try {
-    const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
-    const menu = wx.getMenuButtonBoundingClientRect
-      ? wx.getMenuButtonBoundingClientRect()
-      : null;
-    const statusBarHeight = win.statusBarHeight || 20;
-    const menuHeight = (menu && menu.height) || 32;
-    const menuTop = (menu && menu.top) || statusBarHeight + 6;
-    const navBarHeight = menuHeight + (menuTop - statusBarHeight) * 2;
-    const navPadTop = statusBarHeight;
-    const navPadRight = menu
-      ? Math.max(8, win.windowWidth - menu.left + 8)
-      : 96;
-    // 下拉面板：顶栏下方、胶囊内侧
-    const panelTop = statusBarHeight + navBarHeight + 4;
-    const panelRight = menu
-      ? Math.max(12, win.windowWidth - menu.left + 4)
-      : 16;
-    return {
-      navBarHeight,
-      navPadTop,
-      navPadRight,
-      menuTop: panelTop,
-      menuRight: panelRight,
-    };
-  } catch (e) {
-    return {
-      navBarHeight: 44,
-      navPadTop: 44,
-      navPadRight: 96,
-      menuTop: 92,
-      menuRight: 16,
-    };
-  }
-}
-
 Page({
   data: {
     navBarHeight: 44,
     navPadTop: 44,
     navPadRight: 96,
-    menuTop: 92,
-    menuRight: 16,
     brandTitle: '',
     stageLabel: '',
     actionsLabel: '',
     presetsLabel: '',
     footnote: '',
-    beianEntry: '',
     ambientLabel: '',
     presets: PRESET_MINS,
     presetItems: [],
@@ -137,8 +87,14 @@ Page({
     sceneIndex: [0, 0],
     canvasCss: 260,
     ambient: 'off',
-    ambientOpen: false,
-    ambientOptions: [],
+    privacyAccepted: true,
+    privacyChecked: false,
+    privacyTitle: '',
+    privacyMessage: '',
+    privacyCheckLabel: '',
+    privacyLink: '',
+    termsLink: '',
+    privacyAgree: '',
   },
 
   totalMs: DEFAULT_MIN * 60 * 1000,
@@ -152,13 +108,24 @@ Page({
   scenePicker: null,
   canvas: null,
   ctx: null,
+  lastLocale: '',
 
   onLoad() {
+    bindPrivacyHandlers(this);
+    const acceptPrivacy = this.onAcceptPrivacy.bind(this);
+    this.onAcceptPrivacy = () => {
+      acceptPrivacy();
+      this.reopenCanvasSoon();
+    };
     const nav = readNavMetrics();
     const ambient = initAmbient();
+    const custom = prefs.getCustomMin(DEFAULT_MIN);
+    this.totalMs = custom * 60 * 1000;
+    this.remainMs = this.totalMs;
     this.setData({
       ...nav,
       ambient,
+      activePreset: PRESET_MINS.indexOf(custom) >= 0 ? custom : 0,
     });
     this.applyLabels(true);
     this.refreshStats();
@@ -166,10 +133,27 @@ Page({
   },
 
   onReady() {
-    this.initCanvas();
+    if (this.data.privacyAccepted) this.initCanvas();
+  },
+
+  reopenCanvasSoon() {
+    this.canvas = null;
+    this.ctx = null;
+    setTimeout(() => this.initCanvas(), 32);
   },
 
   onShow() {
+    applyPrivacyState(this);
+    updateTabBarLabels();
+    const locale = getLocale();
+    if (locale !== this.lastLocale) {
+      this.lastLocale = locale;
+      this.applyLabels(true);
+      this.refreshUi();
+    }
+    this.setData({ ambient: getAmbientMode() });
+    this.consumePendingCustomMin();
+    this.refreshStats();
     if (this.running && this.endAt) {
       this.tick();
     }
@@ -182,13 +166,19 @@ Page({
     this.setKeepScreenOn(false);
   },
 
-  buildAmbientOptions() {
-    const cur = getAmbientMode();
-    return AMBIENT_KEYS.map((item) => ({
-      id: item.id,
-      label: t(item.key),
-      active: item.id === cur,
-    }));
+  consumePendingCustomMin() {
+    const app = getApp();
+    const pending =
+      app && app.globalData ? app.globalData.pendingCustomMin : null;
+    if (pending == null) return;
+    if (this.running) return;
+    app.globalData.pendingCustomMin = null;
+    this.setPreset(pending, null);
+    this.setData({
+      sceneTriggerLabel: t('scenePlaceholder'),
+      scenePlaceholder: true,
+      sceneIndex: [0, 0],
+    });
   },
 
   buildPresetItems() {
@@ -244,9 +234,7 @@ Page({
       actionsLabel: t('actionsLabel'),
       presetsLabel: t('presetsLabel'),
       footnote: t('footnote'),
-      beianEntry: t('beianEntry'),
       ambientLabel: t('ambientLabel'),
-      ambientOptions: this.buildAmbientOptions(),
       presetItems: this.buildPresetItems(),
     });
     if (rebuildScenes) this.rebuildScenePicker(true);
@@ -377,45 +365,27 @@ Page({
       activePreset,
       scenePlaceholder: !this.activeSceneId,
       ambient: getAmbientMode(),
-      ambientOptions: this.buildAmbientOptions(),
     });
 
     this.drawDial(this.totalMs > 0 ? remain / this.totalMs : 0, timeText, phase);
   },
 
-  noop() {},
-
-  reopenCanvasSoon() {
-    // wx:if 卸载后需重建 canvas 节点
-    this.canvas = null;
-    this.ctx = null;
-    setTimeout(() => this.initCanvas(), 32);
+  onOpenMine() {
+    wx.switchTab({ url: '/pages/mine/mine' });
   },
 
-  onCloseMenus() {
-    const wasOpen = this.data.ambientOpen;
-    this.setData({ ambientOpen: false });
-    if (wasOpen) this.reopenCanvasSoon();
-  },
-
-  onAmbientToggle() {
-    const open = !this.data.ambientOpen;
-    this.setData({
-      ambientOpen: open,
-      ambientOptions: this.buildAmbientOptions(),
+  onDialTap() {
+    if (!this.finished || this.running) return;
+    const vars = {
+      n: Math.max(1, Math.round(this.totalMs / 60000)),
+      scene: this.notifySceneName(),
+    };
+    alertFinish({
+      title: t('notifyTitle', vars),
+      body: t('notifyBody', vars),
+      durationMs: ALERT_DURATION_MS,
+      withSound: getAmbientMode() !== 'off',
     });
-    if (!open) this.reopenCanvasSoon();
-  },
-
-  onAmbientSelect(e) {
-    const id = e.currentTarget.dataset.id;
-    const next = setAmbientMode(id);
-    this.setData({
-      ambient: next,
-      ambientOpen: false,
-      ambientOptions: this.buildAmbientOptions(),
-    });
-    this.reopenCanvasSoon();
   },
 
   setKeepScreenOn(on) {
@@ -458,7 +428,7 @@ Page({
     this.remainMs = 0;
     this.endAt = 0;
     this.setKeepScreenOn(false);
-    recordCompletedSession(this.totalMs);
+    recordCompletedSession(this.totalMs, this.activeSceneId || '');
     this.refreshStats();
     this.refreshUi();
     const vars = {
@@ -469,10 +439,10 @@ Page({
       title: t('notifyTitle', vars),
       body: t('notifyBody', vars),
       durationMs: ALERT_DURATION_MS,
+      withSound: getAmbientMode() !== 'off',
     });
   },
 
-  /** Scene title for finish notify; default system scene is toilet (如厕). */
   notifySceneName() {
     if (this.activeSceneId) {
       const scene = sceneById(this.activeSceneId);
@@ -576,9 +546,9 @@ Page({
     this.endAt = Date.now() + this.remainMs;
     this.running = true;
     this.setKeepScreenOn(true);
-    // 用户手势后按偏好起播环境音
-    if (this.data.ambient && this.data.ambient !== 'off') {
-      setAmbientMode(this.data.ambient);
+    const ambient = getAmbientMode();
+    if (ambient && ambient !== 'off') {
+      setAmbientMode(ambient);
     }
     this.startTicker();
     this.refreshUi();
@@ -606,7 +576,4 @@ Page({
     this.refreshUi();
   },
 
-  onOpenBeian() {
-    wx.navigateTo({ url: '/pages/beian/beian' });
-  },
 });

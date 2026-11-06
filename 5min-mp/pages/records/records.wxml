@@ -1,0 +1,68 @@
+<!--
+ Copyright 2026 学记宝 / xuejibao.com
+ Licensed under the Apache License, Version 2.0
+ 对齐鸿蒙 RecordsTab
+-->
+<view class="shell" style="padding-top: {{navPadTop}}px;">
+  <view class="titlebar" style="height: {{navBarHeight}}px;">
+    <text class="title">{{tabTitle}}</text>
+  </view>
+  <view class="title-line"></view>
+
+  <scroll-view scroll-y class="body" enhanced show-scrollbar="{{false}}">
+    <view class="section-label">{{weekStatsLabel}}</view>
+    <view class="stats-row">
+      <view class="stat-card">
+        <text class="stat-title">{{weekStatsCountLabel}}</text>
+        <text class="stat-value">{{periodCount}}</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-title">{{weekStatsMinsLabel}}</text>
+        <view class="stat-value-row">
+          <text class="stat-value">{{periodMins}}</text>
+          <text class="stat-unit">{{customUnit}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-label section-label-gap">{{historyLabel}}</view>
+    <view class="card">
+      <block wx:if="{{rows.length === 0}}">
+        <text class="empty">{{historyEmpty}}</text>
+      </block>
+      <block wx:else>
+        <block wx:for="{{rows}}" wx:key="key">
+          <view class="hist-row">
+            <text class="hist-scene">{{item.sceneLine}}</text>
+            <text class="hist-dur">{{item.durationLine}}</text>
+            <text class="hist-time">{{item.timeLine}}</text>
+          </view>
+          <view wx:if="{{index < rows.length - 1}}" class="row-line"></view>
+        </block>
+      </block>
+    </view>
+    <view class="safe-bottom"></view>
+  </scroll-view>
+
+  <!-- privacy gate -->
+  <view class="privacy-mask" wx:if="{{!privacyAccepted}}">
+    <view class="privacy-card">
+      <text class="privacy-title">{{privacyTitle}}</text>
+      <text class="privacy-msg">{{privacyMessage}}</text>
+      <view class="privacy-check" bindtap="onTogglePrivacyCheck">
+        <view class="check-box {{privacyChecked ? 'check-on' : ''}}">
+          <text wx:if="{{privacyChecked}}" class="check-mark">✓</text>
+        </view>
+        <text class="check-label">{{privacyCheckLabel}}</text>
+      </view>
+      <view class="privacy-links">
+        <text class="link" bindtap="onOpenPrivacy">{{privacyLink}}</text>
+        <text class="link" bindtap="onOpenTerms">{{termsLink}}</text>
+      </view>
+      <view
+        class="privacy-btn {{privacyChecked ? '' : 'privacy-btn-off'}}"
+        bindtap="onAcceptPrivacy"
+      >{{privacyAgree}}</view>
+    </view>
+  </view>
+</view>

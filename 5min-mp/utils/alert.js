@@ -50,8 +50,8 @@ function pulseVibrate() {
 }
 
 /**
- * 到期提醒：振动若干秒（小程序无自定义音频文件时以振动 + toast 为主）
- * @param {{ title?: string, body?: string, durationMs?: number }} [opts]
+ * 到期提醒：振动若干秒（小程序无铃声文件；withSound=false 时仅振动，仍可 toast）
+ * @param {{ title?: string, body?: string, durationMs?: number, withSound?: boolean }} [opts]
  */
 function alertFinish(opts) {
   const options = opts || {};
@@ -70,6 +70,7 @@ function alertFinish(opts) {
     pulseVibrate();
   }, step);
 
+  // Toast is the only audible/visual cue besides vibration; always show when titled.
   if (options.title || options.body) {
     wx.showToast({
       title: options.title || options.body || '计时已结束',

@@ -395,13 +395,7 @@ module.exports = {
   "localeCodes": [
     "zh-CN",
     "zh-TW",
-    "en",
-    "bo",
-    "ja",
-    "ar",
-    "fr",
-    "ru",
-    "es"
+    "en"
   ],
   "defaultLocale": "zh-CN"
 };

@@ -4,6 +4,109 @@
  * 视觉 token 对齐 5min-android-app FiveMinColors / FiveMinDimens
  */
 
+/* privacy gate (parity with Harmony) */
+.privacy-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+.privacy-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 32rpx;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+}
+
+.privacy-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1f2a24;
+}
+
+.privacy-msg {
+  font-size: 28rpx;
+  color: #5f6f66;
+  line-height: 1.5;
+}
+
+.privacy-check {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.check-box {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 8rpx;
+  border: 3rpx solid #8a9a90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 4rpx;
+}
+
+.check-on {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.check-mark {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.check-label {
+  font-size: 28rpx;
+  color: #1f2a24;
+  flex: 1;
+}
+
+.privacy-links {
+  display: flex;
+  flex-direction: row;
+  gap: 32rpx;
+}
+
+.link {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #248556;
+}
+
+.privacy-btn {
+  margin-top: 8rpx;
+  height: 100rpx;
+  border-radius: 28rpx;
+  background: #2f9a68;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.privacy-btn-off {
+  background: #a8c4b4;
+  opacity: 0.7;
+}
+
 .page {
   --brand: #2f9a68;
   --brand-strong: #248556;
@@ -389,16 +492,3 @@
   text-align: center;
 }
 
-.beian-entry {
-  margin-top: 16rpx;
-  padding: 8rpx 12rpx;
-  font-size: 22rpx;
-  font-weight: 500;
-  color: var(--brand-strong);
-  text-decoration: underline;
-  text-underline-offset: 4rpx;
-}
-
-.beian-entry-hover {
-  opacity: 0.7;
-}

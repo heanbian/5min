@@ -5,26 +5,26 @@
 
 .page {
   min-height: 100vh;
-  padding: 48rpx 40rpx calc(48rpx + env(safe-area-inset-bottom));
-  background: #eef6f1;
+  padding: 32rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  background: #f2f5f3;
+  box-sizing: border-box;
 }
 
-.block {
+.card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 48rpx 40rpx;
   display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-  margin-bottom: 40rpx;
+  align-items: center;
+  justify-content: center;
 }
 
-.label {
-  font-size: 30rpx;
-  color: #8a9b92;
-  line-height: 1.5;
-}
-
-.value {
-  font-size: 30rpx;
+.icp {
+  font-size: 32rpx;
+  font-weight: 500;
   color: #1f2a24;
   line-height: 1.5;
+  text-align: center;
   word-break: break-all;
 }

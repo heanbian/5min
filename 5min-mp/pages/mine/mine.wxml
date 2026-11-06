@@ -1,0 +1,149 @@
+<!--
+ Copyright 2026 学记宝 / xuejibao.com
+ Licensed under the Apache License, Version 2.0
+ 对齐鸿蒙 MineTab
+-->
+<view class="shell" style="padding-top: {{navPadTop}}px;">
+  <view class="titlebar" style="height: {{navBarHeight}}px;">
+    <text class="title">{{tabTitle}}</text>
+  </view>
+  <view class="title-line"></view>
+
+  <scroll-view scroll-y class="body" enhanced show-scrollbar="{{false}}">
+    <view class="section-label">{{mineSectionPrefs}}</view>
+    <view class="card">
+      <view class="row" bindtap="onOpenLang">
+        <text class="row-title">{{langLabel}}</text>
+        <text class="row-value">{{localeName}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenSound">
+        <text class="row-title">{{ambientLabel}}</text>
+        <text class="row-value">{{ambientName}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenDuration">
+        <text class="row-title">{{durationSettingsLabel}}</text>
+        <text class="row-value">{{customMin}} {{customUnit}}</text>
+        <text class="chev">›</text>
+      </view>
+    </view>
+
+    <view class="section-label section-gap">{{mineSectionSupport}}</view>
+    <view class="card">
+      <view class="row" bindtap="onFeedback">
+        <text class="row-title">{{feedbackLabel}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenPrivacy">
+        <text class="row-title">{{privacyLink}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenTerms">
+        <text class="row-title">{{termsLink}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenAbout">
+        <text class="row-title">{{aboutLabel}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenBeian">
+        <text class="row-title">{{beianEntry}}</text>
+        <text class="chev">›</text>
+      </view>
+    </view>
+    <view class="safe-bottom"></view>
+  </scroll-view>
+
+  <!-- sheets -->
+  <view class="sheet-mask" wx:if="{{dialog}}" catchtouchmove="noop" bindtap="onCloseDialog">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-head">
+        <text class="sheet-title">{{dialogTitle}}</text>
+        <text class="sheet-close" bindtap="onCloseDialog">✕</text>
+      </view>
+
+      <block wx:if="{{dialog === 'lang'}}">
+        <view
+          wx:for="{{localeOptions}}"
+          wx:key="code"
+          class="sheet-item {{item.code === locale ? 'sheet-item-on' : ''}}"
+          data-code="{{item.code}}"
+          bindtap="onPickLocale"
+        >{{item.label}}</view>
+      </block>
+
+      <block wx:if="{{dialog === 'sound'}}">
+        <view
+          wx:for="{{soundOptions}}"
+          wx:key="id"
+          class="sheet-item {{item.id === ambient ? 'sheet-item-on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onPickAmbient"
+        >{{item.label}}</view>
+      </block>
+
+      <block wx:if="{{dialog === 'duration'}}">
+        <view class="duration-box">
+          <input
+            class="duration-input"
+            type="number"
+            maxlength="3"
+            value="{{customText}}"
+            placeholder="{{customMinutesHint}}"
+            bindinput="onCustomInput"
+          />
+          <view class="quick-row">
+            <view
+              wx:for="{{quickMins}}"
+              wx:key="*this"
+              class="quick-chip"
+              data-min="{{item}}"
+              bindtap="onQuickMin"
+            >{{item}}</view>
+          </view>
+          <view class="duration-actions">
+            <view class="btn-cancel" bindtap="onCloseDialog">{{cancelLabel}}</view>
+            <view class="btn-ok" bindtap="onApplyDuration">{{confirmLabel}}</view>
+          </view>
+        </view>
+      </block>
+
+      <block wx:if="{{dialog === 'about'}}">
+        <view class="about-box">
+          <text class="about-body">{{aboutBody}}</text>
+          <text class="about-ver">{{aboutVersion}}</text>
+          <text class="about-web" bindtap="onOpenWebsite">{{aboutWebsite}}</text>
+          <view class="btn-ok about-ok" bindtap="onCloseDialog">{{confirmLabel}}</view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="privacy-mask" wx:if="{{!privacyAccepted}}">
+    <view class="privacy-card">
+      <text class="privacy-title">{{privacyTitle}}</text>
+      <text class="privacy-msg">{{privacyMessage}}</text>
+      <view class="privacy-check" bindtap="onTogglePrivacyCheck">
+        <view class="check-box {{privacyChecked ? 'check-on' : ''}}">
+          <text wx:if="{{privacyChecked}}" class="check-mark">✓</text>
+        </view>
+        <text class="check-label">{{privacyCheckLabel}}</text>
+      </view>
+      <view class="privacy-links">
+        <text class="link" bindtap="onOpenPrivacy">{{privacyLink}}</text>
+        <text class="link" bindtap="onOpenTerms">{{termsLink}}</text>
+      </view>
+      <view
+        class="privacy-btn {{privacyChecked ? '' : 'privacy-btn-off'}}"
+        bindtap="onAcceptPrivacy"
+      >{{privacyAgree}}</view>
+    </view>
+  </view>
+</view>
