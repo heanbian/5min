@@ -17,7 +17,7 @@
   "reset": "Reset",
   "again": "Restart",
   "minutes": "{n} min",
-  "footnote": "Public guidance commonly recommends limiting a single toilet visit to about five minutes; mobile devices can impair time perception. This tool is solely a habit reminder.",
+  "footnote": "Public guidance commonly recommends limiting a single toilet visit to about five minutes; mobile devices can impair time perception. Operated by XueJiBao. Habit reminder only.",
   "aboutLabel": "About",
   "titleIdle": "Toilet Timer · 5min",
   "titleSuffix": "5min",
@@ -139,5 +139,8 @@
   "ambientRain": "Rain",
   "ambientWaves": "Ocean waves",
   "ambientClock": "Ticking clock",
-  "metaDescription": "Toilet Timer (5min.chat): an on-device countdown habit reminder. Public guidance often suggests keeping a single toilet visit to about five minutes. Default 5-minute preset (also 3 / 10); alerts via vibration, sound, and system notification. No registration or ads; timing stays on-device and user data is not uploaded. Habit reminder only."
+  "metaDescription": "XueJiBao Toilet Timer (5min.chat): an on-device countdown habit reminder with scene presets, today and 14-day local history, and finish alerts. No sign-up or ads; data stays on-device by default. Habit reminder only.",
+  "privacyMessage": "Toilet Timer is operated by XueJiBao. Timing, 14-day history, and preferences stay on your device by default; personal data is not uploaded. Please read and agree to the terms to continue.",
+  "aboutBody": "Toilet Timer (5min.chat), operated by XueJiBao, is an on-device countdown habit reminder. It supports scene presets, custom duration, today and 14-day local stats, plus finish sound and vibration. No sign-up or ads; data stays on-device by default. Habit reminder only.",
+  "tipsBody": "Choose a scene preset or set 1–120 minutes. Turning sound off mutes finish tones and system ringtone while keeping vibration and banners. Data stays on-device by default."
 }
