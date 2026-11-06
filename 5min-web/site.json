@@ -6,6 +6,8 @@
  "origin": "https://5min.chat",
  "icp": "蜀ICP备14028739号-4",
  "icpUrl": "https://beian.miit.gov.cn/",
+ "policeBeian": "川公网安备51130302000379号",
+ "policeBeianUrl": "https://beian.mps.gov.cn/#/query/webSearch?code=51130302000379",
  "pages": [
  {
  "path": "/",

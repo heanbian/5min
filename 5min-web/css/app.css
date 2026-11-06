@@ -656,6 +656,11 @@
     text-decoration:none;
   }
   .beian{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:8px 16px;
     margin:4px 0 0;
     flex-shrink:0;
     font-size:0.75rem;
@@ -664,8 +669,22 @@
     line-height:1.5;
   }
   .beian a{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    height:17px;
     color:var(--muted);
     text-decoration:none;
+    line-height:17px;
+  }
+  .beian img,
+  .beian-icon{
+    display:block;
+    width:16px;
+    height:17px;
+    max-width:none;
+    flex:0 0 16px;
+    object-fit:contain;
   }
 
   /* 平板竖屏 */
