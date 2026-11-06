@@ -10,6 +10,7 @@ enum TimerPhase {
 final class TimerViewModel: ObservableObject {
     let catalog = SharedCatalog()
     private let prefs = PrefsStore()
+    private let history = HistoryStore.shared
 
     @Published var locale: String = "zh-CN"
     @Published var totalMs: Int64 = 5 * 60 * 1000
@@ -21,6 +22,12 @@ final class TimerViewModel: ObservableObject {
     @Published var statsCount = 0
     @Published var statsMs: Int64 = 0
     @Published var phase: TimerPhase = .idle
+    @Published var privacyAccepted = false
+    @Published var customMin = 5
+    @Published var recordsEpoch = 0
+    @Published var pendingCustomMin: Int?
+    /// 0 records · 1 home · 2 mine
+    @Published var selectedTab = 1
 
     private var endAt: Date?
     private var tick: AnyCancellable?
@@ -31,32 +38,48 @@ final class TimerViewModel: ObservableObject {
         return CGFloat(remainMs) / CGFloat(totalMs)
     }
 
+    var alertSoundOn: Bool { ambient != "off" }
+
+    var appLocaleCodes: [String] {
+        AppLocales.filter(catalog.localeCodes)
+    }
+
     func bootstrap() {
         NotificationService.configure()
-        NotificationService.requestPermission()
+        privacyAccepted = prefs.privacyAccepted
         let saved = prefs.locale
         locale = I18n.resolve(
             catalog: catalog,
             saved: saved,
             preferredLanguages: Locale.preferredLanguages
         )
-        if saved.isEmpty { prefs.locale = locale }
+        if saved != locale { prefs.locale = locale }
         ambient = prefs.ambient
-        let total = Int64(catalog.defaultMin) * 60_000
+        customMin = prefs.customMin(fallback: catalog.defaultMin)
+        let total = Int64(customMin) * 60_000
         totalMs = total
         remainMs = total
-        let stats = prefs.todayStats()
-        statsCount = stats.count
-        statsMs = stats.ms
+        refreshTodayStats()
         refreshPhase()
+        if privacyAccepted {
+            NotificationService.requestPermission()
+        }
     }
 
     func t(_ key: String, _ vars: [String: String] = [:]) -> String {
         catalog.t(locale, key, vars)
     }
 
+    func acceptPrivacy() {
+        privacyAccepted = true
+        prefs.privacyAccepted = true
+        NotificationService.requestPermission()
+    }
+
     func setLocale(_ code: String) {
-        let value = I18n.resolve(catalog: catalog, saved: code, preferredLanguages: [code])
+        let value = AppLocales.normalize(
+            I18n.resolve(catalog: catalog, saved: code, preferredLanguages: [code])
+        )
         locale = value
         prefs.locale = value
     }
@@ -64,6 +87,28 @@ final class TimerViewModel: ObservableObject {
     func setAmbient(_ mode: String) {
         ambient = mode
         prefs.ambient = mode
+        if mode == "off" {
+            AlertService.shared.stop()
+        }
+    }
+
+    func applyCustomMinutes(_ minutes: Int) {
+        let n = Swift.max(1, Swift.min(120, minutes))
+        customMin = n
+        prefs.setCustomMin(n)
+        pendingCustomMin = n
+    }
+
+    func consumePendingCustomMin() {
+        guard let pending = pendingCustomMin, !running else { return }
+        pendingCustomMin = nil
+        setPreset(minutes: pending, sceneId: nil)
+    }
+
+    func refreshTodayStats() {
+        let stats = history.todayStats()
+        statsCount = stats.count
+        statsMs = stats.ms
     }
 
     func setPreset(minutes: Int, sceneId: String?) {
@@ -99,6 +144,7 @@ final class TimerViewModel: ObservableObject {
     func reset() {
         stopTicker()
         NotificationService.cancelFinish()
+        AlertService.shared.stop()
         finishedHandled = false
         remainMs = totalMs
         running = false
@@ -108,7 +154,7 @@ final class TimerViewModel: ObservableObject {
     }
 
     func realert() {
-        AlertService.shared.play(durationMs: catalog.alertDurationMs)
+        AlertService.shared.play(durationMs: catalog.alertDurationMs, withSound: alertSoundOn)
     }
 
     private func start() {
@@ -123,7 +169,8 @@ final class TimerViewModel: ObservableObject {
         NotificationService.scheduleFinish(
             at: end,
             title: t("notifyTitle", vars),
-            body: t("notifyBody", vars)
+            body: t("notifyBody", vars),
+            withSound: alertSoundOn
         )
         startTicker()
         refreshPhase()
@@ -173,17 +220,17 @@ final class TimerViewModel: ObservableObject {
         finished = true
         remainMs = 0
         UIApplication.shared.isIdleTimerDisabled = false
-        prefs.recordSession(elapsedMs: totalMs)
-        let stats = prefs.todayStats()
-        statsCount = stats.count
-        statsMs = stats.ms
+        history.recordSession(elapsedMs: totalMs, sceneId: activeSceneId ?? "")
+        refreshTodayStats()
+        recordsEpoch += 1
         if fromTicker {
             let vars = notifyVars()
             NotificationService.presentNow(
                 title: t("notifyTitle", vars),
-                body: t("notifyBody", vars)
+                body: t("notifyBody", vars),
+                withSound: alertSoundOn
             )
-            AlertService.shared.play(durationMs: catalog.alertDurationMs)
+            AlertService.shared.play(durationMs: catalog.alertDurationMs, withSound: alertSoundOn)
         }
         refreshPhase()
     }
@@ -192,7 +239,6 @@ final class TimerViewModel: ObservableObject {
         max(1, Int((Double(totalMs) / 60_000.0).rounded()))
     }
 
-    /// Scene title for finish notify; default system scene is toilet (如厕).
     func notifySceneName() -> String {
         if let id = activeSceneId,
            let scene = catalog.scenes.first(where: { $0.id == id }) {

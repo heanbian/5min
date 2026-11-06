@@ -1,19 +1,29 @@
 import AVFoundation
 import UIKit
 
-/// ~5s finish cue: playback session + tone pulses + haptic pulses.
+/// Finish cue: optional tone pulses + haptic pulses.
 final class AlertService {
     static let shared = AlertService()
 
     private var audioEngine: AVAudioEngine?
     private var player: AVAudioPlayerNode?
     private var workItem: DispatchWorkItem?
+    private var hapticDeadline: Date?
 
-    func play(durationMs: Int = 5000) {
-        workItem?.cancel()
-        configureSession()
-        startToneLoop(durationMs: durationMs)
+    func play(durationMs: Int = 5000, withSound: Bool = true) {
+        stop()
+        if withSound {
+            configureSession()
+            startToneLoop(durationMs: durationMs)
+        }
         startHaptics(durationMs: durationMs)
+    }
+
+    func stop() {
+        workItem?.cancel()
+        workItem = nil
+        hapticDeadline = nil
+        stopEngine()
     }
 
     private func configureSession() {
@@ -77,14 +87,17 @@ final class AlertService {
     }
 
     private func startHaptics(durationMs: Int) {
-        let end = Date().addingTimeInterval(Double(durationMs) / 1000.0)
-        func pulse() {
-            guard Date() < end else { return }
-            let gen = UINotificationFeedbackGenerator()
-            gen.notificationOccurred(.warning)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { pulse() }
+        hapticDeadline = Date().addingTimeInterval(Double(durationMs) / 1000.0)
+        pulseHaptic()
+    }
+
+    private func pulseHaptic() {
+        guard let end = hapticDeadline, Date() < end else { return }
+        let gen = UINotificationFeedbackGenerator()
+        gen.notificationOccurred(.warning)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { [weak self] in
+            self?.pulseHaptic()
         }
-        pulse()
     }
 
     private func stopEngine() {

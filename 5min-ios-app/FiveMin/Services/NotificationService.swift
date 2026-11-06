@@ -30,7 +30,7 @@ enum NotificationService {
                 case .notDetermined:
                     requestPermission { _ in onReady() }
                 case .denied:
-                    onReady() // still start timer; scheduled notify may be silent
+                    onReady()
                 @unknown default:
                     onReady()
                 }
@@ -38,19 +38,18 @@ enum NotificationService {
         }
     }
 
-    static func scheduleFinish(at endAt: Date, title: String, body: String) {
+    static func scheduleFinish(at endAt: Date, title: String, body: String, withSound: Bool = true) {
         cancelFinish()
         configure()
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        content.sound = .default
+        content.sound = withSound ? .default : nil
         content.interruptionLevel = .timeSensitive
         if #available(iOS 15.0, *) {
             content.relevanceScore = 1.0
         }
 
-        // Prefer absolute calendar trigger (more reliable across background / lock screen).
         let comps = Calendar.current.dateComponents(
             [.year, .month, .day, .hour, .minute, .second],
             from: endAt
@@ -59,7 +58,6 @@ enum NotificationService {
         let req = UNNotificationRequest(identifier: finishId, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(req) { error in
             if error != nil {
-                // Fallback: relative interval
                 let interval = max(1, endAt.timeIntervalSinceNow)
                 let fallback = UNNotificationRequest(
                     identifier: finishId,
@@ -71,13 +69,12 @@ enum NotificationService {
         }
     }
 
-    /// Immediate local banner (e.g. when finish is handled in-foreground).
-    static func presentNow(title: String, body: String) {
+    static func presentNow(title: String, body: String, withSound: Bool = true) {
         configure()
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        content.sound = .default
+        content.sound = withSound ? .default : nil
         content.interruptionLevel = .timeSensitive
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.15, repeats: false)
         let req = UNNotificationRequest(
@@ -103,7 +100,11 @@ final class NotificationCenterDelegate: NSObject, UNUserNotificationCenterDelega
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.banner, .list, .sound, .badge])
+        var opts: UNNotificationPresentationOptions = [.banner, .list, .badge]
+        if notification.request.content.sound != nil {
+            opts.insert(.sound)
+        }
+        completionHandler(opts)
     }
 
     func userNotificationCenter(

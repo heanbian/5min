@@ -166,59 +166,18 @@ struct TimerView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: FiveMinDimens.topbarH)
 
-            HStack(spacing: 4) {
-                Menu {
-                    ambientButton("off", key: "ambientOff")
-                    ambientButton("rain", key: "ambientRain")
-                    ambientButton("waves", key: "ambientWaves")
-                    ambientButton("clock", key: "ambientClock")
-                } label: {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.system(size: 17))
-                        .foregroundStyle(FiveMinColor.muted)
-                        .frame(width: FiveMinDimens.topbarH, height: FiveMinDimens.topbarH)
-                }
-                .accessibilityLabel(model.t("ambientLabel"))
-
-                Menu {
-                    ForEach(model.catalog.localeCodes, id: \.self) { code in
-                        Button {
-                            model.setLocale(code)
-                        } label: {
-                            if code == model.locale {
-                                Label(model.catalog.t(code, "nativeName"), systemImage: "checkmark")
-                            } else {
-                                Text(model.catalog.t(code, "nativeName"))
-                            }
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(model.catalog.t(model.locale, "nativeName"))
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(FiveMinColor.muted)
-                            .lineLimit(1)
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(FiveMinColor.muted)
-                    }
-                    .padding(.leading, 6)
-                    .padding(.trailing, 2)
-                    .frame(height: FiveMinDimens.topbarH)
-                }
+            Button {
+                model.selectedTab = 2
+            } label: {
+                Image(systemName: model.ambient == "off" ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(model.ambient == "off" ? FiveMinColor.muted.opacity(0.85) : FiveMinColor.muted.opacity(0.55))
+                    .frame(width: FiveMinDimens.topbarH, height: FiveMinDimens.topbarH)
+                    .contentShape(Rectangle())
             }
-        }
-    }
-
-    private func ambientButton(_ id: String, key: String) -> some View {
-        Button {
-            model.setAmbient(id)
-        } label: {
-            if model.ambient == id {
-                Label(model.t(key), systemImage: "checkmark")
-            } else {
-                Text(model.t(key))
-            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(model.t("ambientLabel"))
+            .accessibilityValue(model.ambient == "off" ? model.t("soundMutedHint") : model.t("ambientLabel"))
         }
     }
 

@@ -15,12 +15,13 @@
 
 ## 功能
 
-- 时长预设 3 / 5 / 10 分钟与分组场景
-- 绝对时间戳倒计时；到期系统本地通知（前台横幅 / 后台日历触发）+ 约 5 秒提示音与触觉
-- 今日累计、多语言（含阿语 RTL）
-- 计时中常亮（`isIdleTimerDisabled`）
-- 结束后轻触表盘可再次提醒
-- **iPhone Duo**：按窗口尺寸（非设备型号）自适应；外屏竖排，内屏/横屏/分屏采用左右双栏；支持多方向与非全屏（`UIRequiresFullScreen=false`）
+- 底部三栏：记录 / 首页 / 我的（与鸿蒙客户端对齐）
+- 时长预设 3 / 5 / 10 分钟与分组场景；「我的」支持自定义 1–120 分钟
+- 绝对时间戳倒计时；到期系统本地通知 + 提示音与触觉（提示音可关闭，仍保留振动）
+- 首次启动隐私政策同意；语言限简体 / 繁体 / English
+- 记录页：近 14 日统计与明细（SQLite：`Application Support/5min-chat/5min_chat_history.db`）
+- 今日累计；计时中常亮（`isIdleTimerDisabled`）；结束后轻触表盘可再次提醒
+- **iPhone Duo**：按窗口尺寸自适应；外屏竖排，内屏/横屏/分屏双栏
 
 ### iPhone Duo 说明
 
@@ -177,8 +178,8 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 │ ├── Info.plist
 │ ├── Assets.xcassets/ # AppIcon · Logo · AccentColor
 │ ├── Resources/shared/ # ← export-shared
-│ ├── Features/Timer/
-│ ├── Data/
+│ ├── Features/Root|Timer|Records|Mine/
+│ ├── Data/          # Prefs · HistoryStore(SQLite) · I18n
 │ └── Services/
 ├── scripts/
 │ ├── generate_icons.py

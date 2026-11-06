@@ -7,7 +7,7 @@ struct FiveMinApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TimerView()
+            RootTabView()
                 .environmentObject(model)
                 .onAppear {
                     model.bootstrap()

@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B10000000000000000000001 /* AppLocales.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* AppLocales.swift */; };
+		B10000000000000000000002 /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* HistoryStore.swift */; };
+		B10000000000000000000003 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* RootTabView.swift */; };
+		B10000000000000000000004 /* RecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* RecordsView.swift */; };
+		B10000000000000000000005 /* MineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* MineView.swift */; };
 		43792D06AA234887BEDE1E43 /* shared in Resources */ = {isa = PBXBuildFile; fileRef = CBB26D8D4A3F4970A417872E /* shared */; };
 		4B2A469DED8F439E8A35DDD6 /* I18n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335D646AD96E42DDBDB9959B /* I18n.swift */; };
 		544F1D45EDDB430BA9517F85 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E9B8A4DDB45B9895F7698 /* TimerView.swift */; };
@@ -23,6 +28,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A10000000000000000000001 /* AppLocales.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLocales.swift; sourceTree = "<group>"; };
+		A10000000000000000000002 /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000003 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* RecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordsView.swift; sourceTree = "<group>"; };
+		A10000000000000000000005 /* MineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MineView.swift; sourceTree = "<group>"; };
 		2DB3123630D7407CA4D6CE8D /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		30FFFF9EB0C34F948554807E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		335D646AD96E42DDBDB9959B /* I18n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = I18n.swift; sourceTree = "<group>"; };
@@ -72,8 +82,35 @@
 			isa = PBXGroup;
 			children = (
 				611D0ABC6745493D9098E99B /* Timer */,
+				C10000000000000000000001 /* Records */,
+				C10000000000000000000002 /* Mine */,
+				C10000000000000000000003 /* Root */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000001 /* Records */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000004 /* RecordsView.swift */,
+			);
+			path = Records;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000002 /* Mine */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000005 /* MineView.swift */,
+			);
+			path = Mine;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000003 /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000003 /* RootTabView.swift */,
+			);
+			path = Root;
 			sourceTree = "<group>";
 		};
 		31BDDBFA53FE4CDE820B283C /* Products */ = {
@@ -99,6 +136,8 @@
 				8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */,
 				4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */,
 				335D646AD96E42DDBDB9959B /* I18n.swift */,
+				A10000000000000000000001 /* AppLocales.swift */,
+				A10000000000000000000002 /* HistoryStore.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -205,6 +244,11 @@
 				544F1D45EDDB430BA9517F85 /* TimerView.swift in Sources */,
 				6A11C0DE5E0E4F1A9B2C3D4E /* FiveMinTheme.swift in Sources */,
 				7B22D1EF6F1F502B0C3D4E5F /* DigitalWatch.swift in Sources */,
+				B10000000000000000000001 /* AppLocales.swift in Sources */,
+				B10000000000000000000002 /* HistoryStore.swift in Sources */,
+				B10000000000000000000003 /* RootTabView.swift in Sources */,
+				B10000000000000000000004 /* RecordsView.swift in Sources */,
+				B10000000000000000000005 /* MineView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -262,7 +306,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = Y248NURM5P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -272,7 +316,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = chat.5min.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -290,7 +334,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = Y248NURM5P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -300,7 +344,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = chat.5min.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
