@@ -118,6 +118,7 @@ Page({
     actionsLabel: '',
     presetsLabel: '',
     footnote: '',
+    beianEntry: '',
     ambientLabel: '',
     presets: PRESET_MINS,
     presetItems: [],
@@ -243,6 +244,7 @@ Page({
       actionsLabel: t('actionsLabel'),
       presetsLabel: t('presetsLabel'),
       footnote: t('footnote'),
+      beianEntry: t('beianEntry'),
       ambientLabel: t('ambientLabel'),
       ambientOptions: this.buildAmbientOptions(),
       presetItems: this.buildPresetItems(),
@@ -602,5 +604,9 @@ Page({
     this.remainMs = this.totalMs;
     this.setKeepScreenOn(false);
     this.refreshUi();
+  },
+
+  onOpenBeian() {
+    wx.navigateTo({ url: '/pages/beian/beian' });
   },
 });

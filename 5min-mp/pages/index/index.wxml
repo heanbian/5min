@@ -89,6 +89,9 @@
 
   <view class="footnote">
     <text>{{footnote}}</text>
+    <view class="beian-entry" bindtap="onOpenBeian" hover-class="beian-entry-hover">
+      <text>{{beianEntry}}</text>
+    </view>
   </view>
 
   <view class="menu-overlay" wx:if="{{ambientOpen}}" catchtouchmove="noop">

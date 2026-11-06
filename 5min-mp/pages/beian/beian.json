@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "default",
+  "navigationBarTitleText": "备案信息",
+  "navigationBarBackgroundColor": "#eef6f1",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#eef6f1",
+  "usingComponents": {}
+}
