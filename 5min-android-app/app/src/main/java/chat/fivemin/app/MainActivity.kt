@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import chat.fivemin.app.ui.TimerApp
+import chat.fivemin.app.ui.RootApp
 import chat.fivemin.app.ui.theme.FiveMinTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FiveMinTheme {
-                TimerApp(
+                RootApp(
                     ensureStartPermissions = ::ensureStartPermissions,
                 )
             }

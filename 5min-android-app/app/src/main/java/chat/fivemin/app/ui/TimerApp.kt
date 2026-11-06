@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,16 +24,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,13 +51,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.R
 import chat.fivemin.app.timer.TimerPhase
@@ -65,15 +66,26 @@ import chat.fivemin.app.ui.theme.FiveMinColors
 import chat.fivemin.app.ui.theme.FiveMinDimens
 
 @Composable
-fun TimerApp(
-    vm: TimerViewModel = viewModel(),
+fun TimerHome(
+    vm: TimerViewModel,
     ensureStartPermissions: (onReady: () -> Unit) -> Unit = { it() },
+    onOpenMine: () -> Unit = {},
 ) {
     val state by vm.state.collectAsState()
     val catalog = FiveMinApp.instance.catalog
-    var langOpen by remember { mutableStateOf(false) }
-    var ambientOpen by remember { mutableStateOf(false) }
     var sceneOpen by remember { mutableStateOf(false) }
+    val view = LocalView.current
+    DisposableEffect(state.running) {
+        val window = (view.context as? Activity)?.window
+        if (state.running) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     val ringColor = when (state.phase) {
         TimerPhase.Warn -> FiveMinColors.warn
@@ -130,7 +142,6 @@ fun TimerApp(
     val resetEnabled = state.running || state.remainMs < state.totalMs || state.finished
     val setupEnabled = !state.running
     val radius = RoundedCornerShape(FiveMinDimens.radius)
-    val localeLabel = catalog.t(state.locale, "nativeName")
 
     Box(
         modifier = Modifier
@@ -154,7 +165,6 @@ fun TimerApp(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
                 .padding(horizontal = FiveMinDimens.padX, vertical = FiveMinDimens.padY)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(FiveMinDimens.sectionGap),
@@ -199,111 +209,26 @@ fun TimerApp(
                     )
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxHeight(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                Box(
+                    modifier = Modifier
+                        .size(topbarH)
+                        .clickable(onClick = onOpenMine),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box {
-                        Box(
-                            modifier = Modifier
-                                .size(topbarH)
-                                .clickable { ambientOpen = true },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = vm.t("ambientLabel"),
-                                tint = if (ambientOpen) FiveMinColors.brandStrong else FiveMinColors.muted,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = ambientOpen,
-                            onDismissRequest = { ambientOpen = false },
-                            shape = RoundedCornerShape(FiveMinDimens.radiusSm),
-                            containerColor = FiveMinColors.surface,
-                        ) {
-                            listOf(
-                                "off" to "ambientOff",
-                                "rain" to "ambientRain",
-                                "waves" to "ambientWaves",
-                                "clock" to "ambientClock",
-                            ).forEach { (id, key) ->
-                                val active = state.ambient == id
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            vm.t(key),
-                                            color = if (active) FiveMinColors.brandStrong else FiveMinColors.muted,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 14.sp,
-                                        )
-                                    },
-                                    onClick = {
-                                        vm.setAmbient(id)
-                                        ambientOpen = false
-                                    },
-                                    modifier = if (active) {
-                                        Modifier.background(FiveMinColors.brandSoft, RoundedCornerShape(8.dp))
-                                    } else Modifier,
-                                )
-                            }
-                        }
-                    }
-
-                    Box {
-                        Row(
-                            modifier = Modifier
-                                .height(topbarH)
-                                .clickable { langOpen = true }
-                                .padding(start = 6.dp, end = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Text(
-                                text = localeLabel,
-                                color = if (langOpen) FiveMinColors.brandStrong else FiveMinColors.muted,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                maxLines = 1,
-                                lineHeight = 14.sp,
-                            )
-                            Icon(
-                                Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = if (langOpen) FiveMinColors.brandStrong else FiveMinColors.muted,
-                                modifier = Modifier.size(12.dp),
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = langOpen,
-                            onDismissRequest = { langOpen = false },
-                            shape = RoundedCornerShape(FiveMinDimens.radiusSm),
-                            containerColor = FiveMinColors.surface,
-                        ) {
-                            catalog.localeCodes.forEach { code ->
-                                val active = state.locale == code
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            catalog.t(code, "nativeName"),
-                                            color = if (active) FiveMinColors.brandStrong else FiveMinColors.muted,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 14.sp,
-                                        )
-                                    },
-                                    onClick = {
-                                        vm.setLocale(code)
-                                        langOpen = false
-                                    },
-                                    modifier = if (active) {
-                                        Modifier.background(FiveMinColors.brandSoft, RoundedCornerShape(8.dp))
-                                    } else Modifier,
-                                )
-                            }
-                        }
-                    }
+                    Icon(
+                        imageVector = if (state.ambient == "off") {
+                            Icons.AutoMirrored.Filled.VolumeOff
+                        } else {
+                            Icons.AutoMirrored.Filled.VolumeUp
+                        },
+                        contentDescription = vm.t("ambientLabel"),
+                        tint = if (state.ambient == "off") {
+                            FiveMinColors.muted.copy(alpha = 0.85f)
+                        } else {
+                            FiveMinColors.muted.copy(alpha = 0.55f)
+                        },
+                        modifier = Modifier.size(20.dp),
+                    )
                 }
             }
 
@@ -314,7 +239,9 @@ fun TimerApp(
                 verticalArrangement = Arrangement.spacedBy(FiveMinDimens.stageGap),
             ) {
                 Box(
-                    modifier = Modifier.size(FiveMinDimens.dialSize),
+                    modifier = Modifier
+                        .size(FiveMinDimens.dialSize)
+                        .clickable(enabled = state.finished) { vm.realert() },
                     contentAlignment = Alignment.Center,
                 ) {
                     val progress = state.progress
@@ -565,7 +492,7 @@ fun TimerApp(
             onDismissRequest = { sceneOpen = false },
             confirmButton = {
                 TextButton(onClick = { sceneOpen = false }) {
-                    Text("OK", color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
+                    Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
                 }
             },
             containerColor = FiveMinColors.surface,

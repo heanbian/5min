@@ -55,9 +55,11 @@ class SharedCatalog(
                     )
                 }
             }
-            val codes = root.getJSONArray("localeCodes").let { arr ->
+            val rawCodes = root.getJSONArray("localeCodes").let { arr ->
                 List(arr.length()) { arr.getString(it) }
             }
+            val codes = AppLocales.filter(rawCodes)
+            // Load packs for app locales; keep other JSON files for export parity.
             val localeMaps = codes.associateWith { code ->
                 val raw = context.assets.open("shared/locales/$code.json").bufferedReader().use { it.readText() }
                 val obj = JSONObject(raw)
@@ -74,7 +76,7 @@ class SharedCatalog(
                 groups = groups,
                 scenes = scenes,
                 localeCodes = codes,
-                defaultLocale = root.getString("defaultLocale"),
+                defaultLocale = AppLocales.normalize(root.getString("defaultLocale")),
                 localeMaps = localeMaps,
             )
         }

@@ -20,6 +20,7 @@ object FinishNotifier {
         context: Context,
         totalMs: Long = 5 * 60_000L,
         sceneName: String? = null,
+        withSound: Boolean = true,
     ) {
         val appCtx = context.applicationContext
         val launch = PendingIntent.getActivity(
@@ -41,7 +42,8 @@ object FinishNotifier {
         val title = cat.t(locale, "notifyTitle", vars)
         val body = cat.t(locale, "notifyBody", vars)
         val pattern = cat.vibratePatternMs.map { it.toLong() }.toLongArray()
-        val notification = NotificationCompat.Builder(appCtx, FiveMinApp.CHANNEL_FINISH)
+        val channel = if (withSound) FiveMinApp.CHANNEL_FINISH else FiveMinApp.CHANNEL_FINISH_SILENT
+        val builder = NotificationCompat.Builder(appCtx, channel)
             .setSmallIcon(R.drawable.ic_stat_timer)
             .setColor(Color.parseColor("#2F9A68"))
             .setContentTitle(title)
@@ -52,12 +54,16 @@ object FinishNotifier {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
             .setOnlyAlertOnce(false)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
             .setVibrate(pattern)
             .setContentIntent(launch)
-            .build()
+        if (withSound) {
+            builder.setDefaults(NotificationCompat.DEFAULT_ALL)
+            builder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
+        } else {
+            builder.setDefaults(0)
+            builder.setSilent(true)
+        }
         appCtx.getSystemService(NotificationManager::class.java)
-            ?.notify(NOTIF_ID, notification)
+            ?.notify(NOTIF_ID, builder.build())
     }
 }

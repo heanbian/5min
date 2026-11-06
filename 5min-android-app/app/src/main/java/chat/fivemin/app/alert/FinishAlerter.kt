@@ -2,8 +2,8 @@ package chat.fivemin.app.alert
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.ToneGenerator
 import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -19,12 +19,13 @@ import kotlinx.coroutines.launch
 object FinishAlerter {
     private var job: Job? = null
 
-    fun play(context: Context) {
+    fun play(context: Context, withSound: Boolean = true) {
         val app = FiveMinApp.instance
         val pattern = app.catalog.vibratePatternMs
         val duration = app.catalog.alertDurationMs
         vibrate(context, pattern)
         job?.cancel()
+        if (!withSound) return
         job = CoroutineScope(Dispatchers.Default).launch {
             val tg = try {
                 ToneGenerator(AudioManager.STREAM_ALARM, 90)
@@ -42,8 +43,16 @@ object FinishAlerter {
                 toggle = !toggle
                 delay(620)
             }
-            try { tg?.release() } catch (_: Exception) {}
+            try {
+                tg?.release()
+            } catch (_: Exception) {
+            }
         }
+    }
+
+    fun stop() {
+        job?.cancel()
+        job = null
     }
 
     private fun vibrate(context: Context, patternMs: IntArray) {

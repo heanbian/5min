@@ -12,6 +12,7 @@ object TimerScheduler {
     const val EXTRA_END_AT = "end_at"
     const val EXTRA_ELAPSED = "elapsed_ms"
     const val EXTRA_SCENE = "scene_name"
+    const val EXTRA_SCENE_ID = "scene_id"
     private const val TAG = "TimerScheduler"
 
     fun canScheduleExact(context: Context): Boolean {
@@ -26,9 +27,10 @@ object TimerScheduler {
         endAt: Long,
         elapsedMs: Long,
         sceneName: String = "",
+        sceneId: String = "",
     ) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
-        val pi = pending(context, endAt, elapsedMs, sceneName)
+        val pi = pending(context, endAt, elapsedMs, sceneName, sceneId)
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endAt, pi)
@@ -55,7 +57,7 @@ object TimerScheduler {
     fun cancel(context: Context) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
         try {
-            am.cancel(pending(context, 0L, 0L, ""))
+            am.cancel(pending(context, 0L, 0L, "", ""))
         } catch (_: Exception) {
             // ignore
         }
@@ -66,12 +68,14 @@ object TimerScheduler {
         endAt: Long,
         elapsedMs: Long,
         sceneName: String,
+        sceneId: String,
     ): PendingIntent {
         val intent = Intent(context, TimerAlarmReceiver::class.java).apply {
             action = ACTION_FINISH
             putExtra(EXTRA_END_AT, endAt)
             putExtra(EXTRA_ELAPSED, elapsedMs)
             putExtra(EXTRA_SCENE, sceneName)
+            putExtra(EXTRA_SCENE_ID, sceneId)
         }
         return PendingIntent.getBroadcast(
             context,

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.alert.FinishAlerter
+import chat.fivemin.app.data.AppLocales
 import chat.fivemin.app.notify.FinishNotifier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,20 +21,23 @@ import kotlin.math.max
 class TimerViewModel(app: Application) : AndroidViewModel(app) {
     private val catalog = FiveMinApp.instance.catalog
     private val prefs = FiveMinApp.instance.prefs
+    private val history = FiveMinApp.instance.history
     private val i18n = FiveMinApp.instance.i18n
 
     private var endAt = 0L
     private var tickJob: Job? = null
     private var finishedHandled = false
+    private var pendingCustomMin: Int? = null
 
     private val _state: MutableStateFlow<TimerUiState>
     val state: StateFlow<TimerUiState>
 
     init {
         val locale = i18n.resolveInitial()
-        if (prefs.locale.isBlank()) prefs.locale = locale
-        val total = catalog.defaultMin * 60_000L
-        val (count, ms) = prefs.todayStats()
+        if (prefs.locale != locale) prefs.locale = locale
+        val custom = prefs.customMin(catalog.defaultMin)
+        val total = custom * 60_000L
+        val (count, ms) = history.todayStats()
         _state = MutableStateFlow(
             TimerUiState(
                 locale = locale,
@@ -46,6 +50,10 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 statsCount = count,
                 statsMs = ms,
                 phase = TimerPhase.Idle,
+                privacyAccepted = prefs.privacyAccepted,
+                customMin = custom,
+                recordsEpoch = 0,
+                selectedTab = 1,
             ),
         )
         state = _state.asStateFlow()
@@ -57,8 +65,25 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     fun t(key: String, vars: Map<String, String> = emptyMap()) =
         catalog.t(_state.value.locale, key, vars)
 
+    fun appLocaleCodes(): List<String> = i18n.appLocaleCodes()
+
+    fun acceptPrivacy() {
+        prefs.privacyAccepted = true
+        _state.update { it.copy(privacyAccepted = true) }
+    }
+
+    fun setSelectedTab(index: Int) {
+        _state.update { it.copy(selectedTab = index) }
+        if (index == 0) {
+            _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
+        } else if (index == 1) {
+            consumePendingCustomMin()
+            refreshTodayStats()
+        }
+    }
+
     fun setLocale(code: String) {
-        val resolved = i18n.resolve(code) ?: return
+        val resolved = AppLocales.normalize(i18n.resolve(code) ?: code)
         prefs.locale = resolved
         _state.update { it.copy(locale = resolved) }
     }
@@ -66,6 +91,30 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     fun setAmbient(mode: String) {
         prefs.ambient = mode
         _state.update { it.copy(ambient = mode) }
+        if (mode == "off") FinishAlerter.stop()
+    }
+
+    fun applyCustomMinutes(minutes: Int) {
+        val n = minutes.coerceIn(1, 120)
+        prefs.setCustomMin(n)
+        pendingCustomMin = n
+        _state.update { it.copy(customMin = n) }
+    }
+
+    fun consumePendingCustomMin() {
+        val pending = pendingCustomMin ?: return
+        if (_state.value.running) return
+        pendingCustomMin = null
+        setPresetMinutes(pending, null)
+    }
+
+    fun refreshTodayStats() {
+        val (count, ms) = history.todayStats()
+        _state.update { it.copy(statsCount = count, statsMs = ms) }
+    }
+
+    fun bumpRecordsEpoch() {
+        _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
     }
 
     fun setPresetMinutes(min: Int, sceneId: String? = null) {
@@ -99,6 +148,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun reset() {
         stopTicker()
+        FinishAlerter.stop()
         TimerScheduler.cancel(getApplication())
         TimerForegroundService.stop(getApplication())
         finishedHandled = false
@@ -112,15 +162,25 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun realert() {
+        if (!_state.value.finished) return
+        FinishAlerter.play(getApplication(), _state.value.alertSoundOn)
+    }
+
     private fun start() {
         val s = _state.value
         if (s.remainMs <= 0L) return
         finishedHandled = false
         endAt = System.currentTimeMillis() + s.remainMs
         _state.update { it.copy(running = true, finished = false, phase = phaseFor(it.remainMs, true, false)) }
-        // Alarm + FGS must not crash the UI thread if OS denies permissions
         runCatching {
-            TimerScheduler.scheduleExact(getApplication(), endAt, s.totalMs, notifySceneName())
+            TimerScheduler.scheduleExact(
+                getApplication(),
+                endAt,
+                s.totalMs,
+                notifySceneName(),
+                s.activeSceneId.orEmpty(),
+            )
         }
         runCatching { TimerForegroundService.start(getApplication(), endAt, format(s.remainMs)) }
         startTicker()
@@ -185,13 +245,15 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         stopTicker()
         TimerScheduler.cancel(getApplication())
         TimerForegroundService.stop(getApplication())
-        val total = _state.value.totalMs
+        val s = _state.value
+        val total = s.totalMs
+        val sceneId = s.activeSceneId.orEmpty()
         if (fromTicker) {
-            prefs.recordSession(total)
-            FinishNotifier.show(getApplication(), total, notifySceneName())
-            FinishAlerter.play(getApplication())
+            history.recordSession(total, sceneId)
+            FinishNotifier.show(getApplication(), total, notifySceneName(), s.alertSoundOn)
+            FinishAlerter.play(getApplication(), s.alertSoundOn)
         }
-        val (count, ms) = prefs.todayStats()
+        val (count, ms) = history.todayStats()
         _state.update {
             it.copy(
                 remainMs = 0L,
@@ -200,6 +262,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 phase = TimerPhase.Done,
                 statsCount = count,
                 statsMs = ms,
+                recordsEpoch = it.recordsEpoch + 1,
             )
         }
     }
@@ -212,7 +275,6 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         else -> TimerPhase.Idle
     }
 
-    /** Scene title for finish notify; default system scene is toilet (如厕). */
     fun notifySceneName(): String {
         val id = _state.value.activeSceneId
         if (!id.isNullOrBlank()) {
@@ -223,7 +285,6 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun format(ms: Long): String {
-        // Match 5min-web: ceil seconds, fixed MM:SS for digital watch slots
         val totalSec = ((ms + 999L) / 1000L).coerceAtLeast(0L)
         val m = totalSec / 60L
         val s = totalSec % 60L

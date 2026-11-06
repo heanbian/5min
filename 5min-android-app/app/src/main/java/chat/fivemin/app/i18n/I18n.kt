@@ -2,6 +2,7 @@ package chat.fivemin.app.i18n
 
 import android.content.Context
 import chat.fivemin.app.FiveMinApp
+import chat.fivemin.app.data.AppLocales
 import chat.fivemin.app.data.SharedCatalog
 import java.util.Locale
 
@@ -11,21 +12,22 @@ class I18n(
 ) {
     fun resolveInitial(): String {
         val saved = FiveMinApp.instance.prefs.locale
-        resolve(saved)?.let { return it }
+        resolve(saved)?.let { return AppLocales.normalize(it) }
         val candidates = mutableListOf<String>()
         val locales = context.resources.configuration.locales
         for (i in 0 until locales.size()) candidates += locales[i].toLanguageTag()
         candidates += Locale.getDefault().toLanguageTag()
         for (tag in candidates) {
-            resolve(tag)?.let { return it }
+            resolve(tag)?.let { return AppLocales.normalize(it) }
         }
-        return catalog.defaultLocale
+        return AppLocales.normalize(catalog.defaultLocale)
     }
 
     fun resolve(tag: String?): String? {
         if (tag.isNullOrBlank()) return null
         val lower = tag.trim().replace('_', '-')
-        if (catalog.localeCodes.contains(lower)) return lower
+        val codes = AppLocales.filter(catalog.localeCodes)
+        if (codes.contains(lower)) return lower
         val parts = lower.split('-')
         val base = parts.firstOrNull()?.lowercase() ?: return null
         val region = parts.getOrNull(1)?.uppercase()
@@ -36,7 +38,10 @@ class I18n(
                 "zh-CN"
             }
         }
-        if (catalog.localeCodes.contains(base)) return base
+        if (base == "en") return "en"
+        if (codes.contains(base)) return base
         return null
     }
+
+    fun appLocaleCodes(): List<String> = AppLocales.filter(catalog.localeCodes)
 }
