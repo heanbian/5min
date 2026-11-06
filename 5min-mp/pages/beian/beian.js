@@ -18,8 +18,6 @@ const { t } = require('../../utils/i18n');
 
 Page({
   data: {
-    pageTitle: '',
-    pageSub: '',
     icpLabel: '',
     icp: '',
     siteLabel: '',
@@ -28,34 +26,11 @@ Page({
 
   onLoad() {
     this.setData({
-      pageTitle: t('beianTitle'),
-      pageSub: t('beianPageSub'),
       icpLabel: t('beianIcpLabel'),
       icp: t('beianIcp'),
       siteLabel: t('beianSiteLabel'),
       site: t('beianSite'),
     });
     wx.setNavigationBarTitle({ title: t('beianTitle') });
-  },
-
-  copyText(text) {
-    if (!text) return;
-    wx.setClipboardData({
-      data: text,
-      success() {
-        wx.showToast({
-          title: t('beianCopied'),
-          icon: 'none',
-        });
-      },
-    });
-  },
-
-  onCopyIcp() {
-    this.copyText(this.data.icp);
-  },
-
-  onCopySite() {
-    this.copyText(this.data.site);
   },
 });

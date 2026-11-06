@@ -3,43 +3,12 @@
  Licensed under the Apache License, Version 2.0
 -->
 <view class="page">
-  <view class="glow glow-a" aria-hidden="true"></view>
-  <view class="glow glow-b" aria-hidden="true"></view>
-
-  <view class="hero">
-    <image class="hero-logo" src="/assets/logo.png" mode="aspectFit" aria-label="5min" />
-    <text class="hero-kicker">{{pageSub}}</text>
+  <view class="block">
+    <text class="label">{{icpLabel}}</text>
+    <text class="value">{{icp}}</text>
   </view>
-
-  <view class="panel">
-    <view class="item" bindtap="onCopyIcp" hover-class="item-hover">
-      <view class="item-mark">
-        <text class="item-index">01</text>
-      </view>
-      <view class="item-body">
-        <text class="item-label">{{icpLabel}}</text>
-        <text class="item-value">{{icp}}</text>
-      </view>
-      <text class="item-action">复制</text>
-    </view>
-
-    <view class="rule" aria-hidden="true"></view>
-
-    <view class="item" bindtap="onCopySite" hover-class="item-hover">
-      <view class="item-mark item-mark-soft">
-        <text class="item-index">02</text>
-      </view>
-      <view class="item-body">
-        <text class="item-label">{{siteLabel}}</text>
-        <text class="item-value item-value-link">{{site}}</text>
-      </view>
-      <text class="item-action item-action-accent">复制</text>
-    </view>
-  </view>
-
-  <view class="foot">
-    <view class="foot-dot" aria-hidden="true"></view>
-    <text class="foot-text">{{pageTitle}}</text>
-    <view class="foot-dot" aria-hidden="true"></view>
+  <view class="block">
+    <text class="label">{{siteLabel}}</text>
+    <text class="value">{{site}}</text>
   </view>
 </view>
