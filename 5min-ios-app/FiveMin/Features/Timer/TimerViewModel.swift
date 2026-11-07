@@ -61,10 +61,75 @@ final class TimerViewModel: ObservableObject {
         remainMs = total
         refreshTodayStats()
         refreshPhase()
-        if privacyAccepted {
+        // Store-screenshot launches must stay free of the system notification prompt.
+        if privacyAccepted, !Self.isStoreScreenshotLaunch {
             NotificationService.requestPermission()
         }
+        applyStoreScreenshotSceneIfNeeded()
     }
+
+    private static var isStoreScreenshotLaunch: Bool {
+        ProcessInfo.processInfo.environment["FIVEMIN_SCREENSHOT"] != nil
+    }
+
+    /// DEBUG-only: drive UI for `scripts/capture_store_screenshots.sh` via `FIVEMIN_SCREENSHOT`.
+    private func applyStoreScreenshotSceneIfNeeded() {
+#if DEBUG
+        guard let scene = ProcessInfo.processInfo.environment["FIVEMIN_SCREENSHOT"] else { return }
+        privacyAccepted = true
+        prefs.privacyAccepted = true
+        switch scene {
+        case "home":
+            selectedTab = 1
+            setPreset(minutes: 5, sceneId: "toilet")
+        case "running":
+            selectedTab = 1
+            setPreset(minutes: 5, sceneId: "toilet")
+            // Defer so the first frame paints before the countdown starts.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                guard let self else { return }
+                self.remainMs = 3 * 60_000 + 42_000
+                self.start()
+            }
+        case "warn":
+            selectedTab = 1
+            setPreset(minutes: 5, sceneId: "toilet")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                guard let self else { return }
+                self.remainMs = 42_000
+                self.start()
+            }
+        case "records":
+            seedStoreScreenshotHistory()
+            refreshTodayStats()
+            selectedTab = 0
+            recordsEpoch += 1
+        case "mine":
+            selectedTab = 2
+        default:
+            break
+        }
+#endif
+    }
+
+#if DEBUG
+    private func seedStoreScreenshotHistory() {
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        let samples: [(offsetMs: Int64, minutes: Int, scene: String)] = [
+            (30 * 60_000, 5, "toilet"),
+            (3 * 60 * 60_000, 3, "brush"),
+            (26 * 60 * 60_000, 5, "tea"),
+            (50 * 60 * 60_000, 10, "coffee"),
+        ]
+        for sample in samples {
+            history.insertDemoSession(
+                at: now - sample.offsetMs,
+                minutes: sample.minutes,
+                sceneId: sample.scene
+            )
+        }
+    }
+#endif
 
     func t(_ key: String, _ vars: [String: String] = [:]) -> String {
         catalog.t(locale, key, vars)

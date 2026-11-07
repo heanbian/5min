@@ -82,11 +82,23 @@ final class HistoryStore {
     }
 
     func recordSession(elapsedMs: Int64, sceneId: String = "") {
+        let at = Int64(Date().timeIntervalSince1970 * 1000)
+        let ms = max(0, elapsedMs)
+        let minutes = max(1, Int((Double(ms) / 60_000.0).rounded()))
+        insertSession(at: at, minutes: minutes, sceneId: sceneId, elapsedMs: ms)
+    }
+
+#if DEBUG
+    /// Seed local history for store screenshot captures.
+    func insertDemoSession(at: Int64, minutes: Int, sceneId: String) {
+        let mins = max(1, minutes)
+        insertSession(at: at, minutes: mins, sceneId: sceneId, elapsedMs: Int64(mins) * 60_000)
+    }
+#endif
+
+    private func insertSession(at: Int64, minutes: Int, sceneId: String, elapsedMs: Int64) {
         queue.sync {
             guard let db else { return }
-            let ms = max(0, elapsedMs)
-            let minutes = max(1, Int((Double(ms) / 60_000.0).rounded()))
-            let at = Int64(Date().timeIntervalSince1970 * 1000)
             var stmt: OpaquePointer?
             defer { sqlite3_finalize(stmt) }
             let sql = "INSERT INTO sessions(at, minutes, scene_id, elapsed_ms) VALUES(?,?,?,?)"
@@ -94,7 +106,7 @@ final class HistoryStore {
             sqlite3_bind_int64(stmt, 1, at)
             sqlite3_bind_int(stmt, 2, Int32(minutes))
             sqlite3_bind_text(stmt, 3, (sceneId as NSString).utf8String, -1, nil)
-            sqlite3_bind_int64(stmt, 4, ms)
+            sqlite3_bind_int64(stmt, 4, elapsedMs)
             _ = sqlite3_step(stmt)
             pruneOld()
         }
