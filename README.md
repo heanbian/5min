@@ -32,6 +32,12 @@ cd 5min-web && node scripts/export-shared.mjs
 cd 5min-web && ./run.sh
 ```
 
+## 仓库约定
+
+- **勿提交**：签名密钥 / `*.jks` / `ExportOptions.plist` / `signing.properties` / `keystore.properties` / `local.properties` / 微信 `project.private.config.json` 与 `private.*.key` / 各端 `build` 与本地虚拟环境
+- **商店素材**：各端 `store/artwork/` 可入库；正式包产物放 `store/release/`（已忽略）
+- **共享文案**：以 `5min-web` 为源，用 `export-shared.mjs` 同步到原生端；小程序另需生成 `shared/**/*.js`
+
 ## 许可
 
 各子项目沿用 Apache-2.0（见 `5min-web/LICENSE`）。本工具仅供习惯提醒。

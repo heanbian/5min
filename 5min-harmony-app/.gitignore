@@ -36,10 +36,12 @@ oh-package-lock.json5
 *.hsp
 *.har
 
-# Misc
+# Misc / local tooling
 .DS_Store
 *.log
 *.orig
 .tools-venv/
+.venv/
+.venv-*/
 .review-frames/
 .venv-img/

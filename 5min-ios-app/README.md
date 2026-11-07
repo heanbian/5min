@@ -157,7 +157,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 **应提交**
 
 - 源码、`FiveMin.xcodeproj`、`Info.plist`、`Assets.xcassets`（含 AppIcon / Logo）
-- `scripts/`、`store/artwork/`（图标与截图说明）
+- `scripts/`、`store/artwork/`（图标、商店截图、标题创意素材）
 - `ExportOptions.plist.example`、`signing.properties.example`、`signing/README.md`
 - `LICENSE`、`README.md`、`.gitignore`
 
@@ -165,8 +165,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 
 - `ExportOptions.plist`、`signing.properties`、`signing/material/`
 - `build/`、`DerivedData/`、`*.ipa`、`*.xcarchive`、`store/release/`
-- `xcuserdata/`、证书与描述文件
-
+- `xcuserdata/`、证书与描述文件、本地虚拟环境
 ---
 
 ## 目录速查

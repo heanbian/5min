@@ -23,10 +23,6 @@
         "type": "file"
       },
       {
-        "value": "shared/zh-CN.json",
-        "type": "file"
-      },
-      {
         "type": "glob",
         "value": "shared/locales/*.json"
       },

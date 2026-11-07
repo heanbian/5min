@@ -1,9 +1,11 @@
+# OS junk
 .DS_Store
 Thumbs.db
 *.log
 *.tmp
 *.swp
 *~
+*.cache
 
 # IDE / editor (all platforms)
 .idea/
@@ -16,7 +18,26 @@ Thumbs.db
 .settings/
 .springBeans
 .sts4-cache
-
-# OS / misc
 .workbuddy/
-*.cache
+
+# Tooling caches accidentally created at monorepo root
+.hvigor/
+.gradle/
+node_modules/
+.tools-venv/
+.venv/
+.venv-*/
+__pycache__/
+*.pyc
+
+# Local env / secrets (never commit)
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+*.pem
+AuthKey_*.p8
+private.*.key

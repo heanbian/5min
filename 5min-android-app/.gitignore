@@ -36,3 +36,8 @@ keystore.properties
 *.hprof
 *.orig
 .tools-venv/
+.venv/
+.venv-*/
+
+# Cursor / Copilot tooling leftovers
+/.github/modernize/

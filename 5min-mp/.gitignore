@@ -9,11 +9,11 @@ Thumbs.db
 .vscode/
 *.code-workspace
 
-# 微信开发者工具本地私有配置（可按需提交）
-# project.private.config.json
+# 微信开发者工具本地私有配置 / 上传密钥（勿提交）
+project.private.config.json
+private.*.key
+*.key
 
 node_modules/
 miniprogram_npm/
 .tea/
-private.*.key
-*.key

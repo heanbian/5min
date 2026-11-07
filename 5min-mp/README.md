@@ -56,11 +56,12 @@
 ## 同步共享文案
 
 ```bash
+# 推荐先在 Web 导出，再拷到小程序（JSON 仅作源；运行时 require 的是 .js）
+cd ../5min-web && node scripts/export-shared.mjs && cd ../5min-mp
 HAR=../5min-harmony-app/entry/src/main/resources/rawfile/shared
 MP=./shared
 mkdir -p "$MP/locales"
 cp "$HAR/scenes.json" "$MP/scenes.json"
-cp "$HAR/locales/zh-CN.json" "$MP/zh-CN.json"
 cp "$HAR/locales/zh-CN.json" "$MP/locales/zh-CN.json"
 cp "$HAR/locales/zh-TW.json" "$MP/locales/zh-TW.json"
 cp "$HAR/locales/en.json" "$MP/locales/en.json"

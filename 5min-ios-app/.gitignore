@@ -47,3 +47,10 @@ playground.xcworkspace
 *.swp
 *~
 .tools-venv/
+.venv/
+.venv-*/
+
+# Local screenshot / capture scratch
+store/artwork/screenshots/_debug_*.png
+store/artwork/screenshots/_tmp_*.png
+/tmp/
