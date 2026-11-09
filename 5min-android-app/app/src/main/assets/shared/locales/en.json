@@ -188,5 +188,8 @@
   "historyTimeLine": "Time: {time}",
   "confirmLabel": "OK",
   "cancelLabel": "Cancel",
-  "closeLabel": "Close"
+  "closeLabel": "Close",
+  "beianEntry": "Filing info",
+  "beianTitle": "Filing info",
+  "beianIcp": "蜀ICP备14028739号-6A"
 }

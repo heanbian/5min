@@ -115,14 +115,6 @@
         </view>
       </block>
 
-      <block wx:if="{{dialog === 'about'}}">
-        <view class="about-box">
-          <text class="about-body">{{aboutBody}}</text>
-          <text class="about-ver">{{aboutVersion}}</text>
-          <text class="about-web" bindtap="onOpenWebsite">{{aboutWebsite}}</text>
-          <view class="btn-ok about-ok" bindtap="onCloseDialog">{{confirmLabel}}</view>
-        </view>
-      </block>
     </view>
   </view>
 

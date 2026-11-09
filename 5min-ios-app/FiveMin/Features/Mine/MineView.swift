@@ -5,7 +5,7 @@ struct MineView: View {
     @EnvironmentObject private var model: TimerViewModel
     @State private var sheet: MineSheet?
     @State private var customText = "5"
-    @State private var showAbout = false
+    @State private var showBeian = false
 
     private enum MineSheet: String, Identifiable {
         case lang, sound, duration
@@ -51,7 +51,11 @@ struct MineView: View {
                         }
                         Divider().padding(.leading, 16)
                         linkRow(model.t("aboutLabel")) {
-                            showAbout = true
+                            openURL("https://5min.chat/about.html")
+                        }
+                        Divider().padding(.leading, 16)
+                        linkRow(model.t("beianEntry")) {
+                            showBeian = true
                         }
                     }
                 }
@@ -64,8 +68,8 @@ struct MineView: View {
             sheetContent(kind)
                 .presentationDetents(kind == .duration ? [.medium, .large] : [.medium])
         }
-        .sheet(isPresented: $showAbout) {
-            AboutView()
+        .sheet(isPresented: $showBeian) {
+            BeianView()
                 .environmentObject(model)
         }
     }
@@ -274,31 +278,28 @@ struct MineView: View {
     }
 }
 
-struct AboutView: View {
+struct BeianView: View {
     @EnvironmentObject private var model: TimerViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text(model.t("aboutTitle"))
-                        .font(.system(size: 20, weight: .semibold))
-                    Text(model.t("aboutBody"))
-                        .font(.system(size: 14))
-                        .foregroundStyle(FiveMinColor.muted)
-                    Text(model.t("aboutVersion", ["n": appVersion]))
-                        .font(.system(size: 13))
-                        .foregroundStyle(FiveMinColor.muted)
-                    Button(model.t("aboutWebsite")) {
-                        if let url = URL(string: "https://5min.chat") {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                    .foregroundStyle(FiveMinColor.brandStrong)
-                }
-                .padding(20)
+            VStack {
+                Text(model.t("beianIcp"))
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(FiveMinColor.ink)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 24)
+                    .background(FiveMinColor.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                Spacer()
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255))
+            .navigationTitle(model.t("beianTitle"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -308,9 +309,5 @@ struct AboutView: View {
                 }
             }
         }
-    }
-
-    private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     }
 }

@@ -11,6 +11,7 @@ import { i18n } from '@kit.LocalizationKit';
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
 const TERMS_URL = 'https://5min.chat/terms.html';
 const FEEDBACK_URL = 'https://5min.chat/about.html';
+const ABOUT_URL = 'https://5min.chat/about.html';
 const QUICK_MINS: number[] = [3, 5, 10, 15, 25];
 const SOUND_IDS: string[] = ['off', 'rain', 'waves', 'clock'];
 
@@ -181,8 +182,14 @@ export struct MineTab {
     }
   }
 
-  openAbout(): void {
-    router.pushUrl({ url: 'pages/About' });
+  async openAbout(): Promise<void> {
+    if (this.context) {
+      await openExternalUrl(this.context, ABOUT_URL);
+    }
+  }
+
+  openBeian(): void {
+    router.pushUrl({ url: 'pages/Beian' });
   }
 
   build() {
@@ -359,6 +366,22 @@ export struct MineTab {
                   .height(52)
                   .padding({ left: 16, right: 16 })
                   .onClick(() => this.openAbout())
+
+                  Divider().color($r('app.color.line')).margin({ left: 16 })
+
+                  Row() {
+                    Text(this.t('beianEntry'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => this.openBeian())
                 }
                 .width('100%')
                 .backgroundColor($r('app.color.surface'))

@@ -32,13 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 
-private enum class MineDialog { None, Lang, Sound, Duration, About }
+private enum class MineDialog { None, Lang, Sound, Duration, Beian }
 
 @Composable
 fun MineScreen(vm: TimerViewModel) {
@@ -111,7 +112,9 @@ fun MineScreen(vm: TimerViewModel) {
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("termsLink")) { openUrl("https://5min.chat/terms.html") }
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
-                LinkRow(vm.t("aboutLabel")) { dialog = MineDialog.About }
+                LinkRow(vm.t("aboutLabel")) { openUrl("https://5min.chat/about.html") }
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                LinkRow(vm.t("beianEntry")) { dialog = MineDialog.Beian }
             }
         }
     }
@@ -220,28 +223,24 @@ fun MineScreen(vm: TimerViewModel) {
                 }
             },
         )
-        MineDialog.About -> AlertDialog(
+        MineDialog.Beian -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
                 TextButton(onClick = { dialog = MineDialog.None }) {
                     Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
                 }
             },
-            title = { Text(vm.t("aboutTitle"), fontWeight = FontWeight.SemiBold) },
+            title = { Text(vm.t("beianTitle"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(vm.t("aboutBody"), color = FiveMinColors.muted, fontSize = 14.sp)
-                    val ver = runCatching {
-                        context.packageManager.getPackageInfo(context.packageName, 0).versionName
-                    }.getOrNull() ?: "1.0.6"
-                    Text(vm.t("aboutVersion", mapOf("n" to ver)), color = FiveMinColors.muted, fontSize = 13.sp)
-                    Text(
-                        text = vm.t("aboutWebsite"),
-                        color = FiveMinColors.brandStrong,
-                        modifier = Modifier.clickable { openUrl("https://5min.chat") },
-                    )
-                }
+                Text(
+                    text = vm.t("beianIcp"),
+                    color = FiveMinColors.ink,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             },
         )
         MineDialog.None -> Unit

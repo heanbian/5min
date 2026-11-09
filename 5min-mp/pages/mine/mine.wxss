@@ -208,34 +208,6 @@
   font-weight: 600;
 }
 
-.about-box {
-  padding: 8rpx 40rpx 24rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.about-body {
-  font-size: 28rpx;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.about-ver {
-  font-size: 26rpx;
-  color: var(--muted);
-}
-
-.about-web {
-  font-size: 28rpx;
-  color: var(--brand-strong);
-}
-
-.about-ok {
-  align-self: flex-end;
-  margin-top: 8rpx;
-}
-
 .privacy-mask {
   position: fixed;
   left: 0;

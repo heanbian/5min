@@ -188,5 +188,8 @@
   "historyTimeLine": "时间：{time}",
   "confirmLabel": "确定",
   "cancelLabel": "取消",
-  "closeLabel": "关闭"
+  "closeLabel": "关闭",
+  "beianEntry": "备案信息",
+  "beianTitle": "备案信息",
+  "beianIcp": "蜀ICP备14028739号-6A"
 }

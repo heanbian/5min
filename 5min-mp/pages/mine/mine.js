@@ -61,9 +61,6 @@ Page({
     customMinutesHint: '',
     cancelLabel: '',
     confirmLabel: '',
-    aboutBody: '',
-    aboutVersion: '',
-    aboutWebsite: '',
     privacyAccepted: true,
     privacyChecked: false,
     privacyTitle: '',
@@ -157,15 +154,7 @@ Page({
   },
 
   onOpenAbout() {
-    const app = getApp();
-    const ver = (app && app.globalData && app.globalData.appVersion) || '1.0.6';
-    this.setData({
-      dialog: 'about',
-      dialogTitle: t('aboutTitle'),
-      aboutBody: t('aboutBody'),
-      aboutVersion: t('aboutVersion', { n: ver }),
-      aboutWebsite: t('aboutWebsite'),
-    });
+    openHttps('https://5min.chat/about.html');
   },
 
   onPickLocale(e) {
@@ -209,10 +198,6 @@ Page({
 
   onFeedback() {
     openHttps('https://5min.chat/about.html');
-  },
-
-  onOpenWebsite() {
-    openHttps('https://5min.chat');
   },
 
   onOpenBeian() {
