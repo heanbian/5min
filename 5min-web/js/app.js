@@ -48,7 +48,6 @@ import {
 } from './ambient.js';
 
 const CIRC = 2 * Math.PI * 54;
-const PRESET_MINS = Object.freeze([3, 5, 10]);
 const SCENE_GROUPS = Object.freeze([
   { id: 'daily', labelKey: 'sceneGroupDaily' },
   { id: 'kitchen', labelKey: 'sceneGroupKitchen' },
@@ -125,7 +124,6 @@ const statusEl = document.querySelector('#status');
 const dailyStatsEl = document.querySelector('#dailyStats');
 const startBtn = document.querySelector('#startBtn');
 const resetBtn = document.querySelector('#resetBtn');
-const presets = document.querySelector('#presets');
 const sceneSelect = document.querySelector('#sceneSelect');
 const sceneTrigger = document.querySelector('#sceneTrigger');
 const sceneTriggerLabel = document.querySelector('#sceneTriggerLabel');
@@ -388,21 +386,31 @@ const applyStaticI18n = () => {
   syncLangSelect();
   stageSection.setAttribute('aria-label', pack.stageLabel);
   actionsSection.setAttribute('aria-label', pack.actionsLabel);
-  presets.setAttribute('aria-label', pack.presetsLabel);
   resetBtn.textContent = pack.reset;
-  footnote.replaceChildren(
-    document.createTextNode(`${pack.footnote} `),
-    Object.assign(document.createElement('a'), {
-      href: 'about.html',
-      textContent: pack.aboutLabel,
-    }),
-  );
-  metaDescription?.setAttribute('content', pack.metaDescription);
-
-  for (const btn of presets.querySelectorAll('button[data-min]')) {
-    const n = Number(btn.dataset.min);
-    btn.textContent = tr('minutes', { n });
+  if (footnote) {
+    const links = [
+      { href: 'about.html', label: pack.aboutLabel },
+      { href: 'privacy.html', label: pack.footerPrivacy },
+      { href: 'terms.html', label: pack.footerTerms },
+      { href: 'faq.html', label: pack.footerFaq },
+    ];
+    const frag = document.createDocumentFragment();
+    links.forEach((item, i) => {
+      if (i > 0) {
+        frag.appendChild(document.createTextNode(' · '));
+      }
+      frag.appendChild(
+        Object.assign(document.createElement('a'), {
+          href: item.href,
+          textContent: item.label,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        }),
+      );
+    });
+    footnote.replaceChildren(frag);
   }
+  metaDescription?.setAttribute('content', pack.metaDescription);
 
   syncSceneSelect();
   syncAmbientI18n();
@@ -526,19 +534,12 @@ const releaseWakeLock = async () => {
   wakeLock = null;
 };
 
-const setPresetsEnabled = (enabled) => {
-  for (const btn of presets.querySelectorAll('button[data-min]')) {
-    btn.disabled = !enabled;
-  }
+const setSetupEnabled = (enabled) => {
   if (sceneTrigger) sceneTrigger.disabled = !enabled;
   if (!enabled) setSceneListOpen(false);
 };
 
-const syncPresetActive = () => {
-  const min = totalMs / 60_000;
-  for (const btn of presets.querySelectorAll('button[data-min]')) {
-    btn.classList.toggle('active', Number(btn.dataset.min) === min);
-  }
+const syncSceneUi = () => {
   syncSceneSelect();
   syncBrandTitle();
 };
@@ -616,7 +617,7 @@ const finish = () => {
   render();
   startBtn.disabled = false;
   resetBtn.disabled = false;
-  setPresetsEnabled(true);
+  setSetupEnabled(true);
   // Sound/haptic first — releasing wake lock can briefly alter visibility on some devices.
   fireFinishAlert();
   stopAudioKeepAlive();
@@ -633,7 +634,7 @@ const start = () => {
     remainMs = Math.max(0, endAt - Date.now());
     endAt = 0;
     releaseWakeLock();
-    setPresetsEnabled(true);
+    setSetupEnabled(true);
     render();
     return;
   }
@@ -655,7 +656,7 @@ const start = () => {
   running = true;
   finished = false;
   resetBtn.disabled = false;
-  setPresetsEnabled(false);
+  setSetupEnabled(false);
   render();
   scheduleTick();
   acquireWakeLock();
@@ -673,7 +674,7 @@ const reset = () => {
   remainMs = totalMs;
   startBtn.disabled = false;
   resetBtn.disabled = true;
-  setPresetsEnabled(true);
+  setSetupEnabled(true);
   render();
 };
 
@@ -681,7 +682,7 @@ const setPreset = (min, sceneId = null) => {
   if (!Number.isFinite(min) || min <= 0 || running) return;
   totalMs = min * 60 * 1000;
   activeScene = sceneId;
-  syncPresetActive();
+  syncSceneUi();
   reset();
 };
 
@@ -701,7 +702,12 @@ const syncAmbientUi = () => {
 };
 
 applyStaticI18n();
-syncPresetActive();
+// 默认场景：如厕 · 5 分钟（URL ?sec= 自定义秒数时不覆盖）
+if (bootSec <= 0) {
+  setPreset(5, 'toilet');
+} else {
+  syncSceneUi();
+}
 syncAmbientUi();
 renderDailyStats();
 
@@ -726,15 +732,6 @@ startBtn.addEventListener('pointerdown', () => {
 });
 startBtn.addEventListener('click', start);
 resetBtn.addEventListener('click', reset);
-
-presets.addEventListener('click', (event) => {
-  const btn = event.target.closest('button[data-min]');
-  if (!(btn instanceof HTMLButtonElement) || btn.disabled) return;
-  const min = Number(btn.dataset.min);
-  if (!PRESET_MINS.includes(min)) return;
-  setSceneListOpen(false);
-  setPreset(min, null);
-});
 
 sceneTrigger?.addEventListener('click', (event) => {
   event.stopPropagation();
