@@ -1,8 +1,11 @@
 /**
  * Copyright 2026 学记宝 / xuejibao.com
  * Licensed under the Apache License, Version 2.0
- * https-only web-view for privacy / terms / feedback.
+ * Host-allowlisted https web-view for privacy / terms / about.
  */
+
+const { t } = require('../../utils/i18n');
+const { isAllowedHttps } = require('../../utils/openUrl');
 
 Page({
   data: { url: '' },
@@ -14,8 +17,8 @@ Page({
     } catch (e) {
       url = '';
     }
-    if (url.indexOf('https://') !== 0) {
-      wx.showToast({ title: '无效链接', icon: 'none' });
+    if (!isAllowedHttps(url)) {
+      wx.showToast({ title: t('invalidLink'), icon: 'none' });
       setTimeout(() => wx.navigateBack({ fail() {} }), 400);
       return;
     }

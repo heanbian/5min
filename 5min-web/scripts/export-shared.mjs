@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Export scenes + locales for Android / Harmony / iOS apps.
+ * Export scenes + locales for Android / Harmony / iOS / WeChat mini program.
  */
 import { writeFileSync, mkdirSync, cpSync, existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -40,4 +40,29 @@ for (const t of targets) {
   }
   cpSync(join(exportDir, 'locales', 'index.json'), join(t, 'locales', 'index.json'));
   console.log('synced', t);
+}
+
+const mpShared = join(root, '..', '5min-mp', 'shared');
+if (existsSync(dirname(mpShared))) {
+  mkdirSync(join(mpShared, 'locales'), { recursive: true });
+  cpSync(scenesPath, join(mpShared, 'scenes.json'));
+  for (const code of LOCALE_CODES) {
+    cpSync(join(exportDir, 'locales', `${code}.json`), join(mpShared, 'locales', `${code}.json`));
+  }
+  writeFileSync(
+    join(mpShared, 'scenes.js'),
+    `module.exports = ${readFileSync(join(mpShared, 'scenes.json'), 'utf8').trim()};\n`,
+  );
+  const mpLocaleMap = [
+    ['zh-CN.json', 'zh_CN.js'],
+    ['zh-TW.json', 'zh_TW.js'],
+    ['en.json', 'en.js'],
+  ];
+  for (const [src, dest] of mpLocaleMap) {
+    writeFileSync(
+      join(mpShared, 'locales', dest),
+      `module.exports = ${readFileSync(join(mpShared, 'locales', src), 'utf8').trim()};\n`,
+    );
+  }
+  console.log('synced', mpShared);
 }

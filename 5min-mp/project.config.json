@@ -1,5 +1,5 @@
 {
-  "description": "如厕计时器 · 5min 微信小程序",
+  "description": "如厕计时器 微信小程序",
   "packOptions": {
     "ignore": [
       {
@@ -74,7 +74,7 @@
   "compileType": "miniprogram",
   "libVersion": "3.17.4",
   "appid": "----",
-  "projectname": "5min-mp",
+  "projectname": "如厕计时器",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

@@ -15,9 +15,27 @@
  */
 
 page {
+  --brand: #2f9a68;
+  --brand-strong: #248556;
+  --brand-soft: #e5f5ec;
+  --surface: #ffffff;
+  --ink: #1f2a24;
+  --muted: #5f6f66;
+  --line: #d7e5dc;
+  --bg: #eef6f1;
+  --bg2: #f2f5f3;
+  --radius: 28rpx;
+  --pad-x: 40rpx;
+  --pad-body: 32rpx;
+  --section-gap: 24rpx;
+  --title-size: 38rpx;
+  --body-size: 28rpx;
+  --label-size: 26rpx;
+  --row-title-size: 28rpx;
+
   height: 100%;
-  color: #1f2a24;
-  background: #eef6f1;
+  color: var(--ink);
+  background: var(--bg);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
     "Source Han Sans SC", "Helvetica Neue", sans-serif;
   font-size: 32rpx;
@@ -31,4 +49,108 @@ button,
 picker,
 scroll-view {
   box-sizing: border-box;
+}
+
+/* Shared privacy gate */
+.privacy-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+.privacy-card {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 32rpx;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 28rpx;
+}
+
+.privacy-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.privacy-msg {
+  font-size: var(--body-size);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.privacy-check {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.check-box {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 8rpx;
+  border: 3rpx solid #8a9a90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 4rpx;
+}
+
+.check-on {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.check-mark {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.check-label {
+  font-size: var(--body-size);
+  color: var(--ink);
+  flex: 1;
+}
+
+.privacy-links {
+  display: flex;
+  flex-direction: row;
+  gap: 32rpx;
+}
+
+.privacy-links .link,
+.link {
+  font-size: var(--body-size);
+  font-weight: 500;
+  color: var(--brand-strong);
+}
+
+.privacy-btn {
+  margin-top: 8rpx;
+  height: 100rpx;
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.privacy-btn-off {
+  background: #a8c4b4;
+  opacity: 0.7;
 }

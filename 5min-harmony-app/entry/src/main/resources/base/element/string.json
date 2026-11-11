@@ -1,8 +1,8 @@
 {
   "string": [
-    { "name": "module_desc", "value": "如厕计时器" },
+    { "name": "module_desc", "value": "如厕计时器(5min)" },
     { "name": "EntryAbility_desc", "value": "倒计时主界面" },
-    { "name": "EntryAbility_label", "value": "如厕计时器" },
+    { "name": "EntryAbility_label", "value": "如厕计时器(5min)" },
     { "name": "perm_vibrate", "value": "用于倒计时结束后的振动提醒" },
     { "name": "perm_reminder", "value": "用于倒计时结束后由系统发送本机提醒通知" }
   ]

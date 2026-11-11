@@ -14,7 +14,7 @@
       <view
         class="icon-btn"
         bindtap="onOpenMine"
-        aria-label="{{ambientLabel}}"
+        aria-label="{{tabMine}}"
       >
         <image
           class="icon-volume"
@@ -57,17 +57,6 @@
       >{{resetLabel}}</button>
     </view>
 
-    <view class="presets {{running ? 'presets-disabled' : ''}}" aria-label="{{presetsLabel}}">
-      <block wx:for="{{presetItems}}" wx:key="min">
-        <view wx:if="{{index > 0}}" class="preset-divider"></view>
-        <view
-          class="preset {{activePreset === item.min ? 'preset-on' : ''}}"
-          data-min="{{item.min}}"
-          bindtap="onPreset"
-        >{{item.label}}</view>
-      </block>
-    </view>
-
     <picker
       mode="multiSelector"
       range="{{sceneRange}}"
@@ -82,10 +71,6 @@
         <text class="scene-caret">▾</text>
       </view>
     </picker>
-  </view>
-
-  <view class="footnote">
-    <text>{{footnote}}</text>
   </view>
 
   <view class="privacy-mask" wx:if="{{!privacyAccepted}}">

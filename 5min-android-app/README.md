@@ -1,6 +1,6 @@
 # 5min-android-app
 
-**如厕计时器** — Android 原生客户端。
+**如厕计时器(5min)** — Android 原生客户端。运营方：学记宝。官网：https://5min.chat。
 
 - **applicationId / 源码包名**：`chat.fivemin.app`
  （Android 包名每一段不能以数字开头，故不能用 `chat.5min.app`；与 iOS/鸿蒙品牌 ID 对应关系见根 README）

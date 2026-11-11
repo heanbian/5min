@@ -3,12 +3,11 @@
     "pages/index/index",
     "pages/records/records",
     "pages/mine/mine",
-    "pages/beian/beian",
     "pages/webview/webview"
   ],
   "window": {
     "navigationStyle": "custom",
-    "navigationBarTitleText": "如厕计时器",
+    "navigationBarTitleText": "如厕计时器(5min)",
     "navigationBarBackgroundColor": "#eef6f1",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#eef6f1",
@@ -29,7 +28,7 @@
       },
       {
         "pagePath": "pages/index/index",
-        "text": "主页",
+        "text": "首页",
         "iconPath": "assets/tab/home.png",
         "selectedIconPath": "assets/tab/home-active.png"
       },

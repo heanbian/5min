@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>如厕计时器</string>
+	<string>如厕计时器(5min)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSUserNotificationsUsageDescription</key>
-	<string>用于在倒计时结束后发送本机通知，提醒您起身活动。本应用仅供习惯提醒。</string>
+	<string>用于倒计时结束后发送本机通知，提醒起身活动。仅供习惯提醒。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -61,6 +61,9 @@ Page({
     customMinutesHint: '',
     cancelLabel: '',
     confirmLabel: '',
+    feedbackHint: '',
+    feedbackEmail: '',
+    copyEmailLabel: '',
     privacyAccepted: true,
     privacyChecked: false,
     privacyTitle: '',
@@ -197,10 +200,32 @@ Page({
   },
 
   onFeedback() {
-    openHttps('https://5min.chat/about.html');
+    this.setData({
+      dialog: 'feedback',
+      dialogTitle: t('feedbackLabel'),
+      feedbackHint: t('feedbackBody'),
+      feedbackEmail: t('feedbackEmail'),
+      copyEmailLabel: t('copyEmailLabel'),
+    });
+  },
+
+  onCopyFeedbackEmail() {
+    const email = this.data.feedbackEmail || t('feedbackEmail');
+    wx.setClipboardData({
+      data: email,
+      success: () => {
+        this.setData({ dialog: '' });
+        wx.showToast({ title: t('emailCopied'), icon: 'none' });
+      },
+    });
   },
 
   onOpenBeian() {
-    wx.navigateTo({ url: '/pages/beian/beian' });
+    wx.showModal({
+      title: t('beianTitle'),
+      content: t('beianIcp'),
+      showCancel: false,
+      confirmText: t('confirmLabel'),
+    });
   },
 });

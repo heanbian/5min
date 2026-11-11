@@ -1,10 +1,10 @@
-# 5min-web · 如厕计时器
+# 5min-web · 如厕计时器(5min)
 
-端侧倒计时提醒工具（Web 子项目）。正式站点：[5min.chat](https://5min.chat/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
+端侧倒计时工具（Web 子项目）。官网：[https://5min.chat](https://5min.chat/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
 
-**定名**：如厕计时器。公开资料通常建议将单次如厕时间控制在约 5 分钟以内；使用移动设备时，时长感知易失准。默认 5 分钟预设（亦可选 3 / 10 分钟），计时结束后通过振动、提示音与系统通知提醒起身活动。无需注册，无广告；计时与提醒在本机完成，不向服务端上传用户数据。
+**定名**：如厕计时器(5min)。**运营方**：学记宝。**官网**：https://5min.chat。建议单次如厕约 5 分钟内完成；使用手机易低估耗时。默认 5 分钟（亦可选 3 / 10 分钟），结束后以振动、提示音与系统通知提醒起身。
 
-本工具仅供习惯提醒。
+仅供习惯提醒。
 
 ## 功能
 
@@ -40,13 +40,13 @@
 
 ## 术语与文案约定
 
-- **定名（产品名）**：`如厕计时器`；品牌字标：`5min`。
-- **SEO 标题常用**：`如厕计时器 · 五分钟`。
-- 界面默认标题（`brandTitle`）展示「如厕计时器」；选中场景时展示场景名；通知简称可用「五分钟」。
-- 对外说明优先使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知、Screen Wake Lock、绝对时间戳、时长感知失准、本机完成等。
-- 界面状态优先使用「倒计时进行中 / 计时已结束 / 重新开始」等书面表述，避免「再响」「再来一次」等口语。
-- 合规底线：仅供习惯提醒；不作疗效/预防/诊断宣称；不采集健康敏感个人信息；计时与提醒在本机完成、不向服务端上传用户数据。JSON-LD `applicationCategory` 使用 `UtilitiesApplication`（勿用 `HealthApplication`）。
-- `site.json` 的 `description` / FAQ 须包含正式域名 `5min.chat`、「无广告」与「不向服务端上传」语义；修改后同步 `index.html`、`about.html`、`llms.txt`、`site.webmanifest` 与 JSON-LD。
+- **定名（产品名）**：`如厕计时器(5min)`；运营方：`学记宝`；官网：`https://5min.chat`。
+- **SEO 标题常用**：`如厕计时器(5min)`。
+- 界面默认标题（`brandTitle`）展示「如厕计时器(5min)」；选中场景时展示场景名；简称可用「5min」。
+- 对外说明优先使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知、Screen Wake Lock 等；文案宜简洁，避免堆砌「无广告 / 无需注册 / 数据存本机 / 不上传」等口号。
+- 界面状态优先使用「倒计时中 / 计时已结束 / 重新开始」等书面表述，避免「再响」「再来一次」等口语。
+- 合规底线：仅供习惯提醒；不作疗效/预防/诊断宣称；不采集健康敏感个人信息。JSON-LD `applicationCategory` 使用 `UtilitiesApplication`（勿用 `HealthApplication`）。
+- `site.json` 的 `description` / FAQ 须包含产品名、运营方与官网 `https://5min.chat`；修改后同步 `index.html`、`about.html`、`llms.txt`、`site.webmanifest` 与 JSON-LD。
 - `site.json` 的 `origin` 为 `https://5min.chat`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
 
 ### GEO（生成式引擎优化）
@@ -56,7 +56,7 @@
 - `llms.txt`：站点摘要与关键链接（[llmstxt.org](https://llmstxt.org/) 约定），置于站点根路径。
 - `about.html`：「关于」与「常见问题」独立页（`lang="zh-CN"`），供爬虫与模型直接读取；首页脚注链向该页。
 - JSON-LD：`about.html` 使用 `AboutPage` + `FAQPage`；问题与答案须与页面可见文案逐字一致；修改 FAQ 时同步 `site.json` 对应页的 `faqs`。
-- 回答中保留正式域名、无广告、本机计时不上传、仅供习惯提醒等关键事实。
+- 回答中保留产品名「如厕计时器(5min)」、运营方「学记宝」、官网 `https://5min.chat`、仅供习惯提醒等关键事实。
 
 ## 目录结构
 

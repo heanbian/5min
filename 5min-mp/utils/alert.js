@@ -15,6 +15,7 @@
  */
 
 const { ALERT_DURATION_MS, VIBRATE_PATTERN_MS } = require('./catalog');
+const { t } = require('./i18n');
 
 let vibrateTimer = null;
 let vibrateUntil = 0;
@@ -73,7 +74,7 @@ function alertFinish(opts) {
   // Toast is the only audible/visual cue besides vibration; always show when titled.
   if (options.title || options.body) {
     wx.showToast({
-      title: options.title || options.body || '计时已结束',
+      title: options.title || options.body || t('statusDone'),
       icon: 'none',
       duration: Math.min(duration, 3000),
     });

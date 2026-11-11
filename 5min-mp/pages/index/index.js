@@ -5,7 +5,6 @@
 
 const { t, getLocale } = require('../../utils/i18n');
 const {
-  PRESET_MINS,
   DEFAULT_MIN,
   ALERT_DURATION_MS,
   sceneById,
@@ -67,12 +66,7 @@ Page({
     brandTitle: '',
     stageLabel: '',
     actionsLabel: '',
-    presetsLabel: '',
-    footnote: '',
     ambientLabel: '',
-    presets: PRESET_MINS,
-    presetItems: [],
-    activePreset: DEFAULT_MIN,
     timeText: formatTime(DEFAULT_MIN * 60 * 1000),
     statusText: '',
     statsText: '',
@@ -82,9 +76,10 @@ Page({
     running: false,
     phase: 'idle',
     sceneTriggerLabel: '',
-    scenePlaceholder: true,
+    scenePlaceholder: false,
     sceneRange: [[], []],
-    sceneIndex: [0, 0],
+    sceneIndex: [0, 1],
+    tabMine: '',
     canvasCss: 260,
     ambient: 'off',
     privacyAccepted: true,
@@ -120,12 +115,18 @@ Page({
     const nav = readNavMetrics();
     const ambient = initAmbient();
     const custom = prefs.getCustomMin(DEFAULT_MIN);
-    this.totalMs = custom * 60 * 1000;
-    this.remainMs = this.totalMs;
+    const toilet = sceneById('toilet');
+    // 默认场景：如厕 · 5 分钟；自定义时长与之不同时仅应用时长
+    if (toilet && custom === toilet.min) {
+      this.setPreset(toilet.min, toilet.id);
+    } else {
+      this.totalMs = custom * 60 * 1000;
+      this.remainMs = this.totalMs;
+      this.activeSceneId = null;
+    }
     this.setData({
       ...nav,
       ambient,
-      activePreset: PRESET_MINS.indexOf(custom) >= 0 ? custom : 0,
     });
     this.applyLabels(true);
     this.refreshStats();
@@ -174,18 +175,7 @@ Page({
     if (this.running) return;
     app.globalData.pendingCustomMin = null;
     this.setPreset(pending, null);
-    this.setData({
-      sceneTriggerLabel: t('scenePlaceholder'),
-      scenePlaceholder: true,
-      sceneIndex: [0, 0],
-    });
-  },
-
-  buildPresetItems() {
-    return PRESET_MINS.map((min) => ({
-      min,
-      label: t('minutes', { n: min }),
-    }));
+    this.rebuildScenePicker(false);
   },
 
   rebuildScenePicker(keepSelection) {
@@ -217,14 +207,15 @@ Page({
       min: s.min,
       title: s.title,
     }));
-    const selected = range1[si];
+    const hasScene = !!this.activeSceneId;
+    const selected = hasScene ? range1[si] : null;
     this.setData({
       sceneRange: [range0, range1],
       sceneIndex: [gi, si],
       sceneTriggerLabel: selected
         ? selected.label
         : t('scenePlaceholder'),
-      scenePlaceholder: !this.activeSceneId,
+      scenePlaceholder: !hasScene,
     });
   },
 
@@ -232,10 +223,8 @@ Page({
     this.setData({
       stageLabel: t('stageLabel'),
       actionsLabel: t('actionsLabel'),
-      presetsLabel: t('presetsLabel'),
-      footnote: t('footnote'),
       ambientLabel: t('ambientLabel'),
-      presetItems: this.buildPresetItems(),
+      tabMine: t('tabMine'),
     });
     if (rebuildScenes) this.rebuildScenePicker(true);
   },
@@ -316,9 +305,9 @@ Page({
       statsText = `${t('dailyStatsLabel')} · ${t('dailyStatsEmpty')}`;
     } else {
       const minutes = statsMinutes(stats.totalMs);
-      statsText = `${t('dailyStatsLabel')} · ${stats.count}${t(
+      statsText = `${t('dailyStatsLabel')} · ${stats.count} ${t(
         'dailyStatsCountUnit'
-      )} · ${minutes}${t('dailyStatsMinutesUnit')}`;
+      )} · ${minutes} ${t('dailyStatsMinutesUnit')}`;
     }
     this.setData({ statsText });
   },
@@ -328,7 +317,6 @@ Page({
     const running = this.running;
     const finished = this.finished;
     const phase = visualPhase(remain, running, finished);
-    const totalMin = Math.round(this.totalMs / 60000);
     const timeText = formatTime(remain);
 
     let primaryLabel = t('start');
@@ -348,11 +336,6 @@ Page({
       if (scene) brandTitle = t(scene.titleKey);
     }
 
-    const activePreset =
-      this.activeSceneId == null && PRESET_MINS.includes(totalMin)
-        ? totalMin
-        : 0;
-
     this.setData({
       timeText,
       statusText,
@@ -362,7 +345,6 @@ Page({
       running,
       phase,
       brandTitle,
-      activePreset,
       scenePlaceholder: !this.activeSceneId,
       ambient: getAmbientMode(),
     });
@@ -460,18 +442,6 @@ Page({
     this.remainMs = this.totalMs;
     this.activeSceneId = sceneId || null;
     this.refreshUi();
-  },
-
-  onPreset(e) {
-    if (this.running) return;
-    const min = Number(e.currentTarget.dataset.min);
-    if (!Number.isFinite(min) || min <= 0) return;
-    this.setPreset(min, null);
-    this.setData({
-      sceneTriggerLabel: t('scenePlaceholder'),
-      scenePlaceholder: true,
-      sceneIndex: [0, 0],
-    });
   },
 
   onSceneColumnChange(e) {

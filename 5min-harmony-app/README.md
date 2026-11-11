@@ -1,6 +1,6 @@
 # 5min-harmony-app
 
-**如厕计时器** — HarmonyOS 原生客户端。
+**如厕计时器(5min)** — HarmonyOS 原生客户端。运营方：学记宝。官网：https://5min.chat。
 
 - **bundleName**：`chat.5min.app`
 - **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（与 Android `1.0.0` 对齐；`versionCode` 采用 `major*1000000+minor*1000+patch`）
@@ -75,5 +75,5 @@ chmod +x scripts/release.sh
 
 - 系统通知：首次开始计时时会申请通知授权；到期通过 `notificationManager.publish` 弹出本机通知（自定义 `alert.wav`）；并尝试 `reminderAgentManager`（`PUBLISH_AGENT_REMINDER`）在后台/冻后仍提醒。前台结束时另播放应用内报警音 + 振动（不依赖通知声道是否被静音）。
 - 会话记录使用本地 RDB：`databaseDir/rdb/5min-chat/5min_chat_history.db`（近 14 日）；覆盖安装可保留。
-- 仅在倒计时进行中保持屏幕常亮，降低待机耗电。
-- 本工具仅供习惯提醒；数据仅存本机，默认不上传。
+- 仅在倒计时中保持屏幕常亮，降低待机耗电。
+- 仅供习惯提醒；数据存本机，默认不上传。

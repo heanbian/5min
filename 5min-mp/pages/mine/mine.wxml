@@ -33,11 +33,6 @@
 
     <view class="section-label section-gap">{{mineSectionSupport}}</view>
     <view class="card">
-      <view class="row" bindtap="onFeedback">
-        <text class="row-title">{{feedbackLabel}}</text>
-        <text class="chev">›</text>
-      </view>
-      <view class="row-line"></view>
       <view class="row" bindtap="onOpenPrivacy">
         <text class="row-title">{{privacyLink}}</text>
         <text class="chev">›</text>
@@ -50,6 +45,11 @@
       <view class="row-line"></view>
       <view class="row" bindtap="onOpenAbout">
         <text class="row-title">{{aboutLabel}}</text>
+        <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onFeedback">
+        <text class="row-title">{{feedbackLabel}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
@@ -111,6 +111,16 @@
           <view class="duration-actions">
             <view class="btn-cancel" bindtap="onCloseDialog">{{cancelLabel}}</view>
             <view class="btn-ok" bindtap="onApplyDuration">{{confirmLabel}}</view>
+          </view>
+        </view>
+      </block>
+
+      <block wx:if="{{dialog === 'feedback'}}">
+        <view class="feedback-box">
+          <text class="feedback-hint">{{feedbackHint}}</text>
+          <text class="feedback-email" selectable>{{feedbackEmail}}</text>
+          <view class="duration-actions">
+            <view class="btn-ok" bindtap="onCopyFeedbackEmail">{{copyEmailLabel}}</view>
           </view>
         </view>
       </block>
