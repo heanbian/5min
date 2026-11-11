@@ -384,53 +384,6 @@ fun TimerHome(
                     }
                 }
 
-                // presets: segmented control
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(FiveMinDimens.rowH)
-                        .clip(radius)
-                        .border(1.dp, FiveMinColors.line, radius)
-                        .background(FiveMinColors.surface),
-                ) {
-                    catalog.presetsMin.forEachIndexed { index, min ->
-                        val active = state.activeSceneId == null && state.totalMs == min * 60_000L
-                        if (index > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .fillMaxHeight()
-                                    .background(FiveMinColors.line),
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(if (active) FiveMinColors.brandSoft else FiveMinColors.surface)
-                                .then(
-                                    if (setupEnabled) {
-                                        Modifier.clickable {
-                                            vm.setPresetMinutes(min, null)
-                                        }
-                                    } else Modifier,
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = vm.t("minutes", mapOf("n" to min.toString())),
-                                color = when {
-                                    !setupEnabled -> FiveMinColors.muted.copy(alpha = 0.4f)
-                                    active -> FiveMinColors.brandStrong
-                                    else -> FiveMinColors.muted
-                                },
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                            )
-                        }
-                    }
-                }
-
                 // scene trigger
                 Row(
                     modifier = Modifier
@@ -472,18 +425,6 @@ fun TimerHome(
                     )
                 }
             }
-
-            Text(
-                text = vm.t("footnote"),
-                color = FiveMinColors.muted,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                lineHeight = 20.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 8.dp),
-            )
         }
     }
 

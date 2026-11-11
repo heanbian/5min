@@ -112,7 +112,6 @@ struct TimerView: View {
                 topBar
                 stage(dial: dial)
                 actions
-                footnote
             }
             .padding(.horizontal, FiveMinDimens.padX)
             .padding(.vertical, FiveMinDimens.padY)
@@ -136,7 +135,6 @@ struct TimerView: View {
 
                 VStack(spacing: FiveMinDimens.sectionGap) {
                     actions
-                    footnote
                 }
                 .frame(maxWidth: min(420, size.width * 0.46))
             }
@@ -252,8 +250,6 @@ struct TimerView: View {
                     .disabled(!resetEnabled)
             }
 
-            presetSegment
-
             Button {
                 showScenes = true
             } label: {
@@ -283,50 +279,6 @@ struct TimerView: View {
             .disabled(!setupEnabled)
             .opacity(setupEnabled ? 1 : 0.55)
         }
-    }
-
-    private var presetSegment: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(model.catalog.presetsMin.enumerated()), id: \.element) { index, min in
-                let active = model.activeSceneId == nil && model.totalMs == Int64(min) * 60_000
-                if index > 0 {
-                    Rectangle()
-                        .fill(FiveMinColor.line)
-                        .frame(width: 1)
-                }
-                Button {
-                    model.setPreset(minutes: min, sceneId: nil)
-                } label: {
-                    Text(model.t("minutes", ["n": "\(min)"]))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(
-                            !setupEnabled
-                            ? FiveMinColor.muted.opacity(0.4)
-                            : (active ? FiveMinColor.brandStrong : FiveMinColor.muted)
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(active ? FiveMinColor.brandSoft : FiveMinColor.surface)
-                }
-                .disabled(!setupEnabled)
-            }
-        }
-        .frame(height: FiveMinDimens.rowH)
-        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                .stroke(FiveMinColor.line, lineWidth: 1)
-        )
-    }
-
-    private var footnote: some View {
-        Text(model.t("footnote"))
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(FiveMinColor.muted)
-            .multilineTextAlignment(.center)
-            .lineSpacing(4)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 4)
-            .padding(.bottom, 8)
     }
 
     private var sceneLabel: String {

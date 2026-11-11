@@ -182,9 +182,9 @@ private fun HistoryRow(vm: TimerViewModel, item: HistoryItem) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(vm.t("historySceneLine", mapOf("scene" to scene)), color = FiveMinColors.ink, fontSize = 15.sp)
+        Text(vm.t("historySceneLine", mapOf("scene" to scene)), color = FiveMinColors.ink, fontSize = 14.sp)
         Text(vm.t("historyDurationLine", mapOf("n" to item.minutes.toString())), color = FiveMinColors.ink, fontSize = 14.sp)
-        Text(vm.t("historyTimeLine", mapOf("time" to time)), color = FiveMinColors.muted, fontSize = 13.sp)
+        Text(vm.t("historyTimeLine", mapOf("time" to time)), color = FiveMinColors.ink, fontSize = 14.sp)
     }
 }
 

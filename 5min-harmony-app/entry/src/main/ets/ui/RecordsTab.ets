@@ -211,7 +211,7 @@ export struct RecordsTab {
                     Column({ space: 6 }) {
                       Text(row.sceneLine)
                         .width('100%')
-                        .fontSize(15)
+                        .fontSize(14)
                         .fontColor($r('app.color.ink'))
                       Text(row.durationLine)
                         .width('100%')
@@ -219,8 +219,8 @@ export struct RecordsTab {
                         .fontColor($r('app.color.ink'))
                       Text(row.timeLine)
                         .width('100%')
-                        .fontSize(13)
-                        .fontColor($r('app.color.muted'))
+                        .fontSize(14)
+                        .fontColor($r('app.color.ink'))
                     }
                     .width('100%')
                     .alignItems(HorizontalAlign.Start)

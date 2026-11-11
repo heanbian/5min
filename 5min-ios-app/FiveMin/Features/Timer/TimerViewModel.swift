@@ -56,9 +56,12 @@ final class TimerViewModel: ObservableObject {
         if saved != locale { prefs.locale = locale }
         ambient = prefs.ambient
         customMin = prefs.customMin(fallback: catalog.defaultMin)
-        let total = Int64(customMin) * 60_000
-        totalMs = total
-        remainMs = total
+        if let toilet = catalog.scenes.first(where: { $0.id == "toilet" }),
+           customMin == toilet.min {
+            setPreset(minutes: toilet.min, sceneId: toilet.id)
+        } else {
+            setPreset(minutes: customMin, sceneId: nil)
+        }
         refreshTodayStats()
         refreshPhase()
         // Store-screenshot launches must stay free of the system notification prompt.

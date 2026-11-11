@@ -1,5 +1,6 @@
 import { common } from '@kit.AbilityKit';
-import { promptAction, router } from '@kit.ArkUI';
+import { promptAction } from '@kit.ArkUI';
+import pasteboard from '@ohos.pasteboard';
 import { SharedCatalog } from '../common/SharedCatalog';
 import { PrefsStore } from '../common/PrefsStore';
 import { resolveLocale } from '../common/I18n';
@@ -10,7 +11,6 @@ import { i18n } from '@kit.LocalizationKit';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
 const TERMS_URL = 'https://5min.chat/terms.html';
-const FEEDBACK_URL = 'https://5min.chat/about.html';
 const ABOUT_URL = 'https://5min.chat/about.html';
 const QUICK_MINS: number[] = [3, 5, 10, 15, 25];
 const SOUND_IDS: string[] = ['off', 'rain', 'waves', 'clock'];
@@ -23,7 +23,7 @@ export struct MineTab {
   @State localeCodes: string[] = [];
   @State customMinText: string = '5';
   @State customMin: number = 5;
-  /** '' | lang | sound | duration */
+  /** '' | lang | sound | duration | feedback */
   @State dialog: string = '';
   /** Force full Mine UI refresh after locale/ambient change. */
   @State uiTick: number = 0;
@@ -164,9 +164,19 @@ export struct MineTab {
     await this.applyCustomMinutes();
   }
 
-  async openFeedback(): Promise<void> {
-    if (this.context) {
-      await openExternalUrl(this.context, FEEDBACK_URL);
+  openFeedback(): void {
+    this.openDialog('feedback');
+  }
+
+  async copyFeedbackEmail(): Promise<void> {
+    const email = this.t('feedbackEmail');
+    try {
+      const systemPasteboard = pasteboard.getSystemPasteboard();
+      const pasteData = pasteboard.createPlainTextData(email);
+      await systemPasteboard.setPasteData(pasteData);
+      this.closeDialog();
+      promptAction.showToast({ message: this.t('emailCopied'), duration: 2000 });
+    } catch (_) {
     }
   }
 
@@ -188,8 +198,21 @@ export struct MineTab {
     }
   }
 
-  openBeian(): void {
-    router.pushUrl({ url: 'pages/Beian' });
+  async openBeian(): Promise<void> {
+    try {
+      const buttons: promptAction.Button[] = [
+        {
+          text: this.t('confirmLabel'),
+          color: '#2F9A68'
+        }
+      ];
+      await promptAction.showDialog({
+        title: this.t('beianTitle'),
+        message: this.t('beianIcp'),
+        buttons: buttons
+      });
+    } catch (_) {
+    }
   }
 
   build() {
@@ -306,22 +329,6 @@ export struct MineTab {
 
                 Column({ space: 0 }) {
                   Row() {
-                    Text(this.t('feedbackLabel'))
-                      .fontSize(15)
-                      .fontColor($r('app.color.ink'))
-                      .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
-                  }
-                  .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
-                  .onClick(() => this.openFeedback())
-
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
-
-                  Row() {
                     Text(this.t('privacyLink'))
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
@@ -366,6 +373,22 @@ export struct MineTab {
                   .height(52)
                   .padding({ left: 16, right: 16 })
                   .onClick(() => this.openAbout())
+
+                  Divider().color($r('app.color.line')).margin({ left: 16 })
+
+                  Row() {
+                    Text(this.t('feedbackLabel'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => this.openFeedback())
 
                   Divider().color($r('app.color.line')).margin({ left: 16 })
 
@@ -608,6 +631,31 @@ export struct MineTab {
           }
           .width('100%')
           .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+        } else if (this.dialog === 'feedback') {
+          Column({ space: 16 }) {
+            Text(this.t('feedbackBody'))
+              .fontSize(14)
+              .fontColor($r('app.color.muted'))
+              .width('100%')
+              .lineHeight(22)
+            Text(this.t('feedbackEmail'))
+              .fontSize(15)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.ink'))
+              .width('100%')
+            Text(this.t('copyEmailLabel'))
+              .width('100%')
+              .height(50)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(Color.White)
+              .textAlign(TextAlign.Center)
+              .backgroundColor($r('app.color.brand'))
+              .borderRadius(14)
+              .onClick(() => this.copyFeedbackEmail())
+          }
+          .width('100%')
+          .padding({ left: 20, right: 20, bottom: 28, top: 8 })
         }
       }
       .width('100%')
@@ -627,6 +675,9 @@ export struct MineTab {
     }
     if (this.dialog === 'duration') {
       return this.t('durationSettingsLabel');
+    }
+    if (this.dialog === 'feedback') {
+      return this.t('feedbackLabel');
     }
     return '';
   }

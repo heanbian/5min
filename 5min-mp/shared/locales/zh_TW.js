@@ -1,7 +1,7 @@
 module.exports = {
   "htmlLang": "zh-TW",
   "nativeName": "繁體中文",
-  "brandTitle": "如廁計時器(5min)",
+  "brandTitle": "如廁計時器",
   "stageLabel": "計時",
   "actionsLabel": "操作",
   "presetsLabel": "時長",
@@ -19,7 +19,7 @@ module.exports = {
   "minutes": "{n} 分鐘",
   "footnote": "建議單次如廁約 5 分鐘內完成；使用手機易低估耗時。僅供習慣提醒。",
   "aboutLabel": "關於",
-  "titleIdle": "如廁計時器(5min)",
+  "titleIdle": "如廁計時器",
   "titleSuffix": "5min",
   "titleDoneBlink": "計時已結束 · 請起身活動",
   "titleDoneZero": "0:00 · {n} 分鐘",

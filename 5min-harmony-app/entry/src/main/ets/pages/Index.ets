@@ -102,11 +102,9 @@ struct Index {
   @State showScenes: boolean = false;
   @StorageLink('appAmbient') @Watch('onAmbientLink') ambient: string = 'off';
   @StorageLink('appLocale') @Watch('onLocaleLink') linkedLocale: string = 'zh-CN';
-  @State presets: number[] = [3, 5, 10];
   @State groups: SceneGroup[] = [];
   @State scenes: SceneItem[] = [];
   @State localeCodes: string[] = [];
-  @State footnote: string = '';
   @State dialKey: string = '1';
   @State privacyAccepted: boolean = false;
   @State privacyReady: boolean = false;
@@ -162,7 +160,6 @@ struct Index {
     await this.prefs.init(this.context);
     await this.history.init(this.context);
     this.catalog = await SharedCatalog.load(this.context);
-    this.presets = this.catalog.presetsMin;
     this.groups = this.catalog.groups;
     this.scenes = this.catalog.scenes;
     this.localeCodes = this.catalog.localeCodes;
@@ -185,9 +182,12 @@ struct Index {
     this.linkedLocale = this.locale;
     this.localeTick = this.localeTick + 1;
     const custom = await this.prefs.getCustomMin(this.catalog.defaultMin);
-    const total = custom * 60 * 1000;
-    this.state.totalMs = total;
-    this.state.remainMs = total;
+    const toilet = this.scenes.find((s) => s.id === 'toilet');
+    if (toilet && custom === toilet.min) {
+      this.setPreset(toilet.min, 'toilet');
+    } else {
+      this.setPreset(custom, '');
+    }
     await this.refreshTodayStats();
     this.privacyAccepted = await this.prefs.isPrivacyAccepted();
     this.privacyReady = true;
@@ -277,12 +277,6 @@ struct Index {
   }
 
   /** ArkTS forbids untyped object literals; build i18n vars via typed Record. */
-  private varsN(n: string): Record<string, string> {
-    const vars: Record<string, string> = {};
-    vars['n'] = n;
-    return vars;
-  }
-
   private varsNotify(n: string, scene: string): Record<string, string> {
     const vars: Record<string, string> = {};
     vars['n'] = n;
@@ -370,7 +364,6 @@ struct Index {
       this.statsText =
         `${this.state.statsCount}${this.t('dailyStatsCountUnit')} · ${mins}${this.t('dailyStatsMinutesUnit')}`;
     }
-    this.footnote = this.t('footnote');
   }
 
   setPreset(min: number, sceneId: string): void {
@@ -526,10 +519,6 @@ struct Index {
 
   sessionMinutes(): number {
     return Math.max(1, Math.round(this.state.totalMs / 60000));
-  }
-
-  presetActive(min: number): boolean {
-    return !this.state.activeSceneId && this.state.totalMs === min * 60000;
   }
 
   build() {
@@ -825,31 +814,6 @@ struct Index {
           .width('100%')
 
           Row() {
-            ForEach(this.presets, (min: number) => {
-              Text(this.t('minutes', this.varsN(`${min}`)))
-                .layoutWeight(1)
-                .height(40)
-                .fontSize(14)
-                .fontWeight(FontWeight.Medium)
-                .fontColor(this.presetActive(min) ? $r('app.color.brand_strong') : $r('app.color.muted'))
-                .textAlign(TextAlign.Center)
-                .backgroundColor(this.presetActive(min) ? $r('app.color.brand_soft') : $r('app.color.surface'))
-                .opacity(this.setupEnabled ? 1 : 0.4)
-                .onClick(() => {
-                  if (this.setupEnabled) {
-                    this.setPreset(min, '');
-                  }
-                })
-            }, (min: number) => `${min}`)
-          }
-          .width('100%')
-          .height(40)
-          .border({ width: 1, color: $r('app.color.line') })
-          .borderRadius(14)
-          .clip(true)
-          .backgroundColor($r('app.color.surface'))
-
-          Row() {
             Text(this.sceneLabel)
               .layoutWeight(1)
               .fontSize(14)
@@ -927,15 +891,6 @@ struct Index {
           }
         }
         .width('100%')
-
-        Text(this.footnote)
-          .fontSize(12)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.muted'))
-          .textAlign(TextAlign.Center)
-          .lineHeight(20)
-          .width('100%')
-          .margin({ top: 4, bottom: 8 })
       }
       .width('100%')
       .padding({ left: 20, right: 20, top: 18, bottom: 16 })

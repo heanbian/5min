@@ -5,10 +5,10 @@ struct MineView: View {
     @EnvironmentObject private var model: TimerViewModel
     @State private var sheet: MineSheet?
     @State private var customText = "5"
-    @State private var showBeian = false
+    @State private var showBeianAlert = false
 
     private enum MineSheet: String, Identifiable {
-        case lang, sound, duration
+        case lang, sound, duration, feedback
         var id: String { rawValue }
     }
 
@@ -38,10 +38,6 @@ struct MineView: View {
 
                     sectionTitle(model.t("mineSectionSupport"))
                     card {
-                        linkRow(model.t("feedbackLabel")) {
-                            openURL("https://5min.chat/about.html")
-                        }
-                        Divider().padding(.leading, 16)
                         linkRow(model.t("privacyLink")) {
                             openURL("https://5min.chat/privacy.html")
                         }
@@ -54,8 +50,12 @@ struct MineView: View {
                             openURL("https://5min.chat/about.html")
                         }
                         Divider().padding(.leading, 16)
+                        linkRow(model.t("feedbackLabel")) {
+                            sheet = .feedback
+                        }
+                        Divider().padding(.leading, 16)
                         linkRow(model.t("beianEntry")) {
-                            showBeian = true
+                            showBeianAlert = true
                         }
                     }
                 }
@@ -68,9 +68,10 @@ struct MineView: View {
             sheetContent(kind)
                 .presentationDetents(kind == .duration ? [.medium, .large] : [.medium])
         }
-        .sheet(isPresented: $showBeian) {
-            BeianView()
-                .environmentObject(model)
+        .alert(model.t("beianTitle"), isPresented: $showBeianAlert) {
+            Button(model.t("confirmLabel"), role: .cancel) {}
+        } message: {
+            Text(model.t("beianIcp"))
         }
     }
 
@@ -248,6 +249,32 @@ struct MineView: View {
                             .foregroundStyle(FiveMinColor.brandStrong)
                     }
                 }
+            case .feedback:
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(model.t("feedbackBody"))
+                        .font(.system(size: 15))
+                        .foregroundStyle(FiveMinColor.ink)
+                    Text(model.t("feedbackEmail"))
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(FiveMinColor.ink)
+                        .textSelection(.enabled)
+                    Button(model.t("copyEmailLabel")) { copyFeedbackEmail() }
+                        .buttonStyle(PrimaryButtonStyle())
+                    Spacer()
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .navigationTitle(model.t("feedbackLabel"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button { sheet = nil } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .accessibilityLabel(model.t("cancelLabel"))
+                    }
+                }
             }
         }
     }
@@ -272,42 +299,13 @@ struct MineView: View {
         sheet = nil
     }
 
+    private func copyFeedbackEmail() {
+        UIPasteboard.general.string = model.t("feedbackEmail")
+        sheet = nil
+    }
+
     private func openURL(_ string: String) {
         guard let url = URL(string: string), url.scheme?.lowercased() == "https" else { return }
         UIApplication.shared.open(url)
-    }
-}
-
-struct BeianView: View {
-    @EnvironmentObject private var model: TimerViewModel
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack {
-                Text(model.t("beianIcp"))
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(FiveMinColor.ink)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 24)
-                    .background(FiveMinColor.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                Spacer()
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255))
-            .navigationTitle(model.t("beianTitle"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(model.t("confirmLabel")) { dismiss() }
-                        .fontWeight(.semibold)
-                        .foregroundStyle(FiveMinColor.brandStrong)
-                }
-            }
-        }
     }
 }

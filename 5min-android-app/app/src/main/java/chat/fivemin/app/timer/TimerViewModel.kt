@@ -36,7 +36,16 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val locale = i18n.resolveInitial()
         if (prefs.locale != locale) prefs.locale = locale
         val custom = prefs.customMin(catalog.defaultMin)
-        val total = custom * 60_000L
+        val toilet = catalog.scenes.find { it.id == "toilet" }
+        val activeSceneId: String?
+        val total: Long
+        if (toilet != null && custom == toilet.min) {
+            activeSceneId = toilet.id
+            total = toilet.min * 60_000L
+        } else {
+            activeSceneId = null
+            total = custom * 60_000L
+        }
         val (count, ms) = history.todayStats()
         _state = MutableStateFlow(
             TimerUiState(
@@ -45,7 +54,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 remainMs = total,
                 running = false,
                 finished = false,
-                activeSceneId = null,
+                activeSceneId = activeSceneId,
                 ambient = prefs.ambient,
                 statsCount = count,
                 statsMs = ms,

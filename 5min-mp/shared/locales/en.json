@@ -1,7 +1,7 @@
 {
   "htmlLang": "en",
   "nativeName": "English",
-  "brandTitle": "Toilet Timer (5min)",
+  "brandTitle": "Toilet Timer",
   "stageLabel": "Timer",
   "actionsLabel": "Controls",
   "presetsLabel": "Duration",
@@ -19,7 +19,7 @@
   "minutes": "{n} min",
   "footnote": "A toilet visit is often advised within about 5 minutes; phones can skew time sense. Habit reminder only.",
   "aboutLabel": "About",
-  "titleIdle": "Toilet Timer (5min)",
+  "titleIdle": "Toilet Timer",
   "titleSuffix": "5min",
   "titleDoneBlink": "Done · please stand and move",
   "titleDoneZero": "0:00 · {n} min",

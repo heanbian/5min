@@ -1,7 +1,11 @@
 package chat.fivemin.app.ui.mine
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +43,7 @@ import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 
-private enum class MineDialog { None, Lang, Sound, Duration, Beian }
+private enum class MineDialog { None, Lang, Sound, Duration, Feedback, Beian }
 
 @Composable
 fun MineScreen(vm: TimerViewModel) {
@@ -106,13 +110,13 @@ fun MineScreen(vm: TimerViewModel) {
 
             SectionTitle(vm.t("mineSectionSupport"))
             CardBlock {
-                LinkRow(vm.t("feedbackLabel")) { openUrl("https://5min.chat/about.html") }
-                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("privacyLink")) { openUrl("https://5min.chat/privacy.html") }
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("termsLink")) { openUrl("https://5min.chat/terms.html") }
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("aboutLabel")) { openUrl("https://5min.chat/about.html") }
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                LinkRow(vm.t("feedbackLabel")) { dialog = MineDialog.Feedback }
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("beianEntry")) { dialog = MineDialog.Beian }
             }
@@ -223,6 +227,46 @@ fun MineScreen(vm: TimerViewModel) {
                 }
             },
         )
+        MineDialog.Feedback -> {
+            val email = vm.t("feedbackEmail")
+            AlertDialog(
+                onDismissRequest = { dialog = MineDialog.None },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("email", email))
+                        dialog = MineDialog.None
+                        Toast.makeText(context, vm.t("emailCopied"), Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text(vm.t("copyEmailLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
+                    }
+                },
+                title = { Text(vm.t("feedbackLabel"), fontWeight = FontWeight.SemiBold) },
+                containerColor = FiveMinColors.surface,
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = vm.t("feedbackBody"),
+                            color = FiveMinColors.ink,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                        )
+                        Text(
+                            text = email,
+                            color = FiveMinColors.ink,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                },
+            )
+        }
         MineDialog.Beian -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
