@@ -17,7 +17,7 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v1';
+const CACHE = '5min-shell-v4';
 
 const PRECACHE = [
   './',
@@ -103,6 +103,25 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (!isShellPath(url.pathname)) return;
+
+  /* CSS/JS: network-first so style/copy updates are not stuck behind SW cache */
+  const networkFirst =
+    url.pathname.startsWith('/css/') || url.pathname.startsWith('/js/');
+
+  if (networkFirst) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || Response.error()))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(req).then((cached) => {

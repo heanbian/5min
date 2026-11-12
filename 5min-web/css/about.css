@@ -38,6 +38,7 @@
     height:100%;
     -webkit-text-size-adjust:100%;
     text-size-adjust:100%;
+    background-color:var(--bg);
   }
   body{
     margin:0;
@@ -47,8 +48,13 @@
     font-size:var(--fs-base);
     line-height:var(--lh-body);
     color:var(--ink);
-    /* Solid fallback; painted wash lives on ::before so tall pages
-       keep one viewport-sized gradient (same as the timer page). */
+    /*
+     * One continuous wash matching the timer page base (--bg).
+     * Do NOT stack a short radial that fades to transparent + a
+     * document-tall linear gradient: on long pages that reads as
+     * two horizontal bands. Soft top glow fades into --bg itself.
+     */
+    isolation:isolate;
     background-color:var(--bg);
   }
   body::before{
@@ -58,8 +64,7 @@
     z-index:-1;
     pointer-events:none;
     background:
-      radial-gradient(900px 420px at 50% -8%, #dff0e6 0%, transparent 60%),
-      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 52%, #f4f8f5 100%);
+      radial-gradient(900px 520px at 50% -8%, #dff0e6 0%, var(--bg) 68%);
   }
   .wrap{
     width:100%;
