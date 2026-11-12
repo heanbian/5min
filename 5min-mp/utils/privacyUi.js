@@ -5,7 +5,7 @@
 
 const { t } = require('./i18n');
 const prefs = require('./prefs');
-const { openHttps } = require('./openUrl');
+const { openLegal } = require('./legalDocs');
 const { updateTabBarLabels } = require('./tabBar');
 
 function privacyLabels() {
@@ -46,10 +46,10 @@ function bindPrivacyHandlers(page) {
     this.setData({ privacyChecked: !this.data.privacyChecked });
   };
   page.onOpenPrivacy = function onOpenPrivacy() {
-    openHttps('https://5min.chat/privacy.html');
+    openLegal('privacy');
   };
   page.onOpenTerms = function onOpenTerms() {
-    openHttps('https://5min.chat/terms.html');
+    openLegal('terms');
   };
   page.onAcceptPrivacy = function onAcceptPrivacy() {
     if (!this.data.privacyChecked) return;

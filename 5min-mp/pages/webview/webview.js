@@ -1,7 +1,7 @@
 /**
  * Copyright 2026 学记宝 / xuejibao.com
  * Licensed under the Apache License, Version 2.0
- * Host-allowlisted https web-view for privacy / terms / about.
+ * Host-allowlisted https web-view (e.g. about); privacy/terms use pages/legal.
  */
 
 const { t } = require('../../utils/i18n');

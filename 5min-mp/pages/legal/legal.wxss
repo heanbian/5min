@@ -1,0 +1,86 @@
+/**
+ * Copyright 2026 学记宝 / xuejibao.com
+ * Licensed under the Apache License, Version 2.0
+ */
+
+.legal {
+  height: 100vh;
+  background: var(--bg);
+}
+
+.legal-inner {
+  padding: 36rpx 40rpx 0;
+}
+
+.legal-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+  margin-bottom: 16rpx;
+}
+
+.legal-meta {
+  display: block;
+  font-size: 24rpx;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 28rpx;
+}
+
+.legal-lede {
+  display: block;
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.7;
+  margin-bottom: 28rpx;
+}
+
+.legal-h2 {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 650;
+  color: var(--ink);
+  margin: 36rpx 0 16rpx;
+  line-height: 1.4;
+}
+
+.legal-p {
+  display: block;
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.7;
+  margin-bottom: 16rpx;
+}
+
+.legal-list {
+  margin: 8rpx 0 16rpx;
+}
+
+.legal-li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.legal-bullet,
+.legal-num {
+  flex-shrink: 0;
+  width: 36rpx;
+  font-size: 28rpx;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.legal-li-body {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.legal-safe {
+  height: calc(48rpx + env(safe-area-inset-bottom));
+}

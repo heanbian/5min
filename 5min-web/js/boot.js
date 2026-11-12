@@ -18,3 +18,18 @@
 if (location.protocol === 'file:') {
   console.warn('[5min] ES modules require http(s). Run: npx --yes serve .');
 }
+
+/* Light PWA: register shell service worker (https / localhost only) */
+(function registerShellWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  const host = location.hostname;
+  const ok =
+    location.protocol === 'https:' ||
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]';
+  if (!ok) return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+})();

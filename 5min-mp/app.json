@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/records/records",
     "pages/mine/mine",
+    "pages/legal/legal",
     "pages/webview/webview"
   ],
   "window": {

@@ -18,12 +18,13 @@
 | 状态反馈 | 进行中（绿）→ 剩余不足 1 分钟（琥珀）→ 超时（红） |
 | 到期提醒 | Vibration API（设备支持时）、Web Audio 提示音、Notification API（用户授权后） |
 | 屏幕唤醒 | 计时过程中尝试申请 Screen Wake Lock，以降低因熄屏而错过提醒的可能性 |
+| 轻量 PWA | `site.webmanifest` + 根目录 `sw.js` 预缓存计时壳（HTML / CSS / JS / 字体 / 图标），便于「加到主屏幕」复访；改壳资源后请 bump `sw.js` 内 `CACHE` |
 
 ## 技术栈
 
 纯 **HTML5 + 现代原生 JavaScript（ES modules）**：HTML 只写结构与 SEO；样式在 `css/`，逻辑在 `js/`，无框架、无打包、无第三方运行时依赖。
 
-使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环。
+使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环、Service Worker（壳缓存）。
 
 多语言（`js/i18n/locales.js`）：简体中文、繁体中文、English。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
 
@@ -46,16 +47,17 @@
 - 对外说明优先使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知、Screen Wake Lock 等；文案宜简洁，避免堆砌「无广告 / 无需注册 / 数据存本机 / 不上传」等口号。
 - 界面状态优先使用「倒计时中 / 计时已结束 / 重新开始」等书面表述，避免「再响」「再来一次」等口语。
 - 合规底线：仅供习惯提醒；不作疗效/预防/诊断宣称；不采集健康敏感个人信息。JSON-LD `applicationCategory` 使用 `UtilitiesApplication`（勿用 `HealthApplication`）。
-- `site.json` 的 `description` / FAQ 须包含产品名、运营方与官网 `https://5min.chat`；修改后同步 `index.html`、`about.html`、`llms.txt`、`site.webmanifest` 与 JSON-LD。
+- `site.json` 的 `description` / FAQ 须包含产品名、运营方与官网 `https://5min.chat`；修改后同步 `index.html`、`about.html`、`faq.html`、`llms.txt`、`site.webmanifest`、`sitemap.xml` 与 JSON-LD。
 - `site.json` 的 `origin` 为 `https://5min.chat`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
 
 ### GEO（生成式引擎优化）
 
 面向 AI 检索与引用，需提供可独立引用的说明与问答，且与结构化数据一致：
 
-- `llms.txt`：站点摘要与关键链接（[llmstxt.org](https://llmstxt.org/) 约定），置于站点根路径。
-- `about.html`：「关于」与「常见问题」独立页（`lang="zh-CN"`），供爬虫与模型直接读取；首页脚注链向该页。
-- JSON-LD：`about.html` 使用 `AboutPage` + `FAQPage`；问题与答案须与页面可见文案逐字一致；修改 FAQ 时同步 `site.json` 对应页的 `faqs`。
+- `llms.txt`：站点摘要、关键事实与页面链接（[llmstxt.org](https://llmstxt.org/) 约定），置于站点根路径。
+- `about.html` / `faq.html`：关于页与常见问题页相互独立（`lang="zh-CN"`），供爬虫与模型直接读取；首页脚注链向两页。
+- JSON-LD：`about.html` 使用 `AboutPage`；`faq.html` 使用 `FAQPage`。FAQ 的问题与答案须与页面可见文案**逐字一致**；修改 FAQ 时同步 `site.json` 对应页的 `faqs`。
+- 首页与关于页的 `WebApplication` / `WebPage` 描述须含产品定名、运营方与官网；`applicationCategory` 保持 `UtilitiesApplication`。
 - 回答中保留产品名「如厕计时器(5min)」、运营方「学记宝」、官网 `https://5min.chat`、仅供习惯提醒等关键事实。
 
 ## 目录结构
@@ -87,6 +89,7 @@
 │ └── raster-logo.js # SVG 栅格化为 PNG / ICO
 ├── site.json # 站点元数据、页面文案与 faqs
 ├── site.webmanifest # PWA 清单
+├── sw.js # Service Worker（计时壳预缓存）
 ├── llms.txt # 面向大模型的站点说明
 ├── robots.txt
 ├── sitemap.xml
@@ -113,7 +116,7 @@ PORT=9000 ./run.sh # 环境变量指定端口
 
 ## 部署
 
-将仓库静态文件原样发布至站点根目录即可；无需 Node.js 生产依赖。确保生产域名与 `site.json` 的 `origin` 及 SEO 绝对 URL 一致。
+将仓库静态文件原样发布至站点根目录即可；无需 Node.js 生产依赖。确保生产域名与 `site.json` 的 `origin` 及 SEO 绝对 URL 一致。Service Worker 作用域为站点根；静态托管勿对 `sw.js` 做错误 MIME（应为 `application/javascript`）或过长强制缓存，否则壳更新会滞后。
 
 ## 品牌标识
 

@@ -1,13 +1,16 @@
 {
  "name": "如厕计时器(5min)",
  "short_name": "5min",
- "description": "如厕计时器(5min)：端侧倒计时。默认 5 分钟；结束后提醒起身。运营方学记宝，官网 https://5min.chat。仅供习惯提醒。",
+ "description": "如厕计时器(5min)：由学记宝运营的端侧倒计时。默认「如厕 · 5 分钟」，结束后提醒起身。官网 https://5min.chat。仅供习惯提醒。",
  "start_url": "/",
+ "scope": "/",
+ "id": "/",
  "display": "standalone",
  "orientation": "portrait-primary",
  "background_color": "#eef6f1",
  "theme_color": "#2f9a68",
  "lang": "zh-CN",
+ "categories": ["utilities", "lifestyle"],
  "icons": [
   {
    "src": "/img/logo.svg",

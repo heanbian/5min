@@ -1,0 +1,36 @@
+<!--
+ Copyright 2026 学记宝 / xuejibao.com
+ Licensed under the Apache License, Version 2.0
+-->
+<scroll-view scroll-y class="legal" enhanced show-scrollbar="{{false}}">
+  <view class="legal-inner">
+    <text class="legal-title">{{title}}</text>
+    <text class="legal-meta">{{meta}}</text>
+
+    <block wx:for="{{blocks}}" wx:key="index">
+      <text wx:if="{{item.type === 'h2'}}" class="legal-h2">{{item.text}}</text>
+
+      <rich-text
+        wx:elif="{{item.type === 'lede' || item.type === 'p'}}"
+        class="legal-{{item.type}}"
+        nodes="{{item.nodes}}"
+      />
+
+      <view wx:elif="{{item.type === 'ul'}}" class="legal-list">
+        <view wx:for="{{item.items}}" wx:for-item="li" wx:key="*this" class="legal-li">
+          <text class="legal-bullet">•</text>
+          <rich-text class="legal-li-body" nodes="{{li}}" />
+        </view>
+      </view>
+
+      <view wx:elif="{{item.type === 'ol'}}" class="legal-list">
+        <view wx:for="{{item.items}}" wx:for-item="li" wx:for-index="n" wx:key="*this" class="legal-li">
+          <text class="legal-num">{{n + 1}}.</text>
+          <rich-text class="legal-li-body" nodes="{{li}}" />
+        </view>
+      </view>
+    </block>
+
+    <view class="legal-safe"></view>
+  </view>
+</scroll-view>

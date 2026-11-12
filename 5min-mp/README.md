@@ -16,7 +16,7 @@
 | 近 14 日记录 | 本机 `wx.storage`（`5min.chat.history.v1`），三行展示 |
 | 今日累计 | 主页展示当日完成次数与累计时长 |
 | 环境音 | 雨声 / 海浪 / 钟声 / 关闭；主页喇叭入口进入「我的」 |
-| 隐私同意 | 首次启动门禁；条款经 https `web-view` 打开（仅 `5min.chat`） |
+| 隐私同意 | 首次启动门禁；隐私政策 / 用户协议为小程序内原生页（不依赖业务域名） |
 | 计时控制 | 开始、暂停、重置；绝对时间戳结算 |
 | 到期提醒 | 振动 + Toast；计时中尝试保持屏幕常亮 |
 | 备案 | 「我的 › 备案」弹窗展示备案号 |
@@ -35,7 +35,7 @@
 2. 选择「导入项目」，目录指向本仓库的 `5min-mp/`
 3. AppID 使用 `project.config.json` 中已配置的正式 AppID
 
-隐私 / 条款页使用 `<web-view>`，正式环境需在小程序后台配置业务域名 `5min.chat`。
+隐私政策与用户协议在 `pages/legal/` 内嵌展示（与官网文案对齐），无需配置业务域名即可阅读与通过审核。关于页仍走 `<web-view>`，正式环境若打开「关于」需在小程序后台配置业务域名 `5min.chat`。
 
 上传代码密钥（`private.*.key`）仅用于 CI / `miniprogram-ci`，已在 `.gitignore` 与 `packOptions.ignore` 中排除，勿提交仓库。
 
@@ -54,7 +54,8 @@ node scripts/verify.mjs
 │   ├── index/      # 计时主页
 │   ├── records/    # 近 14 日记录
 │   ├── mine/       # 语言 / 环境音 / 时长 / 关于 / 备案
-│   └── webview/    # https 外链（域名白名单）
+│   ├── legal/      # 隐私政策 / 用户协议（原生页）
+│   └── webview/    # https 外链（关于等；域名白名单）
 ├── utils/          # i18n、prefs、history、提醒、环境音…
 ├── shared/         # scenes + locales（zh-CN / zh-TW / en）
 ├── scripts/        # 本地校验
