@@ -1,6 +1,31 @@
 package chat.fivemin.app.data
 
 import android.content.Context
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.UUID
+
+data class CustomScene(
+    val id: String,
+    val name: String,
+    val min: Int,
+) {
+    companion object {
+        const val GROUP_ID = "custom"
+        const val ID_PREFIX = "custom_"
+        const val MAX_COUNT = 30
+        const val MAX_NAME_LENGTH = 24
+
+        fun makeId(): String = "$ID_PREFIX${UUID.randomUUID().toString().lowercase()}"
+
+        fun clampMinutes(value: Int): Int = value.coerceIn(1, 120)
+
+        fun normalizedName(raw: String): String {
+            val trimmed = raw.trim()
+            return if (trimmed.length <= MAX_NAME_LENGTH) trimmed else trimmed.take(MAX_NAME_LENGTH)
+        }
+    }
+}
 
 /** App settings only; session history lives in [HistoryStore]. */
 class PrefsStore(context: Context) {
@@ -30,7 +55,57 @@ class PrefsStore(context: Context) {
     }
 
     fun setCustomMin(value: Int) {
-        sp.edit().putInt(KEY_CUSTOM_MIN, value.coerceIn(1, 120)).apply()
+        sp.edit().putInt(KEY_CUSTOM_MIN, CustomScene.clampMinutes(value)).apply()
+    }
+
+    fun customScenes(): List<CustomScene> {
+        val raw = sp.getString(KEY_CUSTOM_SCENES, null) ?: return emptyList()
+        return runCatching {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.getJSONObject(i)
+                val id = o.optString("id").ifEmpty { CustomScene.makeId() }
+                val name = CustomScene.normalizedName(o.optString("name"))
+                if (name.isEmpty()) return@mapNotNull null
+                CustomScene(
+                    id = id,
+                    name = name,
+                    min = CustomScene.clampMinutes(o.optInt("min", 5)),
+                )
+            }.take(CustomScene.MAX_COUNT)
+        }.getOrDefault(emptyList())
+    }
+
+    fun setCustomScenes(scenes: List<CustomScene>) {
+        val cleaned = scenes
+            .map { scene ->
+                CustomScene(
+                    id = scene.id.ifEmpty { CustomScene.makeId() },
+                    name = CustomScene.normalizedName(scene.name),
+                    min = CustomScene.clampMinutes(scene.min),
+                )
+            }
+            .filter { it.name.isNotEmpty() }
+            .take(CustomScene.MAX_COUNT)
+        val arr = JSONArray()
+        cleaned.forEach { scene ->
+            arr.put(
+                JSONObject().apply {
+                    put("id", scene.id)
+                    put("name", scene.name)
+                    put("min", scene.min)
+                },
+            )
+        }
+        sp.edit().putString(KEY_CUSTOM_SCENES, arr.toString()).apply()
+        markCustomScenesMigrated()
+    }
+
+    val customScenesMigrated: Boolean
+        get() = sp.getBoolean(KEY_CUSTOM_SCENES_MIGRATED, false)
+
+    fun markCustomScenesMigrated() {
+        sp.edit().putBoolean(KEY_CUSTOM_SCENES_MIGRATED, true).apply()
     }
 
     companion object {
@@ -38,5 +113,7 @@ class PrefsStore(context: Context) {
         private const val KEY_AMBIENT = "ambient"
         private const val KEY_PRIVACY = "privacy_accepted"
         private const val KEY_CUSTOM_MIN = "custom_min"
+        private const val KEY_CUSTOM_SCENES = "custom_scenes"
+        private const val KEY_CUSTOM_SCENES_MIGRATED = "custom_scenes_migrated"
     }
 }

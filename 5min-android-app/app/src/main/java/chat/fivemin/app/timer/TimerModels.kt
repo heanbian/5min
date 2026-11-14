@@ -1,5 +1,7 @@
 package chat.fivemin.app.timer
 
+import chat.fivemin.app.data.CustomScene
+
 enum class TimerPhase { Idle, Running, Paused, Warn, Done }
 
 data class TimerUiState(
@@ -15,6 +17,7 @@ data class TimerUiState(
     val phase: TimerPhase,
     val privacyAccepted: Boolean = false,
     val customMin: Int = 5,
+    val customScenes: List<CustomScene> = emptyList(),
     val recordsEpoch: Int = 0,
     val selectedTab: Int = 1,
 ) {

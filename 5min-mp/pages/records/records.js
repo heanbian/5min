@@ -5,7 +5,7 @@
 
 const { t } = require('../../utils/i18n');
 const history = require('../../utils/history');
-const { sceneById } = require('../../utils/catalog');
+const { resolveSceneTitle } = require('../../utils/catalog');
 const { readNavMetrics } = require('../../utils/navMetrics');
 const {
   applyPrivacyState,
@@ -66,8 +66,8 @@ Page({
     const rows = list.map((item, i) => {
       let scene = t('historySceneDefault');
       if (item.sceneId) {
-        const found = sceneById(item.sceneId);
-        if (found) scene = t(found.titleKey);
+        const title = resolveSceneTitle(item.sceneId);
+        if (title) scene = title;
       }
       return {
         key: `${item.at}-${item.minutes}-${item.sceneId}-${i}`,

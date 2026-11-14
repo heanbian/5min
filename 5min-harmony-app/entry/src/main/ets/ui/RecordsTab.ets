@@ -1,6 +1,6 @@
 import { common } from '@kit.AbilityKit';
 import { SharedCatalog, SceneItem } from '../common/SharedCatalog';
-import { PrefsStore } from '../common/PrefsStore';
+import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore';
 import { resolveLocale } from '../common/I18n';
 import { i18n } from '@kit.LocalizationKit';
@@ -27,6 +27,7 @@ export struct RecordsTab {
   private prefs: PrefsStore = new PrefsStore();
   private history: HistoryStore = new HistoryStore();
   private scenes: SceneItem[] = [];
+  private customScenes: CustomScene[] = [];
 
   aboutToAppear(): void {
     this.bootstrap();
@@ -66,6 +67,7 @@ export struct RecordsTab {
 
   /** Called by parent when tab becomes visible. */
   async reload(): Promise<void> {
+    this.customScenes = await this.prefs.getCustomScenes();
     const hist = await this.history.getHistory();
     this.historyRows = this.formatHistory(hist);
     const period = await this.history.periodStats();
@@ -77,18 +79,27 @@ export struct RecordsTab {
     return this.catalog.t(this.locale, key, vars);
   }
 
+  private resolveSceneTitle(sceneId: string): string {
+    if (!sceneId) {
+      return this.t('historySceneDefault');
+    }
+    const custom = this.customScenes.find((s) => s.id === sceneId);
+    if (custom) {
+      return custom.name;
+    }
+    const found = this.scenes.find((s) => s.id === sceneId);
+    if (found) {
+      return this.t(found.titleKey);
+    }
+    return this.t('historySceneDefault');
+  }
+
   private formatHistory(items: HistoryItem[]): HistoryRowView[] {
     // getHistory() already returns newest-first.
     const out: HistoryRowView[] = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      let scene = this.t('historySceneDefault');
-      if (item.sceneId) {
-        const found = this.scenes.find((s) => s.id === item.sceneId);
-        if (found) {
-          scene = this.t(found.titleKey);
-        }
-      }
+      const scene = this.resolveSceneTitle(item.sceneId);
       const sceneVars: Record<string, string> = {};
       sceneVars['scene'] = scene;
       const durVars: Record<string, string> = {};

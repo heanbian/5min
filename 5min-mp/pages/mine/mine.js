@@ -31,6 +31,16 @@ function ambientKeyOf(id) {
   return 'ambientOff';
 }
 
+function sceneRowsFromPrefs() {
+  const unit = t('customUnit');
+  return prefs.getCustomScenes().map((s) => ({
+    id: s.id,
+    name: s.name,
+    min: s.min,
+    minLabel: `${s.min} ${unit}`,
+  }));
+}
+
 Page({
   data: {
     navBarHeight: 44,
@@ -40,7 +50,8 @@ Page({
     mineSectionSupport: '',
     langLabel: '',
     ambientLabel: '',
-    durationSettingsLabel: '',
+    customScenesLabel: '',
+    customScenesValue: '',
     feedbackLabel: '',
     privacyLink: '',
     termsLink: '',
@@ -56,9 +67,19 @@ Page({
     dialogTitle: '',
     localeOptions: [],
     soundOptions: [],
+    sceneRows: [],
+    canAddScene: true,
+    customScenesEmptyHint: '',
+    customSceneAdd: '',
+    customSceneUse: '',
+    customSceneNameLabel: '',
+    customSceneNamePlaceholder: '',
+    customMinutesLabel: '',
+    editorName: '',
+    editorMinutes: '5',
+    editorSceneId: '',
+    editorConfirmDisabled: true,
     quickMins: QUICK_MINS,
-    customText: '5',
-    customMinutesHint: '',
     cancelLabel: '',
     confirmLabel: '',
     feedbackHint: '',
@@ -89,13 +110,19 @@ Page({
     const locale = getLocale();
     const ambient = getAmbientMode() || prefs.getAmbient() || 'off';
     const customMin = prefs.getCustomMin(DEFAULT_MIN);
+    const scenes = prefs.getCustomScenes();
+    const customScenesValue =
+      scenes.length <= 0
+        ? t('customScenesEmpty')
+        : t('customScenesCount', { n: scenes.length });
     this.setData({
       tabTitle: t('tabMine'),
       mineSectionPrefs: t('mineSectionPrefs'),
       mineSectionSupport: t('mineSectionSupport'),
       langLabel: t('langLabel'),
       ambientLabel: t('ambientLabel'),
-      durationSettingsLabel: t('durationSettingsLabel'),
+      customScenesLabel: t('customScenesLabel'),
+      customScenesValue,
       feedbackLabel: t('feedbackLabel'),
       privacyLink: t('privacyLink'),
       termsLink: t('termsLink'),
@@ -107,10 +134,14 @@ Page({
       ambientName: t(ambientKeyOf(ambient)),
       customMin,
       customUnit: t('customUnit'),
-      customText: String(customMin),
-      customMinutesHint: t('customMinutesHint'),
       cancelLabel: t('cancelLabel'),
       confirmLabel: t('confirmLabel'),
+      customScenesEmptyHint: t('customScenesEmptyHint'),
+      customSceneAdd: t('customSceneAdd'),
+      customSceneUse: t('customSceneUse'),
+      customSceneNameLabel: t('customSceneNameLabel'),
+      customSceneNamePlaceholder: t('customSceneNamePlaceholder'),
+      customMinutesLabel: t('customMinutesLabel'),
       localeOptions: appLocaleCodes().map((code) => ({
         code,
         label: nativeName(code),
@@ -123,6 +154,10 @@ Page({
   },
 
   onCloseDialog() {
+    if (this.data.dialog === 'sceneEditor') {
+      this.onCloseSceneEditor();
+      return;
+    }
     this.setData({ dialog: '' });
   },
 
@@ -148,11 +183,145 @@ Page({
     });
   },
 
-  onOpenDuration() {
+  onOpenCustomScenes() {
+    const scenes = prefs.getCustomScenes();
     this.setData({
-      dialog: 'duration',
-      dialogTitle: t('durationSettingsLabel'),
-      customText: String(this.data.customMin),
+      dialog: 'scenes',
+      dialogTitle: t('customScenesLabel'),
+      sceneRows: sceneRowsFromPrefs(),
+      canAddScene: scenes.length < prefs.MAX_COUNT,
+      customScenesEmptyHint: t('customScenesEmptyHint'),
+      customSceneAdd: t('customSceneAdd'),
+      customSceneUse: t('customSceneUse'),
+    });
+  },
+
+  onAddScene() {
+    if (prefs.getCustomScenes().length >= prefs.MAX_COUNT) return;
+    const customMin = prefs.getCustomMin(DEFAULT_MIN);
+    this.setData({
+      dialog: 'sceneEditor',
+      dialogTitle: t('customSceneAdd'),
+      editorSceneId: '',
+      editorName: '',
+      editorMinutes: String(customMin),
+      editorConfirmDisabled: true,
+      customSceneNameLabel: t('customSceneNameLabel'),
+      customSceneNamePlaceholder: t('customSceneNamePlaceholder'),
+      customMinutesLabel: t('customMinutesLabel'),
+    });
+  },
+
+  onEditScene(e) {
+    const id = e.currentTarget.dataset.id;
+    const scene = prefs.getCustomScenes().find((s) => s.id === id);
+    if (!scene) return;
+    this.setData({
+      dialog: 'sceneEditor',
+      dialogTitle: t('customSceneEdit'),
+      editorSceneId: scene.id,
+      editorName: scene.name,
+      editorMinutes: String(scene.min),
+      editorConfirmDisabled: !prefs.normalizeName(scene.name),
+      customSceneNameLabel: t('customSceneNameLabel'),
+      customSceneNamePlaceholder: t('customSceneNamePlaceholder'),
+      customMinutesLabel: t('customMinutesLabel'),
+    });
+  },
+
+  onUseScene(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!prefs.getCustomScenes().some((s) => s.id === id)) return;
+    const app = getApp();
+    if (app && app.globalData) app.globalData.pendingSceneId = id;
+    this.setData({ dialog: '' });
+    wx.switchTab({ url: '/pages/index/index' });
+  },
+
+  onDeleteScene(e) {
+    const id = e.currentTarget.dataset.id;
+    const next = prefs.getCustomScenes().filter((s) => s.id !== id);
+    prefs.setCustomScenes(next);
+    const app = getApp();
+    if (app && app.globalData && app.globalData.pendingSceneId === id) {
+      app.globalData.pendingSceneId = null;
+    }
+    this.setData({
+      sceneRows: sceneRowsFromPrefs(),
+      canAddScene: next.length < prefs.MAX_COUNT,
+    });
+    this.refresh();
+  },
+
+  onEditorNameInput(e) {
+    const editorName = String(e.detail.value || '').slice(0, prefs.MAX_NAME);
+    this.setData({
+      editorName,
+      editorConfirmDisabled: !prefs.normalizeName(editorName),
+    });
+  },
+
+  onEditorMinutesInput(e) {
+    const digits = String(e.detail.value || '').replace(/\D/g, '').slice(0, 3);
+    this.setData({ editorMinutes: digits });
+  },
+
+  onNudgeMinutes(e) {
+    const delta = Number(e.currentTarget.dataset.delta) || 0;
+    const cur = parseInt(this.data.editorMinutes, 10);
+    const base = Number.isFinite(cur) ? cur : prefs.getCustomMin(DEFAULT_MIN);
+    this.setData({
+      editorMinutes: String(prefs.clampMinutes(base + delta)),
+    });
+  },
+
+  onQuickMin(e) {
+    const min = Number(e.currentTarget.dataset.min);
+    this.setData({ editorMinutes: String(prefs.clampMinutes(min)) });
+  },
+
+  onConfirmSceneEditor() {
+    const name = prefs.normalizeName(this.data.editorName);
+    if (!name) return;
+    const parsed = parseInt(this.data.editorMinutes, 10);
+    const minutes = prefs.clampMinutes(
+      Number.isFinite(parsed) ? parsed : prefs.getCustomMin(DEFAULT_MIN)
+    );
+    const editingId = this.data.editorSceneId;
+    let list = prefs.getCustomScenes().slice();
+    let saved = null;
+    if (editingId) {
+      const idx = list.findIndex((s) => s.id === editingId);
+      if (idx < 0) return;
+      list[idx] = { id: editingId, name, min: minutes };
+      saved = list[idx];
+    } else {
+      if (list.length >= prefs.MAX_COUNT) return;
+      saved = { id: prefs.makeId(), name, min: minutes };
+      list.unshift(saved);
+    }
+    prefs.setCustomScenes(list);
+    prefs.setCustomMin(minutes);
+    if (!editingId) {
+      const app = getApp();
+      if (app && app.globalData) app.globalData.pendingSceneId = saved.id;
+    }
+    this.setData({
+      dialog: 'scenes',
+      dialogTitle: t('customScenesLabel'),
+      sceneRows: sceneRowsFromPrefs(),
+      canAddScene: list.length < prefs.MAX_COUNT,
+      customMin: minutes,
+    });
+    this.refresh();
+  },
+
+  onCloseSceneEditor() {
+    this.setData({
+      dialog: 'scenes',
+      dialogTitle: t('customScenesLabel'),
+      sceneRows: sceneRowsFromPrefs(),
+      canAddScene: prefs.getCustomScenes().length < prefs.MAX_COUNT,
     });
   },
 
@@ -174,29 +343,6 @@ Page({
     prefs.setAmbient(id);
     this.setData({ dialog: '' });
     this.refresh();
-  },
-
-  onCustomInput(e) {
-    const digits = String(e.detail.value || '').replace(/\D/g, '').slice(0, 3);
-    this.setData({ customText: digits });
-  },
-
-  onQuickMin(e) {
-    const min = Number(e.currentTarget.dataset.min);
-    this.applyMinutes(min);
-  },
-
-  onApplyDuration() {
-    const n = parseInt(this.data.customText, 10);
-    this.applyMinutes(Number.isFinite(n) ? n : this.data.customMin);
-  },
-
-  applyMinutes(raw) {
-    const n = prefs.setCustomMin(raw);
-    const app = getApp();
-    if (app && app.globalData) app.globalData.pendingCustomMin = n;
-    this.setData({ dialog: '', customMin: n, customText: String(n) });
-    wx.showToast({ title: t('customApplied'), icon: 'none' });
   },
 
   onFeedback() {

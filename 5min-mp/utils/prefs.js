@@ -8,6 +8,12 @@ const LOCALE_KEY = '5min.locale';
 const AMBIENT_KEY = '5min.ambient';
 const PRIVACY_KEY = '5min.privacyAccepted';
 const CUSTOM_MIN_KEY = '5min.customMin';
+const CUSTOM_SCENES_KEY = '5min.custom_scenes';
+const CUSTOM_SCENES_MIGRATED_KEY = '5min.custom_scenes_migrated';
+
+const MAX_COUNT = 30;
+const MAX_NAME = 24;
+const ID_PREFIX = 'custom_';
 
 function getLocale() {
   try {
@@ -58,6 +64,26 @@ function setPrivacyAccepted(ok) {
   }
 }
 
+function clampMinutes(value) {
+  const n = Math.floor(Number(value) || 0);
+  return Math.max(1, Math.min(120, n));
+}
+
+function normalizeName(raw) {
+  const trimmed = String(raw || '').trim();
+  if (trimmed.length <= MAX_NAME) return trimmed;
+  return trimmed.slice(0, MAX_NAME);
+}
+
+function makeId() {
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+  return ID_PREFIX + uuid;
+}
+
 function getCustomMin(fallback) {
   const fb = fallback == null ? 5 : fallback;
   try {
@@ -70,7 +96,7 @@ function getCustomMin(fallback) {
 }
 
 function setCustomMin(min) {
-  const n = Math.max(1, Math.min(120, Math.floor(Number(min) || 5)));
+  const n = clampMinutes(min || 5);
   try {
     wx.setStorageSync(CUSTOM_MIN_KEY, n);
   } catch (e) {
@@ -79,7 +105,64 @@ function setCustomMin(min) {
   return n;
 }
 
+function sanitizeScene(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const name = normalizeName(raw.name);
+  if (!name) return null;
+  const id = String(raw.id || '').trim() || makeId();
+  return {
+    id,
+    name,
+    min: clampMinutes(raw.min),
+  };
+}
+
+function getCustomScenes() {
+  try {
+    const raw = wx.getStorageSync(CUSTOM_SCENES_KEY);
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map(sanitizeScene)
+      .filter(Boolean)
+      .slice(0, MAX_COUNT);
+  } catch (e) {
+    return [];
+  }
+}
+
+function setCustomScenes(scenes) {
+  const cleaned = (Array.isArray(scenes) ? scenes : [])
+    .map(sanitizeScene)
+    .filter(Boolean)
+    .slice(0, MAX_COUNT);
+  try {
+    wx.setStorageSync(CUSTOM_SCENES_KEY, cleaned);
+  } catch (e) {
+    /* ignore */
+  }
+  markCustomScenesMigrated();
+  return cleaned;
+}
+
+function isCustomScenesMigrated() {
+  try {
+    return !!wx.getStorageSync(CUSTOM_SCENES_MIGRATED_KEY);
+  } catch (e) {
+    return false;
+  }
+}
+
+function markCustomScenesMigrated() {
+  try {
+    wx.setStorageSync(CUSTOM_SCENES_MIGRATED_KEY, true);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 module.exports = {
+  MAX_COUNT,
+  MAX_NAME,
   getLocale,
   setLocale,
   getAmbient,
@@ -88,4 +171,11 @@ module.exports = {
   setPrivacyAccepted,
   getCustomMin,
   setCustomMin,
+  clampMinutes,
+  normalizeName,
+  makeId,
+  getCustomScenes,
+  setCustomScenes,
+  isCustomScenesMigrated,
+  markCustomScenesMigrated,
 };

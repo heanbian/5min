@@ -9,10 +9,10 @@ const prefs = require('./utils/prefs');
 
 App({
   globalData: {
-    /** Apply on next home show after Mine duration change. */
-    pendingCustomMin: null,
+    /** Apply on next home show after Mine custom-scene Use / add. */
+    pendingSceneId: null,
     privacyAccepted: false,
-    appVersion: '1.0.6',
+    appVersion: '1.0.7',
   },
 
   onLaunch() {

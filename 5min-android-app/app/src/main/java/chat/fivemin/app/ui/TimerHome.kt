@@ -58,7 +58,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.R
 import chat.fivemin.app.timer.TimerPhase
 import chat.fivemin.app.timer.TimerViewModel
@@ -72,7 +71,6 @@ fun TimerHome(
     onOpenMine: () -> Unit = {},
 ) {
     val state by vm.state.collectAsState()
-    val catalog = FiveMinApp.instance.catalog
     var sceneOpen by remember { mutableStateOf(false) }
     val view = LocalView.current
     DisposableEffect(state.running) {
@@ -119,9 +117,7 @@ fun TimerHome(
         else -> FiveMinColors.glow
     }
 
-    val title = state.activeSceneId?.let { id ->
-        catalog.scenes.find { it.id == id }?.let { vm.t(it.titleKey) }
-    } ?: vm.t("brandTitle")
+    val title = vm.sceneTitle(state.activeSceneId) ?: vm.t("brandTitle")
     val status = when (state.phase) {
         TimerPhase.Done -> vm.t("statusDone")
         TimerPhase.Warn -> vm.t("statusWarn")
@@ -135,9 +131,7 @@ fun TimerHome(
         state.remainMs < state.totalMs && state.remainMs > 0 -> vm.t("resume")
         else -> vm.t("start")
     }
-    val sceneLabel = state.activeSceneId?.let { id ->
-        catalog.scenes.find { it.id == id }?.let { vm.t(it.labelKey) }
-    } ?: vm.t("scenePlaceholder")
+    val sceneLabel = vm.sceneLabel(state.activeSceneId) ?: vm.t("scenePlaceholder")
     val scenePlaceholder = state.activeSceneId == null
     val resetEnabled = state.running || state.remainMs < state.totalMs || state.finished
     val setupEnabled = !state.running
@@ -447,8 +441,8 @@ fun TimerHome(
             },
             text = {
                 LazyColumn(modifier = Modifier.height(420.dp)) {
-                    catalog.groups.forEach { group ->
-                        val itemsInGroup = catalog.scenes.filter { it.group == group.id }
+                    vm.pickerGroups().forEach { group ->
+                        val itemsInGroup = vm.scenesInGroup(group.id)
                         if (itemsInGroup.isEmpty()) return@forEach
                         item {
                             Row(
@@ -487,7 +481,7 @@ fun TimerHome(
                         items(itemsInGroup, key = { it.id }) { scene ->
                             val active = scene.id == state.activeSceneId
                             Text(
-                                text = vm.t(scene.labelKey),
+                                text = vm.sceneLabel(scene.id) ?: scene.id,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(11.dp))

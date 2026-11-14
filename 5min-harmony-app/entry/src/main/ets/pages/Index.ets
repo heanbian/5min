@@ -1,7 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 import { SharedCatalog, SceneItem, SceneGroup } from '../common/SharedCatalog';
-import { PrefsStore } from '../common/PrefsStore';
+import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore } from '../common/HistoryStore';
 import { resolveLocale } from '../common/I18n';
 import { normalizeAppLocale } from '../common/AppLocales';
@@ -104,6 +104,7 @@ struct Index {
   @StorageLink('appLocale') @Watch('onLocaleLink') linkedLocale: string = 'zh-CN';
   @State groups: SceneGroup[] = [];
   @State scenes: SceneItem[] = [];
+  @State customScenes: CustomScene[] = [];
   @State localeCodes: string[] = [];
   @State dialKey: string = '1';
   @State privacyAccepted: boolean = false;
@@ -127,8 +128,10 @@ struct Index {
   }
 
   onPageShow(): void {
-    this.consumePendingCustomMin();
-    this.refreshTodayStats();
+    this.reloadCustomScenes().then(() => {
+      this.consumePendingScene();
+      this.refreshTodayStats();
+    });
   }
 
   aboutToDisappear(): void {
@@ -160,7 +163,6 @@ struct Index {
     await this.prefs.init(this.context);
     await this.history.init(this.context);
     this.catalog = await SharedCatalog.load(this.context);
-    this.groups = this.catalog.groups;
     this.scenes = this.catalog.scenes;
     this.localeCodes = this.catalog.localeCodes;
 
@@ -182,9 +184,16 @@ struct Index {
     this.linkedLocale = this.locale;
     this.localeTick = this.localeTick + 1;
     const custom = await this.prefs.getCustomMin(this.catalog.defaultMin);
+    await this.reloadCustomScenes();
+    await this.migrateLegacyCustomMinIfNeeded();
+    await this.reloadCustomScenes();
+    this.refreshPickerGroups();
     const toilet = this.scenes.find((s) => s.id === 'toilet');
+    const customMatch = this.customScenes.find((s) => s.min === custom);
     if (toilet && custom === toilet.min) {
       this.setPreset(toilet.min, 'toilet');
+    } else if (customMatch) {
+      this.setPreset(customMatch.min, customMatch.id);
     } else {
       this.setPreset(custom, '');
     }
@@ -193,6 +202,50 @@ struct Index {
     this.privacyReady = true;
     this.ready = true;
     this.refreshUi();
+  }
+
+  private async reloadCustomScenes(): Promise<void> {
+    this.customScenes = await this.prefs.getCustomScenes();
+    this.refreshPickerGroups();
+    if (this.ready) {
+      this.refreshUi();
+    }
+  }
+
+  private refreshPickerGroups(): void {
+    if (this.customScenes.length === 0) {
+      this.groups = this.catalog.groups.slice();
+      return;
+    }
+    const customGroup: SceneGroup = {
+      id: CustomScene.GROUP_ID,
+      labelKey: 'sceneGroupCustom'
+    };
+    this.groups = [customGroup].concat(this.catalog.groups);
+  }
+
+  /** One-shot: turn the old single custom duration into a named scene. */
+  private async migrateLegacyCustomMinIfNeeded(): Promise<void> {
+    if (await this.prefs.isCustomScenesMigrated()) {
+      return;
+    }
+    try {
+      if (this.customScenes.length > 0) {
+        return;
+      }
+      const legacy = await this.prefs.getCustomMin(this.catalog.defaultMin);
+      if (legacy === this.catalog.defaultMin) {
+        return;
+      }
+      const scene = new CustomScene(
+        CustomScene.makeId(),
+        this.t('customSceneMigratedName'),
+        legacy
+      );
+      await this.prefs.setCustomScenes([scene]);
+    } finally {
+      await this.prefs.markCustomScenesMigrated();
+    }
   }
 
   onLocaleLink(): void {
@@ -221,8 +274,10 @@ struct Index {
     if (index === 0) {
       this.recordsEpoch = this.recordsEpoch + 1;
     } else if (index === 1) {
-      this.consumePendingCustomMin();
-      this.refreshTodayStats();
+      this.reloadCustomScenes().then(() => {
+        this.consumePendingScene();
+        this.refreshTodayStats();
+      });
     }
   }
 
@@ -235,17 +290,67 @@ struct Index {
     }
   }
 
-  /** Apply custom minutes chosen on Settings when returning to home. */
-  private consumePendingCustomMin(): void {
+  /** Apply custom scene chosen in Me when returning to home. */
+  private consumePendingScene(): void {
     if (!this.ready || this.state.running) {
       return;
     }
-    const pending = AppStorage.get<number>('pendingCustomMin');
-    if (pending === undefined || pending === null || pending < 1) {
+    const pending = AppStorage.get<string>('pendingSceneId');
+    if (pending === undefined || pending === null || pending.length === 0) {
       return;
     }
-    AppStorage.delete('pendingCustomMin');
-    this.setPreset(pending, '');
+    AppStorage.delete('pendingSceneId');
+    this.selectScene(pending);
+  }
+
+  private scenesInGroup(groupId: string): SceneItem[] {
+    if (groupId === CustomScene.GROUP_ID) {
+      const out: SceneItem[] = [];
+      for (let i = 0; i < this.customScenes.length; i++) {
+        const custom = this.customScenes[i];
+        const item: SceneItem = {
+          id: custom.id,
+          min: custom.min,
+          group: CustomScene.GROUP_ID,
+          labelKey: custom.id,
+          titleKey: custom.id
+        };
+        out.push(item);
+      }
+      return out;
+    }
+    return this.scenes.filter((s) => s.group === groupId);
+  }
+
+  private sceneTitle(id: string): string {
+    if (!id) {
+      return '';
+    }
+    const custom = this.customScenes.find((s) => s.id === id);
+    if (custom) {
+      return custom.name;
+    }
+    const scene = this.scenes.find((s) => s.id === id);
+    return scene ? this.t(scene.titleKey) : '';
+  }
+
+  private sceneLabelText(id: string): string {
+    if (!id) {
+      return '';
+    }
+    const custom = this.customScenes.find((s) => s.id === id);
+    if (custom) {
+      return `${custom.name} · ${custom.min} ${this.t('customUnit')}`;
+    }
+    const scene = this.scenes.find((s) => s.id === id);
+    return scene ? this.t(scene.labelKey) : '';
+  }
+
+  private pickerSceneLabel(scene: SceneItem): string {
+    if (scene.group === CustomScene.GROUP_ID) {
+      return this.sceneLabelText(scene.id);
+    }
+    return this.t(scene.labelKey);
   }
 
   async acceptPrivacy(): Promise<void> {
@@ -287,9 +392,9 @@ struct Index {
   /** Scene title for finish notify; default system scene is toilet (如厕). */
   private notifySceneName(): string {
     if (this.state.activeSceneId) {
-      const scene = this.scenes.find((s) => s.id === this.state.activeSceneId);
-      if (scene) {
-        return this.t(scene.titleKey);
+      const title = this.sceneTitle(this.state.activeSceneId);
+      if (title) {
+        return title;
       }
     }
     return this.t('sceneToiletTitle');
@@ -322,10 +427,11 @@ struct Index {
     }
 
     if (this.state.activeSceneId) {
-      const scene = this.scenes.find((s) => s.id === this.state.activeSceneId);
-      this.brandTitle = scene ? this.t(scene.titleKey) : this.t('brandTitle');
-      this.sceneLabel = scene ? this.t(scene.labelKey) : this.t('scenePlaceholder');
-      this.scenePlaceholder = false;
+      const title = this.sceneTitle(this.state.activeSceneId);
+      const label = this.sceneLabelText(this.state.activeSceneId);
+      this.brandTitle = title.length > 0 ? title : this.t('brandTitle');
+      this.sceneLabel = label.length > 0 ? label : this.t('scenePlaceholder');
+      this.scenePlaceholder = label.length === 0;
     } else {
       this.brandTitle = this.t('brandTitle');
       this.sceneLabel = this.t('scenePlaceholder');
@@ -380,10 +486,18 @@ struct Index {
   }
 
   selectScene(id: string): void {
+    const custom = this.customScenes.find((s) => s.id === id);
+    if (custom) {
+      this.prefs.setCustomMin(custom.min);
+      this.setPreset(custom.min, custom.id);
+      this.showScenes = false;
+      return;
+    }
     const scene = this.scenes.find((s) => s.id === id);
     if (!scene) {
       return;
     }
+    this.prefs.setCustomMin(scene.min);
     this.setPreset(scene.min, scene.id);
     this.showScenes = false;
   }
@@ -837,6 +951,9 @@ struct Index {
           .opacity(this.setupEnabled ? 1 : 0.4)
           .onClick(() => {
             if (this.setupEnabled) {
+              if (!this.showScenes) {
+                this.reloadCustomScenes();
+              }
               this.showScenes = !this.showScenes;
             }
           })
@@ -864,8 +981,8 @@ struct Index {
                     .border({ width: 1, color: '#2F9A6824' })
                     .borderRadius(8)
 
-                    ForEach(this.scenes.filter((s) => s.group === group.id), (scene: SceneItem) => {
-                      Text(this.t(scene.labelKey))
+                    ForEach(this.scenesInGroup(group.id), (scene: SceneItem) => {
+                      Text(this.pickerSceneLabel(scene))
                         .width('100%')
                         .fontSize(14)
                         .fontWeight(FontWeight.Medium)

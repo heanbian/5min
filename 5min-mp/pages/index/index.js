@@ -9,6 +9,7 @@ const {
   ALERT_DURATION_MS,
   sceneById,
   buildScenePicker,
+  resolveSceneTitle,
 } = require('../../utils/catalog');
 const {
   getTodayStats,
@@ -114,15 +115,22 @@ Page({
     };
     const nav = readNavMetrics();
     const ambient = initAmbient();
+    this.migrateLegacyCustomMinIfNeeded();
     const custom = prefs.getCustomMin(DEFAULT_MIN);
     const toilet = sceneById('toilet');
-    // 默认场景：如厕 · 5 分钟；自定义时长与之不同时仅应用时长
+    const customScenes = prefs.getCustomScenes();
+    // 默认场景：如厕 · 5 分钟；否则匹配自定义场景，再退回纯时长
     if (toilet && custom === toilet.min) {
       this.setPreset(toilet.min, toilet.id);
     } else {
-      this.totalMs = custom * 60 * 1000;
-      this.remainMs = this.totalMs;
-      this.activeSceneId = null;
+      const match = customScenes.find((s) => s.min === custom);
+      if (match) {
+        this.setPreset(match.min, match.id);
+      } else {
+        this.totalMs = custom * 60 * 1000;
+        this.remainMs = this.totalMs;
+        this.activeSceneId = null;
+      }
     }
     this.setData({
       ...nav,
@@ -153,7 +161,8 @@ Page({
       this.refreshUi();
     }
     this.setData({ ambient: getAmbientMode() });
-    this.consumePendingCustomMin();
+    this.consumePendingScene();
+    this.syncActiveCustomScene();
     this.refreshStats();
     if (this.running && this.endAt) {
       this.tick();
@@ -167,15 +176,75 @@ Page({
     this.setKeepScreenOn(false);
   },
 
-  consumePendingCustomMin() {
+  migrateLegacyCustomMinIfNeeded() {
+    if (prefs.isCustomScenesMigrated()) return;
+    try {
+      const scenes = prefs.getCustomScenes();
+      if (scenes.length === 0) {
+        const legacy = prefs.getCustomMin(DEFAULT_MIN);
+        if (legacy !== DEFAULT_MIN) {
+          prefs.setCustomScenes([
+            {
+              id: prefs.makeId(),
+              name: t('customSceneMigratedName'),
+              min: legacy,
+            },
+          ]);
+          return;
+        }
+      }
+    } finally {
+      prefs.markCustomScenesMigrated();
+    }
+  },
+
+  consumePendingScene() {
     const app = getApp();
     const pending =
-      app && app.globalData ? app.globalData.pendingCustomMin : null;
-    if (pending == null) return;
+      app && app.globalData ? app.globalData.pendingSceneId : null;
+    if (!pending) return;
     if (this.running) return;
-    app.globalData.pendingCustomMin = null;
-    this.setPreset(pending, null);
-    this.rebuildScenePicker(false);
+    app.globalData.pendingSceneId = null;
+    this.selectScene(pending);
+  },
+
+  syncActiveCustomScene() {
+    if (
+      !this.running &&
+      this.activeSceneId &&
+      String(this.activeSceneId).indexOf('custom_') === 0
+    ) {
+      const found = prefs
+        .getCustomScenes()
+        .find((s) => s.id === this.activeSceneId);
+      if (!found) {
+        this.activeSceneId = null;
+        this.rebuildScenePicker(false);
+        this.refreshUi();
+        return;
+      }
+      if (this.totalMs !== found.min * 60 * 1000) {
+        this.setPreset(found.min, found.id);
+      }
+    }
+    this.rebuildScenePicker(!!this.activeSceneId);
+    this.refreshUi();
+  },
+
+  selectScene(id) {
+    if (this.running) return;
+    const custom = prefs.getCustomScenes().find((s) => s.id === id);
+    if (custom) {
+      prefs.setCustomMin(custom.min);
+      this.setPreset(custom.min, custom.id);
+      this.rebuildScenePicker(true);
+      return;
+    }
+    const scene = sceneById(id);
+    if (!scene) return;
+    prefs.setCustomMin(scene.min);
+    this.setPreset(scene.min, scene.id);
+    this.rebuildScenePicker(true);
   },
 
   rebuildScenePicker(keepSelection) {
@@ -332,8 +401,8 @@ Page({
 
     let brandTitle = t('brandTitle');
     if (this.activeSceneId) {
-      const scene = sceneById(this.activeSceneId);
-      if (scene) brandTitle = t(scene.titleKey);
+      const title = resolveSceneTitle(this.activeSceneId);
+      if (title) brandTitle = title;
     }
 
     this.setData({
@@ -427,8 +496,8 @@ Page({
 
   notifySceneName() {
     if (this.activeSceneId) {
-      const scene = sceneById(this.activeSceneId);
-      if (scene) return t(scene.titleKey);
+      const title = resolveSceneTitle(this.activeSceneId);
+      if (title) return title;
     }
     return t('sceneToiletTitle');
   },
@@ -476,21 +545,7 @@ Page({
     const list = (group && this.scenePicker.scenesByGroup[group.id]) || [];
     const scene = list[si];
     if (!scene) return;
-    this.setPreset(scene.min, scene.id);
-    this.setData({
-      sceneIndex: [gi, si],
-      sceneTriggerLabel: scene.label,
-      scenePlaceholder: false,
-      sceneRange: [
-        this.data.sceneRange[0],
-        list.map((s) => ({
-          id: s.id,
-          label: s.label,
-          min: s.min,
-          title: s.title,
-        })),
-      ],
-    });
+    this.selectScene(scene.id);
   },
 
   onToggle() {

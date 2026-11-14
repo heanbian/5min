@@ -171,9 +171,7 @@ private fun StatCard(
 
 @Composable
 private fun HistoryRow(vm: TimerViewModel, item: HistoryItem) {
-    val catalog = FiveMinApp.instance.catalog
-    val scene = item.sceneId.takeIf { it.isNotBlank() }
-        ?.let { id -> catalog.scenes.find { it.id == id }?.let { vm.t(it.titleKey) } }
+    val scene = vm.sceneTitle(item.sceneId.takeIf { it.isNotBlank() })
         ?: vm.t("historySceneDefault")
     val time = formatDateTime(item.at)
     Column(

@@ -2,7 +2,7 @@ import { common } from '@kit.AbilityKit';
 import { promptAction } from '@kit.ArkUI';
 import pasteboard from '@ohos.pasteboard';
 import { SharedCatalog } from '../common/SharedCatalog';
-import { PrefsStore } from '../common/PrefsStore';
+import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
@@ -21,10 +21,15 @@ export struct MineTab {
   @StorageLink('appAmbient') ambient: string = 'off';
   @State ready: boolean = false;
   @State localeCodes: string[] = [];
-  @State customMinText: string = '5';
   @State customMin: number = 5;
-  /** '' | lang | sound | duration | feedback */
+  @State customScenes: CustomScene[] = [];
+  @State scenesSummary: string = '';
+  /** '' | lang | sound | customScenes | sceneEditor | feedback */
   @State dialog: string = '';
+  /** Empty string = add; otherwise edit id */
+  @State editorId: string = '';
+  @State editorName: string = '';
+  @State editorMinutes: string = '5';
   /** Force full Mine UI refresh after locale/ambient change. */
   @State uiTick: number = 0;
   @State localeName: string = '';
@@ -64,11 +69,36 @@ export struct MineTab {
     const amb = await this.prefs.getAmbient();
     this.ambient = amb;
     AppStorage.setOrCreate('appAmbient', amb);
-    const custom = await this.prefs.getCustomMin(this.catalog.defaultMin);
-    this.customMin = custom;
-    this.customMinText = `${custom}`;
+    this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
+    await this.migrateLegacyCustomMinIfNeeded();
+    await this.reloadCustomScenes();
     this.refreshLabels();
     this.ready = true;
+  }
+
+  /** Same one-shot migration as Index; safe if already migrated. */
+  private async migrateLegacyCustomMinIfNeeded(): Promise<void> {
+    if (await this.prefs.isCustomScenesMigrated()) {
+      return;
+    }
+    try {
+      const existing = await this.prefs.getCustomScenes();
+      if (existing.length > 0) {
+        return;
+      }
+      const legacy = await this.prefs.getCustomMin(this.catalog.defaultMin);
+      if (legacy === this.catalog.defaultMin) {
+        return;
+      }
+      const scene = new CustomScene(
+        CustomScene.makeId(),
+        this.t('customSceneMigratedName'),
+        legacy
+      );
+      await this.prefs.setCustomScenes([scene]);
+    } finally {
+      await this.prefs.markCustomScenesMigrated();
+    }
   }
 
   t(key: string, vars?: Record<string, string>): string {
@@ -96,18 +126,63 @@ export struct MineTab {
     // Read against the current locale code explicitly so values never stick to the old pack.
     this.localeName = this.catalog.t(this.locale, 'nativeName');
     this.ambientName = this.catalog.t(this.locale, this.ambientKeyOf(this.ambient));
+    this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
+  }
+
+  private refreshScenesSummary(): void {
+    const n = this.customScenes.length;
+    if (n <= 0) {
+      this.scenesSummary = this.t('customScenesEmpty');
+    } else {
+      const vars: Record<string, string> = {};
+      vars['n'] = `${n}`;
+      this.scenesSummary = this.t('customScenesCount', vars);
+    }
+  }
+
+  private async reloadCustomScenes(): Promise<void> {
+    this.customScenes = await this.prefs.getCustomScenes();
+    this.refreshScenesSummary();
   }
 
   closeDialog(): void {
     this.dialog = '';
+    this.editorId = '';
+    this.editorName = '';
   }
 
   openDialog(kind: string): void {
-    if (kind === 'duration') {
-      this.customMinText = `${this.customMin}`;
+    if (kind === 'customScenes') {
+      this.reloadCustomScenes();
     }
     this.dialog = kind;
+  }
+
+  private openSceneEditor(id: string): void {
+    if (id.length === 0) {
+      if (this.customScenes.length >= CustomScene.MAX_COUNT) {
+        return;
+      }
+      this.editorId = '';
+      this.editorName = '';
+      this.editorMinutes = `${this.customMin}`;
+    } else {
+      const found = this.customScenes.find((s) => s.id === id);
+      if (!found) {
+        return;
+      }
+      this.editorId = found.id;
+      this.editorName = found.name;
+      this.editorMinutes = `${found.min}`;
+    }
+    this.dialog = 'sceneEditor';
+  }
+
+  private backToScenesList(): void {
+    this.editorId = '';
+    this.editorName = '';
+    this.dialog = 'customScenes';
   }
 
   async setLocale(code: string): Promise<void> {
@@ -119,6 +194,7 @@ export struct MineTab {
     // Assign display strings after locale is committed.
     this.localeName = this.catalog.t(next, 'nativeName');
     this.ambientName = this.catalog.t(next, this.ambientKeyOf(this.ambient));
+    this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
   }
 
@@ -136,32 +212,69 @@ export struct MineTab {
 
   private clampMin(raw: number): number {
     if (isNaN(raw)) {
-      return this.customMin;
+      return CustomScene.clampMinutes(this.customMin);
     }
-    return Math.max(1, Math.min(120, Math.floor(raw)));
+    return CustomScene.clampMinutes(raw);
   }
 
-  nudge(delta: number): void {
-    const next = this.clampMin(this.clampMin(Number(this.customMinText)) + delta);
-    this.customMinText = `${next}`;
+  nudgeEditor(delta: number): void {
+    const next = this.clampMin(this.clampMin(Number(this.editorMinutes)) + delta);
+    this.editorMinutes = `${next}`;
   }
 
-  async applyCustomMinutes(): Promise<void> {
-    const min = this.clampMin(Number(this.customMinText));
-    this.customMin = min;
-    this.customMinText = `${min}`;
-    await this.prefs.setCustomMin(min);
-    AppStorage.setOrCreate<number>('pendingCustomMin', min);
+  private async persistScenes(next: CustomScene[]): Promise<void> {
+    await this.prefs.setCustomScenes(next);
+    this.customScenes = await this.prefs.getCustomScenes();
+    this.refreshScenesSummary();
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async saveSceneEditor(): Promise<void> {
+    const name = CustomScene.normalizedName(this.editorName);
+    if (!name) {
+      return;
+    }
+    const minutes = this.clampMin(Number(this.editorMinutes));
+    const next: CustomScene[] = this.customScenes.slice();
+    if (this.editorId.length > 0) {
+      const idx = next.findIndex((s) => s.id === this.editorId);
+      if (idx < 0) {
+        return;
+      }
+      next[idx] = new CustomScene(this.editorId, name, minutes);
+    } else {
+      if (next.length >= CustomScene.MAX_COUNT) {
+        return;
+      }
+      const saved = new CustomScene(CustomScene.makeId(), name, minutes);
+      next.unshift(saved);
+      AppStorage.setOrCreate<string>('pendingSceneId', saved.id);
+    }
+    this.customMin = minutes;
+    await this.prefs.setCustomMin(minutes);
+    await this.persistScenes(next);
+    this.backToScenesList();
+  }
+
+  async deleteCustomScene(id: string): Promise<void> {
+    const next = this.customScenes.filter((s) => s.id !== id);
+    await this.persistScenes(next);
+    const pending = AppStorage.get<string>('pendingSceneId');
+    if (pending === id) {
+      AppStorage.delete('pendingSceneId');
+    }
+  }
+
+  useCustomScene(id: string): void {
+    if (!this.customScenes.find((s) => s.id === id)) {
+      return;
+    }
+    AppStorage.setOrCreate<string>('pendingSceneId', id);
     this.closeDialog();
     try {
       promptAction.showToast({ message: this.t('customApplied'), duration: 2000 });
     } catch (_) {
     }
-  }
-
-  async pickQuick(min: number): Promise<void> {
-    this.customMinText = `${min}`;
-    await this.applyCustomMinutes();
   }
 
   openFeedback(): void {
@@ -213,6 +326,10 @@ export struct MineTab {
       });
     } catch (_) {
     }
+  }
+
+  private canSaveEditor(): boolean {
+    return CustomScene.normalizedName(this.editorName).length > 0;
   }
 
   build() {
@@ -294,11 +411,11 @@ export struct MineTab {
                   Divider().color($r('app.color.line')).margin({ left: 16 })
 
                   Row() {
-                    Text(this.t('durationSettingsLabel'))
+                    Text(this.t('customScenesLabel'))
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text(`${this.customMin} ${this.t('customUnit')}`)
+                    Text(this.scenesSummary)
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
@@ -310,7 +427,7 @@ export struct MineTab {
                   .width('100%')
                   .height(52)
                   .padding({ left: 16, right: 16 })
-                  .onClick(() => this.openDialog('duration'))
+                  .onClick(() => this.openDialog('customScenes'))
                 }
                 .width('100%')
                 .backgroundColor($r('app.color.surface'))
@@ -447,7 +564,13 @@ export struct MineTab {
         .width('100%')
         .layoutWeight(1)
         .backgroundColor('#00000066')
-        .onClick(() => this.closeDialog())
+        .onClick(() => {
+          if (this.dialog === 'sceneEditor') {
+            this.backToScenesList();
+          } else {
+            this.closeDialog();
+          }
+        })
 
       Column({ space: 0 }) {
         Row() {
@@ -456,13 +579,31 @@ export struct MineTab {
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .layoutWeight(1)
+          if (this.dialog === 'customScenes') {
+            Text('+')
+              .fontSize(22)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(this.customScenes.length >= CustomScene.MAX_COUNT ?
+                $r('app.color.muted') : $r('app.color.brand_strong'))
+              .width(36)
+              .height(36)
+              .textAlign(TextAlign.Center)
+              .opacity(this.customScenes.length >= CustomScene.MAX_COUNT ? 0.4 : 1)
+              .onClick(() => this.openSceneEditor(''))
+          }
           Text('✕')
             .fontSize(18)
             .fontColor($r('app.color.muted'))
             .width(36)
             .height(36)
             .textAlign(TextAlign.Center)
-            .onClick(() => this.closeDialog())
+            .onClick(() => {
+              if (this.dialog === 'sceneEditor') {
+                this.backToScenesList();
+              } else {
+                this.closeDialog();
+              }
+            })
         }
         .width('100%')
         .padding({ left: 20, right: 12, top: 16, bottom: 8 })
@@ -537,100 +678,10 @@ export struct MineTab {
           .padding({ left: 12, right: 12, bottom: 28 })
           .alignItems(HorizontalAlign.Center)
           .direction(Direction.Ltr)
-        } else if (this.dialog === 'duration') {
-          Column({ space: 18 }) {
-            // value card
-            Column({ space: 10 }) {
-              Row() {
-                Text('−')
-                  .width(48)
-                  .height(48)
-                  .fontSize(26)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.brand_strong'))
-                  .textAlign(TextAlign.Center)
-                  .backgroundColor(Color.White)
-                  .borderRadius(24)
-                  .onClick(() => this.nudge(-1))
-
-                Column({ space: 2 }) {
-                  TextInput({ text: this.customMinText })
-                    .width(96)
-                    .height(48)
-                    .fontSize(32)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.ink'))
-                    .textAlign(TextAlign.Center)
-                    .type(InputType.Number)
-                    .backgroundColor(Color.Transparent)
-                    .onChange((v: string) => {
-                      this.customMinText = v;
-                    })
-                  Text(this.t('customUnit'))
-                    .fontSize(13)
-                    .fontColor($r('app.color.muted'))
-                }
-                .alignItems(HorizontalAlign.Center)
-                .layoutWeight(1)
-
-                Text('+')
-                  .width(48)
-                  .height(48)
-                  .fontSize(26)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.brand_strong'))
-                  .textAlign(TextAlign.Center)
-                  .backgroundColor(Color.White)
-                  .borderRadius(24)
-                  .onClick(() => this.nudge(1))
-              }
-              .width('100%')
-              .height(56)
-              .alignItems(VerticalAlign.Center)
-              .justifyContent(FlexAlign.SpaceBetween)
-            }
-            .width('100%')
-            .padding({ left: 20, right: 20, top: 18, bottom: 16 })
-            .backgroundColor($r('app.color.brand_soft'))
-            .borderRadius(16)
-
-            Column({ space: 10 }) {
-              Text(this.t('customMinutesHint'))
-                .fontSize(12)
-                .fontColor($r('app.color.muted'))
-                .width('100%')
-
-              Row({ space: 8 }) {
-                ForEach(QUICK_MINS, (min: number) => {
-                  Text(`${min}`)
-                    .layoutWeight(1)
-                    .height(40)
-                    .fontSize(15)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor(Number(this.customMinText) === min ? Color.White : $r('app.color.brand_strong'))
-                    .textAlign(TextAlign.Center)
-                    .backgroundColor(Number(this.customMinText) === min ? $r('app.color.brand') : $r('app.color.brand_soft'))
-                    .borderRadius(12)
-                    .onClick(() => this.pickQuick(min))
-                }, (min: number) => `d-${min}`)
-              }
-              .width('100%')
-            }
-            .width('100%')
-
-            Text(this.t('customApply'))
-              .width('100%')
-              .height(50)
-              .fontSize(16)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(Color.White)
-              .textAlign(TextAlign.Center)
-              .backgroundColor($r('app.color.brand'))
-              .borderRadius(14)
-              .onClick(() => this.applyCustomMinutes())
-          }
-          .width('100%')
-          .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+        } else if (this.dialog === 'customScenes') {
+          this.CustomScenesPane()
+        } else if (this.dialog === 'sceneEditor') {
+          this.SceneEditorPane()
         } else if (this.dialog === 'feedback') {
           Column({ space: 16 }) {
             Text(this.t('feedbackBody'))
@@ -666,6 +717,203 @@ export struct MineTab {
     .height('100%')
   }
 
+  @Builder
+  CustomScenesPane() {
+    if (this.customScenes.length === 0) {
+      Column({ space: 12 }) {
+        Text(this.t('customScenesEmptyHint'))
+          .fontSize(14)
+          .fontColor($r('app.color.muted'))
+          .textAlign(TextAlign.Center)
+          .width('100%')
+          .padding({ left: 8, right: 8 })
+        Text(this.t('customSceneAdd'))
+          .width('100%')
+          .height(50)
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(Color.White)
+          .textAlign(TextAlign.Center)
+          .backgroundColor($r('app.color.brand'))
+          .borderRadius(14)
+          .onClick(() => this.openSceneEditor(''))
+      }
+      .width('100%')
+      .padding({ left: 20, right: 20, bottom: 28, top: 16 })
+    } else {
+      Scroll() {
+        Column({ space: 0 }) {
+          ForEach(this.customScenes, (scene: CustomScene) => {
+            Row({ space: 10 }) {
+              Column({ space: 4 }) {
+                Text(scene.name)
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.ink'))
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width('100%')
+                Text(`${scene.min} ${this.t('customUnit')}`)
+                  .fontSize(13)
+                  .fontColor($r('app.color.muted'))
+                  .width('100%')
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              .onClick(() => this.openSceneEditor(scene.id))
+
+              Text(this.t('customSceneUse'))
+                .fontSize(13)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.brand_strong'))
+                .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+                .backgroundColor($r('app.color.brand_soft'))
+                .borderRadius(8)
+                .onClick(() => this.useCustomScene(scene.id))
+
+              Text('✕')
+                .fontSize(14)
+                .fontColor($r('app.color.muted'))
+                .width(28)
+                .height(28)
+                .textAlign(TextAlign.Center)
+                .onClick(() => this.deleteCustomScene(scene.id))
+            }
+            .width('100%')
+            .padding({ left: 16, right: 12, top: 12, bottom: 12 })
+
+            Divider().color($r('app.color.line')).margin({ left: 16 })
+          }, (scene: CustomScene) => `scene-${scene.id}-${this.uiTick}`)
+        }
+        .width('100%')
+        .padding({ bottom: 20 })
+      }
+      .width('100%')
+      .constraintSize({ maxHeight: 420 })
+      .scrollBar(BarState.Off)
+    }
+  }
+
+  @Builder
+  SceneEditorPane() {
+    Column({ space: 16 }) {
+      Column({ space: 8 }) {
+        Text(this.t('customSceneNameLabel'))
+          .fontSize(13)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.muted'))
+          .width('100%')
+        TextInput({
+          text: this.editorName,
+          placeholder: this.t('customSceneNamePlaceholder')
+        })
+          .width('100%')
+          .height(48)
+          .fontSize(15)
+          .fontColor($r('app.color.ink'))
+          .padding({ left: 14, right: 14 })
+          .backgroundColor($r('app.color.ghost_bg'))
+          .border({ width: 1, color: $r('app.color.line') })
+          .borderRadius(12)
+          .maxLength(CustomScene.MAX_NAME_LENGTH)
+          .onChange((v: string) => {
+            this.editorName = v;
+          })
+      }
+      .width('100%')
+
+      Text(this.t('customMinutesLabel'))
+        .fontSize(15)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.ink'))
+        .width('100%')
+
+      Row() {
+        Text('−')
+          .width(48)
+          .height(48)
+          .fontSize(26)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.brand_strong'))
+          .textAlign(TextAlign.Center)
+          .backgroundColor($r('app.color.brand_soft'))
+          .borderRadius(24)
+          .onClick(() => this.nudgeEditor(-1))
+
+        Column({ space: 2 }) {
+          TextInput({ text: this.editorMinutes })
+            .width(96)
+            .height(48)
+            .fontSize(28)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .textAlign(TextAlign.Center)
+            .type(InputType.Number)
+            .backgroundColor(Color.Transparent)
+            .onChange((v: string) => {
+              this.editorMinutes = v;
+            })
+          Text(this.t('customUnit'))
+            .fontSize(13)
+            .fontColor($r('app.color.muted'))
+        }
+        .alignItems(HorizontalAlign.Center)
+        .layoutWeight(1)
+
+        Text('+')
+          .width(48)
+          .height(48)
+          .fontSize(26)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.brand_strong'))
+          .textAlign(TextAlign.Center)
+          .backgroundColor($r('app.color.brand_soft'))
+          .borderRadius(24)
+          .onClick(() => this.nudgeEditor(1))
+      }
+      .width('100%')
+      .height(56)
+      .alignItems(VerticalAlign.Center)
+      .justifyContent(FlexAlign.SpaceBetween)
+
+      Row({ space: 8 }) {
+        ForEach(QUICK_MINS, (min: number) => {
+          Text(`${min}`)
+            .layoutWeight(1)
+            .height(40)
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.brand_strong'))
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.brand_soft'))
+            .borderRadius(10)
+            .onClick(() => {
+              this.editorMinutes = `${min}`;
+            })
+        }, (min: number) => `q-${min}`)
+      }
+      .width('100%')
+
+      Text(this.t('confirmLabel'))
+        .width('100%')
+        .height(50)
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(Color.White)
+        .textAlign(TextAlign.Center)
+        .backgroundColor($r('app.color.brand'))
+        .borderRadius(14)
+        .opacity(this.canSaveEditor() ? 1 : 0.55)
+        .onClick(() => {
+          if (this.canSaveEditor()) {
+            this.saveSceneEditor();
+          }
+        })
+    }
+    .width('100%')
+    .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+  }
+
   private dialogTitle(): string {
     if (this.dialog === 'lang') {
       return this.t('langLabel');
@@ -673,8 +921,11 @@ export struct MineTab {
     if (this.dialog === 'sound') {
       return this.t('ambientLabel');
     }
-    if (this.dialog === 'duration') {
-      return this.t('durationSettingsLabel');
+    if (this.dialog === 'customScenes') {
+      return this.t('customScenesLabel');
+    }
+    if (this.dialog === 'sceneEditor') {
+      return this.editorId.length > 0 ? this.t('customSceneEdit') : this.t('customSceneAdd');
     }
     if (this.dialog === 'feedback') {
       return this.t('feedbackLabel');

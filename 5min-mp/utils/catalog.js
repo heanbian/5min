@@ -16,6 +16,7 @@
 
 const scenesJson = require('../shared/scenes.js');
 const { t } = require('./i18n');
+const prefs = require('./prefs');
 
 const PRESET_MINS = Object.freeze(scenesJson.presetsMin || [3, 5, 10]);
 const DEFAULT_MIN = scenesJson.defaultMin || 5;
@@ -26,16 +27,25 @@ const VIBRATE_PATTERN_MS = Object.freeze(
 
 const GROUPS = Object.freeze(scenesJson.groups || []);
 const SCENES = Object.freeze(scenesJson.scenes || []);
+const CUSTOM_GROUP_ID = 'custom';
 
 function sceneById(id) {
   return SCENES.find((s) => s.id === id) || null;
 }
 
 function buildScenePicker() {
+  const customScenes = prefs.getCustomScenes();
+  const unit = t('customUnit');
   const range = GROUPS.map((g) => ({
     id: g.id,
     label: t(g.labelKey),
   }));
+  if (customScenes.length > 0) {
+    range.unshift({
+      id: CUSTOM_GROUP_ID,
+      label: t('sceneGroupCustom'),
+    });
+  }
   const scenesByGroup = {};
   GROUPS.forEach((g) => {
     scenesByGroup[g.id] = SCENES.filter((s) => s.group === g.id).map((s) => ({
@@ -45,7 +55,24 @@ function buildScenePicker() {
       title: t(s.titleKey),
     }));
   });
+  if (customScenes.length > 0) {
+    scenesByGroup[CUSTOM_GROUP_ID] = customScenes.map((s) => ({
+      id: s.id,
+      min: s.min,
+      label: `${s.name} · ${s.min} ${unit}`,
+      title: s.name,
+    }));
+  }
   return { range, scenesByGroup };
+}
+
+function resolveSceneTitle(id) {
+  if (!id) return null;
+  const custom = prefs.getCustomScenes().find((s) => s.id === id);
+  if (custom) return custom.name;
+  const scene = sceneById(id);
+  if (scene) return t(scene.titleKey);
+  return null;
 }
 
 module.exports = {
@@ -55,6 +82,8 @@ module.exports = {
   VIBRATE_PATTERN_MS,
   GROUPS,
   SCENES,
+  CUSTOM_GROUP_ID,
   sceneById,
   buildScenePicker,
+  resolveSceneTitle,
 };

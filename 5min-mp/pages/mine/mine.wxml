@@ -24,9 +24,9 @@
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenDuration">
-        <text class="row-title">{{durationSettingsLabel}}</text>
-        <text class="row-value">{{customMin}} {{customUnit}}</text>
+      <view class="row" bindtap="onOpenCustomScenes">
+        <text class="row-title">{{customScenesLabel}}</text>
+        <text class="row-value">{{customScenesValue}}</text>
         <text class="chev">›</text>
       </view>
     </view>
@@ -66,6 +66,12 @@
     <view class="sheet" catchtap="noop">
       <view class="sheet-head">
         <text class="sheet-title">{{dialogTitle}}</text>
+        <block wx:if="{{dialog === 'scenes'}}">
+          <text
+            class="sheet-add {{canAddScene ? '' : 'sheet-add-off'}}"
+            bindtap="onAddScene"
+          >＋</text>
+        </block>
         <text class="sheet-close" bindtap="onCloseDialog">✕</text>
       </view>
 
@@ -89,16 +95,61 @@
         >{{item.label}}</view>
       </block>
 
-      <block wx:if="{{dialog === 'duration'}}">
-        <view class="duration-box">
+      <block wx:if="{{dialog === 'scenes'}}">
+        <view class="scenes-box" wx:if="{{sceneRows.length === 0}}">
+          <text class="scenes-empty-hint">{{customScenesEmptyHint}}</text>
+          <view class="btn-ok scenes-add-btn" bindtap="onAddScene">{{customSceneAdd}}</view>
+        </view>
+        <view class="scenes-list" wx:else>
+          <view
+            wx:for="{{sceneRows}}"
+            wx:key="id"
+            class="scene-row"
+          >
+            <view
+              class="scene-main"
+              data-id="{{item.id}}"
+              bindtap="onEditScene"
+            >
+              <text class="scene-name">{{item.name}}</text>
+              <text class="scene-min">{{item.minLabel}}</text>
+            </view>
+            <view
+              class="scene-use"
+              data-id="{{item.id}}"
+              catchtap="onUseScene"
+            >{{customSceneUse}}</view>
+            <view
+              class="scene-del"
+              data-id="{{item.id}}"
+              catchtap="onDeleteScene"
+            >✕</view>
+          </view>
+        </view>
+      </block>
+
+      <block wx:if="{{dialog === 'sceneEditor'}}">
+        <view class="editor-box">
+          <text class="editor-label">{{customSceneNameLabel}}</text>
           <input
-            class="duration-input"
-            type="number"
-            maxlength="3"
-            value="{{customText}}"
-            placeholder="{{customMinutesHint}}"
-            bindinput="onCustomInput"
+            class="editor-name-input"
+            maxlength="{{24}}"
+            value="{{editorName}}"
+            placeholder="{{customSceneNamePlaceholder}}"
+            bindinput="onEditorNameInput"
           />
+          <text class="editor-label editor-label-gap">{{customMinutesLabel}}</text>
+          <view class="editor-min-row">
+            <view class="nudge-btn" data-delta="-1" bindtap="onNudgeMinutes">−</view>
+            <input
+              class="editor-min-input"
+              type="number"
+              maxlength="3"
+              value="{{editorMinutes}}"
+              bindinput="onEditorMinutesInput"
+            />
+            <view class="nudge-btn" data-delta="1" bindtap="onNudgeMinutes">＋</view>
+          </view>
           <view class="quick-row">
             <view
               wx:for="{{quickMins}}"
@@ -109,8 +160,11 @@
             >{{item}}</view>
           </view>
           <view class="duration-actions">
-            <view class="btn-cancel" bindtap="onCloseDialog">{{cancelLabel}}</view>
-            <view class="btn-ok" bindtap="onApplyDuration">{{confirmLabel}}</view>
+            <view class="btn-cancel" bindtap="onCloseSceneEditor">{{cancelLabel}}</view>
+            <view
+              class="btn-ok {{editorConfirmDisabled ? 'btn-ok-off' : ''}}"
+              bindtap="onConfirmSceneEditor"
+            >{{confirmLabel}}</view>
           </view>
         </view>
       </block>

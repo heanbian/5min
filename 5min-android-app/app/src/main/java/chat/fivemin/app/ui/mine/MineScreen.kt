@@ -15,13 +15,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,16 +40,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chat.fivemin.app.FiveMinApp
+import chat.fivemin.app.data.CustomScene
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 
-private enum class MineDialog { None, Lang, Sound, Duration, Feedback, Beian }
+private enum class MineDialog { None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian }
 
 @Composable
 fun MineScreen(vm: TimerViewModel) {
@@ -51,7 +59,9 @@ fun MineScreen(vm: TimerViewModel) {
     val context = LocalContext.current
     val catalog = FiveMinApp.instance.catalog
     var dialog by remember { mutableStateOf(MineDialog.None) }
-    var customText by remember { mutableStateOf(state.customMin.toString()) }
+    var editingSceneId by remember { mutableStateOf<String?>(null) }
+    var editorName by remember { mutableStateOf("") }
+    var editorMinutes by remember { mutableStateOf(state.customMin.toString()) }
     val soundIds = listOf("off", "rain", "waves", "clock")
     val quickMins = listOf(3, 5, 10, 15, 25)
 
@@ -67,6 +77,36 @@ fun MineScreen(vm: TimerViewModel) {
         "waves" -> vm.t("ambientWaves")
         "clock" -> vm.t("ambientClock")
         else -> vm.t("ambientOff")
+    }
+
+    fun customScenesValue(): String {
+        val n = state.customScenes.size
+        if (n <= 0) return vm.t("customScenesEmpty")
+        return vm.t("customScenesCount", mapOf("n" to "$n"))
+    }
+
+    fun openSceneEditor(scene: CustomScene?) {
+        if (scene == null) {
+            editingSceneId = null
+            editorName = ""
+            editorMinutes = state.customMin.toString()
+        } else {
+            editingSceneId = scene.id
+            editorName = scene.name
+            editorMinutes = scene.min.toString()
+        }
+        dialog = MineDialog.SceneEditor
+    }
+
+    fun nudgeEditor(delta: Int) {
+        val cur = editorMinutes.toIntOrNull() ?: state.customMin
+        editorMinutes = CustomScene.clampMinutes(cur + delta).toString()
+    }
+
+    fun saveSceneEditor() {
+        val minutes = CustomScene.clampMinutes(editorMinutes.toIntOrNull() ?: state.customMin)
+        if (vm.upsertCustomScene(editingSceneId, editorName, minutes) == null) return
+        dialog = MineDialog.CustomScenes
     }
 
     Column(
@@ -102,9 +142,8 @@ fun MineScreen(vm: TimerViewModel) {
                     dialog = MineDialog.Sound
                 }
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
-                PrefRow(vm.t("durationSettingsLabel"), "${state.customMin} ${vm.t("customUnit")}") {
-                    customText = state.customMin.toString()
-                    dialog = MineDialog.Duration
+                PrefRow(vm.t("customScenesLabel"), customScenesValue()) {
+                    dialog = MineDialog.CustomScenes
                 }
             }
 
@@ -180,7 +219,7 @@ fun MineScreen(vm: TimerViewModel) {
                 }
             },
         )
-        MineDialog.Duration -> AlertDialog(
+        MineDialog.CustomScenes -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             dismissButton = {
                 TextButton(onClick = { dialog = MineDialog.None }) {
@@ -188,45 +227,206 @@ fun MineScreen(vm: TimerViewModel) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    vm.applyCustomMinutes(customText.toIntOrNull() ?: state.customMin)
-                    dialog = MineDialog.None
-                }) {
-                    Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
+                TextButton(
+                    onClick = { openSceneEditor(null) },
+                    enabled = state.customScenes.size < CustomScene.MAX_COUNT,
+                ) {
+                    Text(
+                        vm.t("customSceneAdd"),
+                        color = if (state.customScenes.size < CustomScene.MAX_COUNT) {
+                            FiveMinColors.brandStrong
+                        } else {
+                            FiveMinColors.muted
+                        },
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             },
-            title = { Text(vm.t("durationSettingsLabel"), fontWeight = FontWeight.SemiBold) },
+            title = { Text(vm.t("customScenesLabel"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value = customText,
-                        onValueChange = { customText = it.filter { ch -> ch.isDigit() }.take(3) },
-                        label = { Text(vm.t("customMinutesHint")) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
+                if (state.customScenes.isEmpty()) {
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        quickMins.forEach { m ->
-                            Text(
-                                text = "$m",
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            text = vm.t("customScenesEmptyHint"),
+                            color = FiveMinColors.muted,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                        Text(
+                            text = vm.t("customSceneAdd"),
+                            modifier = Modifier
+                                .background(FiveMinColors.brand, RoundedCornerShape(12.dp))
+                                .clickable { openSceneEditor(null) }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            color = FiveMinColors.surface,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                        )
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.height(360.dp)) {
+                        items(state.customScenes, key = { it.id }) { scene ->
+                            Row(
                                 modifier = Modifier
-                                    .background(FiveMinColors.brandSoft, RoundedCornerShape(10.dp))
-                                    .clickable {
-                                        customText = m.toString()
-                                        vm.applyCustomMinutes(m)
-                                        dialog = MineDialog.None
-                                    }
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                color = FiveMinColors.brandStrong,
-                                fontWeight = FontWeight.SemiBold,
-                            )
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { openSceneEditor(scene) },
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text(
+                                        text = scene.name,
+                                        color = FiveMinColors.ink,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                    Text(
+                                        text = "${scene.min} ${vm.t("customUnit")}",
+                                        color = FiveMinColors.muted,
+                                        fontSize = 13.sp,
+                                    )
+                                }
+                                Text(
+                                    text = vm.t("customSceneUse"),
+                                    modifier = Modifier
+                                        .background(FiveMinColors.brandSoft, RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            vm.queueCustomScene(scene.id)
+                                            dialog = MineDialog.None
+                                            vm.setSelectedTab(1)
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    color = FiveMinColors.brandStrong,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = FiveMinColors.muted,
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clickable { vm.deleteCustomScene(scene.id) },
+                                )
+                            }
                         }
                     }
                 }
             },
         )
+        MineDialog.SceneEditor -> {
+            val canSave = CustomScene.normalizedName(editorName).isNotEmpty()
+            AlertDialog(
+                onDismissRequest = { dialog = MineDialog.CustomScenes },
+                dismissButton = {
+                    TextButton(onClick = { dialog = MineDialog.CustomScenes }) {
+                        Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { saveSceneEditor() },
+                        enabled = canSave,
+                    ) {
+                        Text(
+                            vm.t("confirmLabel"),
+                            color = if (canSave) FiveMinColors.brandStrong else FiveMinColors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        if (editingSceneId == null) vm.t("customSceneAdd") else vm.t("customSceneEdit"),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
+                containerColor = FiveMinColors.surface,
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(
+                            value = editorName,
+                            onValueChange = {
+                                editorName = it.take(CustomScene.MAX_NAME_LENGTH)
+                            },
+                            label = { Text(vm.t("customSceneNameLabel")) },
+                            placeholder = { Text(vm.t("customSceneNamePlaceholder")) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = vm.t("customMinutesLabel"),
+                            color = FiveMinColors.ink,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = "−",
+                                modifier = Modifier
+                                    .background(FiveMinColors.ghostBg, RoundedCornerShape(10.dp))
+                                    .clickable { nudgeEditor(-1) }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                color = FiveMinColors.ink,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp,
+                            )
+                            OutlinedTextField(
+                                value = editorMinutes,
+                                onValueChange = {
+                                    editorMinutes = it.filter { ch -> ch.isDigit() }.take(3)
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                textStyle = TextStyle(
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    textAlign = TextAlign.Center,
+                                ),
+                            )
+                            Text(
+                                text = "+",
+                                modifier = Modifier
+                                    .background(FiveMinColors.ghostBg, RoundedCornerShape(10.dp))
+                                    .clickable { nudgeEditor(1) }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                color = FiveMinColors.ink,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp,
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            quickMins.forEach { m ->
+                                Text(
+                                    text = "$m",
+                                    modifier = Modifier
+                                        .background(FiveMinColors.brandSoft, RoundedCornerShape(10.dp))
+                                        .clickable { editorMinutes = m.toString() }
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    color = FiveMinColors.brandStrong,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
+                    }
+                },
+            )
+        }
         MineDialog.Feedback -> {
             val email = vm.t("feedbackEmail")
             AlertDialog(
