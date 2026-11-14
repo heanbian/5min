@@ -43,8 +43,8 @@
   },
   {
    "path": "/faq.html",
-   "title": "FAQ · 如厕计时器(5min)",
-   "label": "FAQ",
+   "title": "常见问题 · 如厕计时器(5min)",
+   "label": "常见问题",
    "blurb": "默认场景、提醒、隐私、多端使用、PWA 与联系方式",
    "description": "如厕计时器(5min) 常见问题：默认场景、提醒方式、隐私存储、多端与网页版加到主屏幕、联系方式。运营方学记宝，官网 https://5min.chat。",
    "faqs": [
