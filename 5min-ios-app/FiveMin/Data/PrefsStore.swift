@@ -1,11 +1,39 @@
 import Foundation
 
+struct CustomScene: Codable, Identifiable, Equatable {
+    let id: String
+    var name: String
+    var min: Int
+
+    static let groupId = "custom"
+    static let idPrefix = "custom_"
+    static let maxCount = 30
+    static let maxNameLength = 24
+
+    static func makeId() -> String {
+        "\(idPrefix)\(UUID().uuidString.lowercased())"
+    }
+
+    static func clampMinutes(_ value: Int) -> Int {
+        Swift.max(1, Swift.min(120, value))
+    }
+
+    static func normalizedName(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.count <= maxNameLength { return trimmed }
+        let end = trimmed.index(trimmed.startIndex, offsetBy: maxNameLength)
+        return String(trimmed[..<end])
+    }
+}
+
 /// App settings only; session history lives in HistoryStore (SQLite).
 final class PrefsStore {
     private let defaults = UserDefaults.standard
     private let localeKey = "5min.locale"
     private let ambientKey = "5min.ambient"
     private let customMinKey = "5min.custom_min"
+    private let customScenesKey = "5min.custom_scenes"
+    private let customScenesMigratedKey = "5min.custom_scenes_migrated"
     private let privacyKey = "5min.privacy_accepted"
 
     var locale: String {
@@ -30,6 +58,50 @@ final class PrefsStore {
     }
 
     func setCustomMin(_ value: Int) {
-        defaults.set(Swift.max(1, Swift.min(120, value)), forKey: customMinKey)
+        defaults.set(CustomScene.clampMinutes(value), forKey: customMinKey)
+    }
+
+    func customScenes() -> [CustomScene] {
+        guard let data = defaults.data(forKey: customScenesKey),
+              let list = try? JSONDecoder().decode([CustomScene].self, from: data) else {
+            return []
+        }
+        return list
+            .map { scene in
+                CustomScene(
+                    id: scene.id.isEmpty ? CustomScene.makeId() : scene.id,
+                    name: CustomScene.normalizedName(scene.name),
+                    min: CustomScene.clampMinutes(scene.min)
+                )
+            }
+            .filter { !$0.name.isEmpty }
+            .prefix(CustomScene.maxCount)
+            .map { $0 }
+    }
+
+    func setCustomScenes(_ scenes: [CustomScene]) {
+        let cleaned = scenes
+            .map { scene in
+                CustomScene(
+                    id: scene.id.isEmpty ? CustomScene.makeId() : scene.id,
+                    name: CustomScene.normalizedName(scene.name),
+                    min: CustomScene.clampMinutes(scene.min)
+                )
+            }
+            .filter { !$0.name.isEmpty }
+            .prefix(CustomScene.maxCount)
+            .map { $0 }
+        if let data = try? JSONEncoder().encode(Array(cleaned)) {
+            defaults.set(data, forKey: customScenesKey)
+        }
+        markCustomScenesMigrated()
+    }
+
+    var customScenesMigrated: Bool {
+        defaults.bool(forKey: customScenesMigratedKey)
+    }
+
+    func markCustomScenesMigrated() {
+        defaults.set(true, forKey: customScenesMigratedKey)
     }
 }

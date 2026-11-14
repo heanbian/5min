@@ -36,7 +36,7 @@ struct RootTabView: View {
             if newValue == 0 {
                 model.recordsEpoch += 1
             } else if newValue == 1 {
-                model.consumePendingCustomMin()
+                model.consumePendingScene()
                 model.refreshTodayStats()
             }
         }

@@ -282,11 +282,7 @@ struct TimerView: View {
     }
 
     private var sceneLabel: String {
-        if let id = model.activeSceneId,
-           let scene = model.catalog.scenes.first(where: { $0.id == id }) {
-            return model.t(scene.labelKey)
-        }
-        return model.t("scenePlaceholder")
+        model.sceneLabel(for: model.activeSceneId) ?? model.t("scenePlaceholder")
     }
 }
 
@@ -300,8 +296,8 @@ struct ScenePickerView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10, pinnedViews: []) {
-                    ForEach(model.catalog.groups) { group in
-                        let items = model.catalog.scenes.filter { $0.group == group.id }
+                    ForEach(model.pickerGroups) { group in
+                        let items = model.scenes(inGroup: group.id)
                         if !items.isEmpty {
                             groupHeader(model.t(group.labelKey))
                             ForEach(items) { scene in
@@ -310,7 +306,7 @@ struct ScenePickerView: View {
                                     model.selectScene(scene.id)
                                     dismiss()
                                 } label: {
-                                    Text(model.t(scene.labelKey))
+                                    Text(model.sceneLabel(for: scene.id) ?? scene.id)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
                                         .frame(maxWidth: .infinity, alignment: .leading)

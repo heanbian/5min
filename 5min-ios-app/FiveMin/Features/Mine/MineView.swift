@@ -4,12 +4,26 @@ import UIKit
 struct MineView: View {
     @EnvironmentObject private var model: TimerViewModel
     @State private var sheet: MineSheet?
-    @State private var customText = "5"
+    @State private var sceneEditor: SceneEditor?
+    @State private var editorName = ""
+    @State private var editorMinutes = "5"
     @State private var showBeianAlert = false
 
     private enum MineSheet: String, Identifiable {
-        case lang, sound, duration, feedback
+        case lang, sound, customScenes, feedback
         var id: String { rawValue }
+    }
+
+    private enum SceneEditor: Identifiable {
+        case add
+        case edit(CustomScene)
+
+        var id: String {
+            switch self {
+            case .add: return "add"
+            case .edit(let scene): return scene.id
+            }
+        }
     }
 
     private let soundIds = ["off", "rain", "waves", "clock"]
@@ -30,9 +44,8 @@ struct MineView: View {
                             sheet = .sound
                         }
                         Divider().padding(.leading, 16)
-                        prefRow(model.t("durationSettingsLabel"), value: "\(model.customMin) \(model.t("customUnit"))") {
-                            customText = "\(model.customMin)"
-                            sheet = .duration
+                        prefRow(model.t("customScenesLabel"), value: customScenesValue) {
+                            sheet = .customScenes
                         }
                     }
 
@@ -64,15 +77,21 @@ struct MineView: View {
             }
             .background(Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255))
         }
-        .sheet(item: $sheet) { kind in
+        .sheet(item: $sheet, onDismiss: { sceneEditor = nil }) { kind in
             sheetContent(kind)
-                .presentationDetents(kind == .duration ? [.medium, .large] : [.medium])
+                .presentationDetents(kind == .customScenes ? [.medium, .large] : [.medium])
         }
         .alert(model.t("beianTitle"), isPresented: $showBeianAlert) {
             Button(model.t("confirmLabel"), role: .cancel) {}
         } message: {
             Text(model.t("beianIcp"))
         }
+    }
+
+    private var customScenesValue: String {
+        let n = model.customScenes.count
+        if n <= 0 { return model.t("customScenesEmpty") }
+        return model.t("customScenesCount", ["n": "\(n)"])
     }
 
     private var header: some View {
@@ -195,60 +214,8 @@ struct MineView: View {
                         Button(model.t("cancelLabel")) { sheet = nil }
                     }
                 }
-            case .duration:
-                VStack(spacing: 16) {
-                    Text(model.t("customMinutesLabel"))
-                        .font(.system(size: 15, weight: .medium))
-                    HStack(spacing: 16) {
-                        Button("-") { nudge(-1) }
-                            .buttonStyle(SecondaryButtonStyle())
-                            .frame(width: 64)
-                            .accessibilityLabel("-")
-                        TextField("", text: $customText)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                        Button("+") { nudge(1) }
-                            .buttonStyle(SecondaryButtonStyle())
-                            .frame(width: 64)
-                            .accessibilityLabel("+")
-                    }
-                    .padding(.horizontal, 20)
-
-                    HStack(spacing: 8) {
-                        ForEach(quickMins, id: \.self) { m in
-                            Button("\(m)") {
-                                customText = "\(m)"
-                                applyCustom()
-                            }
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(FiveMinColor.brandStrong)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(FiveMinColor.brandSoft)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        }
-                    }
-
-                    Button(model.t("confirmLabel")) { applyCustom() }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .padding(.horizontal, 20)
-                    Spacer()
-                }
-                .padding(.top, 20)
-                .navigationTitle(model.t("durationSettingsLabel"))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(model.t("cancelLabel")) { sheet = nil }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(model.t("confirmLabel")) { applyCustom() }
-                            .fontWeight(.semibold)
-                            .foregroundStyle(FiveMinColor.brandStrong)
-                    }
-                }
+            case .customScenes:
+                customScenesList
             case .feedback:
                 VStack(alignment: .leading, spacing: 16) {
                     Text(model.t("feedbackBody"))
@@ -279,6 +246,204 @@ struct MineView: View {
         }
     }
 
+    private var customScenesList: some View {
+        Group {
+            if model.customScenes.isEmpty {
+                VStack(spacing: 12) {
+                    Text(model.t("customScenesEmptyHint"))
+                        .font(.system(size: 14))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                    Button(model.t("customSceneAdd")) { openSceneEditor(.add) }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .padding(.horizontal, 20)
+                    Spacer()
+                }
+                .padding(.top, 28)
+            } else {
+                List {
+                    ForEach(model.customScenes) { scene in
+                        HStack(spacing: 12) {
+                            Button {
+                                openSceneEditor(.edit(scene))
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(scene.name)
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(FiveMinColor.ink)
+                                    Text("\(scene.min) \(model.t("customUnit"))")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(FiveMinColor.muted)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                model.queueCustomScene(scene.id)
+                                sheet = nil
+                                model.selectedTab = 1
+                            } label: {
+                                Text(model.t("customSceneUse"))
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(FiveMinColor.brandStrong)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(FiveMinColor.brandSoft)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .onDelete { indexSet in
+                        let ids = indexSet.map { model.customScenes[$0].id }
+                        for id in ids {
+                            model.deleteCustomScene(id: id)
+                        }
+                    }
+                }
+                .listStyle(.plain)
+            }
+        }
+        .navigationTitle(model.t("customScenesLabel"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(model.t("cancelLabel")) { sheet = nil }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    openSceneEditor(.add)
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .disabled(model.customScenes.count >= CustomScene.maxCount)
+                .accessibilityLabel(model.t("customSceneAdd"))
+            }
+        }
+        .sheet(item: $sceneEditor) { editor in
+            sceneEditorSheet(editor)
+                .presentationDetents([.medium, .large])
+        }
+    }
+
+    private func sceneEditorSheet(_ editor: SceneEditor) -> some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(model.t("customSceneNameLabel"))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                    TextField(model.t("customSceneNamePlaceholder"), text: $editorName)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .padding(.horizontal, 14)
+                        .frame(height: 48)
+                        .background(FiveMinColor.ghostBg)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(FiveMinColor.line, lineWidth: 1)
+                        )
+                }
+                .padding(.horizontal, 20)
+
+                Text(model.t("customMinutesLabel"))
+                    .font(.system(size: 15, weight: .medium))
+                HStack(spacing: 16) {
+                    Button("-") { nudgeEditor(-1) }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .frame(width: 64)
+                        .accessibilityLabel("-")
+                    TextField("", text: $editorMinutes)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.center)
+                        .font(.system(size: 28, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                    Button("+") { nudgeEditor(1) }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .frame(width: 64)
+                        .accessibilityLabel("+")
+                }
+                .padding(.horizontal, 20)
+
+                HStack(spacing: 8) {
+                    ForEach(quickMins, id: \.self) { m in
+                        Button("\(m)") {
+                            editorMinutes = "\(m)"
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(FiveMinColor.brandStrong)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(FiveMinColor.brandSoft)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                }
+
+                Button(model.t("confirmLabel")) { saveSceneEditor(editor) }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.horizontal, 20)
+                    .disabled(CustomScene.normalizedName(editorName).isEmpty)
+                    .opacity(CustomScene.normalizedName(editorName).isEmpty ? 0.55 : 1)
+
+                Spacer()
+            }
+            .padding(.top, 20)
+            .navigationTitle(editorTitle(editor))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(model.t("cancelLabel")) { sceneEditor = nil }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(model.t("confirmLabel")) { saveSceneEditor(editor) }
+                        .fontWeight(.semibold)
+                        .foregroundStyle(FiveMinColor.brandStrong)
+                        .disabled(CustomScene.normalizedName(editorName).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func editorTitle(_ editor: SceneEditor) -> String {
+        switch editor {
+        case .add: return model.t("customSceneAdd")
+        case .edit: return model.t("customSceneEdit")
+        }
+    }
+
+    private func openSceneEditor(_ editor: SceneEditor) {
+        switch editor {
+        case .add:
+            editorName = ""
+            editorMinutes = "\(model.customMin)"
+        case .edit(let scene):
+            editorName = scene.name
+            editorMinutes = "\(scene.min)"
+        }
+        sceneEditor = editor
+    }
+
+    private func nudgeEditor(_ delta: Int) {
+        let cur = Int(editorMinutes) ?? model.customMin
+        editorMinutes = "\(CustomScene.clampMinutes(cur + delta))"
+    }
+
+    private func saveSceneEditor(_ editor: SceneEditor) {
+        let minutes = CustomScene.clampMinutes(Int(editorMinutes) ?? model.customMin)
+        let id: String?
+        switch editor {
+        case .add: id = nil
+        case .edit(let scene): id = scene.id
+        }
+        guard model.upsertCustomScene(id: id, name: editorName, minutes: minutes) != nil else { return }
+        sceneEditor = nil
+    }
+
     private func ambientLabel(_ id: String) -> String {
         switch id {
         case "rain": return model.t("ambientRain")
@@ -286,17 +451,6 @@ struct MineView: View {
         case "clock": return model.t("ambientClock")
         default: return model.t("ambientOff")
         }
-    }
-
-    private func nudge(_ delta: Int) {
-        let cur = Int(customText) ?? model.customMin
-        customText = "\(Swift.max(1, Swift.min(120, cur + delta)))"
-    }
-
-    private func applyCustom() {
-        let n = Swift.max(1, Swift.min(120, Int(customText) ?? model.customMin))
-        model.applyCustomMinutes(n)
-        sheet = nil
     }
 
     private func copyFeedbackEmail() {

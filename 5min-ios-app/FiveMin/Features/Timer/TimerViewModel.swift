@@ -24,14 +24,24 @@ final class TimerViewModel: ObservableObject {
     @Published var phase: TimerPhase = .idle
     @Published var privacyAccepted = false
     @Published var customMin = 5
+    @Published var customScenes: [CustomScene] = []
     @Published var recordsEpoch = 0
-    @Published var pendingCustomMin: Int?
+    @Published var pendingSceneId: String?
     /// 0 records · 1 home · 2 mine
     @Published var selectedTab = 1
 
     private var endAt: Date?
     private var tick: AnyCancellable?
     private var finishedHandled = false
+
+    var customGroup: SceneGroupDTO {
+        SceneGroupDTO(id: CustomScene.groupId, labelKey: "sceneGroupCustom")
+    }
+
+    var pickerGroups: [SceneGroupDTO] {
+        if customScenes.isEmpty { return catalog.groups }
+        return [customGroup] + catalog.groups
+    }
 
     var progress: CGFloat {
         guard totalMs > 0 else { return 0 }
@@ -56,9 +66,13 @@ final class TimerViewModel: ObservableObject {
         if saved != locale { prefs.locale = locale }
         ambient = prefs.ambient
         customMin = prefs.customMin(fallback: catalog.defaultMin)
+        customScenes = prefs.customScenes()
+        migrateLegacyCustomMinIfNeeded()
         if let toilet = catalog.scenes.first(where: { $0.id == "toilet" }),
            customMin == toilet.min {
             setPreset(minutes: toilet.min, sceneId: toilet.id)
+        } else if let match = customScenes.first(where: { $0.min == customMin }) {
+            setPreset(minutes: match.min, sceneId: match.id)
         } else {
             setPreset(minutes: customMin, sceneId: nil)
         }
@@ -160,17 +174,106 @@ final class TimerViewModel: ObservableObject {
         }
     }
 
-    func applyCustomMinutes(_ minutes: Int) {
-        let n = Swift.max(1, Swift.min(120, minutes))
-        customMin = n
-        prefs.setCustomMin(n)
-        pendingCustomMin = n
+    func consumePendingScene() {
+        guard let pending = pendingSceneId, !running else { return }
+        pendingSceneId = nil
+        selectScene(pending)
     }
 
-    func consumePendingCustomMin() {
-        guard let pending = pendingCustomMin, !running else { return }
-        pendingCustomMin = nil
-        setPreset(minutes: pending, sceneId: nil)
+    @discardableResult
+    func upsertCustomScene(id: String?, name: String, minutes: Int) -> CustomScene? {
+        let trimmed = CustomScene.normalizedName(name)
+        guard !trimmed.isEmpty else { return nil }
+        let n = CustomScene.clampMinutes(minutes)
+        let saved: CustomScene
+        if let id, let idx = customScenes.firstIndex(where: { $0.id == id }) {
+            customScenes[idx].name = trimmed
+            customScenes[idx].min = n
+            saved = customScenes[idx]
+            if activeSceneId == id, !running {
+                setPreset(minutes: n, sceneId: id)
+            }
+        } else {
+            guard customScenes.count < CustomScene.maxCount else { return nil }
+            saved = CustomScene(id: CustomScene.makeId(), name: trimmed, min: n)
+            customScenes.insert(saved, at: 0)
+            if !running {
+                pendingSceneId = saved.id
+            }
+        }
+        persistCustomScenes()
+        customMin = n
+        prefs.setCustomMin(n)
+        return saved
+    }
+
+    func deleteCustomScene(id: String) {
+        customScenes.removeAll { $0.id == id }
+        persistCustomScenes()
+        if pendingSceneId == id { pendingSceneId = nil }
+        if activeSceneId == id {
+            activeSceneId = nil
+        }
+    }
+
+    func queueCustomScene(_ id: String) {
+        guard customScenes.contains(where: { $0.id == id }) else { return }
+        pendingSceneId = id
+    }
+
+    private func persistCustomScenes() {
+        prefs.setCustomScenes(customScenes)
+        customScenes = prefs.customScenes()
+    }
+
+    /// One-shot: turn the old single custom duration into a named scene.
+    private func migrateLegacyCustomMinIfNeeded() {
+        guard !prefs.customScenesMigrated else { return }
+        defer { prefs.markCustomScenesMigrated() }
+        guard customScenes.isEmpty else { return }
+        let legacy = prefs.customMin(fallback: catalog.defaultMin)
+        guard legacy != catalog.defaultMin else { return }
+        let name = t("customSceneMigratedName")
+        let scene = CustomScene(id: CustomScene.makeId(), name: name, min: legacy)
+        customScenes = [scene]
+        prefs.setCustomScenes(customScenes)
+    }
+
+    func scenes(inGroup groupId: String) -> [SceneDTO] {
+        if groupId == CustomScene.groupId {
+            return customScenes.map { custom in
+                SceneDTO(
+                    id: custom.id,
+                    min: custom.min,
+                    group: CustomScene.groupId,
+                    labelKey: custom.id,
+                    titleKey: custom.id
+                )
+            }
+        }
+        return catalog.scenes.filter { $0.group == groupId }
+    }
+
+    func sceneTitle(for id: String?) -> String? {
+        guard let id, !id.isEmpty else { return nil }
+        if let custom = customScenes.first(where: { $0.id == id }) {
+            return custom.name
+        }
+        if let scene = catalog.scenes.first(where: { $0.id == id }) {
+            return t(scene.titleKey)
+        }
+        return nil
+    }
+
+    func sceneLabel(for id: String?) -> String? {
+        guard let id, !id.isEmpty else { return nil }
+        if let custom = customScenes.first(where: { $0.id == id }) {
+            return "\(custom.name) · \(custom.min) \(t("customUnit"))"
+        }
+        if let scene = catalog.scenes.first(where: { $0.id == id }) {
+            return t(scene.labelKey)
+        }
+        return nil
     }
 
     func refreshTodayStats() {
@@ -191,7 +294,15 @@ final class TimerViewModel: ObservableObject {
     }
 
     func selectScene(_ id: String) {
+        if let custom = customScenes.first(where: { $0.id == id }) {
+            customMin = custom.min
+            prefs.setCustomMin(custom.min)
+            setPreset(minutes: custom.min, sceneId: custom.id)
+            return
+        }
         guard let scene = catalog.scenes.first(where: { $0.id == id }) else { return }
+        customMin = scene.min
+        prefs.setCustomMin(scene.min)
         setPreset(minutes: scene.min, sceneId: scene.id)
     }
 
@@ -308,11 +419,7 @@ final class TimerViewModel: ObservableObject {
     }
 
     func notifySceneName() -> String {
-        if let id = activeSceneId,
-           let scene = catalog.scenes.first(where: { $0.id == id }) {
-            return t(scene.titleKey)
-        }
-        return t("sceneToiletTitle")
+        sceneTitle(for: activeSceneId) ?? t("sceneToiletTitle")
     }
 
     private func notifyVars() -> [String: String] {
@@ -332,11 +439,7 @@ final class TimerViewModel: ObservableObject {
     }
 
     var brandTitle: String {
-        if let id = activeSceneId,
-           let scene = catalog.scenes.first(where: { $0.id == id }) {
-            return t(scene.titleKey)
-        }
-        return t("brandTitle")
+        sceneTitle(for: activeSceneId) ?? t("brandTitle")
     }
 
     var statusText: String {

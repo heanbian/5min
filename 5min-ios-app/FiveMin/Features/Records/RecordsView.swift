@@ -110,11 +110,7 @@ struct RecordsView: View {
     }
 
     private func sceneName(_ sceneId: String) -> String {
-        guard !sceneId.isEmpty,
-              let scene = model.catalog.scenes.first(where: { $0.id == sceneId }) else {
-            return model.t("historySceneDefault")
-        }
-        return model.t(scene.titleKey)
+        model.sceneTitle(for: sceneId) ?? model.t("historySceneDefault")
     }
 
     private func formatDateTime(_ at: Int64) -> String {
