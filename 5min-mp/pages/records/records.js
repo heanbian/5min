@@ -7,6 +7,7 @@ const { t } = require('../../utils/i18n');
 const history = require('../../utils/history');
 const { resolveSceneTitle } = require('../../utils/catalog');
 const prefs = require('../../utils/prefs');
+const p0 = require('../../utils/p0Features');
 const { readNavMetrics } = require('../../utils/navMetrics');
 const {
   applyPrivacyState,
@@ -47,6 +48,10 @@ Page({
     filterSceneId: '',
     periodCount: 0,
     periodMins: 0,
+    overtimeInsightTitle: '',
+    overtimeInsightLine: '',
+    overtimeInsightHint: '',
+    showOvertimeInsight: true,
     rows: [],
     privacyAccepted: true,
     privacyChecked: false,
@@ -116,6 +121,15 @@ Page({
     });
     let filterIndex = filterOptions.findIndex((o) => o.id === filterSceneId);
     if (filterIndex < 0) filterIndex = 0;
+    const ot = p0.readOvertimeStats();
+    const showInsight = p0.getShowOvertimeInsight();
+    let overtimeInsightLine = t('overtimeInsightEmpty');
+    if (ot.count > 0) {
+      overtimeInsightLine = t('overtimeInsightLine', {
+        count: ot.count,
+        mins: p0.insightMinutes(ot.ms),
+      });
+    }
     this.setData({
       tabTitle: t('tabRecords'),
       weekStatsLabel: t('weekStatsLabel'),
@@ -133,6 +147,10 @@ Page({
       filterLabel: this.filterLabelFor(filterSceneId, filterOptions),
       periodCount: period.count,
       periodMins: period.minutes,
+      overtimeInsightTitle: t('overtimeInsightTitle'),
+      overtimeInsightLine,
+      overtimeInsightHint: t('overtimeInsightHint'),
+      showOvertimeInsight: showInsight,
       rows,
     });
   },

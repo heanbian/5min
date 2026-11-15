@@ -11,6 +11,7 @@ const {
   nativeName,
 } = require('../../utils/i18n');
 const prefs = require('../../utils/prefs');
+const p0 = require('../../utils/p0Features');
 const cloudSync = require('../../utils/cloudSync');
 const { DEFAULT_MIN } = require('../../utils/catalog');
 const { setAmbientMode, getAmbientMode, initAmbient } = require('../../utils/ambient');
@@ -21,6 +22,16 @@ const {
   bindPrivacyHandlers,
 } = require('../../utils/privacyUi');
 const { updateTabBarLabels } = require('../../utils/tabBar');
+
+function ritualLabel(mode) {
+  return mode === p0.RITUAL_BASIC ? t('standRitualBasic') : t('standRitualOff');
+}
+
+function alertProfileLabel(mode) {
+  if (mode === p0.PROFILE_QUIET) return t('alertProfileQuiet');
+  if (mode === p0.PROFILE_SILENT) return t('alertProfileSilent');
+  return t('alertProfileNormal');
+}
 
 const SOUND_IDS = ['off', 'rain', 'waves', 'clock'];
 const QUICK_MINS = [3, 5, 10, 15, 25];
@@ -99,6 +110,16 @@ Page({
     finishTone: true,
     finishVibrate: true,
     finishNotify: true,
+    standRitualSection: '',
+    standRitualLabel: '',
+    standRitualName: '',
+    standRitual: p0.RITUAL_BASIC,
+    ritualOptions: [],
+    alertProfileLabel: '',
+    alertProfileName: '',
+    alertProfile: p0.PROFILE_NORMAL,
+    alertProfileHint: '',
+    alertProfileOptions: [],
     storageSection: '',
     storageModeLabel: '',
     storageMode: 'local',
@@ -164,6 +185,14 @@ Page({
       finishTone: prefs.getFinishTone(),
       finishVibrate: prefs.getFinishVibrate(),
       finishNotify: prefs.getFinishNotify(),
+      standRitualSection: t('standRitualSection'),
+      standRitualLabel: t('standRitualLabel'),
+      standRitual: p0.getStandRitual(),
+      standRitualName: ritualLabel(p0.getStandRitual()),
+      alertProfileLabel: t('alertProfileLabel'),
+      alertProfile: p0.getAlertProfile(),
+      alertProfileName: alertProfileLabel(p0.getAlertProfile()),
+      alertProfileHint: t('alertProfileHint'),
       storageSection: t('storageSection'),
       storageModeLabel: t('storageModeLabel'),
       storageMode: prefs.getStorageMode(),
@@ -453,6 +482,43 @@ Page({
     prefs.setFinishNotify(on);
     this.setData({ finishNotify: on });
     cloudSync.pushPrefsOnly().catch(() => {});
+  },
+
+  onOpenRitual() {
+    this.setData({
+      dialog: 'ritual',
+      dialogTitle: t('standRitualLabel'),
+      ritualOptions: [
+        { id: p0.RITUAL_OFF, label: t('standRitualOff') },
+        { id: p0.RITUAL_BASIC, label: t('standRitualBasic') },
+      ],
+    });
+  },
+
+  onPickRitual(e) {
+    const id = e.currentTarget.dataset.id;
+    p0.setStandRitual(id);
+    this.setData({ dialog: '' });
+    this.refresh();
+  },
+
+  onOpenAlertProfile() {
+    this.setData({
+      dialog: 'alertProfile',
+      dialogTitle: t('alertProfileLabel'),
+      alertProfileOptions: [
+        { id: p0.PROFILE_NORMAL, label: t('alertProfileNormal') },
+        { id: p0.PROFILE_QUIET, label: t('alertProfileQuiet') },
+        { id: p0.PROFILE_SILENT, label: t('alertProfileSilent') },
+      ],
+    });
+  },
+
+  onPickAlertProfile(e) {
+    const id = e.currentTarget.dataset.id;
+    p0.setAlertProfile(id);
+    this.setData({ dialog: '' });
+    this.refresh();
   },
 
   onFeedback() {

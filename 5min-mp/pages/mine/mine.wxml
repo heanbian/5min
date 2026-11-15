@@ -47,6 +47,22 @@
         <text class="row-title">{{prefFinishNotify}}</text>
         <switch checked="{{finishNotify}}" color="#2f9a68" bindchange="onToggleFinishNotify" />
       </view>
+      <view class="row-line"></view>
+      <view class="row" bindtap="onOpenAlertProfile">
+        <text class="row-title">{{alertProfileLabel}}</text>
+        <text class="row-value">{{alertProfileName}}</text>
+        <text class="chev">›</text>
+      </view>
+    </view>
+    <view class="hint" wx:if="{{alertProfileHint}}">{{alertProfileHint}}</view>
+
+    <view class="section-label section-gap">{{standRitualSection}}</view>
+    <view class="card">
+      <view class="row" bindtap="onOpenRitual">
+        <text class="row-title">{{standRitualLabel}}</text>
+        <text class="row-value">{{standRitualName}}</text>
+        <text class="chev">›</text>
+      </view>
     </view>
 
     <view class="section-label section-gap">{{storageSection}}</view>
@@ -131,6 +147,26 @@
           class="sheet-item {{item.id === storageMode ? 'sheet-item-on' : ''}}"
           data-id="{{item.id}}"
           bindtap="onPickStorage"
+        >{{item.label}}</view>
+      </block>
+
+      <block wx:if="{{dialog === 'ritual'}}">
+        <view
+          wx:for="{{ritualOptions}}"
+          wx:key="id"
+          class="sheet-item {{item.id === standRitual ? 'sheet-item-on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onPickRitual"
+        >{{item.label}}</view>
+      </block>
+
+      <block wx:if="{{dialog === 'alertProfile'}}">
+        <view
+          wx:for="{{alertProfileOptions}}"
+          wx:key="id"
+          class="sheet-item {{item.id === alertProfile ? 'sheet-item-on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onPickAlertProfile"
         >{{item.label}}</view>
       </block>
 

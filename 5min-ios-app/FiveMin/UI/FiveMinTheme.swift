@@ -27,7 +27,8 @@ enum FiveMinColor {
     static let brandStrong = Color(red: 0x24 / 255, green: 0x85 / 255, blue: 0x56 / 255)
     static let brandSoft = Color(red: 0xE5 / 255, green: 0xF5 / 255, blue: 0xEC / 255)
     static let bg = Color(red: 0xEE / 255, green: 0xF6 / 255, blue: 0xF1 / 255)
-    static let bg2 = Color(red: 0xF7 / 255, green: 0xFA / 255, blue: 0xF8 / 255)
+    /// Records / Mine list page — aligned with MP `#F2F5F3`
+    static let bg2 = Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255)
     static let bgBottom = Color(red: 0xF4 / 255, green: 0xF8 / 255, blue: 0xF5 / 255)
     static let glow = Color(red: 0xDF / 255, green: 0xF0 / 255, blue: 0xE6 / 255)
     static let surface = Color.white
@@ -53,14 +54,26 @@ enum FiveMinDimens {
     static let radiusSm: CGFloat = 12
     /// 首页操作按钮 / 场景选择 / 芯片统一大圆角
     static let radius: CGFloat = 22
+    /// 列表卡片 / 统计卡
+    static let radiusCard: CGFloat = 14
+    /// 弹层卡片（仪式等）
+    static let radiusDialog: CGFloat = 16
+    /// 底部 sheet 顶角
+    static let radiusSheet: CGFloat = 18
     static let controlH: CGFloat = 52
     static let fieldH: CGFloat = 52
     static let rowH: CGFloat = 40
+    /// 筛选胶囊 / 快捷分钟芯片高度
     static let chipH: CGFloat = 40
+    static let filterChipH: CGFloat = 40
+    /// 首页推荐场景胶囊
+    static let suggestedChipH: CGFloat = 32
     static let padX: CGFloat = 20
     static let padY: CGFloat = 18
+    static let padBody: CGFloat = 16
     static let stageGap: CGFloat = 18
     static let sectionGap: CGFloat = 20
+    static let listSectionGap: CGFloat = 16
     static let controlGap: CGFloat = 10
     static let dialSize: CGFloat = 260
     static let topbarH: CGFloat = 36

@@ -46,6 +46,7 @@ import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.mine.MineScreen
 import chat.fivemin.app.ui.records.RecordsScreen
 import chat.fivemin.app.ui.theme.FiveMinColors
+import chat.fivemin.app.ui.theme.FiveMinDimens
 
 @Composable
 fun RootApp(
@@ -141,7 +142,7 @@ fun RootApp(
                             .fillMaxWidth()
                             .background(
                                 if (privacyChecked) FiveMinColors.brand else FiveMinColors.brand.copy(alpha = 0.45f),
-                                RoundedCornerShape(14.dp),
+                                RoundedCornerShape(FiveMinDimens.radiusCard),
                             )
                             .clickable(enabled = privacyChecked) { vm.acceptPrivacy() }
                             .padding(vertical = 14.dp),

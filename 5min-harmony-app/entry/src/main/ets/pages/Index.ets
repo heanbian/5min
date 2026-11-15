@@ -8,6 +8,11 @@ import { SceneRanker, SessionRef } from '../common/SceneRanker';
 import { resolveLocale } from '../common/I18n';
 import { normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
+import {
+  RITUAL_BASIC,
+  resolveFinishAlerts,
+  FinishAlertFlags
+} from '../common/P0Features';
 import { TimerState, formatMs, phaseOf } from '../timer/TimerState';
 import { FinishAlerter } from '../alert/FinishAlerter';
 import {
@@ -123,6 +128,10 @@ struct Index {
   @State localeTick: number = 0;
   @State showIgnore: boolean = false;
   @State ignoreLabel: string = '';
+  @State showRitual: boolean = false;
+  @State ritualUp: boolean = false;
+  @State ritualStretch: boolean = false;
+  @State ritualLeave: boolean = false;
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -383,8 +392,10 @@ struct Index {
     if (!this.inOvertime || this.overtimeMs <= 0 || this.lastRecordedSessionId <= 0) {
       return;
     }
+    const ot = this.overtimeMs;
     const elapsed = this.state.totalMs + this.overtimeMs;
     await this.history.updateSessionElapsed(this.lastRecordedSessionId, elapsed);
+    await this.prefs.recordOvertime(ot);
     if (this.cloud) {
       this.cloud.schedulePushSessions();
     }
@@ -397,6 +408,29 @@ struct Index {
     this.inOvertime = false;
     this.overtimeMs = 0;
     this.overtimeAt = 0;
+  }
+
+  private dismissRitual(): void {
+    this.showRitual = false;
+    this.ritualUp = false;
+    this.ritualStretch = false;
+    this.ritualLeave = false;
+  }
+
+  private async maybeShowRitual(): Promise<void> {
+    const mode = await this.prefs.getStandRitual();
+    if (mode !== RITUAL_BASIC) {
+      return;
+    }
+    this.ritualUp = false;
+    this.ritualStretch = false;
+    this.ritualLeave = false;
+    this.showRitual = true;
+  }
+
+  private async effectiveFinishAlerts(): Promise<FinishAlertFlags> {
+    const profile = await this.prefs.getAlertProfile();
+    return resolveFinishAlerts(profile, this.finishTone, this.finishVibrate, this.finishNotify);
   }
 
   async ignoreLastSession(): Promise<void> {
@@ -421,6 +455,7 @@ struct Index {
     await cancelFinishReminder();
     this.finishedHandled = false;
     this.clearOvertimeState();
+    this.dismissRitual();
     this.state.remainMs = this.state.totalMs;
     this.state.running = false;
     this.state.finished = false;
@@ -673,8 +708,9 @@ struct Index {
     if (this.state.running) {
       return;
     }
-  this.commitOvertimeToHistoryIfNeeded();
+    this.commitOvertimeToHistoryIfNeeded();
     this.clearOvertimeState();
+    this.dismissRitual();
     this.lastRecordedSessionId = 0;
     this.finishedHandled = false;
     this.state.totalMs = Math.max(1, min) * 60 * 1000;
@@ -706,6 +742,7 @@ struct Index {
     if (this.state.finished && !this.state.running) {
       await this.commitOvertimeToHistoryIfNeeded();
       this.clearOvertimeState();
+      this.dismissRitual();
       this.lastRecordedSessionId = 0;
       await FinishAlerter.stop();
       this.state.remainMs = this.state.totalMs;
@@ -767,6 +804,7 @@ struct Index {
     await cancelFinishReminder();
     this.finishedHandled = false;
     this.clearOvertimeState();
+    this.dismissRitual();
     this.lastRecordedSessionId = 0;
     this.state.remainMs = this.state.totalMs;
     this.state.running = false;
@@ -780,12 +818,13 @@ struct Index {
     if (!this.state.finished || !this.context) {
       return;
     }
+    const alerts = await this.effectiveFinishAlerts();
     await FinishAlerter.stop();
     await FinishAlerter.play(
       this.context,
       this.catalog.alertDurationMs,
-      this.finishTone,
-      this.finishVibrate
+      alerts.withTone,
+      alerts.withVibrate
     );
   }
 
@@ -846,14 +885,16 @@ struct Index {
     const title = this.t('notifyTitle', notifyVars);
     const body = this.t('notifyBody', notifyVars);
     const ack = this.t('notifyAck');
-    if (this.finishNotify) {
-      await showFinishNotification(title, body, this.finishTone);
+    const alerts = await this.effectiveFinishAlerts();
+    if (alerts.withNotify) {
+      await showFinishNotification(title, body, alerts.withTone);
     }
     const soundP = this.context
-      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs, this.finishTone, this.finishVibrate)
+      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs, alerts.withTone, alerts.withVibrate)
       : Promise.resolve();
-    const dialogP = this.finishNotify ? this.ackFinishDialog(title, body, ack) : Promise.resolve();
+    const dialogP = alerts.withNotify ? this.ackFinishDialog(title, body, ack) : Promise.resolve();
     await Promise.all([soundP, dialogP]);
+    await this.maybeShowRitual();
     this.refreshUi();
   }
 
@@ -867,7 +908,8 @@ struct Index {
   }
 
   build() {
-    Column() {
+    Stack({ alignContent: Alignment.Center }) {
+      Column() {
       if (!this.privacyReady) {
         Text('…')
           .fontSize(18)
@@ -1009,11 +1051,163 @@ struct Index {
         .onChange((i: number) => this.onTabChange(i))
         .animationDuration(200)
       }
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor(this.privacyAccepted && this.ready ? this.bgColor : $r('app.color.bg'))
+      .direction(this.locale.indexOf('ar') === 0 ? Direction.Rtl : Direction.Ltr)
+
+      if (this.showRitual) {
+        this.RitualOverlay()
+      }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(this.privacyAccepted && this.ready ? this.bgColor : $r('app.color.bg'))
-    .direction(this.locale.indexOf('ar') === 0 ? Direction.Rtl : Direction.Ltr)
+  }
+
+  @Builder
+  RitualOverlay() {
+    Column() {
+      Column({ space: 16 }) {
+        Text(this.t('standRitualTitle'))
+          .fontSize(18)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.ink'))
+          .width('100%')
+          .textAlign(TextAlign.Center)
+
+        Row({ space: 12 }) {
+          Stack({ alignContent: Alignment.Center }) {
+            Column()
+              .width(22)
+              .height(22)
+              .borderRadius(6)
+              .backgroundColor(this.ritualUp ? $r('app.color.brand') : Color.Transparent)
+              .border({
+                width: 1.5,
+                color: this.ritualUp ? $r('app.color.brand') : '#8A9A90'
+              })
+            if (this.ritualUp) {
+              Text('✓')
+                .fontSize(13)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(Color.White)
+            }
+          }
+          .width(22)
+          .height(22)
+          .flexShrink(0)
+          Text(this.t('standRitualStepUp'))
+            .fontSize(15)
+            .fontColor($r('app.color.ink'))
+            .layoutWeight(1)
+        }
+        .width('100%')
+        .padding({ top: 10, bottom: 10 })
+        .onClick(() => {
+          this.ritualUp = !this.ritualUp;
+        })
+
+        Row({ space: 12 }) {
+          Stack({ alignContent: Alignment.Center }) {
+            Column()
+              .width(22)
+              .height(22)
+              .borderRadius(6)
+              .backgroundColor(this.ritualStretch ? $r('app.color.brand') : Color.Transparent)
+              .border({
+                width: 1.5,
+                color: this.ritualStretch ? $r('app.color.brand') : '#8A9A90'
+              })
+            if (this.ritualStretch) {
+              Text('✓')
+                .fontSize(13)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(Color.White)
+            }
+          }
+          .width(22)
+          .height(22)
+          .flexShrink(0)
+          Text(this.t('standRitualStepStretch'))
+            .fontSize(15)
+            .fontColor($r('app.color.ink'))
+            .layoutWeight(1)
+        }
+        .width('100%')
+        .padding({ top: 10, bottom: 10 })
+        .onClick(() => {
+          this.ritualStretch = !this.ritualStretch;
+        })
+
+        Row({ space: 12 }) {
+          Stack({ alignContent: Alignment.Center }) {
+            Column()
+              .width(22)
+              .height(22)
+              .borderRadius(6)
+              .backgroundColor(this.ritualLeave ? $r('app.color.brand') : Color.Transparent)
+              .border({
+                width: 1.5,
+                color: this.ritualLeave ? $r('app.color.brand') : '#8A9A90'
+              })
+            if (this.ritualLeave) {
+              Text('✓')
+                .fontSize(13)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(Color.White)
+            }
+          }
+          .width(22)
+          .height(22)
+          .flexShrink(0)
+          Text(this.t('standRitualStepLeave'))
+            .fontSize(15)
+            .fontColor($r('app.color.ink'))
+            .layoutWeight(1)
+        }
+        .width('100%')
+        .padding({ top: 10, bottom: 10 })
+        .onClick(() => {
+          this.ritualLeave = !this.ritualLeave;
+        })
+
+        Row({ space: 10 }) {
+          Text(this.t('standRitualSkip'))
+            .layoutWeight(1)
+            .height(52)
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.ghost_bg'))
+            .borderRadius(22)
+            .onClick(() => this.dismissRitual())
+
+          Text(this.t('standRitualDone'))
+            .layoutWeight(1)
+            .height(52)
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(Color.White)
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.brand'))
+            .borderRadius(22)
+            .onClick(() => this.dismissRitual())
+        }
+        .width('100%')
+        .margin({ top: 8 })
+      }
+      .width('86%')
+      .padding({ left: 20, right: 20, top: 22, bottom: 20 })
+      .backgroundColor($r('app.color.surface'))
+      .borderRadius(16)
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .alignItems(HorizontalAlign.Center)
+    .backgroundColor('#00000066')
   }
 
   @Builder

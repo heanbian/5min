@@ -327,7 +327,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 64rpx;
+  height: var(--suggested-chip-h, 64rpx);
   padding: 0 28rpx;
   margin-right: 12rpx;
   border-radius: var(--radius);
@@ -393,5 +393,97 @@
   font-size: 22rpx;
   line-height: 1;
   color: var(--muted);
+}
+
+.ritual-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 90;
+  background: rgba(31, 42, 36, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  box-sizing: border-box;
+}
+
+.ritual-card {
+  width: 100%;
+  max-width: 620rpx;
+  background: var(--surface);
+  border-radius: var(--radius-dialog, 32rpx);
+  padding: 36rpx 32rpx 28rpx;
+  box-sizing: border-box;
+}
+
+.ritual-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 28rpx;
+}
+
+.ritual-step {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  min-height: 72rpx;
+  padding: 8rpx 0;
+}
+
+.ritual-check {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid var(--line);
+  background: var(--surface);
+  color: #fff;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ritual-check.on {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.ritual-step-label {
+  font-size: 28rpx;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.ritual-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.ritual-btn {
+  flex: 1;
+  height: var(--control-h, 104rpx);
+  border-radius: var(--radius, 44rpx);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.ritual-btn-ghost {
+  background: var(--ghost-bg);
+  color: var(--muted);
+}
+
+.ritual-btn-primary {
+  background: var(--brand);
+  color: #fff;
 }
 

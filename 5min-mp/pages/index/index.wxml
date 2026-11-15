@@ -27,9 +27,9 @@
 
   <view class="stage" aria-label="{{stageLabel}}">
     <view class="dial" bindtap="onDialTap">
-      <!-- canvas 为原生层，隐私门打开时必须卸载，否则会盖住普通 view -->
+      <!-- canvas 为原生层，遮罩打开时必须卸载，否则会盖住普通 view -->
       <canvas
-        wx:if="{{privacyAccepted}}"
+        wx:if="{{privacyAccepted && !showRitual}}"
         type="2d"
         id="progressCanvas"
         class="dial-canvas"
@@ -100,6 +100,28 @@
         bindtap="onSuggestedChip"
       >{{item.title}}</view>
     </scroll-view>
+  </view>
+
+  <view class="ritual-mask" wx:if="{{showRitual}}">
+    <view class="ritual-card">
+      <text class="ritual-title">{{ritualTitle}}</text>
+      <view class="ritual-step" bindtap="onToggleRitualUp">
+        <view class="ritual-check {{ritualUp ? 'on' : ''}}">{{ritualUp ? '✓' : ''}}</view>
+        <text class="ritual-step-label">{{ritualStepUp}}</text>
+      </view>
+      <view class="ritual-step" bindtap="onToggleRitualStretch">
+        <view class="ritual-check {{ritualStretch ? 'on' : ''}}">{{ritualStretch ? '✓' : ''}}</view>
+        <text class="ritual-step-label">{{ritualStepStretch}}</text>
+      </view>
+      <view class="ritual-step" bindtap="onToggleRitualLeave">
+        <view class="ritual-check {{ritualLeave ? 'on' : ''}}">{{ritualLeave ? '✓' : ''}}</view>
+        <text class="ritual-step-label">{{ritualStepLeave}}</text>
+      </view>
+      <view class="ritual-actions">
+        <view class="ritual-btn ritual-btn-ghost" bindtap="onRitualSkip">{{ritualSkip}}</view>
+        <view class="ritual-btn ritual-btn-primary" bindtap="onRitualDone">{{ritualDone}}</view>
+      </view>
+    </view>
   </view>
 
   <view class="privacy-mask" wx:if="{{!privacyAccepted}}">

@@ -14,21 +14,26 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         val sceneName = intent.getStringExtra(TimerScheduler.EXTRA_SCENE).orEmpty()
         val sceneId = intent.getStringExtra(TimerScheduler.EXTRA_SCENE_ID).orEmpty()
         val prefs = FiveMinApp.instance.prefs
+        val alerts = prefs.p0.resolveFinishAlerts(
+            finishTone = prefs.finishTone,
+            finishVibrate = prefs.finishVibrate,
+            finishNotify = prefs.finishNotify,
+        )
         var sessionId = -1L
         if (elapsed > 0L) {
             sessionId = FiveMinApp.instance.history.recordSession(elapsed, sceneId)
             FiveMinApp.instance.cloudSync.schedulePushSessions()
         }
-        if (prefs.finishNotify) {
+        if (alerts.withNotify) {
             FinishNotifier.show(
                 context,
                 elapsed,
                 sceneName.takeIf { it.isNotBlank() },
-                prefs.finishTone,
-                prefs.finishVibrate,
+                alerts.withTone,
+                alerts.withVibrate,
             )
         }
-        FinishAlerter.play(context, prefs.finishTone, prefs.finishVibrate)
+        FinishAlerter.play(context, alerts.withTone, alerts.withVibrate)
         TimerForegroundService.stop(context)
         TimerBus.publishFinished(sessionId)
     }

@@ -21,6 +21,7 @@
 		6A11C0DE5E0E4F1A9B2C3D4E /* FiveMinTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F64789A0B1C2D3 /* FiveMinTheme.swift */; };
 		7B22D1EF6F1F502B0C3D4E5F /* DigitalWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7489B0C1D2E3F /* DigitalWatch.swift */; };
 		96713C72BB414EC69166AE38 /* PrefsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */; };
+		B10000000000000000000008 /* P0Features.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* P0Features.swift */; };
 		97D1DB55C3F0481E807AF6C2 /* TimerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1ABAC3CEFC45B7956958F5 /* TimerViewModel.swift */; };
 		AE58305BC3834AC788440220 /* SharedCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */; };
 		B1645718EB2145A4A1D50559 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB3123630D7407CA4D6CE8D /* NotificationService.swift */; };
@@ -44,6 +45,7 @@
 		3D1758CC71E743D88B154AB4 /* FiveMinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveMinApp.swift; sourceTree = "<group>"; };
 		4CCA38C137CC41B7AC2668FF /* FiveMin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiveMin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefsStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000008 /* P0Features.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = P0Features.swift; sourceTree = "<group>"; };
 		8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCatalog.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F64789A0B1C2D3 /* FiveMinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveMinTheme.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6A7489B0C1D2E3F /* DigitalWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalWatch.swift; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 			children = (
 				8AB465B7139E4F758C77DB68 /* SharedCatalog.swift */,
 				4FC1599ED8C6463BAFDB37F9 /* PrefsStore.swift */,
+				A10000000000000000000008 /* P0Features.swift */,
 				335D646AD96E42DDBDB9959B /* I18n.swift */,
 				A10000000000000000000001 /* AppLocales.swift */,
 				A10000000000000000000002 /* HistoryStore.swift */,
@@ -247,6 +250,7 @@
 				E8F9A0B1C2D34E5F6A7B8C9D /* AppDelegate.swift in Sources */,
 				AE58305BC3834AC788440220 /* SharedCatalog.swift in Sources */,
 				96713C72BB414EC69166AE38 /* PrefsStore.swift in Sources */,
+				B10000000000000000000008 /* P0Features.swift in Sources */,
 				4B2A469DED8F439E8A35DDD6 /* I18n.swift in Sources */,
 				C295C549153E4AABBA0F67CE /* AlertService.swift in Sources */,
 				B1645718EB2145A4A1D50559 /* NotificationService.swift in Sources */,

@@ -28,6 +28,9 @@ data class TimerUiState(
     val selectedTab: Int = 1,
     val overtimeMs: Long = 0L,
     val sessionLogged: Boolean = false,
+    val standRitual: String = "basic",
+    val alertProfile: String = "normal",
+    val showStandRitual: Boolean = false,
 ) {
     val progress: Float
         get() = if (totalMs <= 0L) 0f else (remainMs.toFloat() / totalMs.toFloat()).coerceIn(0f, 1f)

@@ -5,6 +5,13 @@ import { SharedCatalog } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene, STORAGE_MODE_CLOUD, STORAGE_MODE_LOCAL } from '../common/PrefsStore';
 import { HistoryStore } from '../common/HistoryStore';
 import { CloudSync } from '../common/CloudSync';
+import {
+  RITUAL_OFF,
+  RITUAL_BASIC,
+  PROFILE_NORMAL,
+  PROFILE_QUIET,
+  PROFILE_SILENT
+} from '../common/P0Features';
 import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
@@ -16,6 +23,8 @@ const ABOUT_URL = 'https://5min.chat/about.html';
 const QUICK_MINS: number[] = [3, 5, 10, 15, 25];
 const SOUND_IDS: string[] = ['off', 'rain', 'waves', 'clock'];
 const STORAGE_IDS: string[] = [STORAGE_MODE_LOCAL, STORAGE_MODE_CLOUD];
+const RITUAL_IDS: string[] = [RITUAL_OFF, RITUAL_BASIC];
+const ALERT_PROFILE_IDS: string[] = [PROFILE_NORMAL, PROFILE_QUIET, PROFILE_SILENT];
 
 @Component
 export struct MineTab {
@@ -26,7 +35,7 @@ export struct MineTab {
   @State customMin: number = 5;
   @State customScenes: CustomScene[] = [];
   @State scenesSummary: string = '';
-  /** '' | lang | sound | customScenes | sceneEditor | feedback | storage */
+  /** '' | lang | sound | customScenes | sceneEditor | feedback | storage | ritual | alertProfile */
   @State dialog: string = '';
   /** Empty string = add; otherwise edit id */
   @State editorId: string = '';
@@ -39,6 +48,10 @@ export struct MineTab {
   @State finishTone: boolean = true;
   @State finishVibrate: boolean = true;
   @State finishNotify: boolean = true;
+  @State standRitual: string = RITUAL_BASIC;
+  @State standRitualName: string = '';
+  @State alertProfile: string = PROFILE_NORMAL;
+  @State alertProfileName: string = '';
   @State storageMode: string = STORAGE_MODE_LOCAL;
   @State storageModeName: string = '';
   @State storageSyncStatus: string = '';
@@ -88,6 +101,8 @@ export struct MineTab {
     AppStorage.setOrCreate('appFinishTone', this.finishTone);
     AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
     AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
+    this.standRitual = await this.prefs.getStandRitual();
+    this.alertProfile = await this.prefs.getAlertProfile();
     this.storageMode = await this.prefs.getStorageMode();
     this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
     await this.migrateLegacyCustomMinIfNeeded();
@@ -161,6 +176,20 @@ export struct MineTab {
     return this.catalog.t(this.locale, this.ambientKeyOf(id));
   }
 
+  private ritualLabelOf(mode: string): string {
+    return mode === RITUAL_BASIC ? this.t('standRitualBasic') : this.t('standRitualOff');
+  }
+
+  private alertProfileLabelOf(mode: string): string {
+    if (mode === PROFILE_QUIET) {
+      return this.t('alertProfileQuiet');
+    }
+    if (mode === PROFILE_SILENT) {
+      return this.t('alertProfileSilent');
+    }
+    return this.t('alertProfileNormal');
+  }
+
   private refreshLabels(): void {
     // Read against the current locale code explicitly so values never stick to the old pack.
     this.localeName = this.catalog.t(this.locale, 'nativeName');
@@ -168,6 +197,8 @@ export struct MineTab {
     this.storageModeName = this.storageMode === STORAGE_MODE_CLOUD
       ? this.catalog.t(this.locale, 'storageModeCloud')
       : this.catalog.t(this.locale, 'storageModeLocal');
+    this.standRitualName = this.ritualLabelOf(this.standRitual);
+    this.alertProfileName = this.alertProfileLabelOf(this.alertProfile);
     this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
   }
@@ -249,6 +280,8 @@ export struct MineTab {
     this.storageModeName = this.storageMode === STORAGE_MODE_CLOUD
       ? this.catalog.t(next, 'storageModeCloud')
       : this.catalog.t(next, 'storageModeLocal');
+    this.standRitualName = this.ritualLabelOf(this.standRitual);
+    this.alertProfileName = this.alertProfileLabelOf(this.alertProfile);
     this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
     this.pushPrefsIfCloud();
@@ -286,6 +319,26 @@ export struct MineTab {
     await this.prefs.setFinishNotify(on);
     this.uiTick = this.uiTick + 1;
     this.pushPrefsIfCloud();
+  }
+
+  async setStandRitual(mode: string): Promise<void> {
+    this.closeDialog();
+    this.standRitual = mode === RITUAL_BASIC ? RITUAL_BASIC : RITUAL_OFF;
+    await this.prefs.setStandRitual(this.standRitual);
+    this.standRitualName = this.ritualLabelOf(this.standRitual);
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async setAlertProfile(mode: string): Promise<void> {
+    this.closeDialog();
+    if (mode === PROFILE_QUIET || mode === PROFILE_SILENT) {
+      this.alertProfile = mode;
+    } else {
+      this.alertProfile = PROFILE_NORMAL;
+    }
+    await this.prefs.setAlertProfile(this.alertProfile);
+    this.alertProfileName = this.alertProfileLabelOf(this.alertProfile);
+    this.uiTick = this.uiTick + 1;
   }
 
   async pickStorageMode(mode: string): Promise<void> {
@@ -635,6 +688,69 @@ export struct MineTab {
                   .width('100%')
                   .height(52)
                   .padding({ left: 16, right: 16 })
+
+                  Divider().color($r('app.color.line')).margin({ left: 16 })
+
+                  Row() {
+                    Text(this.t('alertProfileLabel'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text(this.alertProfileName)
+                      .fontSize(14)
+                      .fontColor($r('app.color.muted'))
+                      .margin({ right: 6 })
+                      .maxLines(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => this.openDialog('alertProfile'))
+                }
+                .width('100%')
+                .backgroundColor($r('app.color.surface'))
+                .borderRadius(14)
+                .clip(true)
+
+                Text(this.t('alertProfileHint'))
+                  .fontSize(12)
+                  .fontColor($r('app.color.muted'))
+                  .width('100%')
+                  .padding({ left: 4, right: 4 })
+                  .lineHeight(18)
+              }
+              .width('100%')
+
+              Column({ space: 8 }) {
+                Text(this.t('standRitualSection'))
+                  .fontSize(13)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.muted'))
+                  .width('100%')
+                  .padding({ left: 4 })
+
+                Column({ space: 0 }) {
+                  Row() {
+                    Text(this.t('standRitualLabel'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text(this.standRitualName)
+                      .fontSize(14)
+                      .fontColor($r('app.color.muted'))
+                      .margin({ right: 6 })
+                      .maxLines(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => this.openDialog('ritual'))
                 }
                 .width('100%')
                 .backgroundColor($r('app.color.surface'))
@@ -893,10 +1009,10 @@ export struct MineTab {
                   }
                 }
                 .width('100%')
-                .height(48)
+                .height(52)
                 .padding({ left: 14, right: 14 })
                 .backgroundColor(code === this.locale ? $r('app.color.brand_soft') : Color.Transparent)
-                .borderRadius(10)
+                .borderRadius(12)
                 .direction(Direction.Ltr)
                 .onClick(() => this.setLocale(code))
               }, (code: string) => `lang-${code}-${this.uiTick}`)
@@ -930,10 +1046,10 @@ export struct MineTab {
                 }
               }
               .width('100%')
-              .height(48)
+              .height(52)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.ambient ? $r('app.color.brand_soft') : Color.Transparent)
-              .borderRadius(10)
+              .borderRadius(12)
               .direction(Direction.Ltr)
               .onClick(() => this.setAmbient(id))
             }, (id: string) => `snd-${id}-${this.uiTick}`)
@@ -962,13 +1078,77 @@ export struct MineTab {
                 }
               }
               .width('100%')
-              .height(48)
+              .height(52)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.storageMode ? $r('app.color.brand_soft') : Color.Transparent)
-              .borderRadius(10)
+              .borderRadius(12)
               .direction(Direction.Ltr)
               .onClick(() => this.pickStorageMode(id))
             }, (id: string) => `storage-${id}-${this.uiTick}`)
+          }
+          .width('100%')
+          .padding({ left: 12, right: 12, bottom: 28 })
+          .alignItems(HorizontalAlign.Center)
+          .direction(Direction.Ltr)
+        } else if (this.dialog === 'ritual') {
+          Column({ space: 4 }) {
+            ForEach(RITUAL_IDS, (id: string) => {
+              Stack({ alignContent: Alignment.Center }) {
+                Text(this.ritualLabelOf(id))
+                  .width('100%')
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(id === this.standRitual ? $r('app.color.brand_strong') : $r('app.color.ink'))
+                  .textAlign(TextAlign.Center)
+                  .direction(Direction.Ltr)
+                if (id === this.standRitual) {
+                  Text('✓')
+                    .fontSize(16)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.brand_strong'))
+                    .position({ right: 14 })
+                }
+              }
+              .width('100%')
+              .height(52)
+              .padding({ left: 14, right: 14 })
+              .backgroundColor(id === this.standRitual ? $r('app.color.brand_soft') : Color.Transparent)
+              .borderRadius(12)
+              .direction(Direction.Ltr)
+              .onClick(() => this.setStandRitual(id))
+            }, (id: string) => `ritual-${id}-${this.uiTick}`)
+          }
+          .width('100%')
+          .padding({ left: 12, right: 12, bottom: 28 })
+          .alignItems(HorizontalAlign.Center)
+          .direction(Direction.Ltr)
+        } else if (this.dialog === 'alertProfile') {
+          Column({ space: 4 }) {
+            ForEach(ALERT_PROFILE_IDS, (id: string) => {
+              Stack({ alignContent: Alignment.Center }) {
+                Text(this.alertProfileLabelOf(id))
+                  .width('100%')
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(id === this.alertProfile ? $r('app.color.brand_strong') : $r('app.color.ink'))
+                  .textAlign(TextAlign.Center)
+                  .direction(Direction.Ltr)
+                if (id === this.alertProfile) {
+                  Text('✓')
+                    .fontSize(16)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.brand_strong'))
+                    .position({ right: 14 })
+                }
+              }
+              .width('100%')
+              .height(52)
+              .padding({ left: 14, right: 14 })
+              .backgroundColor(id === this.alertProfile ? $r('app.color.brand_soft') : Color.Transparent)
+              .borderRadius(12)
+              .direction(Direction.Ltr)
+              .onClick(() => this.setAlertProfile(id))
+            }, (id: string) => `alert-profile-${id}-${this.uiTick}`)
           }
           .width('100%')
           .padding({ left: 12, right: 12, bottom: 28 })
@@ -1110,7 +1290,7 @@ export struct MineTab {
           .padding({ left: 14, right: 14 })
           .backgroundColor($r('app.color.ghost_bg'))
           .border({ width: 1, color: $r('app.color.line') })
-          .borderRadius(14)
+          .borderRadius(22)
           .maxLength(CustomScene.MAX_NAME_LENGTH)
           .onChange((v: string) => {
             this.editorName = v;
@@ -1135,7 +1315,7 @@ export struct MineTab {
             .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(14)
+            .borderRadius(22)
             .onClick(() => this.nudgeEditor(-1))
 
           TextInput({ text: this.editorMinutes })
@@ -1148,7 +1328,7 @@ export struct MineTab {
             .type(InputType.Number)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(14)
+            .borderRadius(22)
             .onChange((v: string) => {
               this.editorMinutes = v;
             })
@@ -1162,7 +1342,7 @@ export struct MineTab {
             .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(14)
+            .borderRadius(22)
             .onClick(() => this.nudgeEditor(1))
         }
         .width('100%')
@@ -1190,13 +1370,13 @@ export struct MineTab {
 
       Text(this.t('confirmLabel'))
         .width('100%')
-        .height(50)
+        .height(52)
         .fontSize(16)
         .fontWeight(FontWeight.Medium)
         .fontColor(Color.White)
         .textAlign(TextAlign.Center)
         .backgroundColor($r('app.color.brand'))
-        .borderRadius(14)
+        .borderRadius(22)
         .opacity(this.canSaveEditor() ? 1 : 0.55)
         .onClick(() => {
           if (this.canSaveEditor()) {
@@ -1217,6 +1397,12 @@ export struct MineTab {
     }
     if (this.dialog === 'storage') {
       return this.t('storageModeLabel');
+    }
+    if (this.dialog === 'ritual') {
+      return this.t('standRitualLabel');
+    }
+    if (this.dialog === 'alertProfile') {
+      return this.t('alertProfileLabel');
     }
     if (this.dialog === 'customScenes') {
       return this.t('customScenesLabel');

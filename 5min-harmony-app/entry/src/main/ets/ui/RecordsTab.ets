@@ -4,6 +4,7 @@ import { SharedCatalog, SceneItem } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore';
 import { CloudSync } from '../common/CloudSync';
+import { insightMinutes } from '../common/P0Features';
 import { resolveLocale } from '../common/I18n';
 import { i18n } from '@kit.LocalizationKit';
 
@@ -39,6 +40,8 @@ export struct RecordsTab {
   @State filterLabel: string = '';
   @State filterOptions: FilterOption[] = [];
   @State showFilter: boolean = false;
+  @State showOvertimeInsight: boolean = true;
+  @State overtimeInsightLine: string = '';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -94,6 +97,16 @@ export struct RecordsTab {
     this.periodCount = period[0];
     this.periodMins = period[1];
     this.filterLabel = this.currentFilterLabel();
+    this.showOvertimeInsight = await this.prefs.getShowOvertimeInsight();
+    const ot = await this.prefs.readOvertimeStats();
+    if (ot.count > 0) {
+      const vars: Record<string, string> = {};
+      vars['count'] = `${ot.count}`;
+      vars['mins'] = `${insightMinutes(ot.ms)}`;
+      this.overtimeInsightLine = this.t('overtimeInsightLine', vars);
+    } else {
+      this.overtimeInsightLine = this.t('overtimeInsightEmpty');
+    }
   }
 
   t(key: string, vars?: Record<string, string>): string {
@@ -304,6 +317,31 @@ export struct RecordsTab {
               }
               .width('100%')
 
+              if (this.showOvertimeInsight) {
+                Column({ space: 8 }) {
+                  Text(this.t('overtimeInsightTitle'))
+                    .fontSize(15)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.ink'))
+                    .width('100%')
+                  Text(this.overtimeInsightLine)
+                    .fontSize(14)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.ink'))
+                    .width('100%')
+                  Text(this.t('overtimeInsightHint'))
+                    .fontSize(12)
+                    .fontColor($r('app.color.muted'))
+                    .width('100%')
+                    .lineHeight(18)
+                }
+                .width('100%')
+                .padding(16)
+                .alignItems(HorizontalAlign.Start)
+                .backgroundColor($r('app.color.surface'))
+                .borderRadius(14)
+              }
+
               Row() {
                 Text(this.t('historyLabel'))
                   .fontSize(13)
@@ -339,7 +377,7 @@ export struct RecordsTab {
               .padding({ left: 14, right: 14 })
               .backgroundColor($r('app.color.surface'))
               .border({ width: 1, color: $r('app.color.line') })
-              .borderRadius(14)
+              .borderRadius(22)
               .onClick(() => {
                 this.showFilter = true;
               })
@@ -452,7 +490,7 @@ export struct RecordsTab {
                     }
                   }
                   .width('100%')
-                  .height(48)
+                  .height(52)
                   .padding({ left: 16, right: 16 })
                   .onClick(() => this.setFilter(opt.id))
                 }, (opt: FilterOption) => `filt-${opt.id}`)

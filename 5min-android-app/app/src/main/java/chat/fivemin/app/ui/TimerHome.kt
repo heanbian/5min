@@ -32,11 +32,14 @@ import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +77,16 @@ fun TimerHome(
 ) {
     val state by vm.state.collectAsState()
     var sceneOpen by remember { mutableStateOf(false) }
+    var ritualUp by remember { mutableStateOf(false) }
+    var ritualStretch by remember { mutableStateOf(false) }
+    var ritualLeave by remember { mutableStateOf(false) }
+    LaunchedEffect(state.showStandRitual) {
+        if (state.showStandRitual) {
+            ritualUp = false
+            ritualStretch = false
+            ritualLeave = false
+        }
+    }
     val view = LocalView.current
     DisposableEffect(state.running) {
         val window = (view.context as? Activity)?.window
@@ -481,7 +494,7 @@ fun TimerHome(
                             Text(
                                 text = vm.sceneTitle(id) ?: id,
                                 modifier = Modifier
-                                    .height(32.dp)
+                                    .height(FiveMinDimens.suggestedChipH)
                                     .then(
                                         if (active) {
                                             Modifier
@@ -553,7 +566,7 @@ fun TimerHome(
                     vm.pickerGroups().forEach { group ->
                         val itemsInGroup = vm.scenesInGroup(group.id)
                         if (itemsInGroup.isEmpty()) return@forEach
-                        item {
+                        item(key = "hdr:${group.id}") {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -587,7 +600,8 @@ fun TimerHome(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                         }
-                        items(itemsInGroup, key = { it.id }) { scene ->
+                        // 推荐分组与目录/自定义会复用同一 scene id，key 必须带 group 前缀
+                        items(itemsInGroup, key = { "${group.id}:${it.id}" }) { scene ->
                             val active = scene.id == state.activeSceneId
                             Text(
                                 text = vm.sceneLabel(scene.id) ?: scene.id,
@@ -610,6 +624,82 @@ fun TimerHome(
                     }
                 }
             },
+        )
+    }
+
+    if (state.showStandRitual) {
+        AlertDialog(
+            onDismissRequest = { vm.dismissStandRitual() },
+            dismissButton = {
+                TextButton(onClick = { vm.dismissStandRitual() }) {
+                    Text(vm.t("standRitualSkip"), color = FiveMinColors.muted)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { vm.dismissStandRitual() }) {
+                    Text(vm.t("standRitualDone"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            containerColor = FiveMinColors.surface,
+            shape = RoundedCornerShape(FiveMinDimens.radiusDialog),
+            title = {
+                Text(
+                    vm.t("standRitualTitle"),
+                    color = FiveMinColors.ink,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    RitualCheckRow(
+                        label = vm.t("standRitualStepUp"),
+                        checked = ritualUp,
+                        onCheckedChange = { ritualUp = it },
+                    )
+                    RitualCheckRow(
+                        label = vm.t("standRitualStepStretch"),
+                        checked = ritualStretch,
+                        onCheckedChange = { ritualStretch = it },
+                    )
+                    RitualCheckRow(
+                        label = vm.t("standRitualStepLeave"),
+                        checked = ritualLeave,
+                        onCheckedChange = { ritualLeave = it },
+                    )
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun RitualCheckRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = FiveMinColors.brand,
+                uncheckedColor = FiveMinColors.muted,
+            ),
+        )
+        Text(
+            text = label,
+            color = FiveMinColors.ink,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f),
         )
     }
 }

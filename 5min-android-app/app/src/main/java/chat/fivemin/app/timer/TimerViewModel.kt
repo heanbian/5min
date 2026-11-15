@@ -7,6 +7,7 @@ import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.alert.FinishAlerter
 import chat.fivemin.app.data.AppLocales
 import chat.fivemin.app.data.CustomScene
+import chat.fivemin.app.data.P0Features
 import chat.fivemin.app.data.Scene
 import chat.fivemin.app.data.SceneGroup
 import chat.fivemin.app.data.SceneRanker
@@ -94,6 +95,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 suggestedSceneIds = suggested,
                 recordsEpoch = 0,
                 selectedTab = 1,
+                standRitual = prefs.p0.standRitual,
+                alertProfile = prefs.p0.alertProfile,
             ),
         )
         state = _state.asStateFlow()
@@ -227,6 +230,29 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         cloud.schedulePushPrefs()
     }
 
+    fun setStandRitual(mode: String) {
+        prefs.p0.standRitual = mode
+        _state.update { it.copy(standRitual = prefs.p0.standRitual) }
+        cloud.schedulePushPrefs()
+    }
+
+    fun setAlertProfile(mode: String) {
+        prefs.p0.alertProfile = mode
+        _state.update { it.copy(alertProfile = prefs.p0.alertProfile) }
+        cloud.schedulePushPrefs()
+    }
+
+    fun dismissStandRitual() {
+        _state.update { it.copy(showStandRitual = false) }
+    }
+
+    private fun resolvedFinishAlerts(): P0Features.FinishAlerts =
+        prefs.p0.resolveFinishAlerts(
+            finishTone = _state.value.finishTone,
+            finishVibrate = _state.value.finishVibrate,
+            finishNotify = _state.value.finishNotify,
+        )
+
     fun setStorageMode(mode: String) {
         if (mode == "cloud") {
             _state.update { it.copy(storageSyncStatus = t("storageSyncing")) }
@@ -272,6 +298,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 customMin = prefs.customMin(catalog.defaultMin),
                 customScenes = prefs.customScenes(),
                 storageMode = prefs.storageMode,
+                standRitual = prefs.p0.standRitual,
+                alertProfile = prefs.p0.alertProfile,
             )
         }
     }
@@ -374,6 +402,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setPresetMinutes(min: Int, sceneId: String? = null) {
         if (_state.value.running) return
+        commitOvertimeToHistoryIfNeeded()
         val total = min.coerceAtLeast(1) * 60_000L
         stopOvertimeTicker()
         finishedHandled = false
@@ -387,6 +416,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 phase = TimerPhase.Idle,
                 overtimeMs = 0L,
                 sessionLogged = false,
+                showStandRitual = false,
             )
         }
     }
@@ -415,6 +445,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun reset() {
+        commitOvertimeToHistoryIfNeeded()
         stopTicker()
         stopOvertimeTicker()
         FinishAlerter.stop()
@@ -430,6 +461,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 phase = TimerPhase.Idle,
                 overtimeMs = 0L,
                 sessionLogged = false,
+                showStandRitual = false,
             )
         }
     }
@@ -438,18 +470,33 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val id = lastRecordedId
         if (id > 0L) {
             history.deleteSession(id)
-            lastRecordedId = -1L
+            lastRecordedId = -1L // clear before reset so overtime is not re-committed
             refreshTodayStats()
             refreshSuggested()
             _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
         }
+        // Zero overtime before reset so commitOvertimeToHistoryIfNeeded is a no-op.
+        _state.update { it.copy(overtimeMs = 0L, showStandRitual = false) }
         reset()
     }
 
     fun realert() {
         if (!_state.value.finished) return
+        val alerts = resolvedFinishAlerts()
+        FinishAlerter.play(getApplication(), alerts.withTone, alerts.withVibrate)
+    }
+
+    /** Persist overtime into the last session and weekly insight stats. */
+    private fun commitOvertimeToHistoryIfNeeded() {
         val s = _state.value
-        FinishAlerter.play(getApplication(), s.finishTone, s.finishVibrate)
+        if (!s.finished || s.overtimeMs <= 0L || lastRecordedId <= 0L) return
+        val ot = s.overtimeMs
+        history.updateSessionElapsed(lastRecordedId, s.totalMs + ot)
+        prefs.p0.recordOvertime(ot)
+        cloud.schedulePushSessions()
+        refreshTodayStats()
+        refreshSuggested()
+        _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
     }
 
     private fun start() {
@@ -488,14 +535,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun restart() {
-        val s = _state.value
-        if (s.finished && s.overtimeMs > 0L && lastRecordedId > 0L) {
-            history.updateSessionElapsed(lastRecordedId, s.totalMs + s.overtimeMs)
-            cloud.schedulePushSessions()
-            refreshTodayStats()
-            refreshSuggested()
-            _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
-        }
+        commitOvertimeToHistoryIfNeeded()
         stopOvertimeTicker()
         lastRecordedId = -1L
         _state.update {
@@ -505,6 +545,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 phase = TimerPhase.Idle,
                 overtimeMs = 0L,
                 sessionLogged = false,
+                showStandRitual = false,
             )
         }
         start()
@@ -570,24 +611,26 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val s = _state.value
         val total = s.totalMs
         val sceneId = s.activeSceneId.orEmpty()
+        val alerts = resolvedFinishAlerts()
         if (fromTicker) {
             lastRecordedId = history.recordSession(total, sceneId)
             cloud.schedulePushSessions()
-            if (s.finishNotify) {
+            if (alerts.withNotify) {
                 FinishNotifier.show(
                     getApplication(),
                     total,
                     notifySceneName(),
-                    s.finishTone,
-                    s.finishVibrate,
+                    alerts.withTone,
+                    alerts.withVibrate,
                 )
             }
-            FinishAlerter.play(getApplication(), s.finishTone, s.finishVibrate)
+            FinishAlerter.play(getApplication(), alerts.withTone, alerts.withVibrate)
         } else if (alarmSessionId > 0L) {
             lastRecordedId = alarmSessionId
         }
         val (count, ms) = history.todayStats()
         val suggested = computeSuggested()
+        val showRitual = prefs.p0.standRitual == P0Features.RITUAL_BASIC
         _state.update {
             it.copy(
                 remainMs = 0L,
@@ -600,6 +643,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 recordsEpoch = it.recordsEpoch + 1,
                 overtimeMs = 0L,
                 sessionLogged = lastRecordedId > 0L,
+                showStandRitual = showRitual,
             )
         }
         startOvertimeTicker()

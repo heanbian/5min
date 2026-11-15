@@ -57,12 +57,12 @@
 
 .card {
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card, 28rpx);
   overflow: hidden;
 }
 
 .row {
-  min-height: 104rpx;
+  min-height: var(--control-h, 104rpx);
   padding: 0 32rpx;
   display: flex;
   flex-direction: row;
@@ -119,7 +119,7 @@
 
 .sheet {
   background: var(--surface);
-  border-radius: 28rpx 28rpx 0 0;
+  border-radius: var(--radius-sheet, 36rpx) var(--radius-sheet, 36rpx) 0 0;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   max-height: 70vh;
   overflow-y: auto;
@@ -149,7 +149,12 @@
 }
 
 .sheet-item {
-  padding: 28rpx 40rpx;
+  min-height: var(--control-h, 104rpx);
+  padding: 0 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   font-size: var(--row-title-size);
   font-weight: 500;
   color: var(--ink);
@@ -273,7 +278,7 @@
 .editor-name-input {
   height: var(--control-h, 104rpx);
   border: 1px solid var(--line);
-  border-radius: var(--radius, 28rpx);
+  border-radius: var(--radius, 44rpx);
   padding: 0 28rpx;
   font-size: var(--row-title-size);
   margin-bottom: 40rpx;
@@ -296,7 +301,7 @@
   text-align: center;
   background: var(--ghost-bg, #e8ecea);
   border: 1px solid var(--line);
-  border-radius: var(--radius, 28rpx);
+  border-radius: var(--radius, 44rpx);
   color: var(--ink);
   font-size: 36rpx;
   font-weight: 500;
@@ -311,7 +316,7 @@
   font-weight: 500;
   color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: var(--radius, 28rpx);
+  border-radius: var(--radius, 44rpx);
   background: var(--ghost-bg, #e8ecea);
   box-sizing: border-box;
 }
@@ -331,7 +336,7 @@
   height: var(--row-h, 80rpx);
   line-height: var(--row-h, 80rpx);
   padding: 0 24rpx;
-  border-radius: 24rpx;
+  border-radius: var(--radius-sm, 24rpx);
   font-size: 28rpx;
   box-sizing: border-box;
 }

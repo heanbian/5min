@@ -78,6 +78,10 @@ struct TimerView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if model.showRitual {
+                    ritualOverlay
+                }
             }
         }
         .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
@@ -86,6 +90,84 @@ struct TimerView: View {
                 .environmentObject(model)
                 .presentationDetents([.medium, .large])
         }
+    }
+
+    private var ritualOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.42)
+                .ignoresSafeArea()
+                .allowsHitTesting(true)
+
+            VStack(alignment: .leading, spacing: 16) {
+                Text(model.t("standRitualTitle"))
+                    .font(FiveMinFont.ui(18, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.ink)
+
+                ritualStep(
+                    label: model.t("standRitualStepUp"),
+                    isOn: model.ritualUp
+                ) {
+                    model.ritualUp.toggle()
+                }
+                ritualStep(
+                    label: model.t("standRitualStepStretch"),
+                    isOn: model.ritualStretch
+                ) {
+                    model.ritualStretch.toggle()
+                }
+                ritualStep(
+                    label: model.t("standRitualStepLeave"),
+                    isOn: model.ritualLeave
+                ) {
+                    model.ritualLeave.toggle()
+                }
+
+                HStack(spacing: 10) {
+                    Button(model.t("standRitualSkip")) {
+                        model.dismissRitual()
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    Button(model.t("standRitualDone")) {
+                        model.dismissRitual()
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+                .padding(.top, 4)
+            }
+            .padding(20)
+            .frame(maxWidth: 360)
+            .background(FiveMinColor.surface)
+            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusDialog, style: .continuous))
+            .shadow(color: Color.black.opacity(0.18), radius: 20, y: 8)
+            .padding(.horizontal, 28)
+        }
+    }
+
+    private func ritualStep(label: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(isOn ? FiveMinColor.brandStrong : FiveMinColor.line, lineWidth: 1.5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(isOn ? FiveMinColor.brandSoft : Color.clear)
+                        )
+                        .frame(width: 24, height: 24)
+                    if isOn {
+                        Image(systemName: "checkmark")
+                            .font(FiveMinFont.ui(12, weight: .bold))
+                            .foregroundStyle(FiveMinColor.brandStrong)
+                    }
+                }
+                Text(label)
+                    .font(FiveMinFont.ui(15))
+                    .foregroundStyle(FiveMinColor.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// Prefer scene / window bounds over device idiom — required for iPhone Duo resize.
@@ -314,7 +396,7 @@ struct TimerView: View {
                             .foregroundStyle(active ? Color.white : FiveMinColor.brandStrong)
                             .lineLimit(1)
                             .padding(.horizontal, 14)
-                            .frame(height: 32)
+                            .frame(height: FiveMinDimens.suggestedChipH)
                             .background(
                                 Group {
                                     if active {

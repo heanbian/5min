@@ -53,11 +53,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.data.CustomScene
+import chat.fivemin.app.data.P0Features
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 import chat.fivemin.app.ui.theme.FiveMinDimens
 
-private enum class MineDialog { None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian, Storage }
+private enum class MineDialog {
+    None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian, Storage, StandRitual, AlertProfile,
+}
 
 @Composable
 fun MineScreen(vm: TimerViewModel) {
@@ -84,6 +87,15 @@ fun MineScreen(vm: TimerViewModel) {
         "waves" -> vm.t("ambientWaves")
         "clock" -> vm.t("ambientClock")
         else -> vm.t("ambientOff")
+    }
+
+    fun ritualLabel(mode: String): String =
+        if (mode == P0Features.RITUAL_BASIC) vm.t("standRitualBasic") else vm.t("standRitualOff")
+
+    fun alertProfileLabel(mode: String): String = when (mode) {
+        P0Features.PROFILE_QUIET -> vm.t("alertProfileQuiet")
+        P0Features.PROFILE_SILENT -> vm.t("alertProfileSilent")
+        else -> vm.t("alertProfileNormal")
     }
 
     fun customScenesValue(): String {
@@ -136,8 +148,8 @@ fun MineScreen(vm: TimerViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .padding(FiveMinDimens.padBody),
+            verticalArrangement = Arrangement.spacedBy(FiveMinDimens.listSectionGap),
         ) {
             SectionTitle(vm.t("mineSectionPrefs"))
             CardBlock {
@@ -173,6 +185,23 @@ fun MineScreen(vm: TimerViewModel) {
                     checked = state.finishNotify,
                     onCheckedChange = { vm.setFinishNotify(it) },
                 )
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                PrefRow(vm.t("alertProfileLabel"), alertProfileLabel(state.alertProfile)) {
+                    dialog = MineDialog.AlertProfile
+                }
+            }
+            Text(
+                text = vm.t("alertProfileHint"),
+                color = FiveMinColors.muted,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+
+            SectionTitle(vm.t("standRitualSection"))
+            CardBlock {
+                PrefRow(vm.t("standRitualLabel"), ritualLabel(state.standRitual)) {
+                    dialog = MineDialog.StandRitual
+                }
             }
 
             SectionTitle(vm.t("storageSection"))
@@ -319,6 +348,69 @@ fun MineScreen(vm: TimerViewModel) {
                 }
             },
         )
+        MineDialog.StandRitual -> AlertDialog(
+            onDismissRequest = { dialog = MineDialog.None },
+            confirmButton = {
+                TextButton(onClick = { dialog = MineDialog.None }) {
+                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
+                }
+            },
+            title = { Text(vm.t("standRitualLabel"), fontWeight = FontWeight.SemiBold) },
+            containerColor = FiveMinColors.surface,
+            text = {
+                Column {
+                    listOf(
+                        P0Features.RITUAL_OFF to vm.t("standRitualOff"),
+                        P0Features.RITUAL_BASIC to vm.t("standRitualBasic"),
+                    ).forEach { (id, label) ->
+                        Text(
+                            text = label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    vm.setStandRitual(id)
+                                    dialog = MineDialog.None
+                                }
+                                .padding(vertical = 12.dp),
+                            color = if (id == state.standRitual) FiveMinColors.brandStrong else FiveMinColors.ink,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            },
+        )
+        MineDialog.AlertProfile -> AlertDialog(
+            onDismissRequest = { dialog = MineDialog.None },
+            confirmButton = {
+                TextButton(onClick = { dialog = MineDialog.None }) {
+                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
+                }
+            },
+            title = { Text(vm.t("alertProfileLabel"), fontWeight = FontWeight.SemiBold) },
+            containerColor = FiveMinColors.surface,
+            text = {
+                Column {
+                    listOf(
+                        P0Features.PROFILE_NORMAL to vm.t("alertProfileNormal"),
+                        P0Features.PROFILE_QUIET to vm.t("alertProfileQuiet"),
+                        P0Features.PROFILE_SILENT to vm.t("alertProfileSilent"),
+                    ).forEach { (id, label) ->
+                        Text(
+                            text = label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    vm.setAlertProfile(id)
+                                    dialog = MineDialog.None
+                                }
+                                .padding(vertical = 12.dp),
+                            color = if (id == state.alertProfile) FiveMinColors.brandStrong else FiveMinColors.ink,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            },
+        )
         else -> Unit
     }
 
@@ -346,7 +438,9 @@ fun MineScreen(vm: TimerViewModel) {
 
     // Keep dialog when-block closed: remaining cases continue below
     when (dialog) {
-        MineDialog.None, MineDialog.Lang, MineDialog.Sound, MineDialog.Storage -> Unit
+        MineDialog.None, MineDialog.Lang, MineDialog.Sound, MineDialog.Storage,
+        MineDialog.StandRitual, MineDialog.AlertProfile,
+        -> Unit
         MineDialog.CustomScenes -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             dismissButton = {
@@ -660,7 +754,7 @@ private fun CardBlock(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(FiveMinColors.surface, RoundedCornerShape(14.dp)),
+            .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard)),
     ) { content() }
 }
 

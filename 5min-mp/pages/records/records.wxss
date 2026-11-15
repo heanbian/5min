@@ -55,10 +55,38 @@
   margin-bottom: var(--section-gap);
 }
 
+.insight-card {
+  background: var(--surface);
+  border-radius: var(--radius-card, 28rpx);
+  padding: 32rpx;
+  margin-bottom: var(--section-gap);
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.insight-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.insight-line {
+  font-size: 28rpx;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.insight-hint {
+  font-size: 24rpx;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .stat-card {
   flex: 1;
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card, 28rpx);
   padding: 32rpx;
   display: flex;
   flex-direction: column;
@@ -92,7 +120,7 @@
 
 .card {
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card, 28rpx);
   overflow: hidden;
 }
 
@@ -122,12 +150,12 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  min-height: 80rpx;
+  min-height: var(--row-h, 80rpx);
   padding: 0 28rpx;
   margin-bottom: 16rpx;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius, 44rpx);
 }
 
 .filter-hint {
@@ -172,7 +200,12 @@
   padding: 8rpx 0;
 }
 
-.hist-scene,
+.hist-scene {
+  font-size: var(--row-title-size, 30rpx);
+  font-weight: 500;
+  color: var(--ink);
+}
+
 .hist-dur,
 .hist-time {
   font-size: var(--body-size);

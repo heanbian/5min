@@ -25,6 +25,12 @@
       </view>
     </view>
 
+    <view class="insight-card" wx:if="{{showOvertimeInsight}}">
+      <text class="insight-title">{{overtimeInsightTitle}}</text>
+      <text class="insight-line">{{overtimeInsightLine}}</text>
+      <text class="insight-hint">{{overtimeInsightHint}}</text>
+    </view>
+
     <view class="history-head">
       <text class="section-label section-label-gap">{{historyLabel}}</text>
       <text class="clear-link" bindtap="onClearHistory">{{historyClear}}</text>

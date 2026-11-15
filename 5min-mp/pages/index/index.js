@@ -27,6 +27,7 @@ const {
   pauseAmbient,
 } = require('../../utils/ambient');
 const prefs = require('../../utils/prefs');
+const p0 = require('../../utils/p0Features');
 const { readNavMetrics } = require('../../utils/navMetrics');
 const {
   applyPrivacyState,
@@ -111,6 +112,16 @@ Page({
     privacyAgree: '',
     showIgnore: false,
     finishIgnoreLabel: '',
+    showRitual: false,
+    ritualTitle: '',
+    ritualStepUp: '',
+    ritualStepStretch: '',
+    ritualStepLeave: '',
+    ritualDone: '',
+    ritualSkip: '',
+    ritualUp: false,
+    ritualStretch: false,
+    ritualLeave: false,
   },
 
   totalMs: DEFAULT_MIN * 60 * 1000,
@@ -433,10 +444,12 @@ Page({
 
   commitOvertimeToHistoryIfNeeded() {
     if (!this.inOvertime || this.overtimeMs <= 0 || !this.lastRecordedSessionId) return;
+    const ot = this.overtimeMs;
     history.updateSessionElapsed(
       this.lastRecordedSessionId,
       this.totalMs + this.overtimeMs
     );
+    p0.recordOvertime(ot);
     this.refreshStats();
   },
 
@@ -457,6 +470,10 @@ Page({
     this.finished = false;
     this.endAt = 0;
     this.setKeepScreenOn(false);
+    if (this.data.showRitual) {
+      this.setData({ showRitual: false });
+      this.reopenCanvasSoon();
+    }
     this.refreshUi();
   },
 
@@ -529,12 +546,13 @@ Page({
       n: Math.max(1, Math.round(this.totalMs / 60000)),
       scene: this.notifySceneName(),
     };
+    const alerts = p0.resolveFinishAlerts(prefs);
     alertFinish({
       title: t('notifyTitle', vars),
       body: t('notifyBody', vars),
       durationMs: ALERT_DURATION_MS,
-      withNotify: prefs.getFinishNotify(),
-      withVibrate: prefs.getFinishVibrate(),
+      withNotify: alerts.withNotify,
+      withVibrate: alerts.withVibrate,
     });
   },
 
@@ -596,13 +614,55 @@ Page({
       n: Math.max(1, Math.round(this.totalMs / 60000)),
       scene: this.notifySceneName(),
     };
+    const alerts = p0.resolveFinishAlerts(prefs);
     alertFinish({
       title: t('notifyTitle', vars),
       body: t('notifyBody', vars),
       durationMs: ALERT_DURATION_MS,
-      withNotify: prefs.getFinishNotify(),
-      withVibrate: prefs.getFinishVibrate(),
+      withNotify: alerts.withNotify,
+      withVibrate: alerts.withVibrate,
     });
+    this.maybeShowRitual();
+  },
+
+  maybeShowRitual() {
+    if (p0.getStandRitual() !== p0.RITUAL_BASIC) return;
+    // 卸载 canvas，避免原生层盖住仪式遮罩
+    this.canvas = null;
+    this.ctx = null;
+    this.setData({
+      showRitual: true,
+      ritualTitle: t('standRitualTitle'),
+      ritualStepUp: t('standRitualStepUp'),
+      ritualStepStretch: t('standRitualStepStretch'),
+      ritualStepLeave: t('standRitualStepLeave'),
+      ritualDone: t('standRitualDone'),
+      ritualSkip: t('standRitualSkip'),
+      ritualUp: false,
+      ritualStretch: false,
+      ritualLeave: false,
+    });
+  },
+
+  dismissRitual() {
+    this.setData({ showRitual: false });
+    this.reopenCanvasSoon();
+  },
+
+  onToggleRitualUp() {
+    this.setData({ ritualUp: !this.data.ritualUp });
+  },
+  onToggleRitualStretch() {
+    this.setData({ ritualStretch: !this.data.ritualStretch });
+  },
+  onToggleRitualLeave() {
+    this.setData({ ritualLeave: !this.data.ritualLeave });
+  },
+  onRitualSkip() {
+    this.dismissRitual();
+  },
+  onRitualDone() {
+    this.dismissRitual();
   },
 
   notifySceneName() {

@@ -29,7 +29,8 @@ object FiveMinColors {
     val brandStrong = Color(0xFF248556)
     val brandSoft = Color(0xFFE5F5EC)
     val bg = Color(0xFFEEF6F1)
-    val bg2 = Color(0xFFF7FAF8)
+    /** Records / Mine list page background — aligned with MP/iOS `#F2F5F3` */
+    val bg2 = Color(0xFFF2F5F3)
     val bgBottom = Color(0xFFF4F8F5)
     val glow = Color(0xFFDFF0E6)
     val surface = Color(0xFFFFFFFF)
@@ -55,14 +56,26 @@ object FiveMinDimens {
     val radiusSm = 12.dp
     /** 首页操作按钮 / 场景选择 / 芯片统一大圆角 */
     val radius = 22.dp
+    /** 列表卡片 / 统计卡 */
+    val radiusCard = 14.dp
+    /** 弹层卡片（仪式等） */
+    val radiusDialog = 16.dp
+    /** 底部 sheet 顶角 */
+    val radiusSheet = 18.dp
     val controlH = 52.dp
     val fieldH = 52.dp
     val rowH = 40.dp
+    /** 筛选胶囊 / 快捷分钟芯片高度 */
     val chipH = 40.dp
+    val filterChipH = 40.dp
+    /** 首页推荐场景胶囊 */
+    val suggestedChipH = 32.dp
     val padX = 20.dp
     val padY = 18.dp
+    val padBody = 16.dp
     val stageGap = 18.dp
     val sectionGap = 20.dp
+    val listSectionGap = 16.dp
     val controlGap = 10.dp
     val dialSize = 260.dp
 }

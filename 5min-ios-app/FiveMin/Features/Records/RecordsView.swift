@@ -16,7 +16,7 @@ struct RecordsView: View {
         VStack(spacing: 0) {
             header
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: FiveMinDimens.listSectionGap) {
                     Text(model.t("weekStatsLabel"))
                         .font(FiveMinFont.ui(13, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
@@ -25,6 +25,10 @@ struct RecordsView: View {
                     HStack(spacing: 10) {
                         statCard(title: model.t("weekStatsCountLabel"), value: "\(periodCount)", unit: nil)
                         statCard(title: model.t("weekStatsMinsLabel"), value: "\(periodMins)", unit: model.t("customUnit"))
+                    }
+
+                    if P0Features.getShowOvertimeInsight() {
+                        overtimeInsightCard
                     }
 
                     HStack {
@@ -62,12 +66,12 @@ struct RecordsView: View {
                         }
                     }
                     .background(FiveMinColor.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 16)
+                .padding(.horizontal, FiveMinDimens.padBody)
+                .padding(.vertical, FiveMinDimens.padBody)
             }
-            .background(Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255))
+            .background(FiveMinColor.bg2)
         }
         .onAppear(perform: reload)
         .onChange(of: model.recordsEpoch) { _, _ in reload() }
@@ -153,7 +157,35 @@ struct RecordsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(FiveMinColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
+    }
+
+    private var overtimeInsightCard: some View {
+        let stats = P0Features.readOvertimeStats()
+        let line: String
+        if stats.count > 0 {
+            line = model.t("overtimeInsightLine", [
+                "count": "\(stats.count)",
+                "mins": "\(P0Features.insightMinutes(stats.ms))",
+            ])
+        } else {
+            line = model.t("overtimeInsightEmpty")
+        }
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(model.t("overtimeInsightTitle"))
+                .font(FiveMinFont.ui(15, weight: .semibold))
+                .foregroundStyle(FiveMinColor.ink)
+            Text(line)
+                .font(FiveMinFont.ui(14))
+                .foregroundStyle(FiveMinColor.ink)
+            Text(model.t("overtimeInsightHint"))
+                .font(FiveMinFont.ui(12))
+                .foregroundStyle(FiveMinColor.muted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(FiveMinColor.surface)
+        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
     }
 
     private func historyRow(_ item: HistoryItem) -> some View {

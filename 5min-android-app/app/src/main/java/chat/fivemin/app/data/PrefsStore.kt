@@ -31,6 +31,9 @@ data class CustomScene(
 class PrefsStore(context: Context) {
     private val sp = context.getSharedPreferences("5min_prefs", Context.MODE_PRIVATE)
 
+    /** P0: overtime insight · stand-up ritual · alert profile. */
+    val p0 = P0Features(sp)
+
     init {
         migrateFinishAlertPrefs()
     }

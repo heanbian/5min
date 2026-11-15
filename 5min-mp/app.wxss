@@ -26,17 +26,23 @@ page {
   --danger-soft: #ffefed;
   --bg: #eef6f1;
   --bg2: #f2f5f3;
-  --radius: 28rpx;
+  /* 对齐 App：control 22 / card 14 / sm 12 / sheet 18 */
+  --radius: 44rpx;
+  --radius-card: 28rpx;
+  --radius-sm: 24rpx;
+  --radius-sheet: 36rpx;
+  --radius-dialog: 32rpx;
   --control-h: 104rpx;
   --row-h: 80rpx;
+  --suggested-chip-h: 64rpx;
   --ghost-bg: #e8ecea;
   --pad-x: 40rpx;
   --pad-body: 32rpx;
-  --section-gap: 24rpx;
-  --title-size: 38rpx;
+  --section-gap: 32rpx;
+  --title-size: 40rpx;
   --body-size: 28rpx;
   --label-size: 26rpx;
-  --row-title-size: 28rpx;
+  --row-title-size: 30rpx;
 
   height: 100%;
   color: var(--ink);

@@ -11,7 +11,7 @@ struct MineView: View {
     @State private var showCloudConfirm = false
 
     private enum MineSheet: String, Identifiable {
-        case lang, sound, storage, customScenes, feedback
+        case lang, sound, storage, customScenes, feedback, standRitual, alertProfile
         var id: String { rawValue }
     }
 
@@ -34,7 +34,7 @@ struct MineView: View {
         VStack(spacing: 0) {
             header
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: FiveMinDimens.listSectionGap) {
                     sectionTitle(model.t("mineSectionPrefs"))
                     card {
                         prefRow(model.t("langLabel"), value: model.catalog.t(model.locale, "nativeName")) {
@@ -52,6 +52,10 @@ struct MineView: View {
 
                     sectionTitle(model.t("prefAlertsSection"))
                     card {
+                        prefRow(model.t("alertProfileLabel"), value: alertProfileValue) {
+                            sheet = .alertProfile
+                        }
+                        Divider().padding(.leading, 16)
                         alertToggleRow(model.t("prefFinishTone"), isOn: alertBinding(
                             get: { model.finishTone },
                             set: { model.setFinishTone($0) }
@@ -66,6 +70,17 @@ struct MineView: View {
                             get: { model.finishNotify },
                             set: { model.setFinishNotify($0) }
                         ))
+                    }
+                    Text(model.t("alertProfileHint"))
+                        .font(FiveMinFont.ui(12))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .padding(.horizontal, 4)
+
+                    sectionTitle(model.t("standRitualSection"))
+                    card {
+                        prefRow(model.t("standRitualLabel"), value: standRitualValue) {
+                            sheet = .standRitual
+                        }
                     }
 
                     sectionTitle(model.t("storageSection"))
@@ -120,10 +135,10 @@ struct MineView: View {
                         .padding(.top, 8)
                         .padding(.bottom, 12)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 16)
+                .padding(.horizontal, FiveMinDimens.padBody)
+                .padding(.vertical, FiveMinDimens.padBody)
             }
-            .background(Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255))
+            .background(FiveMinColor.bg2)
         }
         .sheet(item: $sheet, onDismiss: { sceneEditor = nil }) { kind in
             sheetContent(kind)
@@ -148,6 +163,20 @@ struct MineView: View {
         let n = model.customScenes.count
         if n <= 0 { return model.t("customScenesEmpty") }
         return model.t("customScenesCount", ["n": "\(n)"])
+    }
+
+    private var standRitualValue: String {
+        model.standRitual == P0Features.ritualBasic
+            ? model.t("standRitualBasic")
+            : model.t("standRitualOff")
+    }
+
+    private var alertProfileValue: String {
+        switch model.alertProfile {
+        case P0Features.profileQuiet: return model.t("alertProfileQuiet")
+        case P0Features.profileSilent: return model.t("alertProfileSilent")
+        default: return model.t("alertProfileNormal")
+        }
     }
 
     private var appVersion: String {
@@ -179,7 +208,7 @@ struct MineView: View {
     private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
             .background(FiveMinColor.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
     }
 
     private func alertBinding(get: @escaping () -> Bool, set: @escaping (Bool) -> Void) -> Binding<Bool> {
@@ -325,10 +354,78 @@ struct MineView: View {
                         Button(model.t("cancelLabel")) { sheet = nil }
                     }
                 }
+            case .standRitual:
+                List {
+                    Button {
+                        model.setStandRitual(P0Features.ritualOff)
+                        sheet = nil
+                    } label: {
+                        HStack {
+                            Text(model.t("standRitualOff"))
+                            Spacer()
+                            if model.standRitual == P0Features.ritualOff {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(FiveMinColor.brandStrong)
+                            }
+                        }
+                    }
+                    Button {
+                        model.setStandRitual(P0Features.ritualBasic)
+                        sheet = nil
+                    } label: {
+                        HStack {
+                            Text(model.t("standRitualBasic"))
+                            Spacer()
+                            if model.standRitual == P0Features.ritualBasic {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(FiveMinColor.brandStrong)
+                            }
+                        }
+                    }
+                }
+                .navigationTitle(model.t("standRitualLabel"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(model.t("cancelLabel")) { sheet = nil }
+                    }
+                }
+            case .alertProfile:
+                List {
+                    ForEach(
+                        [
+                            (P0Features.profileNormal, "alertProfileNormal"),
+                            (P0Features.profileQuiet, "alertProfileQuiet"),
+                            (P0Features.profileSilent, "alertProfileSilent"),
+                        ],
+                        id: \.0
+                    ) { id, key in
+                        Button {
+                            model.setAlertProfile(id)
+                            sheet = nil
+                        } label: {
+                            HStack {
+                                Text(model.t(key))
+                                Spacer()
+                                if model.alertProfile == id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(FiveMinColor.brandStrong)
+                                }
+                            }
+                        }
+                    }
+                }
+                .navigationTitle(model.t("alertProfileLabel"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(model.t("cancelLabel")) { sheet = nil }
+                    }
+                }
             case .customScenes:
                 customScenesList
             case .feedback:
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: FiveMinDimens.listSectionGap) {
                     Text(model.t("feedbackBody"))
                         .font(FiveMinFont.ui(15))
                         .foregroundStyle(FiveMinColor.ink)

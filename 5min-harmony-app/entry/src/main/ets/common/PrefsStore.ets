@@ -1,6 +1,19 @@
 import { preferences } from '@kit.ArkData';
 import { common } from '@kit.AbilityKit';
 import { util } from '@kit.ArkTS';
+import {
+  OVERTIME_STATS_KEY,
+  OVERTIME_INSIGHT_KEY,
+  STAND_RITUAL_KEY,
+  ALERT_PROFILE_KEY,
+  RITUAL_BASIC,
+  PROFILE_NORMAL,
+  OvertimeStats,
+  weekKey,
+  emptyOvertimeStats,
+  normalizeStandRitual,
+  normalizeAlertProfile
+} from './P0Features';
 
 const STORE = '5min_prefs';
 
@@ -228,6 +241,92 @@ export class PrefsStore {
 
   async setPrivacyAccepted(ok: boolean): Promise<void> {
     await this.pref?.put('privacy_accepted', ok);
+    await this.pref?.flush();
+  }
+
+  // --- P0: overtime insight · stand-up ritual · alert profile ---
+
+  async readOvertimeStats(): Promise<OvertimeStats> {
+    const key = weekKey();
+    const raw = String(await this.pref?.get(OVERTIME_STATS_KEY, '') ?? '');
+    if (!raw) {
+      return emptyOvertimeStats();
+    }
+    try {
+      const parsed: Object = JSON.parse(raw) as Object;
+      const row = parsed as Record<string, Object>;
+      const wk = String(row['weekKey'] ?? '');
+      if (wk !== key) {
+        return emptyOvertimeStats();
+      }
+      const stats = new OvertimeStats();
+      stats.weekKey = wk;
+      stats.count = Math.max(0, Math.floor(Number(row['count'] ?? 0)));
+      stats.ms = Math.max(0, Math.floor(Number(row['ms'] ?? 0)));
+      if (isNaN(stats.count)) {
+        stats.count = 0;
+      }
+      if (isNaN(stats.ms)) {
+        stats.ms = 0;
+      }
+      return stats;
+    } catch (_) {
+      return emptyOvertimeStats();
+    }
+  }
+
+  /** Record one overtime burst (ms beyond planned). */
+  async recordOvertime(overtimeMs: number): Promise<OvertimeStats> {
+    let ms = Math.floor(Number(overtimeMs));
+    if (isNaN(ms) || ms < 0) {
+      ms = 0;
+    }
+    if (ms <= 0) {
+      return this.readOvertimeStats();
+    }
+    const cur = await this.readOvertimeStats();
+    const next = new OvertimeStats();
+    next.weekKey = weekKey();
+    next.count = cur.count + 1;
+    next.ms = cur.ms + ms;
+    const payload: Record<string, Object> = {};
+    payload['weekKey'] = next.weekKey;
+    payload['count'] = next.count;
+    payload['ms'] = next.ms;
+    await this.pref?.put(OVERTIME_STATS_KEY, JSON.stringify(payload));
+    await this.pref?.flush();
+    return next;
+  }
+
+  async getShowOvertimeInsight(): Promise<boolean> {
+    if (!(await this.pref?.has(OVERTIME_INSIGHT_KEY))) {
+      return true;
+    }
+    return Boolean(await this.pref?.get(OVERTIME_INSIGHT_KEY, true) ?? true);
+  }
+
+  async setShowOvertimeInsight(on: boolean): Promise<void> {
+    await this.pref?.put(OVERTIME_INSIGHT_KEY, on);
+    await this.pref?.flush();
+  }
+
+  async getStandRitual(): Promise<string> {
+    const v = String(await this.pref?.get(STAND_RITUAL_KEY, RITUAL_BASIC) ?? RITUAL_BASIC);
+    return normalizeStandRitual(v.length > 0 ? v : RITUAL_BASIC);
+  }
+
+  async setStandRitual(mode: string): Promise<void> {
+    await this.pref?.put(STAND_RITUAL_KEY, normalizeStandRitual(mode));
+    await this.pref?.flush();
+  }
+
+  async getAlertProfile(): Promise<string> {
+    const v = String(await this.pref?.get(ALERT_PROFILE_KEY, PROFILE_NORMAL) ?? PROFILE_NORMAL);
+    return normalizeAlertProfile(v.length > 0 ? v : PROFILE_NORMAL);
+  }
+
+  async setAlertProfile(mode: string): Promise<void> {
+    await this.pref?.put(ALERT_PROFILE_KEY, normalizeAlertProfile(mode));
     await this.pref?.flush();
   }
 }

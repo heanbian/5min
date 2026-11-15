@@ -38,6 +38,12 @@ final class TimerViewModel: ObservableObject {
     @Published var overtimeMs: Int64 = 0
     @Published var storageMode = PrefsStore.modeLocal
     @Published var storageSyncStatus = ""
+    @Published var standRitual = P0Features.ritualBasic
+    @Published var alertProfile = P0Features.profileNormal
+    @Published var showRitual = false
+    @Published var ritualUp = false
+    @Published var ritualStretch = false
+    @Published var ritualLeave = false
 
     private var endAt: Date?
     private var overtimeStart: Date?
@@ -70,7 +76,15 @@ final class TimerViewModel: ObservableObject {
         return CGFloat(remainMs) / CGFloat(totalMs)
     }
 
-    var alertSoundOn: Bool { finishTone }
+    var alertSoundOn: Bool { resolvedFinishAlerts().withTone }
+
+    private func resolvedFinishAlerts() -> P0Features.FinishAlerts {
+        P0Features.resolveFinishAlerts(
+            finishTone: finishTone,
+            finishVibrate: finishVibrate,
+            finishNotify: finishNotify
+        )
+    }
 
     var appLocaleCodes: [String] {
         AppLocales.filter(catalog.localeCodes)
@@ -90,6 +104,8 @@ final class TimerViewModel: ObservableObject {
         finishTone = prefs.finishTone
         finishVibrate = prefs.finishVibrate
         finishNotify = prefs.finishNotify
+        standRitual = P0Features.getStandRitual()
+        alertProfile = P0Features.getAlertProfile()
         storageMode = prefs.storageMode
         customMin = prefs.customMin(fallback: catalog.defaultMin)
         customScenes = prefs.customScenes()
@@ -235,6 +251,23 @@ final class TimerViewModel: ObservableObject {
         cloud.schedulePushPrefs()
     }
 
+    func setStandRitual(_ mode: String) {
+        P0Features.setStandRitual(mode)
+        standRitual = P0Features.getStandRitual()
+    }
+
+    func setAlertProfile(_ mode: String) {
+        P0Features.setAlertProfile(mode)
+        alertProfile = P0Features.getAlertProfile()
+    }
+
+    func dismissRitual() {
+        showRitual = false
+        ritualUp = false
+        ritualStretch = false
+        ritualLeave = false
+    }
+
     func setStorageMode(_ mode: String) {
         if mode == PrefsStore.modeCloud {
             storageSyncStatus = t("storageSyncing")
@@ -274,6 +307,8 @@ final class TimerViewModel: ObservableObject {
         finishTone = prefs.finishTone
         finishVibrate = prefs.finishVibrate
         finishNotify = prefs.finishNotify
+        standRitual = P0Features.getStandRitual()
+        alertProfile = P0Features.getAlertProfile()
         customMin = prefs.customMin(fallback: catalog.defaultMin)
         customScenes = prefs.customScenes()
         storageMode = prefs.storageMode
@@ -322,14 +357,17 @@ final class TimerViewModel: ObservableObject {
         remainMs = totalMs
         running = false
         finished = false
+        dismissRitual()
         UIApplication.shared.isIdleTimerDisabled = false
         refreshPhase()
     }
 
     private func commitOvertimeToHistoryIfNeeded() {
         guard inOvertime, overtimeMs > 0, let id = lastRecordedSessionId else { return }
+        let ot = overtimeMs
         let elapsed = totalMs + overtimeMs
         history.updateSessionElapsed(id: id, elapsedMs: elapsed)
+        P0Features.recordOvertime(ot)
         cloud.schedulePushSessions()
         recordsEpoch += 1
         refreshTodayStats()
@@ -546,10 +584,11 @@ final class TimerViewModel: ObservableObject {
     }
 
     func realert() {
+        let alerts = resolvedFinishAlerts()
         AlertService.shared.play(
             durationMs: catalog.alertDurationMs,
-            withSound: finishTone,
-            withVibrate: finishVibrate
+            withSound: alerts.withTone,
+            withVibrate: alerts.withVibrate
         )
     }
 
@@ -568,12 +607,13 @@ final class TimerViewModel: ObservableObject {
         finished = false
         UIApplication.shared.isIdleTimerDisabled = true
         let vars = notifyVars()
-        if finishNotify {
+        let alerts = resolvedFinishAlerts()
+        if alerts.withNotify {
             NotificationService.scheduleFinish(
                 at: end,
                 title: t("notifyTitle", vars),
                 body: t("notifyBody", vars),
-                withSound: finishTone
+                withSound: alerts.withTone
             )
         }
         startTicker()
@@ -636,17 +676,18 @@ final class TimerViewModel: ObservableObject {
         recordsEpoch += 1
         if fromTicker {
             let vars = notifyVars()
-            if finishNotify {
+            let alerts = resolvedFinishAlerts()
+            if alerts.withNotify {
                 NotificationService.presentNow(
                     title: t("notifyTitle", vars),
                     body: t("notifyBody", vars),
-                    withSound: finishTone
+                    withSound: alerts.withTone
                 )
             }
             AlertService.shared.play(
                 durationMs: catalog.alertDurationMs,
-                withSound: finishTone,
-                withVibrate: finishVibrate
+                withSound: alerts.withTone,
+                withVibrate: alerts.withVibrate
             )
         }
         inOvertime = true
@@ -655,6 +696,15 @@ final class TimerViewModel: ObservableObject {
         UIApplication.shared.isIdleTimerDisabled = true
         startTicker()
         refreshPhase()
+        maybeShowRitual()
+    }
+
+    private func maybeShowRitual() {
+        guard P0Features.getStandRitual() == P0Features.ritualBasic else { return }
+        ritualUp = false
+        ritualStretch = false
+        ritualLeave = false
+        showRitual = true
     }
 
     func sessionMinutes() -> Int {

@@ -112,8 +112,8 @@ fun RecordsScreen(vm: TimerViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(FiveMinDimens.padBody),
+            verticalArrangement = Arrangement.spacedBy(FiveMinDimens.listSectionGap),
         ) {
             Text(
                 text = vm.t("weekStatsLabel"),
@@ -135,6 +135,45 @@ fun RecordsScreen(vm: TimerViewModel) {
                     unit = vm.t("customUnit"),
                     modifier = Modifier.weight(1f),
                 )
+            }
+            val p0 = FiveMinApp.instance.prefs.p0
+            val overtimeStats = remember(state.recordsEpoch) { p0.readOvertimeStats() }
+            if (p0.showOvertimeInsight) {
+                val insightLine = if (overtimeStats.count > 0) {
+                    vm.t(
+                        "overtimeInsightLine",
+                        mapOf(
+                            "count" to overtimeStats.count.toString(),
+                            "mins" to p0.insightMinutes(overtimeStats.ms).toString(),
+                        ),
+                    )
+                } else {
+                    vm.t("overtimeInsightEmpty")
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = vm.t("overtimeInsightTitle"),
+                        color = FiveMinColors.ink,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = insightLine,
+                        color = FiveMinColors.ink,
+                        fontSize = 14.sp,
+                    )
+                    Text(
+                        text = vm.t("overtimeInsightHint"),
+                        color = FiveMinColors.muted,
+                        fontSize = 12.sp,
+                    )
+                }
             }
             Text(
                 text = vm.t("historyLabel"),
@@ -175,7 +214,7 @@ fun RecordsScreen(vm: TimerViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FiveMinColors.surface, RoundedCornerShape(14.dp)),
+                    .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard)),
             ) {
                 if (rows.isEmpty()) {
                     Text(
@@ -293,7 +332,7 @@ private fun StatCard(
 ) {
     Column(
         modifier = modifier
-            .background(FiveMinColors.surface, RoundedCornerShape(14.dp))
+            .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
