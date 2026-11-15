@@ -47,6 +47,14 @@
   margin-top: var(--section-gap);
 }
 
+.hint {
+  margin-top: 12rpx;
+  padding: 0 8rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .card {
   background: var(--surface);
   border-radius: var(--radius);

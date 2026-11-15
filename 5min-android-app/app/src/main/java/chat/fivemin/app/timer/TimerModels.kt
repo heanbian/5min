@@ -15,6 +15,8 @@ data class TimerUiState(
     val finishTone: Boolean = true,
     val finishVibrate: Boolean = true,
     val finishNotify: Boolean = true,
+    val storageMode: String = "local",
+    val storageSyncStatus: String = "",
     val statsCount: Int,
     val statsMs: Long,
     val phase: TimerPhase,

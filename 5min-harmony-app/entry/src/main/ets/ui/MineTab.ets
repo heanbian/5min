@@ -2,7 +2,9 @@ import { common } from '@kit.AbilityKit';
 import { promptAction } from '@kit.ArkUI';
 import pasteboard from '@ohos.pasteboard';
 import { SharedCatalog } from '../common/SharedCatalog';
-import { PrefsStore, CustomScene } from '../common/PrefsStore';
+import { PrefsStore, CustomScene, STORAGE_MODE_CLOUD, STORAGE_MODE_LOCAL } from '../common/PrefsStore';
+import { HistoryStore } from '../common/HistoryStore';
+import { CloudSync } from '../common/CloudSync';
 import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
@@ -13,6 +15,7 @@ const TERMS_URL = 'https://5min.chat/terms.html';
 const ABOUT_URL = 'https://5min.chat/about.html';
 const QUICK_MINS: number[] = [3, 5, 10, 15, 25];
 const SOUND_IDS: string[] = ['off', 'rain', 'waves', 'clock'];
+const STORAGE_IDS: string[] = [STORAGE_MODE_LOCAL, STORAGE_MODE_CLOUD];
 
 @Component
 export struct MineTab {
@@ -23,7 +26,7 @@ export struct MineTab {
   @State customMin: number = 5;
   @State customScenes: CustomScene[] = [];
   @State scenesSummary: string = '';
-  /** '' | lang | sound | customScenes | sceneEditor | feedback */
+  /** '' | lang | sound | customScenes | sceneEditor | feedback | storage */
   @State dialog: string = '';
   /** Empty string = add; otherwise edit id */
   @State editorId: string = '';
@@ -36,9 +39,14 @@ export struct MineTab {
   @State finishTone: boolean = true;
   @State finishVibrate: boolean = true;
   @State finishNotify: boolean = true;
+  @State storageMode: string = STORAGE_MODE_LOCAL;
+  @State storageModeName: string = '';
+  @State storageSyncStatus: string = '';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
+  private history: HistoryStore = new HistoryStore();
+  private cloud: CloudSync | null = null;
   private context: common.UIAbilityContext | null = null;
 
   aboutToAppear(): void {
@@ -51,6 +59,8 @@ export struct MineTab {
       return;
     }
     await this.prefs.init(this.context);
+    await this.history.init(this.context);
+    this.cloud = new CloudSync(this.prefs, this.history);
     this.catalog = await SharedCatalog.load(this.context);
     this.localeCodes = APP_LOCALES.slice();
     const saved = await this.prefs.getLocale();
@@ -77,6 +87,7 @@ export struct MineTab {
     AppStorage.setOrCreate('appFinishTone', this.finishTone);
     AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
     AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
+    this.storageMode = await this.prefs.getStorageMode();
     this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
     await this.migrateLegacyCustomMinIfNeeded();
     await this.reloadCustomScenes();
@@ -134,8 +145,21 @@ export struct MineTab {
     // Read against the current locale code explicitly so values never stick to the old pack.
     this.localeName = this.catalog.t(this.locale, 'nativeName');
     this.ambientName = this.catalog.t(this.locale, this.ambientKeyOf(this.ambient));
+    this.storageModeName = this.storageMode === STORAGE_MODE_CLOUD
+      ? this.catalog.t(this.locale, 'storageModeCloud')
+      : this.catalog.t(this.locale, 'storageModeLocal');
     this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
+  }
+
+  private pushPrefsIfCloud(): void {
+    if (this.cloud) {
+      this.cloud.schedulePushPrefs();
+    }
+  }
+
+  private storageLabelOf(id: string): string {
+    return id === STORAGE_MODE_CLOUD ? this.t('storageModeCloud') : this.t('storageModeLocal');
   }
 
   private refreshScenesSummary(): void {
@@ -202,8 +226,12 @@ export struct MineTab {
     // Assign display strings after locale is committed.
     this.localeName = this.catalog.t(next, 'nativeName');
     this.ambientName = this.catalog.t(next, this.ambientKeyOf(this.ambient));
+    this.storageModeName = this.storageMode === STORAGE_MODE_CLOUD
+      ? this.catalog.t(next, 'storageModeCloud')
+      : this.catalog.t(next, 'storageModeLocal');
     this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
+    this.pushPrefsIfCloud();
   }
 
   async setAmbient(mode: string): Promise<void> {
@@ -213,6 +241,7 @@ export struct MineTab {
     await this.prefs.setAmbient(mode);
     this.ambientName = this.catalog.t(this.locale, this.ambientKeyOf(mode));
     this.uiTick = this.uiTick + 1;
+    this.pushPrefsIfCloud();
   }
 
   async setFinishTone(on: boolean): Promise<void> {
@@ -220,6 +249,7 @@ export struct MineTab {
     AppStorage.setOrCreate('appFinishTone', on);
     await this.prefs.setFinishTone(on);
     this.uiTick = this.uiTick + 1;
+    this.pushPrefsIfCloud();
   }
 
   async setFinishVibrate(on: boolean): Promise<void> {
@@ -227,6 +257,7 @@ export struct MineTab {
     AppStorage.setOrCreate('appFinishVibrate', on);
     await this.prefs.setFinishVibrate(on);
     this.uiTick = this.uiTick + 1;
+    this.pushPrefsIfCloud();
   }
 
   async setFinishNotify(on: boolean): Promise<void> {
@@ -234,6 +265,76 @@ export struct MineTab {
     AppStorage.setOrCreate('appFinishNotify', on);
     await this.prefs.setFinishNotify(on);
     this.uiTick = this.uiTick + 1;
+    this.pushPrefsIfCloud();
+  }
+
+  async pickStorageMode(mode: string): Promise<void> {
+    if (mode === STORAGE_MODE_CLOUD) {
+      try {
+        const buttons: promptAction.Button[] = [
+          { text: this.t('cancelLabel'), color: '#5F6F66' },
+          { text: this.t('confirmLabel'), color: '#2F9A68' }
+        ];
+        const res = await promptAction.showDialog({
+          title: this.t('storageModeCloud'),
+          message: this.t('storageCloudConfirm'),
+          buttons: buttons
+        });
+        if (res.index !== 1) {
+          return;
+        }
+      } catch (_) {
+        return;
+      }
+      await this.applyStorageMode(STORAGE_MODE_CLOUD);
+      return;
+    }
+    await this.applyStorageMode(STORAGE_MODE_LOCAL);
+  }
+
+  async applyStorageMode(mode: string): Promise<void> {
+    this.closeDialog();
+    this.storageSyncStatus = '';
+    if (!this.cloud) {
+      return;
+    }
+    if (mode === STORAGE_MODE_CLOUD) {
+      this.storageSyncStatus = this.t('storageSyncing');
+      this.uiTick = this.uiTick + 1;
+      const ok = await this.cloud.enableCloud();
+      if (ok) {
+        this.storageMode = STORAGE_MODE_CLOUD;
+        this.storageSyncStatus = this.t('storageSyncOk');
+        await this.reloadFromPrefsAfterCloud();
+      } else {
+        this.storageMode = STORAGE_MODE_LOCAL;
+        this.storageSyncStatus = this.t('storageSyncFail');
+      }
+      this.refreshLabels();
+      return;
+    }
+    await this.cloud.disableCloud();
+    this.storageMode = STORAGE_MODE_LOCAL;
+    this.storageSyncStatus = '';
+    this.refreshLabels();
+  }
+
+  /** After a successful cloud pull, refresh Mine + AppStorage from prefs. */
+  private async reloadFromPrefsAfterCloud(): Promise<void> {
+    const nextLocale = normalizeAppLocale(await this.prefs.getLocale(), 'zh-CN');
+    this.locale = nextLocale;
+    AppStorage.setOrCreate('appLocale', nextLocale);
+    const amb = await this.prefs.getAmbient();
+    this.ambient = amb;
+    AppStorage.setOrCreate('appAmbient', amb);
+    this.finishTone = await this.prefs.getFinishTone();
+    this.finishVibrate = await this.prefs.getFinishVibrate();
+    this.finishNotify = await this.prefs.getFinishNotify();
+    AppStorage.setOrCreate('appFinishTone', this.finishTone);
+    AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
+    AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
+    this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
+    await this.reloadCustomScenes();
   }
 
   private clampMin(raw: number): number {
@@ -253,6 +354,7 @@ export struct MineTab {
     this.customScenes = await this.prefs.getCustomScenes();
     this.refreshScenesSummary();
     this.uiTick = this.uiTick + 1;
+    this.pushPrefsIfCloud();
   }
 
   async saveSceneEditor(): Promise<void> {
@@ -522,6 +624,56 @@ export struct MineTab {
               .width('100%')
 
               Column({ space: 8 }) {
+                Text(this.t('storageSection'))
+                  .fontSize(13)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.muted'))
+                  .width('100%')
+                  .padding({ left: 4 })
+
+                Column({ space: 0 }) {
+                  Row() {
+                    Text(this.t('storageModeLabel'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text(this.storageModeName)
+                      .fontSize(14)
+                      .fontColor($r('app.color.muted'))
+                      .margin({ right: 6 })
+                      .maxLines(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => this.openDialog('storage'))
+                }
+                .width('100%')
+                .backgroundColor($r('app.color.surface'))
+                .borderRadius(14)
+                .clip(true)
+
+                Text(this.t('storageModeHint'))
+                  .fontSize(12)
+                  .fontColor($r('app.color.muted'))
+                  .width('100%')
+                  .padding({ left: 4, right: 4 })
+                  .lineHeight(18)
+
+                if (this.storageSyncStatus.length > 0) {
+                  Text(this.storageSyncStatus)
+                    .fontSize(12)
+                    .fontColor($r('app.color.muted'))
+                    .width('100%')
+                    .padding({ left: 4, right: 4 })
+                }
+              }
+              .width('100%')
+
+              Column({ space: 8 }) {
                 Text(this.t('mineSectionSupport'))
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
@@ -758,6 +910,38 @@ export struct MineTab {
               .direction(Direction.Ltr)
               .onClick(() => this.setAmbient(id))
             }, (id: string) => `snd-${id}-${this.uiTick}`)
+          }
+          .width('100%')
+          .padding({ left: 12, right: 12, bottom: 28 })
+          .alignItems(HorizontalAlign.Center)
+          .direction(Direction.Ltr)
+        } else if (this.dialog === 'storage') {
+          Column({ space: 4 }) {
+            ForEach(STORAGE_IDS, (id: string) => {
+              Stack({ alignContent: Alignment.Center }) {
+                Text(this.storageLabelOf(id))
+                  .width('100%')
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(id === this.storageMode ? $r('app.color.brand_strong') : $r('app.color.ink'))
+                  .textAlign(TextAlign.Center)
+                  .direction(Direction.Ltr)
+                if (id === this.storageMode) {
+                  Text('✓')
+                    .fontSize(16)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.brand_strong'))
+                    .position({ right: 14 })
+                }
+              }
+              .width('100%')
+              .height(48)
+              .padding({ left: 14, right: 14 })
+              .backgroundColor(id === this.storageMode ? $r('app.color.brand_soft') : Color.Transparent)
+              .borderRadius(10)
+              .direction(Direction.Ltr)
+              .onClick(() => this.pickStorageMode(id))
+            }, (id: string) => `storage-${id}-${this.uiTick}`)
           }
           .width('100%')
           .padding({ left: 12, right: 12, bottom: 28 })
@@ -1003,6 +1187,9 @@ export struct MineTab {
     }
     if (this.dialog === 'sound') {
       return this.t('ambientLabel');
+    }
+    if (this.dialog === 'storage') {
+      return this.t('storageModeLabel');
     }
     if (this.dialog === 'customScenes') {
       return this.t('customScenesLabel');

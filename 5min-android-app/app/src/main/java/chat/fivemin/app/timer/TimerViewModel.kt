@@ -11,6 +11,7 @@ import chat.fivemin.app.data.Scene
 import chat.fivemin.app.data.SceneGroup
 import chat.fivemin.app.data.SceneRanker
 import chat.fivemin.app.notify.FinishNotifier
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.max
 
@@ -81,6 +83,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 finishTone = prefs.finishTone,
                 finishVibrate = prefs.finishVibrate,
                 finishNotify = prefs.finishNotify,
+                storageMode = prefs.storageMode,
+                storageSyncStatus = "",
                 statsCount = count,
                 statsMs = ms,
                 phase = TimerPhase.Idle,
@@ -188,32 +192,88 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private val cloud get() = FiveMinApp.instance.cloudSync
+
     fun setLocale(code: String) {
         val resolved = AppLocales.normalize(i18n.resolve(code) ?: code)
         prefs.locale = resolved
         _state.update { it.copy(locale = resolved) }
+        cloud.schedulePushPrefs()
     }
 
     fun setAmbient(mode: String) {
         prefs.ambient = mode
         _state.update { it.copy(ambient = mode) }
         if (mode == "off") FinishAlerter.stop()
+        cloud.schedulePushPrefs()
     }
 
     fun setFinishTone(on: Boolean) {
         prefs.finishTone = on
         _state.update { it.copy(finishTone = on) }
         if (!on) FinishAlerter.stop()
+        cloud.schedulePushPrefs()
     }
 
     fun setFinishVibrate(on: Boolean) {
         prefs.finishVibrate = on
         _state.update { it.copy(finishVibrate = on) }
+        cloud.schedulePushPrefs()
     }
 
     fun setFinishNotify(on: Boolean) {
         prefs.finishNotify = on
         _state.update { it.copy(finishNotify = on) }
+        cloud.schedulePushPrefs()
+    }
+
+    fun setStorageMode(mode: String) {
+        if (mode == "cloud") {
+            _state.update { it.copy(storageSyncStatus = t("storageSyncing")) }
+            cloud.enableCloud { ok ->
+                viewModelScope.launch {
+                    withContext(Dispatchers.Main) {
+                        if (ok) {
+                            reloadPrefsFromStore()
+                            bumpRecordsEpoch()
+                            refreshTodayStats()
+                            refreshSuggested()
+                            _state.update {
+                                it.copy(
+                                    storageMode = prefs.storageMode,
+                                    storageSyncStatus = t("storageSyncOk"),
+                                )
+                            }
+                        } else {
+                            _state.update {
+                                it.copy(
+                                    storageMode = prefs.storageMode,
+                                    storageSyncStatus = t("storageSyncFail"),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            return
+        }
+        cloud.disableCloud()
+        _state.update { it.copy(storageMode = "local", storageSyncStatus = "") }
+    }
+
+    private fun reloadPrefsFromStore() {
+        _state.update {
+            it.copy(
+                locale = prefs.locale.ifBlank { it.locale },
+                ambient = prefs.ambient,
+                finishTone = prefs.finishTone,
+                finishVibrate = prefs.finishVibrate,
+                finishNotify = prefs.finishNotify,
+                customMin = prefs.customMin(catalog.defaultMin),
+                customScenes = prefs.customScenes(),
+                storageMode = prefs.storageMode,
+            )
+        }
     }
 
     fun consumePendingScene() {
@@ -268,6 +328,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     private fun persistCustomScenes(scenes: List<CustomScene>) {
         prefs.setCustomScenes(scenes)
         _state.update { it.copy(customScenes = prefs.customScenes()) }
+        cloud.schedulePushPrefs()
     }
 
     /** One-shot: turn the old single custom duration into a named scene. */
@@ -296,7 +357,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun deleteHistorySession(id: Long) {
-        history.deleteSession(id)
+        val clientId = history.deleteSession(id)
+        cloud.scheduleDeleteSession(clientId)
         bumpRecordsEpoch()
         refreshTodayStats()
         refreshSuggested()
@@ -304,6 +366,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun clearHistory() {
         history.clearHistory()
+        cloud.scheduleClearSessions()
         bumpRecordsEpoch()
         refreshTodayStats()
         refreshSuggested()
@@ -428,6 +491,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val s = _state.value
         if (s.finished && s.overtimeMs > 0L && lastRecordedId > 0L) {
             history.updateSessionElapsed(lastRecordedId, s.totalMs + s.overtimeMs)
+            cloud.schedulePushSessions()
             refreshTodayStats()
             refreshSuggested()
             _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
@@ -508,6 +572,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val sceneId = s.activeSceneId.orEmpty()
         if (fromTicker) {
             lastRecordedId = history.recordSession(total, sceneId)
+            cloud.schedulePushSessions()
             if (s.finishNotify) {
                 FinishNotifier.show(
                     getApplication(),

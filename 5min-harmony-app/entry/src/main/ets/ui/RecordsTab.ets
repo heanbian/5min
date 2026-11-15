@@ -3,6 +3,7 @@ import { promptAction } from '@kit.ArkUI';
 import { SharedCatalog, SceneItem } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore';
+import { CloudSync } from '../common/CloudSync';
 import { resolveLocale } from '../common/I18n';
 import { i18n } from '@kit.LocalizationKit';
 
@@ -42,6 +43,7 @@ export struct RecordsTab {
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
   private history: HistoryStore = new HistoryStore();
+  private cloud: CloudSync | null = null;
   private scenes: SceneItem[] = [];
   private customScenes: CustomScene[] = [];
 
@@ -66,6 +68,7 @@ export struct RecordsTab {
     const context = getContext(this) as common.UIAbilityContext;
     await this.prefs.init(context);
     await this.history.init(context);
+    this.cloud = new CloudSync(this.prefs, this.history);
     this.catalog = await SharedCatalog.load(context);
     this.scenes = this.catalog.scenes;
     if (!this.locale) {
@@ -183,7 +186,10 @@ export struct RecordsTab {
     } catch (_) {
       return;
     }
-    await this.history.deleteSession(id);
+    const clientId = await this.history.deleteSession(id);
+    if (this.cloud && clientId) {
+      this.cloud.scheduleDeleteSession(clientId);
+    }
     await this.reload();
     this.uiTick = this.uiTick + 1;
   }
@@ -206,6 +212,9 @@ export struct RecordsTab {
       return;
     }
     await this.history.clearHistory();
+    if (this.cloud) {
+      this.cloud.scheduleClearSessions();
+    }
     await this.reload();
     this.uiTick = this.uiTick + 1;
   }

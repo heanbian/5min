@@ -61,7 +61,9 @@ const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { resolveAppRoot, resolvePublicPath, assertPublicReady } = require('./bizjs/paths');
 const { visitorLogMiddleware, ensureVisitorLogTable } = require('./bizjs/visitor-log');
+const { ensureCloudStorageTables } = require('./bizjs/cloud-storage');
 const registerPublicRoutes = require('./routes/public');
+const registerStorageRoutes = require('./routes/storage');
 
 const APP_ROOT = resolveAppRoot();
 const PID_FILE = path.join(APP_ROOT, 'fivemin.pid');
@@ -80,7 +82,7 @@ dotenv.config({
   override: true
 });
 
-const PORT = Number(process.env.PORT) || 8080;
+const PORT = Number(process.env.PORT) || 3300;
 const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
 const publicPath = resolvePublicPath();
 assertPublicReady(publicPath);
@@ -202,6 +204,7 @@ app.use((req, res, next) => {
 
 app.use(visitorLogMiddleware);
 registerPublicRoutes(app);
+registerStorageRoutes(app);
 
 function staticHeaders(res, filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -292,6 +295,11 @@ const server = app.listen(PORT, () => {
     .then(() => console.log('访客记录表已就绪'))
     .catch((err) => {
       console.error('访客记录表初始化失败: ' + (err && err.message ? err.message : err));
+    });
+  ensureCloudStorageTables()
+    .then(() => console.log('云存储表已就绪'))
+    .catch((err) => {
+      console.error('云存储表初始化失败: ' + (err && err.message ? err.message : err));
     });
 });
 

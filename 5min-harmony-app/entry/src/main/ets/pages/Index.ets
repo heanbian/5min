@@ -3,6 +3,7 @@ import { window } from '@kit.ArkUI';
 import { SharedCatalog, SceneItem, SceneGroup } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore } from '../common/HistoryStore';
+import { CloudSync } from '../common/CloudSync';
 import { SceneRanker, SessionRef } from '../common/SceneRanker';
 import { resolveLocale } from '../common/I18n';
 import { normalizeAppLocale } from '../common/AppLocales';
@@ -125,6 +126,7 @@ struct Index {
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
   private history: HistoryStore = new HistoryStore();
+  private cloud: CloudSync | null = null;
   private state: TimerState = new TimerState();
   private tickId: number = -1;
   private finishedHandled: boolean = false;
@@ -170,6 +172,7 @@ struct Index {
     }
     await this.prefs.init(this.context);
     await this.history.init(this.context);
+    this.cloud = new CloudSync(this.prefs, this.history);
     this.catalog = await SharedCatalog.load(this.context);
     this.scenes = this.catalog.scenes;
     this.localeCodes = this.catalog.localeCodes;
@@ -216,6 +219,43 @@ struct Index {
     this.privacyReady = true;
     this.ready = true;
     this.refreshUi();
+    await this.syncCloudOnLaunchIfNeeded();
+  }
+
+  /** Pull/push cloud snapshot when storageMode is cloud (matches Android app start). */
+  private async syncCloudOnLaunchIfNeeded(): Promise<void> {
+    if (!this.cloud || !(await this.cloud.isCloud())) {
+      return;
+    }
+    CloudSync.runAsync(async () => {
+      if (!this.cloud) {
+        return;
+      }
+      await this.cloud.syncNow();
+      const nextLocale = normalizeAppLocale(await this.prefs.getLocale(), 'zh-CN');
+      if (nextLocale !== this.locale) {
+        this.locale = nextLocale;
+        this.state.locale = nextLocale;
+        this.linkedLocale = nextLocale;
+        AppStorage.setOrCreate('appLocale', nextLocale);
+        this.localeTick = this.localeTick + 1;
+      }
+      const amb = await this.prefs.getAmbient();
+      this.ambient = amb;
+      this.state.ambient = amb;
+      AppStorage.setOrCreate('appAmbient', amb);
+      this.finishTone = await this.prefs.getFinishTone();
+      this.finishVibrate = await this.prefs.getFinishVibrate();
+      this.finishNotify = await this.prefs.getFinishNotify();
+      AppStorage.setOrCreate('appFinishTone', this.finishTone);
+      AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
+      AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
+      await this.reloadCustomScenes();
+      await this.refreshTodayStats();
+      await this.refreshSuggested();
+      this.recordsEpoch = this.recordsEpoch + 1;
+      this.refreshUi();
+    });
   }
 
   private async reloadCustomScenes(): Promise<void> {
@@ -344,6 +384,9 @@ struct Index {
     }
     const elapsed = this.state.totalMs + this.overtimeMs;
     await this.history.updateSessionElapsed(this.lastRecordedSessionId, elapsed);
+    if (this.cloud) {
+      this.cloud.schedulePushSessions();
+    }
     this.recordsEpoch = this.recordsEpoch + 1;
     await this.refreshTodayStats();
     await this.refreshSuggested();
@@ -359,7 +402,10 @@ struct Index {
     if (this.lastRecordedSessionId <= 0) {
       return;
     }
-    await this.history.deleteSession(this.lastRecordedSessionId);
+    const clientId = await this.history.deleteSession(this.lastRecordedSessionId);
+    if (this.cloud && clientId) {
+      this.cloud.scheduleDeleteSession(clientId);
+    }
     this.lastRecordedSessionId = 0;
     this.recordsEpoch = this.recordsEpoch + 1;
     await this.refreshTodayStats();
@@ -781,6 +827,9 @@ struct Index {
     this.state.finished = true;
     this.lastRecordedSessionId =
       await this.history.recordSession(this.state.totalMs, this.state.activeSceneId);
+    if (this.cloud) {
+      this.cloud.schedulePushSessions();
+    }
     this.recordsEpoch = this.recordsEpoch + 1;
     await this.refreshTodayStats();
     await this.refreshSuggested();

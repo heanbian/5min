@@ -59,6 +59,25 @@ function prune(list) {
   return list.filter((row) => row.at >= cut);
 }
 
+function scheduleCloudPush() {
+  try {
+    const prefs = require('./prefs');
+    if (prefs.getStorageMode() !== 'cloud') return;
+    clearTimeout(scheduleCloudPush._timer);
+    scheduleCloudPush._timer = setTimeout(() => {
+      try {
+        require('./cloudSync')
+          .pushSessionsOnly()
+          .catch(() => {});
+      } catch (e) {
+        /* ignore */
+      }
+    }, 800);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 function recordSession(elapsedMs, sceneId) {
   const ms = Math.max(0, Math.floor(Number(elapsedMs) || 0));
   if (ms <= 0) return '';
@@ -74,6 +93,7 @@ function recordSession(elapsedMs, sceneId) {
     elapsedMs: ms,
   });
   writeAll(next);
+  scheduleCloudPush();
   return id;
 }
 
@@ -92,10 +112,44 @@ function deleteSession(id) {
   if (!id) return;
   const list = prune(readAll()).filter((row) => row.id !== id);
   writeAll(list);
+  try {
+    const prefs = require('./prefs');
+    if (prefs.getStorageMode() === 'cloud') {
+      require('./cloudSync')
+        .deleteRemoteSession(id)
+        .catch(() => {});
+    }
+  } catch (e) {
+    /* ignore */
+  }
 }
 
 function clearHistory() {
   writeAll([]);
+  try {
+    const prefs = require('./prefs');
+    if (prefs.getStorageMode() === 'cloud') {
+      require('./cloudSync')
+        .clearRemoteSessions()
+        .catch(() => {});
+    }
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+/** Replace local history with a sanitized list (used by cloud merge). */
+function replaceAll(list) {
+  const cleaned = (Array.isArray(list) ? list : [])
+    .filter((row) => row && Number(row.at) > 0 && Number(row.minutes) > 0)
+    .map((row) => ({
+      id: String(row.id || makeRowId(Math.floor(Number(row.at)))),
+      at: Math.floor(Number(row.at)),
+      minutes: Math.floor(Number(row.minutes)),
+      sceneId: String(row.sceneId || ''),
+      elapsedMs: Math.max(0, Math.floor(Number(row.elapsedMs) || 0)),
+    }));
+  writeAll(prune(cleaned));
 }
 
 /** Sessions in last HISTORY_DAYS, newest first; optional sceneId filter. */
@@ -137,6 +191,7 @@ module.exports = {
   updateSessionElapsed,
   deleteSession,
   clearHistory,
+  replaceAll,
   getHistory,
   periodStats,
   todayStats,

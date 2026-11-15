@@ -6,10 +6,19 @@ struct HistoryItem: Identifiable, Equatable {
     var at: Int64
     var minutes: Int
     var sceneId: String
+    var clientId: String = ""
 }
 
 /// Local SQLite history under Application Support/5min-chat/5min_chat_history.db
 final class HistoryStore {
+    struct SyncSession {
+        var clientId: String
+        var at: Int64
+        var minutes: Int
+        var sceneId: String
+        var elapsedMs: Int64
+    }
+
     static let shared = HistoryStore()
     static let historyDays = 14
 
@@ -47,7 +56,29 @@ final class HistoryStore {
         );
         """)
         exec("CREATE INDEX IF NOT EXISTS idx_sessions_at ON sessions(at);")
+        ensureClientIdColumn()
         pruneOld()
+    }
+
+    private func ensureClientIdColumn() {
+        var hasClient = false
+        queue.sync {
+            guard let db else { return }
+            var stmt: OpaquePointer?
+            defer { sqlite3_finalize(stmt) }
+            if sqlite3_prepare_v2(db, "PRAGMA table_info(sessions)", -1, &stmt, nil) == SQLITE_OK {
+                while sqlite3_step(stmt) == SQLITE_ROW {
+                    if let name = sqlite3_column_text(stmt, 1) {
+                        if String(cString: name) == "client_id" { hasClient = true }
+                    }
+                }
+            }
+        }
+        if !hasClient {
+            exec("ALTER TABLE sessions ADD COLUMN client_id TEXT NOT NULL DEFAULT ''")
+        }
+        exec("UPDATE sessions SET client_id = 'n_' || id WHERE client_id IS NULL OR client_id = ''")
+        exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_client_id ON sessions(client_id)")
     }
 
     @discardableResult
@@ -81,34 +112,39 @@ final class HistoryStore {
         }
     }
 
+    private func newClientId() -> String {
+        "n_" + UUID().uuidString.lowercased()
+    }
+
     @discardableResult
     func recordSession(elapsedMs: Int64, sceneId: String = "") -> Int64 {
         let at = Int64(Date().timeIntervalSince1970 * 1000)
         let ms = max(0, elapsedMs)
         let minutes = max(1, Int((Double(ms) / 60_000.0).rounded()))
-        return insertSession(at: at, minutes: minutes, sceneId: sceneId, elapsedMs: ms)
+        return insertSession(at: at, minutes: minutes, sceneId: sceneId, elapsedMs: ms, clientId: newClientId())
     }
 
 #if DEBUG
     /// Seed local history for store screenshot captures.
     func insertDemoSession(at: Int64, minutes: Int, sceneId: String) {
         let mins = max(1, minutes)
-        insertSession(at: at, minutes: mins, sceneId: sceneId, elapsedMs: Int64(mins) * 60_000)
+        insertSession(at: at, minutes: mins, sceneId: sceneId, elapsedMs: Int64(mins) * 60_000, clientId: newClientId())
     }
 #endif
 
     @discardableResult
-    private func insertSession(at: Int64, minutes: Int, sceneId: String, elapsedMs: Int64) -> Int64 {
+    private func insertSession(at: Int64, minutes: Int, sceneId: String, elapsedMs: Int64, clientId: String) -> Int64 {
         queue.sync {
             guard let db else { return 0 }
             var stmt: OpaquePointer?
             defer { sqlite3_finalize(stmt) }
-            let sql = "INSERT INTO sessions(at, minutes, scene_id, elapsed_ms) VALUES(?,?,?,?)"
+            let sql = "INSERT INTO sessions(at, minutes, scene_id, elapsed_ms, client_id) VALUES(?,?,?,?,?)"
             guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return 0 }
             sqlite3_bind_int64(stmt, 1, at)
             sqlite3_bind_int(stmt, 2, Int32(minutes))
             sqlite3_bind_text(stmt, 3, (sceneId as NSString).utf8String, -1, nil)
             sqlite3_bind_int64(stmt, 4, elapsedMs)
+            sqlite3_bind_text(stmt, 5, (clientId as NSString).utf8String, -1, nil)
             guard sqlite3_step(stmt) == SQLITE_DONE else { return 0 }
             pruneOld()
             return sqlite3_last_insert_rowid(db)
@@ -131,7 +167,25 @@ final class HistoryStore {
         }
     }
 
-    func deleteSession(id: Int64) {
+    func clientIdOf(id: Int64) -> String {
+        queue.sync {
+            guard let db, id > 0 else { return "" }
+            var stmt: OpaquePointer?
+            defer { sqlite3_finalize(stmt) }
+            guard sqlite3_prepare_v2(db, "SELECT client_id FROM sessions WHERE id = ?", -1, &stmt, nil) == SQLITE_OK else {
+                return ""
+            }
+            sqlite3_bind_int64(stmt, 1, id)
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                return sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
+            }
+            return ""
+        }
+    }
+
+    @discardableResult
+    func deleteSession(id: Int64) -> String {
+        let clientId = clientIdOf(id: id)
         queue.sync {
             guard let db else { return }
             var stmt: OpaquePointer?
@@ -141,6 +195,7 @@ final class HistoryStore {
             sqlite3_bind_int64(stmt, 1, id)
             _ = sqlite3_step(stmt)
         }
+        return clientId
     }
 
     func clearHistory() {
@@ -158,9 +213,9 @@ final class HistoryStore {
             let filterByScene = sceneId != nil && !(sceneId?.isEmpty ?? true)
             let sql: String
             if filterByScene {
-                sql = "SELECT id, at, minutes, scene_id FROM sessions WHERE at >= ? AND scene_id = ? ORDER BY at DESC"
+                sql = "SELECT id, at, minutes, scene_id, client_id FROM sessions WHERE at >= ? AND scene_id = ? ORDER BY at DESC"
             } else {
-                sql = "SELECT id, at, minutes, scene_id FROM sessions WHERE at >= ? ORDER BY at DESC"
+                sql = "SELECT id, at, minutes, scene_id, client_id FROM sessions WHERE at >= ? ORDER BY at DESC"
             }
             guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
             sqlite3_bind_int64(stmt, 1, cutoffMs)
@@ -173,12 +228,92 @@ final class HistoryStore {
                 let at = sqlite3_column_int64(stmt, 1)
                 let minutes = Int(sqlite3_column_int(stmt, 2))
                 let scene = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
+                let client = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
                 if at > 0, minutes > 0 {
-                    out.append(HistoryItem(id: id, at: at, minutes: minutes, sceneId: scene))
+                    out.append(HistoryItem(id: id, at: at, minutes: minutes, sceneId: scene, clientId: client))
                 }
             }
             return out
         }
+    }
+
+    func exportForSync() -> [SyncSession] {
+        queue.sync {
+            guard let db else { return [] }
+            var stmt: OpaquePointer?
+            defer { sqlite3_finalize(stmt) }
+            let sql = "SELECT client_id, at, minutes, scene_id, elapsed_ms FROM sessions WHERE at >= ? ORDER BY at DESC"
+            guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+            sqlite3_bind_int64(stmt, 1, cutoffMs)
+            var out: [SyncSession] = []
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let client = sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
+                let at = sqlite3_column_int64(stmt, 1)
+                let minutes = Int(sqlite3_column_int(stmt, 2))
+                let scene = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
+                let elapsed = sqlite3_column_int64(stmt, 4)
+                if client.isEmpty || at <= 0 || minutes <= 0 { continue }
+                out.append(SyncSession(clientId: client, at: at, minutes: minutes, sceneId: scene, elapsedMs: elapsed))
+            }
+            return out
+        }
+    }
+
+    func mergeFromCloud(_ rows: [SyncSession]) {
+        guard !rows.isEmpty else { return }
+        queue.sync {
+            guard let db else { return }
+            for row in rows {
+                if row.clientId.isEmpty || row.at <= 0 || row.minutes <= 0 { continue }
+                var find: OpaquePointer?
+                defer { sqlite3_finalize(find) }
+                var existing: Int64 = -1
+                if sqlite3_prepare_v2(db, "SELECT id FROM sessions WHERE client_id = ?", -1, &find, nil) == SQLITE_OK {
+                    sqlite3_bind_text(find, 1, (row.clientId as NSString).utf8String, -1, nil)
+                    if sqlite3_step(find) == SQLITE_ROW {
+                        existing = sqlite3_column_int64(find, 0)
+                    }
+                }
+                if existing > 0 {
+                    var upd: OpaquePointer?
+                    defer { sqlite3_finalize(upd) }
+                    let sql = "UPDATE sessions SET at=?, minutes=?, scene_id=?, elapsed_ms=? WHERE id=?"
+                    if sqlite3_prepare_v2(db, sql, -1, &upd, nil) == SQLITE_OK {
+                        sqlite3_bind_int64(upd, 1, row.at)
+                        sqlite3_bind_int(upd, 2, Int32(row.minutes))
+                        sqlite3_bind_text(upd, 3, (row.sceneId as NSString).utf8String, -1, nil)
+                        sqlite3_bind_int64(upd, 4, row.elapsedMs)
+                        sqlite3_bind_int64(upd, 5, existing)
+                        _ = sqlite3_step(upd)
+                    }
+                } else {
+                    _ = insertSessionUnlocked(
+                        at: row.at,
+                        minutes: row.minutes,
+                        sceneId: row.sceneId,
+                        elapsedMs: row.elapsedMs,
+                        clientId: row.clientId
+                    )
+                }
+            }
+            pruneOld()
+        }
+    }
+
+    /// Caller must already be on `queue`.
+    private func insertSessionUnlocked(at: Int64, minutes: Int, sceneId: String, elapsedMs: Int64, clientId: String) -> Int64 {
+        guard let db else { return 0 }
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        let sql = "INSERT INTO sessions(at, minutes, scene_id, elapsed_ms, client_id) VALUES(?,?,?,?,?)"
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return 0 }
+        sqlite3_bind_int64(stmt, 1, at)
+        sqlite3_bind_int(stmt, 2, Int32(minutes))
+        sqlite3_bind_text(stmt, 3, (sceneId as NSString).utf8String, -1, nil)
+        sqlite3_bind_int64(stmt, 4, elapsedMs)
+        sqlite3_bind_text(stmt, 5, (clientId as NSString).utf8String, -1, nil)
+        guard sqlite3_step(stmt) == SQLITE_DONE else { return 0 }
+        return sqlite3_last_insert_rowid(db)
     }
 
     func periodStats() -> (count: Int, minutes: Int) {

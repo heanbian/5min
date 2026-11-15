@@ -20,4 +20,15 @@ App({
     initAmbient();
     this.globalData.privacyAccepted = prefs.isPrivacyAccepted();
   },
+
+  onShow() {
+    if (prefs.getStorageMode() !== 'cloud') return;
+    try {
+      require('./utils/cloudSync')
+        .syncNow()
+        .catch(() => {});
+    } catch (e) {
+      /* ignore */
+    }
+  },
 });

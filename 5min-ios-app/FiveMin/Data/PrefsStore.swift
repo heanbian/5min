@@ -38,6 +38,12 @@ final class PrefsStore {
     private let finishToneKey = "5min.finish_tone"
     private let finishVibrateKey = "5min.finish_vibrate"
     private let finishNotifyKey = "5min.finish_notify"
+    private let storageModeKey = "5min.storage_mode"
+    private let deviceIdKey = "5min.device_id"
+    private let deviceSecretKey = "5min.device_secret"
+
+    static let modeLocal = "local"
+    static let modeCloud = "cloud"
 
     var locale: String {
         get { defaults.string(forKey: localeKey) ?? "" }
@@ -52,6 +58,30 @@ final class PrefsStore {
     var privacyAccepted: Bool {
         get { defaults.bool(forKey: privacyKey) }
         set { defaults.set(newValue, forKey: privacyKey) }
+    }
+
+    var storageMode: String {
+        get {
+            defaults.string(forKey: storageModeKey) == Self.modeCloud ? Self.modeCloud : Self.modeLocal
+        }
+        set {
+            defaults.set(newValue == Self.modeCloud ? Self.modeCloud : Self.modeLocal, forKey: storageModeKey)
+        }
+    }
+
+    var deviceId: String {
+        get { defaults.string(forKey: deviceIdKey) ?? "" }
+        set { defaults.set(newValue, forKey: deviceIdKey) }
+    }
+
+    var deviceSecret: String {
+        get { defaults.string(forKey: deviceSecretKey) ?? "" }
+        set { defaults.set(newValue, forKey: deviceSecretKey) }
+    }
+
+    func setDeviceCredentials(id: String, secret: String) {
+        defaults.set(id, forKey: deviceIdKey)
+        defaults.set(secret, forKey: deviceSecretKey)
     }
 
     func customMin(fallback: Int = 5) -> Int {

@@ -49,6 +49,17 @@
       </view>
     </view>
 
+    <view class="section-label section-gap">{{storageSection}}</view>
+    <view class="card">
+      <view class="row" bindtap="onOpenStorage">
+        <text class="row-title">{{storageModeLabel}}</text>
+        <text class="row-value">{{storageModeName}}</text>
+        <text class="chev">›</text>
+      </view>
+    </view>
+    <view class="hint" wx:if="{{storageModeHint}}">{{storageModeHint}}</view>
+    <view class="hint" wx:if="{{storageSyncStatus}}">{{storageSyncStatus}}</view>
+
     <view class="section-label section-gap">{{mineSectionSupport}}</view>
     <view class="card">
       <view class="row" bindtap="onOpenPrivacy">
@@ -110,6 +121,16 @@
           class="sheet-item {{item.id === ambient ? 'sheet-item-on' : ''}}"
           data-id="{{item.id}}"
           bindtap="onPickAmbient"
+        >{{item.label}}</view>
+      </block>
+
+      <block wx:if="{{dialog === 'storage'}}">
+        <view
+          wx:for="{{storageOptions}}"
+          wx:key="id"
+          class="sheet-item {{item.id === storageMode ? 'sheet-item-on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onPickStorage"
         >{{item.label}}</view>
       </block>
 

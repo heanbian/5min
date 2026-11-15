@@ -40,6 +40,9 @@ export class CustomScene {
   }
 }
 
+export const STORAGE_MODE_LOCAL: string = 'local';
+export const STORAGE_MODE_CLOUD: string = 'cloud';
+
 /** App settings only; session history lives in HistoryStore (RDB). */
 export class PrefsStore {
   private pref: preferences.Preferences | null = null;
@@ -47,6 +50,31 @@ export class PrefsStore {
   async init(context: common.UIAbilityContext): Promise<void> {
     this.pref = await preferences.getPreferences(context, STORE);
     await this.migrateFinishAlertPrefsIfNeeded();
+  }
+
+  async getStorageMode(): Promise<string> {
+    const mode = String(await this.pref?.get('storage_mode', STORAGE_MODE_LOCAL) ?? STORAGE_MODE_LOCAL);
+    return mode === STORAGE_MODE_CLOUD ? STORAGE_MODE_CLOUD : STORAGE_MODE_LOCAL;
+  }
+
+  async setStorageMode(mode: string): Promise<void> {
+    const next = mode === STORAGE_MODE_CLOUD ? STORAGE_MODE_CLOUD : STORAGE_MODE_LOCAL;
+    await this.pref?.put('storage_mode', next);
+    await this.pref?.flush();
+  }
+
+  async getDeviceId(): Promise<string> {
+    return String(await this.pref?.get('device_id', '') ?? '');
+  }
+
+  async getDeviceSecret(): Promise<string> {
+    return String(await this.pref?.get('device_secret', '') ?? '');
+  }
+
+  async setDeviceCredentials(deviceId: string, deviceSecret: string): Promise<void> {
+    await this.pref?.put('device_id', deviceId);
+    await this.pref?.put('device_secret', deviceSecret);
+    await this.pref?.flush();
   }
 
   private async migrateFinishAlertPrefsIfNeeded(): Promise<void> {

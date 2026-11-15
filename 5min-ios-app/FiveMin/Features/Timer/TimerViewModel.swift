@@ -11,6 +11,7 @@ final class TimerViewModel: ObservableObject {
     let catalog = SharedCatalog()
     private let prefs = PrefsStore()
     private let history = HistoryStore.shared
+    private lazy var cloud = CloudSync(prefs: prefs, history: history)
 
     @Published var locale: String = "zh-CN"
     @Published var totalMs: Int64 = 5 * 60 * 1000
@@ -35,6 +36,8 @@ final class TimerViewModel: ObservableObject {
     @Published var finishNotify = true
     @Published var inOvertime = false
     @Published var overtimeMs: Int64 = 0
+    @Published var storageMode = PrefsStore.modeLocal
+    @Published var storageSyncStatus = ""
 
     private var endAt: Date?
     private var overtimeStart: Date?
@@ -87,6 +90,7 @@ final class TimerViewModel: ObservableObject {
         finishTone = prefs.finishTone
         finishVibrate = prefs.finishVibrate
         finishNotify = prefs.finishNotify
+        storageMode = prefs.storageMode
         customMin = prefs.customMin(fallback: catalog.defaultMin)
         customScenes = prefs.customScenes()
         migrateLegacyCustomMinIfNeeded()
@@ -106,6 +110,11 @@ final class TimerViewModel: ObservableObject {
             NotificationService.requestPermission()
         }
         applyStoreScreenshotSceneIfNeeded()
+        scheduleCloudSyncIfNeeded()
+    }
+
+    func scheduleCloudSyncIfNeeded() {
+        cloud.scheduleSync()
     }
 
     func refreshSuggested() {
@@ -196,6 +205,7 @@ final class TimerViewModel: ObservableObject {
         )
         locale = value
         prefs.locale = value
+        cloud.schedulePushPrefs()
     }
 
     func setAmbient(_ mode: String) {
@@ -204,21 +214,69 @@ final class TimerViewModel: ObservableObject {
         if mode == "off" {
             AlertService.shared.stop()
         }
+        cloud.schedulePushPrefs()
     }
 
     func setFinishTone(_ on: Bool) {
         finishTone = on
         prefs.finishTone = on
+        cloud.schedulePushPrefs()
     }
 
     func setFinishVibrate(_ on: Bool) {
         finishVibrate = on
         prefs.finishVibrate = on
+        cloud.schedulePushPrefs()
     }
 
     func setFinishNotify(_ on: Bool) {
         finishNotify = on
         prefs.finishNotify = on
+        cloud.schedulePushPrefs()
+    }
+
+    func setStorageMode(_ mode: String) {
+        if mode == PrefsStore.modeCloud {
+            storageSyncStatus = t("storageSyncing")
+            cloud.enableCloud { [weak self] ok in
+                Task { @MainActor in
+                    guard let self else { return }
+                    if ok {
+                        self.reloadPrefsFromStore()
+                        self.recordsEpoch += 1
+                        self.refreshTodayStats()
+                        self.refreshSuggested()
+                        self.storageMode = self.prefs.storageMode
+                        self.storageSyncStatus = self.t("storageSyncOk")
+                    } else {
+                        self.storageMode = self.prefs.storageMode
+                        self.storageSyncStatus = self.t("storageSyncFail")
+                    }
+                }
+            }
+            return
+        }
+        cloud.disableCloud()
+        storageMode = PrefsStore.modeLocal
+        storageSyncStatus = ""
+    }
+
+    private func reloadPrefsFromStore() {
+        let saved = prefs.locale
+        if !saved.isEmpty {
+            locale = I18n.resolve(
+                catalog: catalog,
+                saved: saved,
+                preferredLanguages: Locale.preferredLanguages
+            )
+        }
+        ambient = prefs.ambient
+        finishTone = prefs.finishTone
+        finishVibrate = prefs.finishVibrate
+        finishNotify = prefs.finishNotify
+        customMin = prefs.customMin(fallback: catalog.defaultMin)
+        customScenes = prefs.customScenes()
+        storageMode = prefs.storageMode
     }
 
     var dialTimeText: String {
@@ -244,7 +302,8 @@ final class TimerViewModel: ObservableObject {
 
     func ignoreLastSession() {
         guard let id = lastRecordedSessionId else { return }
-        history.deleteSession(id: id)
+        let clientId = history.deleteSession(id: id)
+        cloud.scheduleDeleteSession(clientId: clientId)
         lastRecordedSessionId = nil
         recordsEpoch += 1
         refreshTodayStats()
@@ -271,6 +330,7 @@ final class TimerViewModel: ObservableObject {
         guard inOvertime, overtimeMs > 0, let id = lastRecordedSessionId else { return }
         let elapsed = totalMs + overtimeMs
         history.updateSessionElapsed(id: id, elapsedMs: elapsed)
+        cloud.schedulePushSessions()
         recordsEpoch += 1
         refreshTodayStats()
     }
@@ -327,6 +387,7 @@ final class TimerViewModel: ObservableObject {
     private func persistCustomScenes() {
         prefs.setCustomScenes(customScenes)
         customScenes = prefs.customScenes()
+        cloud.schedulePushPrefs()
     }
 
     /// One-shot: turn the old single custom duration into a named scene.
@@ -409,7 +470,8 @@ final class TimerViewModel: ObservableObject {
     }
 
     func deleteHistorySession(id: Int64) {
-        history.deleteSession(id: id)
+        let clientId = history.deleteSession(id: id)
+        cloud.scheduleDeleteSession(clientId: clientId)
         recordsEpoch += 1
         refreshTodayStats()
         refreshSuggested()
@@ -417,6 +479,7 @@ final class TimerViewModel: ObservableObject {
 
     func clearAllHistory() {
         history.clearHistory()
+        cloud.scheduleClearSessions()
         recordsEpoch += 1
         refreshTodayStats()
         refreshSuggested()
@@ -567,6 +630,7 @@ final class TimerViewModel: ObservableObject {
         remainMs = 0
         UIApplication.shared.isIdleTimerDisabled = false
         lastRecordedSessionId = history.recordSession(elapsedMs: totalMs, sceneId: activeSceneId ?? "")
+        cloud.schedulePushSessions()
         refreshTodayStats()
         refreshSuggested()
         recordsEpoch += 1

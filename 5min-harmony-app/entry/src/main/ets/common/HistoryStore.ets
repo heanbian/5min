@@ -1,6 +1,7 @@
 import { relationalStore } from '@kit.ArkData';
 import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { util } from '@kit.ArkTS';
 
 /**
  * Durable RDB under app sandbox:
@@ -11,7 +12,7 @@ const DB_NAME = '5min_chat_history.db';
 const DB_CUSTOM_DIR = '5min-chat';
 const TABLE = 'sessions';
 /** Bump when schema changes; upgrades must ALTER / migrate, never DROP user data. */
-const DB_SCHEMA_VERSION = 1;
+const DB_SCHEMA_VERSION = 2;
 /** Keep / show sessions within this many days. */
 export const HISTORY_DAYS = 14;
 
@@ -24,6 +25,24 @@ export class HistoryItem {
   at: number = 0;
   minutes: number = 0;
   sceneId: string = '';
+  clientId: string = '';
+}
+
+/** Session row for cloud sync (device-bound client id). */
+export class SyncSession {
+  clientId: string = '';
+  at: number = 0;
+  minutes: number = 0;
+  sceneId: string = '';
+  elapsedMs: number = 0;
+
+  constructor(clientId: string, at: number, minutes: number, sceneId: string, elapsedMs: number) {
+    this.clientId = clientId;
+    this.at = at;
+    this.minutes = minutes;
+    this.sceneId = sceneId;
+    this.elapsedMs = elapsedMs;
+  }
 }
 
 /** Process-wide RDB handle so Index / Records share one durable store. */
@@ -92,15 +111,56 @@ export class HistoryStore {
           'at INTEGER NOT NULL, ' +
           'minutes INTEGER NOT NULL, ' +
           'scene_id TEXT NOT NULL DEFAULT \'\', ' +
-          'elapsed_ms INTEGER NOT NULL DEFAULT 0)'
+          'elapsed_ms INTEGER NOT NULL DEFAULT 0, ' +
+          'client_id TEXT NOT NULL DEFAULT \'\')'
       );
       await store.executeSql(
         `CREATE INDEX IF NOT EXISTS idx_sessions_at ON ${TABLE}(at)`
       );
     }
+    if (current < 2) {
+      await HistoryStore.ensureClientIdColumn(store);
+    }
     if (store.version !== DB_SCHEMA_VERSION) {
       store.version = DB_SCHEMA_VERSION;
     }
+  }
+
+  private static async ensureClientIdColumn(store: relationalStore.RdbStore): Promise<void> {
+    let hasClientId = false;
+    try {
+      const rs = await store.querySql(`PRAGMA table_info(${TABLE})`);
+      try {
+        if (rs.goToFirstRow()) {
+          do {
+            const name = rs.getString(rs.getColumnIndex('name'));
+            if (name === 'client_id') {
+              hasClientId = true;
+              break;
+            }
+          } while (rs.goToNextRow());
+        }
+      } finally {
+        rs.close();
+      }
+    } catch (_) {
+      hasClientId = false;
+    }
+    if (!hasClientId) {
+      await store.executeSql(
+        `ALTER TABLE ${TABLE} ADD COLUMN client_id TEXT NOT NULL DEFAULT ''`
+      );
+    }
+    await store.executeSql(
+      `UPDATE ${TABLE} SET client_id = 'n_' || id WHERE client_id IS NULL OR client_id = ''`
+    );
+    await store.executeSql(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_client_id ON ${TABLE}(client_id)`
+    );
+  }
+
+  private static newClientId(): string {
+    return `n_${util.generateRandomUUID().toLowerCase()}`;
   }
 
   async recordSession(elapsedMs: number, sceneId: string = ''): Promise<number> {
@@ -114,6 +174,7 @@ export class HistoryStore {
     values['minutes'] = minutes;
     values['scene_id'] = sceneId ? sceneId : '';
     values['elapsed_ms'] = ms;
+    values['client_id'] = HistoryStore.newClientId();
     const rowId = await this.store.insert(TABLE, values);
     await HistoryStore.pruneOld(this.store);
     return rowId;
@@ -133,13 +194,33 @@ export class HistoryStore {
     await this.store.update(values, predicates);
   }
 
-  async deleteSession(id: number): Promise<void> {
+  async clientIdOf(id: number): Promise<string> {
     if (!this.store || id <= 0) {
-      return;
+      return '';
     }
     const predicates = new relationalStore.RdbPredicates(TABLE);
     predicates.equalTo('id', id);
+    const rs = await this.store.query(predicates);
+    try {
+      if (rs.goToFirstRow()) {
+        return rs.getString(rs.getColumnIndex('client_id'));
+      }
+    } finally {
+      rs.close();
+    }
+    return '';
+  }
+
+  /** Delete one session; returns its clientId for remote delete when cloud. */
+  async deleteSession(id: number): Promise<string> {
+    if (!this.store || id <= 0) {
+      return '';
+    }
+    const clientId = await this.clientIdOf(id);
+    const predicates = new relationalStore.RdbPredicates(TABLE);
+    predicates.equalTo('id', id);
     await this.store.delete(predicates);
+    return clientId;
   }
 
   async clearHistory(): Promise<void> {
@@ -172,6 +253,11 @@ export class HistoryStore {
           item.at = rs.getLong(rs.getColumnIndex('at'));
           item.minutes = rs.getLong(rs.getColumnIndex('minutes'));
           item.sceneId = rs.getString(rs.getColumnIndex('scene_id'));
+          try {
+            item.clientId = rs.getString(rs.getColumnIndex('client_id'));
+          } catch (_) {
+            item.clientId = '';
+          }
           if (item.at > 0 && item.minutes > 0) {
             out.push(item);
           }
@@ -181,6 +267,77 @@ export class HistoryStore {
       rs.close();
     }
     return out;
+  }
+
+  async exportForSync(): Promise<SyncSession[]> {
+    if (!this.store) {
+      return [];
+    }
+    const cutoff = HistoryStore.cutoffMs();
+    const predicates = new relationalStore.RdbPredicates(TABLE);
+    predicates.greaterThanOrEqualTo('at', cutoff);
+    predicates.orderByDesc('at');
+    const rs = await this.store.query(predicates);
+    const out: SyncSession[] = [];
+    try {
+      if (rs.goToFirstRow()) {
+        do {
+          const clientId = rs.getString(rs.getColumnIndex('client_id'));
+          const at = rs.getLong(rs.getColumnIndex('at'));
+          const minutes = rs.getLong(rs.getColumnIndex('minutes'));
+          if (!clientId || at <= 0 || minutes <= 0) {
+            continue;
+          }
+          out.push(new SyncSession(
+            clientId,
+            at,
+            minutes,
+            rs.getString(rs.getColumnIndex('scene_id')),
+            rs.getLong(rs.getColumnIndex('elapsed_ms'))
+          ));
+        } while (rs.goToNextRow());
+      }
+    } finally {
+      rs.close();
+    }
+    return out;
+  }
+
+  async mergeFromCloud(rows: SyncSession[]): Promise<void> {
+    if (!this.store || rows.length === 0) {
+      return;
+    }
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row.clientId || row.at <= 0 || row.minutes <= 0) {
+        continue;
+      }
+      const predicates = new relationalStore.RdbPredicates(TABLE);
+      predicates.equalTo('client_id', row.clientId);
+      const rs = await this.store.query(predicates);
+      let existingId = -1;
+      try {
+        if (rs.goToFirstRow()) {
+          existingId = rs.getLong(rs.getColumnIndex('id'));
+        }
+      } finally {
+        rs.close();
+      }
+      const values: relationalStore.ValuesBucket = {};
+      values['at'] = row.at;
+      values['minutes'] = row.minutes;
+      values['scene_id'] = row.sceneId ? row.sceneId : '';
+      values['elapsed_ms'] = Math.max(0, row.elapsedMs);
+      values['client_id'] = row.clientId;
+      if (existingId > 0) {
+        const upd = new relationalStore.RdbPredicates(TABLE);
+        upd.equalTo('id', existingId);
+        await this.store.update(values, upd);
+      } else {
+        await this.store.insert(TABLE, values);
+      }
+    }
+    await HistoryStore.pruneOld(this.store);
   }
 
   async periodStats(): Promise<[number, number]> {

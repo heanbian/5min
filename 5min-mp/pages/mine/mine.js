@@ -11,6 +11,7 @@ const {
   nativeName,
 } = require('../../utils/i18n');
 const prefs = require('../../utils/prefs');
+const cloudSync = require('../../utils/cloudSync');
 const { DEFAULT_MIN } = require('../../utils/catalog');
 const { setAmbientMode, getAmbientMode, initAmbient } = require('../../utils/ambient');
 const { openHttps } = require('../../utils/openUrl');
@@ -98,6 +99,13 @@ Page({
     finishTone: true,
     finishVibrate: true,
     finishNotify: true,
+    storageSection: '',
+    storageModeLabel: '',
+    storageMode: 'local',
+    storageModeName: '',
+    storageModeHint: '',
+    storageSyncStatus: '',
+    storageOptions: [],
   },
 
   onLoad() {
@@ -156,6 +164,18 @@ Page({
       finishTone: prefs.getFinishTone(),
       finishVibrate: prefs.getFinishVibrate(),
       finishNotify: prefs.getFinishNotify(),
+      storageSection: t('storageSection'),
+      storageModeLabel: t('storageModeLabel'),
+      storageMode: prefs.getStorageMode(),
+      storageModeName:
+        prefs.getStorageMode() === 'cloud'
+          ? t('storageModeCloud')
+          : t('storageModeLocal'),
+      storageModeHint: t('storageModeHint'),
+      storageOptions: [
+        { id: 'local', label: t('storageModeLocal') },
+        { id: 'cloud', label: t('storageModeCloud') },
+      ],
       localeOptions: appLocaleCodes().map((code) => ({
         code,
         label: nativeName(code),
@@ -165,6 +185,57 @@ Page({
         label: t(ambientKeyOf(id)),
       })),
     });
+  },
+
+  onOpenStorage() {
+    this.setData({
+      dialog: 'storage',
+      dialogTitle: t('storageModeLabel'),
+      storageOptions: [
+        { id: 'local', label: t('storageModeLocal') },
+        { id: 'cloud', label: t('storageModeCloud') },
+      ],
+    });
+  },
+
+  onPickStorage(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id === 'cloud') {
+      wx.showModal({
+        title: t('storageModeCloud'),
+        content: t('storageCloudConfirm'),
+        confirmText: t('confirmLabel'),
+        cancelText: t('cancelLabel'),
+        success: (res) => {
+          if (!res.confirm) return;
+          this.applyStorageMode('cloud');
+        },
+      });
+      return;
+    }
+    this.applyStorageMode('local');
+  },
+
+  applyStorageMode(mode) {
+    this.setData({ dialog: '', storageSyncStatus: '' });
+    if (mode === 'cloud') {
+      this.setData({ storageSyncStatus: t('storageSyncing') });
+      cloudSync
+        .enableCloud()
+        .then(() => {
+          this.setData({ storageSyncStatus: t('storageSyncOk') });
+          updateTabBarLabels();
+          this.refresh();
+        })
+        .catch(() => {
+          prefs.setStorageMode('local');
+          this.setData({ storageSyncStatus: t('storageSyncFail') });
+          this.refresh();
+        });
+      return;
+    }
+    cloudSync.disableCloud();
+    this.refresh();
   },
 
   onCloseDialog() {
@@ -265,6 +336,7 @@ Page({
       canAddScene: next.length < prefs.MAX_COUNT,
     });
     this.refresh();
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onEditorNameInput(e) {
@@ -328,6 +400,7 @@ Page({
       customMin: minutes,
     });
     this.refresh();
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onCloseSceneEditor() {
@@ -349,6 +422,7 @@ Page({
     updateTabBarLabels();
     this.setData({ dialog: '' });
     this.refresh();
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onPickAmbient(e) {
@@ -357,24 +431,28 @@ Page({
     prefs.setAmbient(id);
     this.setData({ dialog: '' });
     this.refresh();
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onToggleFinishTone(e) {
     const on = !!e.detail.value;
     prefs.setFinishTone(on);
     this.setData({ finishTone: on });
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onToggleFinishVibrate(e) {
     const on = !!e.detail.value;
     prefs.setFinishVibrate(on);
     this.setData({ finishVibrate: on });
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onToggleFinishNotify(e) {
     const on = !!e.detail.value;
     prefs.setFinishNotify(on);
     this.setData({ finishNotify: on });
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onFeedback() {

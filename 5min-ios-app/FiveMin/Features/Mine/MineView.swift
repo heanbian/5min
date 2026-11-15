@@ -8,9 +8,10 @@ struct MineView: View {
     @State private var editorName = ""
     @State private var editorMinutes = "5"
     @State private var showBeianAlert = false
+    @State private var showCloudConfirm = false
 
     private enum MineSheet: String, Identifiable {
-        case lang, sound, customScenes, feedback
+        case lang, sound, storage, customScenes, feedback
         var id: String { rawValue }
     }
 
@@ -67,6 +68,28 @@ struct MineView: View {
                         ))
                     }
 
+                    sectionTitle(model.t("storageSection"))
+                    card {
+                        prefRow(
+                            model.t("storageModeLabel"),
+                            value: model.storageMode == PrefsStore.modeCloud
+                                ? model.t("storageModeCloud")
+                                : model.t("storageModeLocal")
+                        ) {
+                            sheet = .storage
+                        }
+                    }
+                    Text(model.t("storageModeHint"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .padding(.horizontal, 4)
+                    if !model.storageSyncStatus.isEmpty {
+                        Text(model.storageSyncStatus)
+                            .font(.system(size: 12))
+                            .foregroundStyle(FiveMinColor.muted)
+                            .padding(.horizontal, 4)
+                    }
+
                     sectionTitle(model.t("mineSectionSupport"))
                     card {
                         linkRow(model.t("privacyLink")) {
@@ -103,6 +126,14 @@ struct MineView: View {
             Button(model.t("confirmLabel"), role: .cancel) {}
         } message: {
             Text(model.t("beianIcp"))
+        }
+        .alert(model.t("storageModeCloud"), isPresented: $showCloudConfirm) {
+            Button(model.t("cancelLabel"), role: .cancel) {}
+            Button(model.t("confirmLabel")) {
+                model.setStorageMode(PrefsStore.modeCloud)
+            }
+        } message: {
+            Text(model.t("storageCloudConfirm"))
         }
     }
 
@@ -241,6 +272,42 @@ struct MineView: View {
                     }
                 }
                 .navigationTitle(model.t("ambientLabel"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(model.t("cancelLabel")) { sheet = nil }
+                    }
+                }
+            case .storage:
+                List {
+                    Button {
+                        model.setStorageMode(PrefsStore.modeLocal)
+                        sheet = nil
+                    } label: {
+                        HStack {
+                            Text(model.t("storageModeLocal"))
+                            Spacer()
+                            if model.storageMode == PrefsStore.modeLocal {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(FiveMinColor.brandStrong)
+                            }
+                        }
+                    }
+                    Button {
+                        sheet = nil
+                        showCloudConfirm = true
+                    } label: {
+                        HStack {
+                            Text(model.t("storageModeCloud"))
+                            Spacer()
+                            if model.storageMode == PrefsStore.modeCloud {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(FiveMinColor.brandStrong)
+                            }
+                        }
+                    }
+                }
+                .navigationTitle(model.t("storageModeLabel"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

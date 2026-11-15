@@ -13,6 +13,9 @@ const CUSTOM_SCENES_MIGRATED_KEY = '5min.custom_scenes_migrated';
 const FINISH_TONE_KEY = '5min.finish_tone';
 const FINISH_VIBRATE_KEY = '5min.finish_vibrate';
 const FINISH_NOTIFY_KEY = '5min.finish_notify';
+const STORAGE_MODE_KEY = '5min.storage_mode';
+const DEVICE_ID_KEY = '5min.device_id';
+const DEVICE_SECRET_KEY = '5min.device_secret';
 
 const MAX_COUNT = 30;
 const MAX_NAME = 24;
@@ -240,6 +243,48 @@ function setFinishNotify(on) {
   }
 }
 
+function getStorageMode() {
+  try {
+    const v = String(wx.getStorageSync(STORAGE_MODE_KEY) || 'local');
+    return v === 'cloud' ? 'cloud' : 'local';
+  } catch (e) {
+    return 'local';
+  }
+}
+
+function setStorageMode(mode) {
+  try {
+    wx.setStorageSync(STORAGE_MODE_KEY, mode === 'cloud' ? 'cloud' : 'local');
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function getDeviceId() {
+  try {
+    return String(wx.getStorageSync(DEVICE_ID_KEY) || '');
+  } catch (e) {
+    return '';
+  }
+}
+
+function getDeviceSecret() {
+  try {
+    return String(wx.getStorageSync(DEVICE_SECRET_KEY) || '');
+  } catch (e) {
+    return '';
+  }
+}
+
+function setDeviceCredentials(deviceId, deviceSecret) {
+  try {
+    wx.setStorageSync(DEVICE_ID_KEY, String(deviceId || ''));
+    wx.setStorageSync(DEVICE_SECRET_KEY, String(deviceSecret || ''));
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 module.exports = {
   MAX_COUNT,
   MAX_NAME,
@@ -264,4 +309,9 @@ module.exports = {
   setFinishVibrate,
   getFinishNotify,
   setFinishNotify,
+  getStorageMode,
+  setStorageMode,
+  getDeviceId,
+  getDeviceSecret,
+  setDeviceCredentials,
 };

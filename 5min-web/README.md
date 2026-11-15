@@ -20,6 +20,7 @@
 | 屏幕唤醒 | 计时过程中尝试申请 Screen Wake Lock |
 | 轻量 PWA | `public/site.webmanifest` + `public/sw.js` 预缓存计时壳；改壳资源后请 bump `CACHE` |
 | 访客记录 | 服务端写入 PostgreSQL 表 `fivemin_visitor_log`（无管理页） |
+| 云存储 API | 端侧可选：设备凭证绑定偏好与近 14 日会话（`/api/v1/storage`） |
 | 健康检查 | `GET /api/status` → `{ success, data }` |
 
 ## 技术栈
@@ -28,7 +29,7 @@
 |----|------|
 | 服务端 | Node.js ≥ 24 · Express 5 · Helmet · `pg`；目录布局对齐学记宝 [`tools`](https://github.com/heanbian) 类项目：`server.js` / `bizjs/` / `routes/` / `public/` |
 | 前端 | `public/` 内 HTML5 + 原生 ES modules，无框架、无前端打包 |
-| 数据 | **计时与统计仅存浏览器本机**；PostgreSQL 仅用于站点托管侧的访客日志 |
+| 数据 | Web 计时默认仍存浏览器本机；App 可选云端同步。PostgreSQL：访客日志 + 云存储表 |
 
 多语言（`public/js/i18n/locales.js`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
 
@@ -44,9 +45,11 @@
 ├── bizjs/
 │   ├── db.js                 # PostgreSQL 连接池（读 server.conf）
 │   ├── paths.js              # 应用根 / public 路径解析（pkg 友好）
-│   └── visitor-log.js        # 访客 DDL、中间件、地理解析与限流
+│   ├── visitor-log.js        # 访客 DDL、中间件、地理解析与限流
+│   └── cloud-storage.js      # 设备云存储 DDL / 鉴权 / 偏好与会话
 ├── routes/
-│   └── public.js             # GET /api/status
+│   ├── public.js             # GET /api/status
+│   └── storage.js            # /api/v1/storage/*
 ├── public/                   # 对外静态根（部署时与二进制同级，勿打进 ncc/pkg）
 │   ├── index.html            # 计时主页
 │   ├── about.html            # 关于
@@ -117,11 +120,28 @@ npm run build:pkg
 |------|------|
 | `PORT` | 监听端口，默认 `8080` |
 | `TRUST_PROXY` | 置于可信反代后设为 `1`；须由反代剥离/覆写伪造头 |
-| `DB_*` | PostgreSQL 连接；启动时 `CREATE TABLE IF NOT EXISTS fivemin_visitor_log` |
+| `DB_*` | PostgreSQL 连接；启动时确保访客表与云存储表 |
+| `STORAGE_PEPPER` | 设备 secret 哈希盐（生产务必更换） |
 | `VISITOR_GEO_ENABLED` | 访客地理解析（默认开；可关） |
 | `FIVEMIN_ROOT` / `FIVEMIN_PUBLIC` | 覆盖应用根 / `public` 路径（打包部署用） |
 
 无独立 migration 目录；表结构在进程监听后按需确保（与 `tools` 一致）。
+
+### 云存储 API（`/api/v1/storage`）
+
+端侧在「我的 › 数据存储」选择云端后，用本机生成的 `deviceId`（UUID）+ `deviceSecret`（≥32 位 hex）注册并同步。服务端只存 secret 的 SHA-256（加 pepper）。
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/register` | 注册或校验设备凭证 |
+| `GET` | `/snapshot` | 拉取偏好 + 近 14 日会话 |
+| `PUT` | `/prefs` | 覆盖偏好 |
+| `PUT` | `/sessions` | 批量 upsert 会话（`clientId`） |
+| `PUT` | `/snapshot` | 偏好与会话一并写入后返回快照 |
+| `DELETE` | `/sessions/:clientId` | 软删除单条 |
+| `POST` | `/sessions/clear` | 清空该设备云端会话 |
+
+鉴权头：`X-Device-Id`、`X-Device-Secret`。写操作按 IP 限流。响应形如 `{ success, data }` / `{ success: false, message }`。
 
 ## 共享文案导出
 

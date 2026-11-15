@@ -17,6 +17,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         var sessionId = -1L
         if (elapsed > 0L) {
             sessionId = FiveMinApp.instance.history.recordSession(elapsed, sceneId)
+            FiveMinApp.instance.cloudSync.schedulePushSessions()
         }
         if (prefs.finishNotify) {
             FinishNotifier.show(

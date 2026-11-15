@@ -65,6 +65,31 @@ class PrefsStore(context: Context) {
             sp.edit().putBoolean(KEY_FINISH_NOTIFY, value).apply()
         }
 
+    var storageMode: String
+        get() = if (sp.getString(KEY_STORAGE_MODE, MODE_LOCAL) == MODE_CLOUD) MODE_CLOUD else MODE_LOCAL
+        set(value) {
+            sp.edit().putString(KEY_STORAGE_MODE, if (value == MODE_CLOUD) MODE_CLOUD else MODE_LOCAL).apply()
+        }
+
+    var deviceId: String
+        get() = sp.getString(KEY_DEVICE_ID, null).orEmpty()
+        set(value) {
+            sp.edit().putString(KEY_DEVICE_ID, value).apply()
+        }
+
+    var deviceSecret: String
+        get() = sp.getString(KEY_DEVICE_SECRET, null).orEmpty()
+        set(value) {
+            sp.edit().putString(KEY_DEVICE_SECRET, value).apply()
+        }
+
+    fun setDeviceCredentials(id: String, secret: String) {
+        sp.edit()
+            .putString(KEY_DEVICE_ID, id)
+            .putString(KEY_DEVICE_SECRET, secret)
+            .apply()
+    }
+
     var privacyAccepted: Boolean
         get() = sp.getBoolean(KEY_PRIVACY, false)
         set(value) {
@@ -150,5 +175,10 @@ class PrefsStore(context: Context) {
         private const val KEY_CUSTOM_MIN = "custom_min"
         private const val KEY_CUSTOM_SCENES = "custom_scenes"
         private const val KEY_CUSTOM_SCENES_MIGRATED = "custom_scenes_migrated"
+        private const val KEY_STORAGE_MODE = "storage_mode"
+        private const val KEY_DEVICE_ID = "device_id"
+        private const val KEY_DEVICE_SECRET = "device_secret"
+        const val MODE_LOCAL = "local"
+        const val MODE_CLOUD = "cloud"
     }
 }

@@ -22,6 +22,9 @@ DB_NAME=fivemin
 # VISITOR_GEO_ENABLED=true
 # 注意：TRUST_PROXY=1 时须由可信反向代理剥离/覆写 X-Forwarded-* 与 CDN 国家头，否则客户端可伪造 IP/地区
 
+# 云存储设备凭证哈希盐（生产务必更换）
+# STORAGE_PEPPER=please-change-to-a-long-random-secret
+
 # 正式站点 https://5min.chat（写在 public/site.json，不从这里读取）
 # ASSET_VERSION=
 # DOTENV_CONFIG_PATH=

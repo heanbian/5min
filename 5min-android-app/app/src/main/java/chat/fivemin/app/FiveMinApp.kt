@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import chat.fivemin.app.data.CloudSync
 import chat.fivemin.app.data.HistoryStore
 import chat.fivemin.app.data.PrefsStore
 import chat.fivemin.app.data.SharedCatalog
@@ -13,6 +14,8 @@ class FiveMinApp : Application() {
     lateinit var prefs: PrefsStore
         private set
     lateinit var history: HistoryStore
+        private set
+    lateinit var cloudSync: CloudSync
         private set
     lateinit var catalog: SharedCatalog
         private set
@@ -24,9 +27,13 @@ class FiveMinApp : Application() {
         instance = this
         prefs = PrefsStore(this)
         history = HistoryStore(this)
+        cloudSync = CloudSync(prefs, history)
         catalog = SharedCatalog.load(this)
         i18n = I18n(this, catalog)
         ensureChannels()
+        if (prefs.storageMode == PrefsStore.MODE_CLOUD) {
+            cloudSync.scheduleSync()
+        }
     }
 
     private fun ensureChannels() {

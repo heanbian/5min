@@ -57,7 +57,7 @@ import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 import chat.fivemin.app.ui.theme.FiveMinDimens
 
-private enum class MineDialog { None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian }
+private enum class MineDialog { None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian, Storage }
 
 @Composable
 fun MineScreen(vm: TimerViewModel) {
@@ -65,6 +65,7 @@ fun MineScreen(vm: TimerViewModel) {
     val context = LocalContext.current
     val catalog = FiveMinApp.instance.catalog
     var dialog by remember { mutableStateOf(MineDialog.None) }
+    var confirmCloud by remember { mutableStateOf(false) }
     var editingSceneId by remember { mutableStateOf<String?>(null) }
     var editorName by remember { mutableStateOf("") }
     var editorMinutes by remember { mutableStateOf(state.customMin.toString()) }
@@ -174,6 +175,30 @@ fun MineScreen(vm: TimerViewModel) {
                 )
             }
 
+            SectionTitle(vm.t("storageSection"))
+            CardBlock {
+                PrefRow(
+                    vm.t("storageModeLabel"),
+                    if (state.storageMode == "cloud") vm.t("storageModeCloud") else vm.t("storageModeLocal"),
+                ) {
+                    dialog = MineDialog.Storage
+                }
+            }
+            Text(
+                text = vm.t("storageModeHint"),
+                color = FiveMinColors.muted,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+            if (state.storageSyncStatus.isNotBlank()) {
+                Text(
+                    text = state.storageSyncStatus,
+                    color = FiveMinColors.muted,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+
             SectionTitle(vm.t("mineSectionSupport"))
             CardBlock {
                 LinkRow(vm.t("privacyLink")) { openUrl("https://5min.chat/privacy.html") }
@@ -246,6 +271,67 @@ fun MineScreen(vm: TimerViewModel) {
                 }
             },
         )
+        MineDialog.Storage -> AlertDialog(
+            onDismissRequest = { dialog = MineDialog.None },
+            confirmButton = {
+                TextButton(onClick = { dialog = MineDialog.None }) {
+                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
+                }
+            },
+            title = { Text(vm.t("storageModeLabel"), fontWeight = FontWeight.SemiBold) },
+            containerColor = FiveMinColors.surface,
+            text = {
+                Column {
+                    listOf("local" to vm.t("storageModeLocal"), "cloud" to vm.t("storageModeCloud")).forEach { (id, label) ->
+                        Text(
+                            text = label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (id == "local") {
+                                        vm.setStorageMode("local")
+                                        dialog = MineDialog.None
+                                    } else {
+                                        dialog = MineDialog.None
+                                        confirmCloud = true
+                                    }
+                                }
+                                .padding(vertical = 12.dp),
+                            color = if (id == state.storageMode) FiveMinColors.brandStrong else FiveMinColors.ink,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            },
+        )
+        else -> Unit
+    }
+
+    if (confirmCloud) {
+        AlertDialog(
+            onDismissRequest = { confirmCloud = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmCloud = false
+                    vm.setStorageMode("cloud")
+                }) {
+                    Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmCloud = false }) {
+                    Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
+                }
+            },
+            title = { Text(vm.t("storageModeCloud"), fontWeight = FontWeight.SemiBold) },
+            text = { Text(vm.t("storageCloudConfirm")) },
+            containerColor = FiveMinColors.surface,
+        )
+    }
+
+    // Keep dialog when-block closed: remaining cases continue below
+    when (dialog) {
+        MineDialog.None, MineDialog.Lang, MineDialog.Sound, MineDialog.Storage -> Unit
         MineDialog.CustomScenes -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             dismissButton = {
