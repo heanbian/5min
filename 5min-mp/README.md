@@ -57,7 +57,7 @@ node scripts/verify.mjs
 │   ├── legal/      # 隐私政策 / 用户协议（原生页）
 │   └── webview/    # https 外链（关于等；域名白名单）
 ├── utils/          # i18n、prefs、history、提醒、环境音…
-├── shared/         # scenes + locales（zh-CN / zh-TW / en）
+├── shared/         # scenes + locales（zh-CN / zh-TW / en / de / ru / fr / bo）
 ├── scripts/        # 本地校验
 └── assets/         # logo / 喇叭 / tab 图标
 ```

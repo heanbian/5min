@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -325,11 +326,11 @@ fun TimerHome(
             // —— actions ——
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(FiveMinDimens.controlGap),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.controlGap),
                 ) {
                     Box(
                         modifier = Modifier
@@ -392,7 +393,10 @@ fun TimerHome(
                         .background(FiveMinColors.surface)
                         .then(
                             if (setupEnabled) {
-                                Modifier.clickable { sceneOpen = true }
+                                Modifier.clickable {
+                                    vm.refreshSuggested()
+                                    sceneOpen = true
+                                }
                             } else Modifier,
                         )
                         .padding(horizontal = 14.dp),
@@ -417,6 +421,47 @@ fun TimerHome(
                         tint = if (sceneOpen) FiveMinColors.brandStrong else FiveMinColors.muted,
                         modifier = Modifier.size(18.dp),
                     )
+                }
+
+                val chipIds = vm.chipSceneIds()
+                if (chipIds.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        chipIds.forEach { id ->
+                            val active = id == state.activeSceneId
+                            Text(
+                                text = vm.sceneTitle(id) ?: id,
+                                modifier = Modifier
+                                    .height(FiveMinDimens.chipH)
+                                    .clip(radius)
+                                    .border(
+                                        1.dp,
+                                        if (active) FiveMinColors.brand.copy(alpha = 0.35f) else FiveMinColors.line,
+                                        radius,
+                                    )
+                                    .background(if (active) FiveMinColors.brandSoft else FiveMinColors.surface)
+                                    .then(
+                                        if (setupEnabled) {
+                                            Modifier.clickable { vm.selectScene(id) }
+                                        } else Modifier,
+                                    )
+                                    .padding(horizontal = 12.dp)
+                                    .wrapContentHeight(Alignment.CenterVertically),
+                                color = when {
+                                    !setupEnabled -> FiveMinColors.muted.copy(alpha = 0.4f)
+                                    active -> FiveMinColors.brandStrong
+                                    else -> FiveMinColors.muted
+                                },
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -484,13 +529,15 @@ fun TimerHome(
                                 text = vm.sceneLabel(scene.id) ?: scene.id,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(11.dp))
+                                    .height(FiveMinDimens.rowH)
+                                    .clip(RoundedCornerShape(FiveMinDimens.radiusSm))
                                     .background(if (active) FiveMinColors.brandSoft else Color.Transparent)
                                     .clickable {
                                         vm.selectScene(scene.id)
                                         sceneOpen = false
                                     }
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    .padding(horizontal = 12.dp)
+                                    .wrapContentHeight(Alignment.CenterVertically),
                                 color = if (active) FiveMinColors.brandStrong else FiveMinColors.muted,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,

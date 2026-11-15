@@ -4,7 +4,7 @@
  * App UI locales — aligned with 5min-harmony-app AppLocales.
  */
 
-const SUPPORTED = Object.freeze(['zh-CN', 'zh-TW', 'en']);
+const SUPPORTED = Object.freeze(['zh-CN', 'zh-TW', 'en', 'de', 'ru', 'fr', 'bo']);
 
 function isSupported(code) {
   return SUPPORTED.indexOf(code) >= 0;
@@ -31,7 +31,16 @@ function normalize(code, fallback) {
     }
     return 'zh-CN';
   }
-  if (base === 'en') return 'en';
+  if (
+    (base === 'en' ||
+      base === 'de' ||
+      base === 'ru' ||
+      base === 'fr' ||
+      base === 'bo') &&
+    isSupported(base)
+  ) {
+    return base;
+  }
   return fb;
 }
 

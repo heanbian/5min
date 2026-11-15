@@ -250,6 +250,39 @@
   border-color: var(--ghost-line);
 }
 
+.suggested-chips {
+  width: 100%;
+  white-space: nowrap;
+  height: var(--row-h);
+}
+
+.suggested-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--row-h);
+  padding: 0 24rpx;
+  margin-right: 16rpx;
+  border-radius: var(--radius);
+  border: 2rpx solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 26rpx;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.suggested-chip.is-active {
+  border-color: rgba(47, 154, 104, 0.35);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.suggested-chip.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .scene-trigger {
   display: flex;
   align-items: center;

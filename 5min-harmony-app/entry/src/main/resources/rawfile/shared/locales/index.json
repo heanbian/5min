@@ -2,7 +2,11 @@
   "codes": [
     "zh-CN",
     "zh-TW",
-    "en"
+    "en",
+    "de",
+    "ru",
+    "fr",
+    "bo"
   ],
   "defaultLocale": "zh-CN"
 }

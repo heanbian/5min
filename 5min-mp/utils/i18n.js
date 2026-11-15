@@ -6,6 +6,10 @@
 const zhCN = require('../shared/locales/zh_CN.js');
 const zhTW = require('../shared/locales/zh_TW.js');
 const en = require('../shared/locales/en.js');
+const de = require('../shared/locales/de.js');
+const ru = require('../shared/locales/ru.js');
+const fr = require('../shared/locales/fr.js');
+const bo = require('../shared/locales/bo.js');
 const { normalize, SUPPORTED, filter } = require('./appLocales');
 const prefs = require('./prefs');
 
@@ -13,6 +17,10 @@ const PACKS = Object.freeze({
   'zh-CN': zhCN,
   'zh-TW': zhTW,
   en,
+  de,
+  ru,
+  fr,
+  bo,
 });
 
 let currentLocale = 'zh-CN';

@@ -9,6 +9,7 @@ import chat.fivemin.app.data.AppLocales
 import chat.fivemin.app.data.CustomScene
 import chat.fivemin.app.data.Scene
 import chat.fivemin.app.data.SceneGroup
+import chat.fivemin.app.data.SceneRanker
 import chat.fivemin.app.notify.FinishNotifier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,6 +33,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     private var finishedHandled = false
     private var pendingSceneId: String? = null
 
+    private val suggestedGroup = SceneGroup(SceneRanker.GROUP_ID, SceneRanker.LABEL_KEY)
     private val customGroup = SceneGroup(CustomScene.GROUP_ID, "sceneGroupCustom")
 
     private val _state: MutableStateFlow<TimerUiState>
@@ -63,6 +65,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         val (count, ms) = history.todayStats()
+        val suggested = computeSuggested(scenes)
         _state = MutableStateFlow(
             TimerUiState(
                 locale = locale,
@@ -78,6 +81,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 privacyAccepted = prefs.privacyAccepted,
                 customMin = custom,
                 customScenes = scenes,
+                suggestedSceneIds = suggested,
                 recordsEpoch = 0,
                 selectedTab = 1,
             ),
@@ -88,17 +92,37 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private fun computeSuggested(customScenes: List<CustomScene> = _state.value.customScenes): List<String> {
+        val known = catalog.scenes.map { it.id }.toMutableSet()
+        customScenes.forEach { known.add(it.id) }
+        val sessions = history.getHistory().map { SceneRanker.SessionRef(it.sceneId, it.at) }
+        return SceneRanker.rank(sessions, known)
+    }
+
+    fun refreshSuggested() {
+        _state.update { it.copy(suggestedSceneIds = computeSuggested(it.customScenes)) }
+    }
+
+    fun chipSceneIds(): List<String> =
+        _state.value.suggestedSceneIds.take(SceneRanker.CHIP_N)
+
     fun t(key: String, vars: Map<String, String> = emptyMap()) =
         catalog.t(_state.value.locale, key, vars)
 
     fun appLocaleCodes(): List<String> = i18n.appLocaleCodes()
 
     fun pickerGroups(): List<SceneGroup> {
-        val scenes = _state.value.customScenes
-        return if (scenes.isEmpty()) catalog.groups else listOf(customGroup) + catalog.groups
+        val groups = mutableListOf<SceneGroup>()
+        if (_state.value.suggestedSceneIds.isNotEmpty()) groups += suggestedGroup
+        if (_state.value.customScenes.isNotEmpty()) groups += customGroup
+        groups += catalog.groups
+        return groups
     }
 
     fun scenesInGroup(groupId: String): List<Scene> {
+        if (groupId == SceneRanker.GROUP_ID) {
+            return _state.value.suggestedSceneIds.mapNotNull { sceneForId(it, SceneRanker.GROUP_ID) }
+        }
         if (groupId == CustomScene.GROUP_ID) {
             return _state.value.customScenes.map { custom ->
                 Scene(
@@ -111,6 +135,19 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         return catalog.scenes.filter { it.group == groupId }
+    }
+
+    private fun sceneForId(id: String, group: String): Scene? {
+        _state.value.customScenes.firstOrNull { it.id == id }?.let { custom ->
+            return Scene(
+                id = custom.id,
+                min = custom.min,
+                group = group,
+                labelKey = custom.id,
+                titleKey = custom.id,
+            )
+        }
+        return catalog.scenes.firstOrNull { it.id == id }?.copy(group = group)
     }
 
     fun sceneTitle(id: String?): String? {
@@ -141,6 +178,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         } else if (index == 1) {
             consumePendingScene()
             refreshTodayStats()
+            refreshSuggested()
         }
     }
 
@@ -186,13 +224,14 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         }
         persistCustomScenes(current)
         prefs.setCustomMin(n)
-        _state.update { it.copy(customMin = n) }
+        _state.update { it.copy(customMin = n, suggestedSceneIds = computeSuggested(it.customScenes)) }
         return saved
     }
 
     fun deleteCustomScene(id: String) {
         val next = _state.value.customScenes.filterNot { it.id == id }
         persistCustomScenes(next)
+        refreshSuggested()
         if (pendingSceneId == id) pendingSceneId = null
         if (_state.value.activeSceneId == id) {
             _state.update { it.copy(activeSceneId = null) }
@@ -380,6 +419,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
             FinishAlerter.play(getApplication(), s.alertSoundOn)
         }
         val (count, ms) = history.todayStats()
+        val suggested = computeSuggested()
         _state.update {
             it.copy(
                 remainMs = 0L,
@@ -388,6 +428,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 phase = TimerPhase.Done,
                 statsCount = count,
                 statsMs = ms,
+                suggestedSceneIds = suggested,
                 recordsEpoch = it.recordsEpoch + 1,
             )
         }

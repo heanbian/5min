@@ -38,6 +38,7 @@ struct RootTabView: View {
             } else if newValue == 1 {
                 model.consumePendingScene()
                 model.refreshTodayStats()
+                model.refreshSuggested()
             }
         }
     }

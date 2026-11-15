@@ -332,7 +332,7 @@ struct MineView: View {
 
     private func sceneEditorSheet(_ editor: SceneEditor) -> some View {
         NavigationStack {
-            VStack(spacing: 16) {
+            VStack(spacing: FiveMinDimens.sectionGap) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(model.t("customSceneNameLabel"))
                         .font(.system(size: 13, weight: .medium))
@@ -341,34 +341,44 @@ struct MineView: View {
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                         .padding(.horizontal, 14)
-                        .frame(height: 48)
+                        .frame(height: FiveMinDimens.fieldH)
                         .background(FiveMinColor.ghostBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
                                 .stroke(FiveMinColor.line, lineWidth: 1)
                         )
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, FiveMinDimens.padX)
 
-                Text(model.t("customMinutesLabel"))
-                    .font(.system(size: 15, weight: .medium))
-                HStack(spacing: 16) {
-                    Button("-") { nudgeEditor(-1) }
-                        .buttonStyle(SecondaryButtonStyle())
-                        .frame(width: 64)
-                        .accessibilityLabel("-")
-                    TextField("", text: $editorMinutes)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.center)
-                        .font(.system(size: 28, weight: .medium))
-                        .frame(maxWidth: .infinity)
-                    Button("+") { nudgeEditor(1) }
-                        .buttonStyle(SecondaryButtonStyle())
-                        .frame(width: 64)
-                        .accessibilityLabel("+")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(model.t("customMinutesLabel"))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                    HStack(spacing: FiveMinDimens.controlGap) {
+                        Button("-") { nudgeEditor(-1) }
+                            .buttonStyle(SecondaryButtonStyle())
+                            .frame(width: FiveMinDimens.controlH)
+                            .accessibilityLabel("-")
+                        TextField("", text: $editorMinutes)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.center)
+                            .font(.system(size: 24, weight: .medium))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: FiveMinDimens.fieldH)
+                            .background(FiveMinColor.ghostBg)
+                            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
+                                    .stroke(FiveMinColor.line, lineWidth: 1)
+                            )
+                        Button("+") { nudgeEditor(1) }
+                            .buttonStyle(SecondaryButtonStyle())
+                            .frame(width: FiveMinDimens.controlH)
+                            .accessibilityLabel("+")
+                    }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, FiveMinDimens.padX)
 
                 HStack(spacing: 8) {
                     ForEach(quickMins, id: \.self) { m in
@@ -377,22 +387,23 @@ struct MineView: View {
                         }
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(FiveMinColor.brandStrong)
+                        .frame(height: FiveMinDimens.chipH)
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
                         .background(FiveMinColor.brandSoft)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusSm, style: .continuous))
                     }
                 }
+                .padding(.horizontal, FiveMinDimens.padX)
 
                 Button(model.t("confirmLabel")) { saveSceneEditor(editor) }
                     .buttonStyle(PrimaryButtonStyle())
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, FiveMinDimens.padX)
                     .disabled(CustomScene.normalizedName(editorName).isEmpty)
                     .opacity(CustomScene.normalizedName(editorName).isEmpty ? 0.55 : 1)
 
                 Spacer()
             }
-            .padding(.top, 20)
+            .padding(.top, FiveMinDimens.padY)
             .navigationTitle(editorTitle(editor))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

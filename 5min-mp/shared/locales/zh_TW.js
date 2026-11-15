@@ -200,6 +200,7 @@ module.exports = {
   "customSceneNamePlaceholder": "例如：伸展",
   "customSceneMigratedName": "自訂",
   "sceneGroupCustom": "自訂",
+  "sceneGroupSuggested": "常用",
   "privacyCheckLabel": "我已閱讀並同意",
   "historySceneLine": "場景：{scene}",
   "historyDurationLine": "時長：{n} 分鐘",

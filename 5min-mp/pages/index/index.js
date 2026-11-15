@@ -10,6 +10,7 @@ const {
   sceneById,
   buildScenePicker,
   resolveSceneTitle,
+  CHIP_N,
 } = require('../../utils/catalog');
 const {
   getTodayStats,
@@ -80,6 +81,7 @@ Page({
     scenePlaceholder: false,
     sceneRange: [[], []],
     sceneIndex: [0, 1],
+    suggestedChips: [],
     tabMine: '',
     canvasCss: 260,
     ambient: 'off',
@@ -278,6 +280,12 @@ Page({
     }));
     const hasScene = !!this.activeSceneId;
     const selected = hasScene ? range1[si] : null;
+    const suggested = this.scenePicker.suggested || [];
+    const suggestedChips = suggested.slice(0, CHIP_N).map((id) => ({
+      id,
+      title: resolveSceneTitle(id) || id,
+      active: id === this.activeSceneId,
+    }));
     this.setData({
       sceneRange: [range0, range1],
       sceneIndex: [gi, si],
@@ -285,7 +293,15 @@ Page({
         ? selected.label
         : t('scenePlaceholder'),
       scenePlaceholder: !hasScene,
+      suggestedChips,
     });
+  },
+
+  onSuggestedChip(e) {
+    if (this.running) return;
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    this.selectScene(id);
   },
 
   applyLabels(rebuildScenes) {

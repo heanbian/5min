@@ -26,7 +26,7 @@
 
 使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环、Service Worker（壳缓存）。
 
-多语言（`js/i18n/locales.js`）：简体中文、繁体中文、English。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
+多语言（`js/i18n/locales.js`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
 
 > **本地预览须用 HTTP 服务。** Chrome 等浏览器在 `file://` 下会拦截 ES module 的跨文件 `import`，请勿直接双击打开。
 
@@ -112,7 +112,7 @@ PORT=9000 ./run.sh # 环境变量指定端口
 开发联调：
 
 - 短时结束：`?sec=2`（单位：秒）
-- 指定语言：`?lang=zh-CN` / `zh-TW` / `en` / `bo` / `ja` / `ar` / `fr` / `ru` / `es`
+- 指定语言：`?lang=zh-CN` / `zh-TW` / `en` / `de` / `ru` / `fr` / `bo`
 
 ## 部署
 

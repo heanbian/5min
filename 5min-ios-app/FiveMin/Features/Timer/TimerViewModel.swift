@@ -25,6 +25,7 @@ final class TimerViewModel: ObservableObject {
     @Published var privacyAccepted = false
     @Published var customMin = 5
     @Published var customScenes: [CustomScene] = []
+    @Published var suggestedSceneIds: [String] = []
     @Published var recordsEpoch = 0
     @Published var pendingSceneId: String?
     /// 0 records · 1 home · 2 mine
@@ -34,13 +35,24 @@ final class TimerViewModel: ObservableObject {
     private var tick: AnyCancellable?
     private var finishedHandled = false
 
+    var suggestedGroup: SceneGroupDTO {
+        SceneGroupDTO(id: SceneRanker.groupId, labelKey: SceneRanker.labelKey)
+    }
+
     var customGroup: SceneGroupDTO {
         SceneGroupDTO(id: CustomScene.groupId, labelKey: "sceneGroupCustom")
     }
 
     var pickerGroups: [SceneGroupDTO] {
-        if customScenes.isEmpty { return catalog.groups }
-        return [customGroup] + catalog.groups
+        var groups: [SceneGroupDTO] = []
+        if !suggestedSceneIds.isEmpty { groups.append(suggestedGroup) }
+        if !customScenes.isEmpty { groups.append(customGroup) }
+        groups.append(contentsOf: catalog.groups)
+        return groups
+    }
+
+    var chipSceneIds: [String] {
+        Array(suggestedSceneIds.prefix(SceneRanker.chipN))
     }
 
     var progress: CGFloat {
@@ -77,12 +89,21 @@ final class TimerViewModel: ObservableObject {
             setPreset(minutes: customMin, sceneId: nil)
         }
         refreshTodayStats()
+        refreshSuggested()
         refreshPhase()
         // Store-screenshot launches must stay free of the system notification prompt.
         if privacyAccepted, !Self.isStoreScreenshotLaunch {
             NotificationService.requestPermission()
         }
         applyStoreScreenshotSceneIfNeeded()
+    }
+
+    func refreshSuggested() {
+        let known = Set(catalog.scenes.map(\.id) + customScenes.map(\.id))
+        let sessions = history.getHistory().map {
+            SceneRanker.SessionRef(sceneId: $0.sceneId, at: $0.at)
+        }
+        suggestedSceneIds = SceneRanker.rank(sessions: sessions, knownIds: known)
     }
 
     private static var isStoreScreenshotLaunch: Bool {
@@ -145,6 +166,7 @@ final class TimerViewModel: ObservableObject {
                 sceneId: sample.scene
             )
         }
+        refreshSuggested()
     }
 #endif
 
@@ -202,6 +224,7 @@ final class TimerViewModel: ObservableObject {
             }
         }
         persistCustomScenes()
+        refreshSuggested()
         customMin = n
         prefs.setCustomMin(n)
         return saved
@@ -210,6 +233,7 @@ final class TimerViewModel: ObservableObject {
     func deleteCustomScene(id: String) {
         customScenes.removeAll { $0.id == id }
         persistCustomScenes()
+        refreshSuggested()
         if pendingSceneId == id { pendingSceneId = nil }
         if activeSceneId == id {
             activeSceneId = nil
@@ -240,6 +264,9 @@ final class TimerViewModel: ObservableObject {
     }
 
     func scenes(inGroup groupId: String) -> [SceneDTO] {
+        if groupId == SceneRanker.groupId {
+            return suggestedSceneIds.compactMap { id in sceneDTO(for: id) }
+        }
         if groupId == CustomScene.groupId {
             return customScenes.map { custom in
                 SceneDTO(
@@ -252,6 +279,26 @@ final class TimerViewModel: ObservableObject {
             }
         }
         return catalog.scenes.filter { $0.group == groupId }
+    }
+
+    private func sceneDTO(for id: String) -> SceneDTO? {
+        if let custom = customScenes.first(where: { $0.id == id }) {
+            return SceneDTO(
+                id: custom.id,
+                min: custom.min,
+                group: SceneRanker.groupId,
+                labelKey: custom.id,
+                titleKey: custom.id
+            )
+        }
+        guard let scene = catalog.scenes.first(where: { $0.id == id }) else { return nil }
+        return SceneDTO(
+            id: scene.id,
+            min: scene.min,
+            group: SceneRanker.groupId,
+            labelKey: scene.labelKey,
+            titleKey: scene.titleKey
+        )
     }
 
     func sceneTitle(for id: String?) -> String? {
@@ -401,6 +448,7 @@ final class TimerViewModel: ObservableObject {
         UIApplication.shared.isIdleTimerDisabled = false
         history.recordSession(elapsedMs: totalMs, sceneId: activeSceneId ?? "")
         refreshTodayStats()
+        refreshSuggested()
         recordsEpoch += 1
         if fromTicker {
             let vars = notifyVars()

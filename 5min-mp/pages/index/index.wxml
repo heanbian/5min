@@ -71,6 +71,22 @@
         <text class="scene-caret">▾</text>
       </view>
     </picker>
+
+    <scroll-view
+      wx:if="{{suggestedChips.length}}"
+      class="suggested-chips"
+      scroll-x
+      enable-flex
+      show-scrollbar="{{false}}"
+    >
+      <view
+        wx:for="{{suggestedChips}}"
+        wx:key="id"
+        class="suggested-chip {{item.active ? 'is-active' : ''}} {{running ? 'disabled' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onSuggestedChip"
+      >{{item.title}}</view>
+    </scroll-view>
   </view>
 
   <view class="privacy-mask" wx:if="{{!privacyAccepted}}">

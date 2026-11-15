@@ -44,11 +44,14 @@ object FiveMinDimens {
     val radiusSm = 12.dp
     val radius = 14.dp
     val controlH = 52.dp
+    val fieldH = 52.dp
     val rowH = 40.dp
+    val chipH = 40.dp
     val padX = 20.dp
     val padY = 18.dp
     val stageGap = 18.dp
     val sectionGap = 20.dp
+    val controlGap = 10.dp
     val dialSize = 260.dp
 }
 

@@ -32,11 +32,14 @@ enum FiveMinDimens {
     static let radiusSm: CGFloat = 12
     static let radius: CGFloat = 14
     static let controlH: CGFloat = 52
+    static let fieldH: CGFloat = 52
     static let rowH: CGFloat = 40
+    static let chipH: CGFloat = 40
     static let padX: CGFloat = 20
     static let padY: CGFloat = 18
     static let stageGap: CGFloat = 18
     static let sectionGap: CGFloat = 20
+    static let controlGap: CGFloat = 10
     static let dialSize: CGFloat = 260
     static let topbarH: CGFloat = 36
 }

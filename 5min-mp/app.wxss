@@ -25,6 +25,9 @@ page {
   --bg: #eef6f1;
   --bg2: #f2f5f3;
   --radius: 28rpx;
+  --control-h: 104rpx;
+  --row-h: 80rpx;
+  --ghost-bg: #e8ecea;
   --pad-x: 40rpx;
   --pad-body: 32rpx;
   --section-gap: 24rpx;

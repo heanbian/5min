@@ -200,6 +200,7 @@ module.exports = {
   "customSceneNamePlaceholder": "e.g. Stretch",
   "customSceneMigratedName": "Custom",
   "sceneGroupCustom": "Custom",
+  "sceneGroupSuggested": "Frequent",
   "privacyCheckLabel": "I have read and agree to",
   "historySceneLine": "Scene: {scene}",
   "historyDurationLine": "Duration: {n} min",

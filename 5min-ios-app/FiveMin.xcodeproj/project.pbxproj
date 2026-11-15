@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B10000000000000000000001 /* AppLocales.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* AppLocales.swift */; };
 		B10000000000000000000002 /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* HistoryStore.swift */; };
+		B10000000000000000000006 /* SceneRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* SceneRanker.swift */; };
 		B10000000000000000000003 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* RootTabView.swift */; };
 		B10000000000000000000004 /* RecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* RecordsView.swift */; };
 		B10000000000000000000005 /* MineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* MineView.swift */; };
@@ -30,6 +31,7 @@
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* AppLocales.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLocales.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000006 /* SceneRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneRanker.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* RecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordsView.swift; sourceTree = "<group>"; };
 		A10000000000000000000005 /* MineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MineView.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 				335D646AD96E42DDBDB9959B /* I18n.swift */,
 				A10000000000000000000001 /* AppLocales.swift */,
 				A10000000000000000000002 /* HistoryStore.swift */,
+				A10000000000000000000006 /* SceneRanker.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -246,6 +249,7 @@
 				7B22D1EF6F1F502B0C3D4E5F /* DigitalWatch.swift in Sources */,
 				B10000000000000000000001 /* AppLocales.swift in Sources */,
 				B10000000000000000000002 /* HistoryStore.swift in Sources */,
+				B10000000000000000000006 /* SceneRanker.swift in Sources */,
 				B10000000000000000000003 /* RootTabView.swift in Sources */,
 				B10000000000000000000004 /* RecordsView.swift in Sources */,
 				B10000000000000000000005 /* MineView.swift in Sources */,

@@ -200,6 +200,7 @@
   "customSceneNamePlaceholder": "例如：拉伸",
   "customSceneMigratedName": "自定义",
   "sceneGroupCustom": "自定义",
+  "sceneGroupSuggested": "常用",
   "privacyCheckLabel": "我已阅读并同意",
   "historySceneLine": "场景：{scene}",
   "historyDurationLine": "时长：{n} 分钟",

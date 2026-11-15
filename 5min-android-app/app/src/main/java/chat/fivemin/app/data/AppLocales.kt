@@ -1,7 +1,7 @@
 package chat.fivemin.app.data
 
 object AppLocales {
-    val supported: List<String> = listOf("zh-CN", "zh-TW", "en")
+    val supported: List<String> = listOf("zh-CN", "zh-TW", "en", "de", "ru", "fr", "bo")
 
     fun isSupported(code: String): Boolean = code in supported
 
@@ -16,7 +16,7 @@ object AppLocales {
             base == "zh" && (region == "TW" || region == "HK" || region == "MO" ||
                 trimmed.lowercase().contains("hant")) -> "zh-TW"
             base == "zh" -> "zh-CN"
-            base == "en" -> "en"
+            base in listOf("en", "de", "ru", "fr", "bo") && isSupported(base) -> base
             else -> fallback
         }
     }

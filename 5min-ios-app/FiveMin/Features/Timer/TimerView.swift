@@ -241,8 +241,8 @@ struct TimerView: View {
     // MARK: - Actions
 
     private var actions: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 10) {
+        VStack(spacing: FiveMinDimens.controlGap) {
+            HStack(spacing: FiveMinDimens.controlGap) {
                 Button(model.startLabel) { model.toggleStart() }
                     .buttonStyle(PrimaryButtonStyle())
                 Button(model.t("reset")) { model.reset() }
@@ -278,7 +278,42 @@ struct TimerView: View {
             }
             .disabled(!setupEnabled)
             .opacity(setupEnabled ? 1 : 0.55)
+
+            if !model.chipSceneIds.isEmpty {
+                suggestedChips
+            }
         }
+    }
+
+    private var suggestedChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(model.chipSceneIds, id: \.self) { id in
+                    let active = id == model.activeSceneId
+                    Button {
+                        guard setupEnabled else { return }
+                        model.selectScene(id)
+                    } label: {
+                        Text(model.sceneTitle(for: id) ?? id)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
+                            .lineLimit(1)
+                            .padding(.horizontal, 12)
+                            .frame(height: FiveMinDimens.chipH)
+                            .background(active ? FiveMinColor.brandSoft : FiveMinColor.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
+                                    .stroke(active ? FiveMinColor.brand.opacity(0.35) : FiveMinColor.line, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!setupEnabled)
+                    .opacity(setupEnabled ? 1 : 0.55)
+                }
+            }
+        }
+        .accessibilityLabel(model.t(SceneRanker.labelKey))
     }
 
     private var sceneLabel: String {
@@ -295,7 +330,7 @@ struct ScenePickerView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 10, pinnedViews: []) {
+                LazyVStack(alignment: .leading, spacing: FiveMinDimens.controlGap, pinnedViews: []) {
                     ForEach(model.pickerGroups) { group in
                         let items = model.scenes(inGroup: group.id)
                         if !items.isEmpty {
@@ -311,9 +346,9 @@ struct ScenePickerView: View {
                                         .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.horizontal, 12)
-                                        .padding(.vertical, 10)
+                                        .frame(minHeight: FiveMinDimens.rowH)
                                         .background(
-                                            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                            RoundedRectangle(cornerRadius: FiveMinDimens.radiusSm, style: .continuous)
                                                 .fill(active ? FiveMinColor.brandSoft : .clear)
                                         )
                                 }
@@ -321,7 +356,8 @@ struct ScenePickerView: View {
                         }
                     }
                 }
-                .padding(16)
+                .padding(FiveMinDimens.padX)
+                .onAppear { model.refreshSuggested() }
             }
             .background(FiveMinColor.surface)
             .navigationTitle(model.t("scenesLabel"))

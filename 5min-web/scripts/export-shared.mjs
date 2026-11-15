@@ -53,11 +53,10 @@ if (existsSync(dirname(mpShared))) {
     join(mpShared, 'scenes.js'),
     `module.exports = ${readFileSync(join(mpShared, 'scenes.json'), 'utf8').trim()};\n`,
   );
-  const mpLocaleMap = [
-    ['zh-CN.json', 'zh_CN.js'],
-    ['zh-TW.json', 'zh_TW.js'],
-    ['en.json', 'en.js'],
-  ];
+  const mpLocaleMap = LOCALE_CODES.map((code) => {
+    const dest = code === 'zh-CN' ? 'zh_CN.js' : code === 'zh-TW' ? 'zh_TW.js' : `${code}.js`;
+    return [`${code}.json`, dest];
+  });
   for (const [src, dest] of mpLocaleMap) {
     writeFileSync(
       join(mpShared, 'locales', dest),

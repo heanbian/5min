@@ -18,6 +18,7 @@ data class TimerUiState(
     val privacyAccepted: Boolean = false,
     val customMin: Int = 5,
     val customScenes: List<CustomScene> = emptyList(),
+    val suggestedSceneIds: List<String> = emptyList(),
     val recordsEpoch: Int = 0,
     val selectedTab: Int = 1,
 ) {

@@ -796,7 +796,7 @@ export struct MineTab {
 
   @Builder
   SceneEditorPane() {
-    Column({ space: 16 }) {
+    Column({ space: 20 }) {
       Column({ space: 8 }) {
         Text(this.t('customSceneNameLabel'))
           .fontSize(13)
@@ -808,13 +808,13 @@ export struct MineTab {
           placeholder: this.t('customSceneNamePlaceholder')
         })
           .width('100%')
-          .height(48)
+          .height(52)
           .fontSize(15)
           .fontColor($r('app.color.ink'))
           .padding({ left: 14, right: 14 })
           .backgroundColor($r('app.color.ghost_bg'))
           .border({ width: 1, color: $r('app.color.line') })
-          .borderRadius(12)
+          .borderRadius(14)
           .maxLength(CustomScene.MAX_NAME_LENGTH)
           .onChange((v: string) => {
             this.editorName = v;
@@ -822,59 +822,57 @@ export struct MineTab {
       }
       .width('100%')
 
-      Text(this.t('customMinutesLabel'))
-        .fontSize(15)
-        .fontWeight(FontWeight.Medium)
-        .fontColor($r('app.color.ink'))
-        .width('100%')
-
-      Row() {
-        Text('−')
-          .width(48)
-          .height(48)
-          .fontSize(26)
+      Column({ space: 8 }) {
+        Text(this.t('customMinutesLabel'))
+          .fontSize(13)
           .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.brand_strong'))
-          .textAlign(TextAlign.Center)
-          .backgroundColor($r('app.color.brand_soft'))
-          .borderRadius(24)
-          .onClick(() => this.nudgeEditor(-1))
+          .fontColor($r('app.color.muted'))
+          .width('100%')
 
-        Column({ space: 2 }) {
+        Row({ space: 10 }) {
+          Text('−')
+            .width(52)
+            .height(52)
+            .fontSize(22)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.ghost_bg'))
+            .border({ width: 1, color: $r('app.color.line') })
+            .borderRadius(14)
+            .onClick(() => this.nudgeEditor(-1))
+
           TextInput({ text: this.editorMinutes })
-            .width(96)
-            .height(48)
-            .fontSize(28)
+            .layoutWeight(1)
+            .height(52)
+            .fontSize(24)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .textAlign(TextAlign.Center)
             .type(InputType.Number)
-            .backgroundColor(Color.Transparent)
+            .backgroundColor($r('app.color.ghost_bg'))
+            .border({ width: 1, color: $r('app.color.line') })
+            .borderRadius(14)
             .onChange((v: string) => {
               this.editorMinutes = v;
             })
-          Text(this.t('customUnit'))
-            .fontSize(13)
-            .fontColor($r('app.color.muted'))
-        }
-        .alignItems(HorizontalAlign.Center)
-        .layoutWeight(1)
 
-        Text('+')
-          .width(48)
-          .height(48)
-          .fontSize(26)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.brand_strong'))
-          .textAlign(TextAlign.Center)
-          .backgroundColor($r('app.color.brand_soft'))
-          .borderRadius(24)
-          .onClick(() => this.nudgeEditor(1))
+          Text('+')
+            .width(52)
+            .height(52)
+            .fontSize(22)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.ghost_bg'))
+            .border({ width: 1, color: $r('app.color.line') })
+            .borderRadius(14)
+            .onClick(() => this.nudgeEditor(1))
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
       }
       .width('100%')
-      .height(56)
-      .alignItems(VerticalAlign.Center)
-      .justifyContent(FlexAlign.SpaceBetween)
 
       Row({ space: 8 }) {
         ForEach(QUICK_MINS, (min: number) => {
@@ -886,7 +884,7 @@ export struct MineTab {
             .fontColor($r('app.color.brand_strong'))
             .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.brand_soft'))
-            .borderRadius(10)
+            .borderRadius(12)
             .onClick(() => {
               this.editorMinutes = `${min}`;
             })

@@ -259,43 +259,49 @@
 }
 
 .editor-name-input {
-  height: 88rpx;
+  height: var(--control-h, 104rpx);
   border: 1px solid var(--line);
-  border-radius: 16rpx;
-  padding: 0 24rpx;
+  border-radius: var(--radius, 28rpx);
+  padding: 0 28rpx;
   font-size: var(--row-title-size);
-  margin-bottom: 24rpx;
-  background: #e8ecea;
+  margin-bottom: 40rpx;
+  background: var(--ghost-bg, #e8ecea);
+  box-sizing: border-box;
 }
 
 .editor-min-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 24rpx;
-  margin-bottom: 24rpx;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
 }
 
 .nudge-btn {
-  width: 112rpx;
-  height: 80rpx;
-  line-height: 80rpx;
+  width: var(--control-h, 104rpx);
+  height: var(--control-h, 104rpx);
+  line-height: var(--control-h, 104rpx);
   text-align: center;
-  background: #e8ecea;
+  background: var(--ghost-bg, #e8ecea);
   border: 1px solid var(--line);
-  border-radius: 16rpx;
+  border-radius: var(--radius, 28rpx);
   color: var(--ink);
   font-size: 36rpx;
   font-weight: 500;
+  box-sizing: border-box;
 }
 
 .editor-min-input {
   flex: 1;
-  height: 80rpx;
+  height: var(--control-h, 104rpx);
   text-align: center;
   font-size: 48rpx;
   font-weight: 500;
   color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 28rpx);
+  background: var(--ghost-bg, #e8ecea);
+  box-sizing: border-box;
 }
 
 .quick-row {
@@ -303,16 +309,19 @@
   flex-direction: row;
   flex-wrap: wrap;
   gap: 16rpx;
-  margin-bottom: 28rpx;
+  margin-bottom: 40rpx;
 }
 
 .quick-chip {
   background: var(--brand-soft);
   color: var(--brand-strong);
   font-weight: 600;
-  padding: 16rpx 28rpx;
-  border-radius: 20rpx;
+  height: var(--row-h, 80rpx);
+  line-height: var(--row-h, 80rpx);
+  padding: 0 24rpx;
+  border-radius: 24rpx;
   font-size: 28rpx;
+  box-sizing: border-box;
 }
 
 .duration-actions {

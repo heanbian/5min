@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +53,7 @@ import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.data.CustomScene
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
+import chat.fivemin.app.ui.theme.FiveMinDimens
 
 private enum class MineDialog { None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian }
 
@@ -353,71 +357,96 @@ fun MineScreen(vm: TimerViewModel) {
                 },
                 containerColor = FiveMinColors.surface,
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedTextField(
-                            value = editorName,
-                            onValueChange = {
-                                editorName = it.take(CustomScene.MAX_NAME_LENGTH)
-                            },
-                            label = { Text(vm.t("customSceneNameLabel")) },
-                            placeholder = { Text(vm.t("customSceneNamePlaceholder")) },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Text(
-                            text = vm.t("customMinutesLabel"),
-                            color = FiveMinColors.ink,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(FiveMinDimens.sectionGap)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                text = "−",
-                                modifier = Modifier
-                                    .background(FiveMinColors.ghostBg, RoundedCornerShape(10.dp))
-                                    .clickable { nudgeEditor(-1) }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                                color = FiveMinColors.ink,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
+                                text = vm.t("customSceneNameLabel"),
+                                color = FiveMinColors.muted,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
                             )
                             OutlinedTextField(
-                                value = editorMinutes,
+                                value = editorName,
                                 onValueChange = {
-                                    editorMinutes = it.filter { ch -> ch.isDigit() }.take(3)
+                                    editorName = it.take(CustomScene.MAX_NAME_LENGTH)
                                 },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                placeholder = { Text(vm.t("customSceneNamePlaceholder")) },
                                 singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                textStyle = TextStyle(
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                ),
-                            )
-                            Text(
-                                text = "+",
                                 modifier = Modifier
-                                    .background(FiveMinColors.ghostBg, RoundedCornerShape(10.dp))
-                                    .clickable { nudgeEditor(1) }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                                color = FiveMinColors.ink,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
+                                    .fillMaxWidth()
+                                    .height(FiveMinDimens.fieldH),
+                                shape = RoundedCornerShape(FiveMinDimens.radius),
                             )
+                        }
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = vm.t("customMinutesLabel"),
+                                color = FiveMinColors.muted,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.controlGap),
+                            ) {
+                                Text(
+                                    text = "−",
+                                    modifier = Modifier
+                                        .size(FiveMinDimens.controlH)
+                                        .clip(RoundedCornerShape(FiveMinDimens.radius))
+                                        .background(FiveMinColors.ghostBg)
+                                        .border(1.dp, FiveMinColors.line, RoundedCornerShape(FiveMinDimens.radius))
+                                        .clickable { nudgeEditor(-1) }
+                                        .wrapContentHeight(Alignment.CenterVertically),
+                                    color = FiveMinColors.ink,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+                                OutlinedTextField(
+                                    value = editorMinutes,
+                                    onValueChange = {
+                                        editorMinutes = it.filter { ch -> ch.isDigit() }.take(3)
+                                    },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(FiveMinDimens.fieldH),
+                                    shape = RoundedCornerShape(FiveMinDimens.radius),
+                                    textStyle = TextStyle(
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                    ),
+                                )
+                                Text(
+                                    text = "+",
+                                    modifier = Modifier
+                                        .size(FiveMinDimens.controlH)
+                                        .clip(RoundedCornerShape(FiveMinDimens.radius))
+                                        .background(FiveMinColors.ghostBg)
+                                        .border(1.dp, FiveMinColors.line, RoundedCornerShape(FiveMinDimens.radius))
+                                        .clickable { nudgeEditor(1) }
+                                        .wrapContentHeight(Alignment.CenterVertically),
+                                    color = FiveMinColors.ink,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             quickMins.forEach { m ->
                                 Text(
                                     text = "$m",
                                     modifier = Modifier
-                                        .background(FiveMinColors.brandSoft, RoundedCornerShape(10.dp))
+                                        .height(FiveMinDimens.chipH)
+                                        .background(FiveMinColors.brandSoft, RoundedCornerShape(FiveMinDimens.radiusSm))
                                         .clickable { editorMinutes = m.toString() }
-                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                        .padding(horizontal = 12.dp)
+                                        .wrapContentHeight(Alignment.CenterVertically),
                                     color = FiveMinColors.brandStrong,
                                     fontWeight = FontWeight.SemiBold,
                                 )

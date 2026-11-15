@@ -3,6 +3,7 @@ import { window } from '@kit.ArkUI';
 import { SharedCatalog, SceneItem, SceneGroup } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore } from '../common/HistoryStore';
+import { SceneRanker, SessionRef } from '../common/SceneRanker';
 import { resolveLocale } from '../common/I18n';
 import { normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
@@ -105,6 +106,8 @@ struct Index {
   @State groups: SceneGroup[] = [];
   @State scenes: SceneItem[] = [];
   @State customScenes: CustomScene[] = [];
+  @State suggestedSceneIds: string[] = [];
+  @State chipSceneIds: string[] = [];
   @State localeCodes: string[] = [];
   @State dialKey: string = '1';
   @State privacyAccepted: boolean = false;
@@ -131,6 +134,7 @@ struct Index {
     this.reloadCustomScenes().then(() => {
       this.consumePendingScene();
       this.refreshTodayStats();
+      this.refreshSuggested();
     });
   }
 
@@ -187,7 +191,6 @@ struct Index {
     await this.reloadCustomScenes();
     await this.migrateLegacyCustomMinIfNeeded();
     await this.reloadCustomScenes();
-    this.refreshPickerGroups();
     const toilet = this.scenes.find((s) => s.id === 'toilet');
     const customMatch = this.customScenes.find((s) => s.min === custom);
     if (toilet && custom === toilet.min) {
@@ -198,6 +201,7 @@ struct Index {
       this.setPreset(custom, '');
     }
     await this.refreshTodayStats();
+    await this.refreshSuggested();
     this.privacyAccepted = await this.prefs.isPrivacyAccepted();
     this.privacyReady = true;
     this.ready = true;
@@ -206,22 +210,47 @@ struct Index {
 
   private async reloadCustomScenes(): Promise<void> {
     this.customScenes = await this.prefs.getCustomScenes();
-    this.refreshPickerGroups();
+    await this.refreshSuggested();
     if (this.ready) {
       this.refreshUi();
     }
   }
 
-  private refreshPickerGroups(): void {
-    if (this.customScenes.length === 0) {
-      this.groups = this.catalog.groups.slice();
-      return;
+  private async refreshSuggested(): Promise<void> {
+    const known: string[] = [];
+    for (let i = 0; i < this.scenes.length; i++) {
+      known.push(this.scenes[i].id);
     }
-    const customGroup: SceneGroup = {
-      id: CustomScene.GROUP_ID,
-      labelKey: 'sceneGroupCustom'
-    };
-    this.groups = [customGroup].concat(this.catalog.groups);
+    for (let i = 0; i < this.customScenes.length; i++) {
+      known.push(this.customScenes[i].id);
+    }
+    const history = await this.history.getHistory();
+    const sessions: SessionRef[] = [];
+    for (let i = 0; i < history.length; i++) {
+      sessions.push(new SessionRef(history[i].sceneId, history[i].at));
+    }
+    this.suggestedSceneIds = SceneRanker.rank(sessions, known);
+    this.chipSceneIds = this.suggestedSceneIds.slice(0, SceneRanker.CHIP_N);
+    this.refreshPickerGroups();
+  }
+
+  private refreshPickerGroups(): void {
+    const groups: SceneGroup[] = [];
+    if (this.suggestedSceneIds.length > 0) {
+      const suggestedGroup: SceneGroup = {
+        id: SceneRanker.GROUP_ID,
+        labelKey: SceneRanker.LABEL_KEY
+      };
+      groups.push(suggestedGroup);
+    }
+    if (this.customScenes.length > 0) {
+      const customGroup: SceneGroup = {
+        id: CustomScene.GROUP_ID,
+        labelKey: 'sceneGroupCustom'
+      };
+      groups.push(customGroup);
+    }
+    this.groups = groups.concat(this.catalog.groups);
   }
 
   /** One-shot: turn the old single custom duration into a named scene. */
@@ -277,6 +306,7 @@ struct Index {
       this.reloadCustomScenes().then(() => {
         this.consumePendingScene();
         this.refreshTodayStats();
+        this.refreshSuggested();
       });
     }
   }
@@ -304,6 +334,16 @@ struct Index {
   }
 
   private scenesInGroup(groupId: string): SceneItem[] {
+    if (groupId === SceneRanker.GROUP_ID) {
+      const out: SceneItem[] = [];
+      for (let i = 0; i < this.suggestedSceneIds.length; i++) {
+        const item = this.sceneItemForId(this.suggestedSceneIds[i], SceneRanker.GROUP_ID);
+        if (item) {
+          out.push(item);
+        }
+      }
+      return out;
+    }
     if (groupId === CustomScene.GROUP_ID) {
       const out: SceneItem[] = [];
       for (let i = 0; i < this.customScenes.length; i++) {
@@ -320,6 +360,32 @@ struct Index {
       return out;
     }
     return this.scenes.filter((s) => s.group === groupId);
+  }
+
+  private sceneItemForId(id: string, group: string): SceneItem | null {
+    const custom = this.customScenes.find((s) => s.id === id);
+    if (custom) {
+      const item: SceneItem = {
+        id: custom.id,
+        min: custom.min,
+        group: group,
+        labelKey: custom.id,
+        titleKey: custom.id
+      };
+      return item;
+    }
+    const scene = this.scenes.find((s) => s.id === id);
+    if (!scene) {
+      return null;
+    }
+    const item: SceneItem = {
+      id: scene.id,
+      min: scene.min,
+      group: group,
+      labelKey: scene.labelKey,
+      titleKey: scene.titleKey
+    };
+    return item;
   }
 
   private sceneTitle(id: string): string {
@@ -611,6 +677,7 @@ struct Index {
     this.state.finished = true;
     await this.history.recordSession(this.state.totalMs, this.state.activeSceneId);
     await this.refreshTodayStats();
+    await this.refreshSuggested();
     const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
     const title = this.t('notifyTitle', notifyVars);
     const body = this.t('notifyBody', notifyVars);
@@ -960,7 +1027,7 @@ struct Index {
 
           if (this.showScenes) {
             Scroll() {
-              Column({ space: 4 }) {
+              Column({ space: 10 }) {
                 ForEach(this.groups, (group: SceneGroup) => {
                   Column({ space: 2 }) {
                     Row({ space: 8 }) {
@@ -977,19 +1044,21 @@ struct Index {
                     }
                     .width('100%')
                     .padding({ left: 10, right: 10, top: 7, bottom: 7 })
-                    .backgroundColor('#E5F5ECB8')
-                    .border({ width: 1, color: '#2F9A6824' })
+                    .backgroundColor($r('app.color.brand_soft'))
+                    .border({ width: 1, color: $r('app.color.brand') })
                     .borderRadius(8)
+                    .opacity(0.85)
 
                     ForEach(this.scenesInGroup(group.id), (scene: SceneItem) => {
                       Text(this.pickerSceneLabel(scene))
                         .width('100%')
+                        .height(40)
                         .fontSize(14)
                         .fontWeight(FontWeight.Medium)
                         .fontColor(scene.id === this.state.activeSceneId ?
                           $r('app.color.brand_strong') : $r('app.color.muted'))
-                        .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-                        .borderRadius(11)
+                        .padding({ left: 12, right: 12 })
+                        .borderRadius(12)
                         .backgroundColor(scene.id === this.state.activeSceneId ?
                           $r('app.color.brand_soft') : Color.Transparent)
                         .onClick(() => this.selectScene(scene.id))
@@ -999,12 +1068,45 @@ struct Index {
                 }, (group: SceneGroup) => group.id)
               }
               .width('100%')
-              .padding(6)
+              .padding(10)
             }
             .height(280)
             .backgroundColor($r('app.color.surface'))
             .border({ width: 1, color: $r('app.color.line') })
             .borderRadius(14)
+          }
+
+          if (this.chipSceneIds.length > 0) {
+            Scroll() {
+              Row({ space: 8 }) {
+                ForEach(this.chipSceneIds, (id: string) => {
+                  Text(this.sceneTitle(id) || id)
+                    .fontSize(13)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor(id === this.state.activeSceneId ?
+                      $r('app.color.brand_strong') : $r('app.color.muted'))
+                    .height(40)
+                    .padding({ left: 12, right: 12 })
+                    .textAlign(TextAlign.Center)
+                    .backgroundColor(id === this.state.activeSceneId ?
+                      $r('app.color.brand_soft') : $r('app.color.surface'))
+                    .border({
+                      width: 1,
+                      color: id === this.state.activeSceneId ? $r('app.color.brand') : $r('app.color.line')
+                    })
+                    .borderRadius(14)
+                    .opacity(this.setupEnabled ? 1 : 0.4)
+                    .onClick(() => {
+                      if (this.setupEnabled) {
+                        this.selectScene(id);
+                      }
+                    })
+                }, (id: string) => id)
+              }
+            }
+            .scrollable(ScrollDirection.Horizontal)
+            .scrollBar(BarState.Off)
+            .width('100%')
           }
         }
         .width('100%')

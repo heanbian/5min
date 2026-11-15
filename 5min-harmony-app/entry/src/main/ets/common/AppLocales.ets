@@ -1,5 +1,5 @@
 /** App-supported UI languages (Harmony client). */
-export const APP_LOCALES: string[] = ['zh-CN', 'zh-TW', 'en'];
+export const APP_LOCALES: string[] = ['zh-CN', 'zh-TW', 'en', 'de', 'ru', 'fr', 'bo'];
 
 export function isAppLocale(code: string): boolean {
   return APP_LOCALES.indexOf(code) >= 0;
@@ -25,8 +25,9 @@ export function normalizeAppLocale(code: string, fallback: string = 'zh-CN'): st
     }
     return 'zh-CN';
   }
-  if (base === 'en') {
-    return 'en';
+  if ((base === 'en' || base === 'de' || base === 'ru' || base === 'fr' || base === 'bo') &&
+    isAppLocale(base)) {
+    return base;
   }
   return fallback;
 }
