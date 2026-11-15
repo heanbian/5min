@@ -1,0 +1,42 @@
+{
+  "name": "5min-web",
+  "author": "xuejibao",
+  "version": "1.0.0",
+  "description": "如厕计时器(5min) · 5min.chat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "npm run clean && npm run build:ncc",
+    "build:ncc": "npx ncc build server.js -o dist && rm -rf dist/server.conf dist/public",
+    "build:pkg": "npm run build:ncc && npx pkg dist/index.js -o fivemin --targets node24-linux-x64,node24-win-x64,node24-macos-arm64 --no-bytecode --public-packages=* --public",
+    "clean": "rm -rf dist fivemin-linux-x64 fivemin-macos-arm64 fivemin-win-x64.exe && find . -path ./node_modules -prune -o -name '*.log' -delete",
+    "export-shared": "node scripts/export-shared.mjs",
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "dotenv": "18.0.9",
+    "express": "5.3.0",
+    "helmet": "8.3.0",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "0.45.0",
+    "@yao-pkg/pkg": "6.25.0",
+    "eslint": "10.14.0",
+    "nodemon": "3.1.14"
+  },
+  "pkg": {
+    "scripts": "dist/index.js",
+    "targets": [
+      "node24-linux-x64",
+      "node24-win-x64",
+      "node24-macos-arm64"
+    ],
+    "outputPath": "dist"
+  }
+}

@@ -40,7 +40,7 @@ class HistoryStore(context: Context) {
         pruneOld()
     }
 
-    fun recordSession(elapsedMs: Long, sceneId: String = "") {
+    fun recordSession(elapsedMs: Long, sceneId: String = ""): Long {
         val ms = elapsedMs.coerceAtLeast(0L)
         val minutes = max(1, (ms / 60_000.0).roundToInt())
         val values = ContentValues().apply {
@@ -49,18 +49,48 @@ class HistoryStore(context: Context) {
             put("scene_id", sceneId)
             put("elapsed_ms", ms)
         }
-        db.insert(TABLE, null, values)
+        val id = db.insert(TABLE, null, values)
         pruneOld()
+        return id
     }
 
-    fun getHistory(): List<HistoryItem> {
+    fun updateSessionElapsed(id: Long, elapsedMs: Long) {
+        if (id <= 0L) return
+        val ms = elapsedMs.coerceAtLeast(0L)
+        val minutes = max(1, (ms / 60_000.0).roundToInt())
+        val values = ContentValues().apply {
+            put("minutes", minutes)
+            put("elapsed_ms", ms)
+        }
+        db.update(TABLE, values, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun deleteSession(id: Long) {
+        if (id <= 0L) return
+        db.delete(TABLE, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun clearHistory() {
+        db.delete(TABLE, null, null)
+    }
+
+    fun getHistory(sceneId: String? = null): List<HistoryItem> {
         val cutoff = cutoffMs()
+        val selection: String
+        val args: Array<String>
+        if (!sceneId.isNullOrEmpty()) {
+            selection = "at >= ? AND scene_id = ?"
+            args = arrayOf(cutoff.toString(), sceneId)
+        } else {
+            selection = "at >= ?"
+            args = arrayOf(cutoff.toString())
+        }
         val out = ArrayList<HistoryItem>()
         db.query(
             TABLE,
             arrayOf("id", "at", "minutes", "scene_id"),
-            "at >= ?",
-            arrayOf(cutoff.toString()),
+            selection,
+            args,
             null,
             null,
             "at DESC",

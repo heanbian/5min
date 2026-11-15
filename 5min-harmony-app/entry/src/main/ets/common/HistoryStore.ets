@@ -20,6 +20,7 @@ const LOG_TAG = 'HistoryStore';
 
 /** One finished session for local history. */
 export class HistoryItem {
+  id: number = 0;
   at: number = 0;
   minutes: number = 0;
   sceneId: string = '';
@@ -102,9 +103,9 @@ export class HistoryStore {
     }
   }
 
-  async recordSession(elapsedMs: number, sceneId: string = ''): Promise<void> {
+  async recordSession(elapsedMs: number, sceneId: string = ''): Promise<number> {
     if (!this.store) {
-      return;
+      return 0;
     }
     const ms = Math.max(0, elapsedMs);
     const minutes = Math.max(1, Math.round(ms / 60000));
@@ -113,18 +114,53 @@ export class HistoryStore {
     values['minutes'] = minutes;
     values['scene_id'] = sceneId ? sceneId : '';
     values['elapsed_ms'] = ms;
-    await this.store.insert(TABLE, values);
+    const rowId = await this.store.insert(TABLE, values);
     await HistoryStore.pruneOld(this.store);
+    return rowId;
   }
 
-  /** Sessions in the last HISTORY_DAYS days, newest first. */
-  async getHistory(): Promise<HistoryItem[]> {
+  async updateSessionElapsed(id: number, elapsedMs: number): Promise<void> {
+    if (!this.store || id <= 0) {
+      return;
+    }
+    const ms = Math.max(0, elapsedMs);
+    const minutes = Math.max(1, Math.round(ms / 60000));
+    const values: relationalStore.ValuesBucket = {};
+    values['minutes'] = minutes;
+    values['elapsed_ms'] = ms;
+    const predicates = new relationalStore.RdbPredicates(TABLE);
+    predicates.equalTo('id', id);
+    await this.store.update(values, predicates);
+  }
+
+  async deleteSession(id: number): Promise<void> {
+    if (!this.store || id <= 0) {
+      return;
+    }
+    const predicates = new relationalStore.RdbPredicates(TABLE);
+    predicates.equalTo('id', id);
+    await this.store.delete(predicates);
+  }
+
+  async clearHistory(): Promise<void> {
+    if (!this.store) {
+      return;
+    }
+    const predicates = new relationalStore.RdbPredicates(TABLE);
+    await this.store.delete(predicates);
+  }
+
+  /** Sessions in the last HISTORY_DAYS days, newest first; optional scene filter. */
+  async getHistory(sceneId: string = ''): Promise<HistoryItem[]> {
     if (!this.store) {
       return [];
     }
     const cutoff = HistoryStore.cutoffMs();
     const predicates = new relationalStore.RdbPredicates(TABLE);
     predicates.greaterThanOrEqualTo('at', cutoff);
+    if (sceneId.length > 0) {
+      predicates.equalTo('scene_id', sceneId);
+    }
     predicates.orderByDesc('at');
     const rs = await this.store.query(predicates);
     const out: HistoryItem[] = [];
@@ -132,6 +168,7 @@ export class HistoryStore {
       if (rs.goToFirstRow()) {
         do {
           const item = new HistoryItem();
+          item.id = rs.getLong(rs.getColumnIndex('id'));
           item.at = rs.getLong(rs.getColumnIndex('at'));
           item.minutes = rs.getLong(rs.getColumnIndex('minutes'));
           item.sceneId = rs.getString(rs.getColumnIndex('scene_id'));

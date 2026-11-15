@@ -30,10 +30,17 @@ final class TimerViewModel: ObservableObject {
     @Published var pendingSceneId: String?
     /// 0 records · 1 home · 2 mine
     @Published var selectedTab = 1
+    @Published var finishTone = true
+    @Published var finishVibrate = true
+    @Published var finishNotify = true
+    @Published var inOvertime = false
+    @Published var overtimeMs: Int64 = 0
 
     private var endAt: Date?
+    private var overtimeStart: Date?
     private var tick: AnyCancellable?
     private var finishedHandled = false
+    private var lastRecordedSessionId: Int64?
 
     var suggestedGroup: SceneGroupDTO {
         SceneGroupDTO(id: SceneRanker.groupId, labelKey: SceneRanker.labelKey)
@@ -60,7 +67,7 @@ final class TimerViewModel: ObservableObject {
         return CGFloat(remainMs) / CGFloat(totalMs)
     }
 
-    var alertSoundOn: Bool { ambient != "off" }
+    var alertSoundOn: Bool { finishTone }
 
     var appLocaleCodes: [String] {
         AppLocales.filter(catalog.localeCodes)
@@ -77,6 +84,9 @@ final class TimerViewModel: ObservableObject {
         )
         if saved != locale { prefs.locale = locale }
         ambient = prefs.ambient
+        finishTone = prefs.finishTone
+        finishVibrate = prefs.finishVibrate
+        finishNotify = prefs.finishNotify
         customMin = prefs.customMin(fallback: catalog.defaultMin)
         customScenes = prefs.customScenes()
         migrateLegacyCustomMinIfNeeded()
@@ -194,6 +204,75 @@ final class TimerViewModel: ObservableObject {
         if mode == "off" {
             AlertService.shared.stop()
         }
+    }
+
+    func setFinishTone(_ on: Bool) {
+        finishTone = on
+        prefs.finishTone = on
+    }
+
+    func setFinishVibrate(_ on: Bool) {
+        finishVibrate = on
+        prefs.finishVibrate = on
+    }
+
+    func setFinishNotify(_ on: Bool) {
+        finishNotify = on
+        prefs.finishNotify = on
+    }
+
+    var dialTimeText: String {
+        if inOvertime {
+            return "+\(formatOvertime(overtimeMs))"
+        }
+        return format(remainMs)
+    }
+
+    func formatOvertime(_ ms: Int64) -> String {
+        let totalSec = max(0, ms / 1000)
+        let m = totalSec / 60
+        let s = totalSec % 60
+        if m > 0 {
+            return String(format: "%d:%02d", m, s)
+        }
+        return String(format: "0:%02d", s)
+    }
+
+    var canIgnoreFinish: Bool {
+        phase == .done && lastRecordedSessionId != nil
+    }
+
+    func ignoreLastSession() {
+        guard let id = lastRecordedSessionId else { return }
+        history.deleteSession(id: id)
+        lastRecordedSessionId = nil
+        recordsEpoch += 1
+        refreshTodayStats()
+        refreshSuggested()
+        resetToIdleAfterFinish()
+    }
+
+    private func resetToIdleAfterFinish() {
+        stopTicker()
+        NotificationService.cancelFinish()
+        AlertService.shared.stop()
+        finishedHandled = false
+        inOvertime = false
+        overtimeMs = 0
+        overtimeStart = nil
+        remainMs = totalMs
+        running = false
+        finished = false
+        UIApplication.shared.isIdleTimerDisabled = false
+        refreshPhase()
+    }
+
+    private func commitOvertimeToHistoryIfNeeded() {
+        guard inOvertime, overtimeMs > 0, let id = lastRecordedSessionId else { return }
+        let elapsed = totalMs + overtimeMs
+        history.updateSessionElapsed(id: id, elapsedMs: elapsed)
+        recordsEpoch += 1
+        refreshTodayStats()
     }
 
     func consumePendingScene() {
@@ -329,9 +408,26 @@ final class TimerViewModel: ObservableObject {
         statsMs = stats.ms
     }
 
+    func deleteHistorySession(id: Int64) {
+        history.deleteSession(id: id)
+        recordsEpoch += 1
+        refreshTodayStats()
+        refreshSuggested()
+    }
+
+    func clearAllHistory() {
+        history.clearHistory()
+        recordsEpoch += 1
+        refreshTodayStats()
+        refreshSuggested()
+    }
+
     func setPreset(minutes: Int, sceneId: String?) {
         guard !running else { return }
+        if inOvertime { commitOvertimeToHistoryIfNeeded() }
+        clearOvertimeState()
         finishedHandled = false
+        lastRecordedSessionId = nil
         let total = Int64(max(1, minutes)) * 60_000
         totalMs = total
         remainMs = total
@@ -355,8 +451,12 @@ final class TimerViewModel: ObservableObject {
 
     func toggleStart() {
         if finished && !running {
+            commitOvertimeToHistoryIfNeeded()
+            clearOvertimeState()
+            lastRecordedSessionId = nil
             remainMs = totalMs
             finished = false
+            finishedHandled = false
             NotificationService.ensureAuthorized { [weak self] in self?.start() }
             return
         }
@@ -368,10 +468,13 @@ final class TimerViewModel: ObservableObject {
     }
 
     func reset() {
+        commitOvertimeToHistoryIfNeeded()
         stopTicker()
         NotificationService.cancelFinish()
         AlertService.shared.stop()
         finishedHandled = false
+        clearOvertimeState()
+        lastRecordedSessionId = nil
         remainMs = totalMs
         running = false
         finished = false
@@ -380,7 +483,17 @@ final class TimerViewModel: ObservableObject {
     }
 
     func realert() {
-        AlertService.shared.play(durationMs: catalog.alertDurationMs, withSound: alertSoundOn)
+        AlertService.shared.play(
+            durationMs: catalog.alertDurationMs,
+            withSound: finishTone,
+            withVibrate: finishVibrate
+        )
+    }
+
+    private func clearOvertimeState() {
+        inOvertime = false
+        overtimeMs = 0
+        overtimeStart = nil
     }
 
     private func start() {
@@ -392,12 +505,14 @@ final class TimerViewModel: ObservableObject {
         finished = false
         UIApplication.shared.isIdleTimerDisabled = true
         let vars = notifyVars()
-        NotificationService.scheduleFinish(
-            at: end,
-            title: t("notifyTitle", vars),
-            body: t("notifyBody", vars),
-            withSound: alertSoundOn
-        )
+        if finishNotify {
+            NotificationService.scheduleFinish(
+                at: end,
+                title: t("notifyTitle", vars),
+                body: t("notifyBody", vars),
+                withSound: finishTone
+            )
+        }
         startTicker()
         refreshPhase()
     }
@@ -427,6 +542,11 @@ final class TimerViewModel: ObservableObject {
     }
 
     private func onTick() {
+        if inOvertime, let overtimeStart {
+            overtimeMs = max(0, Int64(-overtimeStart.timeIntervalSinceNow * 1000))
+            refreshPhase()
+            return
+        }
         guard running, let endAt else { return }
         let remain = max(0, Int64(endAt.timeIntervalSinceNow * 1000))
         remainMs = remain
@@ -446,19 +566,30 @@ final class TimerViewModel: ObservableObject {
         finished = true
         remainMs = 0
         UIApplication.shared.isIdleTimerDisabled = false
-        history.recordSession(elapsedMs: totalMs, sceneId: activeSceneId ?? "")
+        lastRecordedSessionId = history.recordSession(elapsedMs: totalMs, sceneId: activeSceneId ?? "")
         refreshTodayStats()
         refreshSuggested()
         recordsEpoch += 1
         if fromTicker {
             let vars = notifyVars()
-            NotificationService.presentNow(
-                title: t("notifyTitle", vars),
-                body: t("notifyBody", vars),
-                withSound: alertSoundOn
+            if finishNotify {
+                NotificationService.presentNow(
+                    title: t("notifyTitle", vars),
+                    body: t("notifyBody", vars),
+                    withSound: finishTone
+                )
+            }
+            AlertService.shared.play(
+                durationMs: catalog.alertDurationMs,
+                withSound: finishTone,
+                withVibrate: finishVibrate
             )
-            AlertService.shared.play(durationMs: catalog.alertDurationMs, withSound: alertSoundOn)
         }
+        inOvertime = true
+        overtimeStart = Date()
+        overtimeMs = 0
+        UIApplication.shared.isIdleTimerDisabled = true
+        startTicker()
         refreshPhase()
     }
 
@@ -492,7 +623,11 @@ final class TimerViewModel: ObservableObject {
 
     var statusText: String {
         switch phase {
-        case .done: return t("statusDone")
+        case .done:
+            if inOvertime {
+                return t("statusOvertime", ["n": formatOvertime(overtimeMs)])
+            }
+            return t("statusDone")
         case .warn: return t("statusWarn")
         case .running: return t("statusRunning")
         case .paused: return t("statusPaused")
@@ -508,7 +643,7 @@ final class TimerViewModel: ObservableObject {
     }
 
     private func refreshPhase() {
-        if finished || (remainMs <= 0 && !running) {
+        if finished || inOvertime || (remainMs <= 0 && !running) {
             phase = .done
         } else if running && remainMs > 0 && remainMs <= 60_000 {
             phase = .warn

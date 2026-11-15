@@ -21,6 +21,7 @@ object FinishNotifier {
         totalMs: Long = 5 * 60_000L,
         sceneName: String? = null,
         withSound: Boolean = true,
+        withVibrate: Boolean = true,
     ) {
         val appCtx = context.applicationContext
         val launch = PendingIntent.getActivity(
@@ -54,8 +55,10 @@ object FinishNotifier {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
             .setOnlyAlertOnce(false)
-            .setVibrate(pattern)
             .setContentIntent(launch)
+        if (withVibrate) {
+            builder.setVibrate(pattern)
+        }
         if (withSound) {
             builder.setDefaults(NotificationCompat.DEFAULT_ALL)
             builder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI)

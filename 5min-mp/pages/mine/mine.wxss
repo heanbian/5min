@@ -61,6 +61,10 @@
   align-items: center;
 }
 
+.row-switch switch {
+  transform: scale(0.92);
+}
+
 .row-title {
   flex: 1;
   font-size: var(--row-title-size);

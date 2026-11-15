@@ -17,6 +17,7 @@ const {
   recordCompletedSession,
   statsMinutes,
 } = require('../../utils/stats');
+const history = require('../../utils/history');
 const { alertFinish, clearAlerts } = require('../../utils/alert');
 const { drawDigitalWatch } = require('../../utils/digitalWatch');
 const {
@@ -44,6 +45,14 @@ function formatTime(ms) {
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${m}:${pad2(s)}`;
+}
+
+function formatOvertime(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m > 0) return `${m}:${pad2(s)}`;
+  return `0:${pad2(s)}`;
 }
 
 function visualPhase(remainMs, running, finished) {
@@ -93,6 +102,8 @@ Page({
     privacyLink: '',
     termsLink: '',
     privacyAgree: '',
+    showIgnore: false,
+    finishIgnoreLabel: '',
   },
 
   totalMs: DEFAULT_MIN * 60 * 1000,
@@ -103,6 +114,10 @@ Page({
   endAt: 0,
   tickTimer: null,
   activeSceneId: null,
+  lastRecordedSessionId: '',
+  inOvertime: false,
+  overtimeAt: 0,
+  overtimeMs: 0,
   scenePicker: null,
   canvas: null,
   ctx: null,
@@ -397,12 +412,54 @@ Page({
     this.setData({ statsText });
   },
 
+  commitOvertimeToHistoryIfNeeded() {
+    if (!this.inOvertime || this.overtimeMs <= 0 || !this.lastRecordedSessionId) return;
+    history.updateSessionElapsed(
+      this.lastRecordedSessionId,
+      this.totalMs + this.overtimeMs
+    );
+    this.refreshStats();
+  },
+
+  clearOvertimeState() {
+    this.inOvertime = false;
+    this.overtimeAt = 0;
+    this.overtimeMs = 0;
+  },
+
+  resetToIdleAfterFinish() {
+    this.stopTicker();
+    clearAlerts();
+    this.finishedHandled = false;
+    this.clearOvertimeState();
+    this.lastRecordedSessionId = '';
+    this.remainMs = this.totalMs;
+    this.running = false;
+    this.finished = false;
+    this.endAt = 0;
+    this.setKeepScreenOn(false);
+    this.refreshUi();
+  },
+
+  onIgnoreFinish() {
+    if (!this.lastRecordedSessionId) return;
+    history.deleteSession(this.lastRecordedSessionId);
+    this.lastRecordedSessionId = '';
+    this.refreshStats();
+    this.resetToIdleAfterFinish();
+  },
+
   refreshUi() {
     const remain = this.remainMs;
     const running = this.running;
     const finished = this.finished;
-    const phase = visualPhase(remain, running, finished);
-    const timeText = formatTime(remain);
+    let phase = visualPhase(remain, running, finished);
+  let timeText = formatTime(remain);
+
+    if (this.inOvertime) {
+      timeText = `+${formatOvertime(this.overtimeMs)}`;
+      phase = 'done';
+    }
 
     let primaryLabel = t('start');
     if (finished && !running) primaryLabel = t('again');
@@ -410,7 +467,9 @@ Page({
     else if (remain < this.totalMs && remain > 0) primaryLabel = t('resume');
 
     let statusText = t('statusIdle');
-    if (finished || remain <= 0) statusText = t('statusDone');
+    if (this.inOvertime) {
+      statusText = t('statusOvertime', { n: formatOvertime(this.overtimeMs) });
+    } else if (finished || remain <= 0) statusText = t('statusDone');
     else if (running && remain <= WARN_MS) statusText = t('statusWarn');
     else if (running) statusText = t('statusRunning');
     else if (remain < this.totalMs) statusText = t('statusPaused');
@@ -420,6 +479,8 @@ Page({
       const title = resolveSceneTitle(this.activeSceneId);
       if (title) brandTitle = title;
     }
+
+    const dialProgress = this.inOvertime ? 0 : (this.totalMs > 0 ? remain / this.totalMs : 0);
 
     this.setData({
       timeText,
@@ -432,9 +493,11 @@ Page({
       brandTitle,
       scenePlaceholder: !this.activeSceneId,
       ambient: getAmbientMode(),
+      showIgnore: finished && !!this.lastRecordedSessionId,
+      finishIgnoreLabel: t('finishIgnore'),
     });
 
-    this.drawDial(this.totalMs > 0 ? remain / this.totalMs : 0, timeText, phase);
+    this.drawDial(dialProgress, timeText, phase);
   },
 
   onOpenMine() {
@@ -451,7 +514,8 @@ Page({
       title: t('notifyTitle', vars),
       body: t('notifyBody', vars),
       durationMs: ALERT_DURATION_MS,
-      withSound: getAmbientMode() !== 'off',
+      withNotify: prefs.getFinishNotify(),
+      withVibrate: prefs.getFinishVibrate(),
     });
   },
 
@@ -476,6 +540,11 @@ Page({
   },
 
   tick() {
+    if (this.inOvertime) {
+      this.overtimeMs = Math.max(0, Date.now() - this.overtimeAt);
+      this.refreshUi();
+      return;
+    }
     if (!this.running || !this.endAt) return;
     const remain = Math.max(0, this.endAt - Date.now());
     this.remainMs = remain;
@@ -489,14 +558,20 @@ Page({
   onFinished() {
     if (this.finishedHandled) return;
     this.finishedHandled = true;
-    this.stopTicker();
     this.running = false;
     this.finished = true;
     this.remainMs = 0;
     this.endAt = 0;
     this.setKeepScreenOn(false);
-    recordCompletedSession(this.totalMs, this.activeSceneId || '');
-    this.refreshStats();
+    const rec = recordCompletedSession(this.totalMs, this.activeSceneId || '');
+    this.lastRecordedSessionId = rec.id || '';
+    if (rec.stats) {
+      this.refreshStats();
+    }
+    this.inOvertime = true;
+    this.overtimeAt = Date.now();
+    this.overtimeMs = 0;
+    this.startTicker();
     this.refreshUi();
     const vars = {
       n: Math.max(1, Math.round(this.totalMs / 60000)),
@@ -506,7 +581,8 @@ Page({
       title: t('notifyTitle', vars),
       body: t('notifyBody', vars),
       durationMs: ALERT_DURATION_MS,
-      withSound: getAmbientMode() !== 'off',
+      withNotify: prefs.getFinishNotify(),
+      withVibrate: prefs.getFinishVibrate(),
     });
   },
 
@@ -520,6 +596,9 @@ Page({
 
   setPreset(minutes, sceneId) {
     if (this.running) return;
+    this.commitOvertimeToHistoryIfNeeded();
+    this.clearOvertimeState();
+    this.lastRecordedSessionId = '';
     clearAlerts();
     this.finishedHandled = false;
     this.finished = false;
@@ -566,6 +645,10 @@ Page({
 
   onToggle() {
     if (this.finished && !this.running) {
+      this.commitOvertimeToHistoryIfNeeded();
+      this.clearOvertimeState();
+      this.lastRecordedSessionId = '';
+      clearAlerts();
       this.remainMs = this.totalMs;
       this.finished = false;
       this.finishedHandled = false;
@@ -606,9 +689,12 @@ Page({
   },
 
   onReset() {
+    this.commitOvertimeToHistoryIfNeeded();
     this.stopTicker();
     clearAlerts();
     this.finishedHandled = false;
+    this.clearOvertimeState();
+    this.lastRecordedSessionId = '';
     this.running = false;
     this.finished = false;
     this.endAt = 0;

@@ -54,7 +54,7 @@
 共享文案：
 
 ```bash
-cd ../5min-web && node scripts/export-shared.mjs
+cd ../5min-web && npm run export-shared
 ```
 
 同步到 `FiveMin/Resources/shared/`。
@@ -144,7 +144,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 
 | 类型 | 位置 |
 |------|------|
-| 界面多语言 / 场景 | `5min-web/js/i18n/locales.js` → `export-shared` |
+| 界面多语言 / 场景 | `5min-web/public/js/i18n/locales.js` → `export-shared` |
 | 显示名 / 通知权限 | `FiveMin/Info.plist` |
 | 商店元数据 | App Store Connect |
 

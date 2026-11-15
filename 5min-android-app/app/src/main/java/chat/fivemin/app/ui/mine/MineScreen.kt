@@ -31,6 +31,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -149,6 +151,27 @@ fun MineScreen(vm: TimerViewModel) {
                 PrefRow(vm.t("customScenesLabel"), customScenesValue()) {
                     dialog = MineDialog.CustomScenes
                 }
+            }
+
+            SectionTitle(vm.t("prefAlertsSection"))
+            CardBlock {
+                PrefSwitchRow(
+                    title = vm.t("prefFinishTone"),
+                    checked = state.finishTone,
+                    onCheckedChange = { vm.setFinishTone(it) },
+                )
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                PrefSwitchRow(
+                    title = vm.t("prefFinishVibrate"),
+                    checked = state.finishVibrate,
+                    onCheckedChange = { vm.setFinishVibrate(it) },
+                )
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                PrefSwitchRow(
+                    title = vm.t("prefFinishNotify"),
+                    checked = state.finishNotify,
+                    onCheckedChange = { vm.setFinishNotify(it) },
+                )
             }
 
             SectionTitle(vm.t("mineSectionSupport"))
@@ -553,6 +576,33 @@ private fun PrefRow(title: String, value: String, onClick: () -> Unit) {
         Text(title, color = FiveMinColors.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
         Text(value, color = FiveMinColors.muted, fontSize = 14.sp, modifier = Modifier.padding(end = 6.dp))
         Text("›", color = FiveMinColors.muted, fontSize = 18.sp)
+    }
+}
+
+@Composable
+private fun PrefSwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, color = FiveMinColors.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = FiveMinColors.surface,
+                checkedTrackColor = FiveMinColors.brand,
+                uncheckedThumbColor = FiveMinColors.surface,
+                uncheckedTrackColor = FiveMinColors.line,
+            ),
+        )
     }
 }
 

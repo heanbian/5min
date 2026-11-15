@@ -49,6 +49,24 @@ struct MineView: View {
                         }
                     }
 
+                    sectionTitle(model.t("prefAlertsSection"))
+                    card {
+                        alertToggleRow(model.t("prefFinishTone"), isOn: alertBinding(
+                            get: { model.finishTone },
+                            set: { model.setFinishTone($0) }
+                        ))
+                        Divider().padding(.leading, 16)
+                        alertToggleRow(model.t("prefFinishVibrate"), isOn: alertBinding(
+                            get: { model.finishVibrate },
+                            set: { model.setFinishVibrate($0) }
+                        ))
+                        Divider().padding(.leading, 16)
+                        alertToggleRow(model.t("prefFinishNotify"), isOn: alertBinding(
+                            get: { model.finishNotify },
+                            set: { model.setFinishNotify($0) }
+                        ))
+                    }
+
                     sectionTitle(model.t("mineSectionSupport"))
                     card {
                         linkRow(model.t("privacyLink")) {
@@ -120,6 +138,21 @@ struct MineView: View {
         VStack(spacing: 0) { content() }
             .background(FiveMinColor.surface)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func alertBinding(get: @escaping () -> Bool, set: @escaping (Bool) -> Void) -> Binding<Bool> {
+        Binding(get: get, set: set)
+    }
+
+    private func alertToggleRow(_ title: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: isOn) {
+            Text(title)
+                .font(.system(size: 15))
+                .foregroundStyle(FiveMinColor.ink)
+        }
+        .tint(FiveMinColor.brandStrong)
+        .padding(.horizontal, 16)
+        .frame(minHeight: 52)
     }
 
     private func prefRow(_ title: String, value: String, action: @escaping () -> Void) -> some View {

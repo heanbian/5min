@@ -192,12 +192,12 @@ struct TimerView: View {
                     .stroke(ringColor, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 0.2), value: model.progress)
-                DigitalWatchTime(text: model.format(model.remainMs), color: timeColor)
+                DigitalWatchTime(text: model.dialTimeText, color: timeColor)
                     .frame(width: dial * 0.64)
             }
             .frame(width: dial, height: dial)
             .onTapGesture {
-                if model.finished { model.realert() }
+                if model.phase == .done { model.realert() }
             }
 
             VStack(spacing: 6) {
@@ -248,6 +248,11 @@ struct TimerView: View {
                 Button(model.t("reset")) { model.reset() }
                     .buttonStyle(SecondaryButtonStyle(enabled: resetEnabled))
                     .disabled(!resetEnabled)
+            }
+
+            if model.canIgnoreFinish {
+                Button(model.t("finishIgnore")) { model.ignoreLastSession() }
+                    .buttonStyle(SecondaryButtonStyle())
             }
 
             Button {

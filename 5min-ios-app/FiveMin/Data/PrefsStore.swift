@@ -35,6 +35,9 @@ final class PrefsStore {
     private let customScenesKey = "5min.custom_scenes"
     private let customScenesMigratedKey = "5min.custom_scenes_migrated"
     private let privacyKey = "5min.privacy_accepted"
+    private let finishToneKey = "5min.finish_tone"
+    private let finishVibrateKey = "5min.finish_vibrate"
+    private let finishNotifyKey = "5min.finish_notify"
 
     var locale: String {
         get { defaults.string(forKey: localeKey) ?? "" }
@@ -103,5 +106,31 @@ final class PrefsStore {
 
     func markCustomScenesMigrated() {
         defaults.set(true, forKey: customScenesMigratedKey)
+    }
+
+    var finishTone: Bool {
+        get {
+            if let value = defaults.object(forKey: finishToneKey) as? Bool {
+                return value
+            }
+            return ambient != "off"
+        }
+        set { defaults.set(newValue, forKey: finishToneKey) }
+    }
+
+    var finishVibrate: Bool {
+        get {
+            if defaults.object(forKey: finishVibrateKey) == nil { return true }
+            return defaults.bool(forKey: finishVibrateKey)
+        }
+        set { defaults.set(newValue, forKey: finishVibrateKey) }
+    }
+
+    var finishNotify: Bool {
+        get {
+            if defaults.object(forKey: finishNotifyKey) == nil { return true }
+            return defaults.bool(forKey: finishNotifyKey)
+        }
+        set { defaults.set(newValue, forKey: finishNotifyKey) }
     }
 }

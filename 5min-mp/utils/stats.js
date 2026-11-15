@@ -12,8 +12,8 @@ function getTodayStats() {
 }
 
 function recordCompletedSession(elapsedMs, sceneId) {
-  history.recordSession(elapsedMs, sceneId || '');
-  return history.todayStats();
+  const id = history.recordSession(elapsedMs, sceneId || '');
+  return { id, stats: history.todayStats() };
 }
 
 function statsMinutes(totalMs) {

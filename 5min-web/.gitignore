@@ -25,3 +25,8 @@ node_modules/
 !.env.example
 *.cache
 .workbuddy/
+server.conf
+fivemin.pid
+fivemin-linux-x64
+fivemin-macos-arm64
+fivemin-win-x64.exe

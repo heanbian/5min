@@ -81,11 +81,12 @@ final class HistoryStore {
         }
     }
 
-    func recordSession(elapsedMs: Int64, sceneId: String = "") {
+    @discardableResult
+    func recordSession(elapsedMs: Int64, sceneId: String = "") -> Int64 {
         let at = Int64(Date().timeIntervalSince1970 * 1000)
         let ms = max(0, elapsedMs)
         let minutes = max(1, Int((Double(ms) / 60_000.0).rounded()))
-        insertSession(at: at, minutes: minutes, sceneId: sceneId, elapsedMs: ms)
+        return insertSession(at: at, minutes: minutes, sceneId: sceneId, elapsedMs: ms)
     }
 
 #if DEBUG
@@ -96,30 +97,76 @@ final class HistoryStore {
     }
 #endif
 
-    private func insertSession(at: Int64, minutes: Int, sceneId: String, elapsedMs: Int64) {
+    @discardableResult
+    private func insertSession(at: Int64, minutes: Int, sceneId: String, elapsedMs: Int64) -> Int64 {
         queue.sync {
-            guard let db else { return }
+            guard let db else { return 0 }
             var stmt: OpaquePointer?
             defer { sqlite3_finalize(stmt) }
             let sql = "INSERT INTO sessions(at, minutes, scene_id, elapsed_ms) VALUES(?,?,?,?)"
-            guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+            guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return 0 }
             sqlite3_bind_int64(stmt, 1, at)
             sqlite3_bind_int(stmt, 2, Int32(minutes))
             sqlite3_bind_text(stmt, 3, (sceneId as NSString).utf8String, -1, nil)
             sqlite3_bind_int64(stmt, 4, elapsedMs)
-            _ = sqlite3_step(stmt)
+            guard sqlite3_step(stmt) == SQLITE_DONE else { return 0 }
             pruneOld()
+            return sqlite3_last_insert_rowid(db)
         }
     }
 
-    func getHistory() -> [HistoryItem] {
+    func updateSessionElapsed(id: Int64, elapsedMs: Int64) {
+        let ms = max(0, elapsedMs)
+        let minutes = max(1, Int((Double(ms) / 60_000.0).rounded()))
+        queue.sync {
+            guard let db else { return }
+            var stmt: OpaquePointer?
+            defer { sqlite3_finalize(stmt) }
+            let sql = "UPDATE sessions SET elapsed_ms = ?, minutes = ? WHERE id = ?"
+            guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+            sqlite3_bind_int64(stmt, 1, ms)
+            sqlite3_bind_int(stmt, 2, Int32(minutes))
+            sqlite3_bind_int64(stmt, 3, id)
+            _ = sqlite3_step(stmt)
+        }
+    }
+
+    func deleteSession(id: Int64) {
+        queue.sync {
+            guard let db else { return }
+            var stmt: OpaquePointer?
+            defer { sqlite3_finalize(stmt) }
+            let sql = "DELETE FROM sessions WHERE id = ?"
+            guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
+            sqlite3_bind_int64(stmt, 1, id)
+            _ = sqlite3_step(stmt)
+        }
+    }
+
+    func clearHistory() {
+        queue.sync {
+            guard let db else { return }
+            exec("DELETE FROM sessions")
+        }
+    }
+
+    func getHistory(sceneId: String? = nil) -> [HistoryItem] {
         queue.sync {
             guard let db else { return [] }
             var stmt: OpaquePointer?
             defer { sqlite3_finalize(stmt) }
-            let sql = "SELECT id, at, minutes, scene_id FROM sessions WHERE at >= ? ORDER BY at DESC"
+            let filterByScene = sceneId != nil && !(sceneId?.isEmpty ?? true)
+            let sql: String
+            if filterByScene {
+                sql = "SELECT id, at, minutes, scene_id FROM sessions WHERE at >= ? AND scene_id = ? ORDER BY at DESC"
+            } else {
+                sql = "SELECT id, at, minutes, scene_id FROM sessions WHERE at >= ? ORDER BY at DESC"
+            }
             guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
             sqlite3_bind_int64(stmt, 1, cutoffMs)
+            if filterByScene, let sceneId {
+                sqlite3_bind_text(stmt, 2, (sceneId as NSString).utf8String, -1, nil)
+            }
             var out: [HistoryItem] = []
             while sqlite3_step(stmt) == SQLITE_ROW {
                 let id = sqlite3_column_int64(stmt, 0)

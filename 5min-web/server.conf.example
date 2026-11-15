@@ -1,0 +1,29 @@
+# 如厕计时器(5min) · 服务配置示例
+# 复制为 server.conf 后按环境修改（server.conf 已被 git 忽略）
+
+NODE_ENV=development
+PORT=3300
+TRUST_PROXY=0
+
+DB_HOST=localhost
+DB_PORT=5433
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=fivemin
+
+# 可选连接池与 SSL
+# DB_POOL_MAX=10
+# DB_SSL=0
+# 生产启用 DB_SSL=1 时请保持证书校验开启（勿设 DB_SSL_REJECT_UNAUTHORIZED=false，除非本地调试）
+# DB_SSL_REJECT_UNAUTHORIZED=true
+
+# 访客记录地理解析（ip-api.com 免费档为 HTTP；默认开启；内网 IP 记为「内网/本地」）
+# 可设 VISITOR_GEO_ENABLED=false 关闭出站查询
+# VISITOR_GEO_ENABLED=true
+# 注意：TRUST_PROXY=1 时须由可信反向代理剥离/覆写 X-Forwarded-* 与 CDN 国家头，否则客户端可伪造 IP/地区
+
+# 正式站点 https://5min.chat（写在 public/site.json，不从这里读取）
+# ASSET_VERSION=
+# DOTENV_CONFIG_PATH=
+# FIVEMIN_ROOT=
+# FIVEMIN_PUBLIC=

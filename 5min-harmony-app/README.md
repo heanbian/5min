@@ -22,7 +22,8 @@
 共享配置由 Web 子项目导出：
 
 ```bash
-cd ../5min-web && node scripts/export-shared.mjs
+cd ../5min-web && npm run export-shared
+# 文案源：public/js/i18n/locales.js
 ```
 
 图标重出（与 Android 同品牌）：

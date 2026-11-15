@@ -46,6 +46,56 @@ export class PrefsStore {
 
   async init(context: common.UIAbilityContext): Promise<void> {
     this.pref = await preferences.getPreferences(context, STORE);
+    await this.migrateFinishAlertPrefsIfNeeded();
+  }
+
+  private async migrateFinishAlertPrefsIfNeeded(): Promise<void> {
+    const hasTone = await this.pref?.has('finish_tone');
+    if (hasTone) {
+      return;
+    }
+    const ambient = String(await this.pref?.get('ambient', 'off') ?? 'off');
+    const legacyTone = ambient !== 'off';
+    await this.pref?.put('finish_tone', legacyTone);
+    await this.pref?.put('finish_vibrate', true);
+    await this.pref?.put('finish_notify', true);
+    await this.pref?.flush();
+  }
+
+  async getFinishTone(): Promise<boolean> {
+    if (!(await this.pref?.has('finish_tone'))) {
+      await this.migrateFinishAlertPrefsIfNeeded();
+    }
+    return Boolean(await this.pref?.get('finish_tone', true) ?? true);
+  }
+
+  async setFinishTone(on: boolean): Promise<void> {
+    await this.pref?.put('finish_tone', on);
+    await this.pref?.flush();
+  }
+
+  async getFinishVibrate(): Promise<boolean> {
+    if (!(await this.pref?.has('finish_vibrate'))) {
+      await this.migrateFinishAlertPrefsIfNeeded();
+    }
+    return Boolean(await this.pref?.get('finish_vibrate', true) ?? true);
+  }
+
+  async setFinishVibrate(on: boolean): Promise<void> {
+    await this.pref?.put('finish_vibrate', on);
+    await this.pref?.flush();
+  }
+
+  async getFinishNotify(): Promise<boolean> {
+    if (!(await this.pref?.has('finish_notify'))) {
+      await this.migrateFinishAlertPrefsIfNeeded();
+    }
+    return Boolean(await this.pref?.get('finish_notify', true) ?? true);
+  }
+
+  async setFinishNotify(on: boolean): Promise<void> {
+    await this.pref?.put('finish_notify', on);
+    await this.pref?.flush();
   }
 
   async getLocale(): Promise<string> {

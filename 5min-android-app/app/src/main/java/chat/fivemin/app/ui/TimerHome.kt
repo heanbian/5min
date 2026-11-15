@@ -119,8 +119,13 @@ fun TimerHome(
     }
 
     val title = vm.sceneTitle(state.activeSceneId) ?: vm.t("brandTitle")
+    val dialMs = if (state.finished && !state.running) state.overtimeMs else state.remainMs
     val status = when (state.phase) {
-        TimerPhase.Done -> vm.t("statusDone")
+        TimerPhase.Done -> if (state.finished) {
+            vm.t("statusOvertime", mapOf("n" to vm.format(state.overtimeMs)))
+        } else {
+            vm.t("statusDone")
+        }
         TimerPhase.Warn -> vm.t("statusWarn")
         TimerPhase.Running -> vm.t("statusRunning")
         TimerPhase.Paused -> vm.t("statusPaused")
@@ -263,7 +268,7 @@ fun TimerHome(
                         )
                     }
                     DigitalWatchTime(
-                        text = vm.format(state.remainMs),
+                        text = vm.format(dialMs),
                         color = timeColor,
                     )
                 }
@@ -375,6 +380,26 @@ fun TimerHome(
                             color = FiveMinColors.ghostInk.copy(alpha = if (resetEnabled) 1f else 0.4f),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
+                        )
+                    }
+                }
+
+                if (state.sessionLogged && state.finished && !state.running) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(FiveMinDimens.controlH)
+                            .clip(radius)
+                            .border(1.dp, FiveMinColors.line, radius)
+                            .background(FiveMinColors.surface)
+                            .clickable { vm.ignoreFinish() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = vm.t("finishIgnore"),
+                            color = FiveMinColors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
                         )
                     }
                 }

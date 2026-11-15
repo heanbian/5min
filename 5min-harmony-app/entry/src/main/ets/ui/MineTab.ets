@@ -6,7 +6,6 @@ import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
-import { FinishAlerter } from '../alert/FinishAlerter';
 import { i18n } from '@kit.LocalizationKit';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
@@ -34,6 +33,9 @@ export struct MineTab {
   @State uiTick: number = 0;
   @State localeName: string = '';
   @State ambientName: string = '';
+  @State finishTone: boolean = true;
+  @State finishVibrate: boolean = true;
+  @State finishNotify: boolean = true;
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -69,6 +71,12 @@ export struct MineTab {
     const amb = await this.prefs.getAmbient();
     this.ambient = amb;
     AppStorage.setOrCreate('appAmbient', amb);
+    this.finishTone = await this.prefs.getFinishTone();
+    this.finishVibrate = await this.prefs.getFinishVibrate();
+    this.finishNotify = await this.prefs.getFinishNotify();
+    AppStorage.setOrCreate('appFinishTone', this.finishTone);
+    AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
+    AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
     this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
     await this.migrateLegacyCustomMinIfNeeded();
     await this.reloadCustomScenes();
@@ -203,10 +211,28 @@ export struct MineTab {
     this.ambient = mode;
     AppStorage.setOrCreate('appAmbient', mode);
     await this.prefs.setAmbient(mode);
-    if (mode === 'off') {
-      await FinishAlerter.stop();
-    }
     this.ambientName = this.catalog.t(this.locale, this.ambientKeyOf(mode));
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async setFinishTone(on: boolean): Promise<void> {
+    this.finishTone = on;
+    AppStorage.setOrCreate('appFinishTone', on);
+    await this.prefs.setFinishTone(on);
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async setFinishVibrate(on: boolean): Promise<void> {
+    this.finishVibrate = on;
+    AppStorage.setOrCreate('appFinishVibrate', on);
+    await this.prefs.setFinishVibrate(on);
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async setFinishNotify(on: boolean): Promise<void> {
+    this.finishNotify = on;
+    AppStorage.setOrCreate('appFinishNotify', on);
+    await this.prefs.setFinishNotify(on);
     this.uiTick = this.uiTick + 1;
   }
 
@@ -428,6 +454,65 @@ export struct MineTab {
                   .height(52)
                   .padding({ left: 16, right: 16 })
                   .onClick(() => this.openDialog('customScenes'))
+                }
+                .width('100%')
+                .backgroundColor($r('app.color.surface'))
+                .borderRadius(14)
+                .clip(true)
+              }
+              .width('100%')
+
+              Column({ space: 8 }) {
+                Text(this.t('prefAlertsSection'))
+                  .fontSize(13)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.muted'))
+                  .width('100%')
+                  .padding({ left: 4 })
+
+                Column({ space: 0 }) {
+                  Row() {
+                    Text(this.t('prefFinishTone'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Toggle({ type: ToggleType.Switch, isOn: this.finishTone })
+                      .selectedColor($r('app.color.brand'))
+                      .onChange((on: boolean) => this.setFinishTone(on))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+
+                  Divider().color($r('app.color.line')).margin({ left: 16 })
+
+                  Row() {
+                    Text(this.t('prefFinishVibrate'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Toggle({ type: ToggleType.Switch, isOn: this.finishVibrate })
+                      .selectedColor($r('app.color.brand'))
+                      .onChange((on: boolean) => this.setFinishVibrate(on))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+
+                  Divider().color($r('app.color.line')).margin({ left: 16 })
+
+                  Row() {
+                    Text(this.t('prefFinishNotify'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Toggle({ type: ToggleType.Switch, isOn: this.finishNotify })
+                      .selectedColor($r('app.color.brand'))
+                      .onChange((on: boolean) => this.setFinishNotify(on))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
                 }
                 .width('100%')
                 .backgroundColor($r('app.color.surface'))

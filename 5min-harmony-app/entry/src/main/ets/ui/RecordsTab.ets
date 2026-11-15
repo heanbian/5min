@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { promptAction } from '@kit.ArkUI';
 import { SharedCatalog, SceneItem } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore';
@@ -8,9 +9,20 @@ import { i18n } from '@kit.LocalizationKit';
 /** One list row: scene / duration / time on separate lines. */
 class HistoryRowView {
   key: string = '';
+  id: number = 0;
   sceneLine: string = '';
   durationLine: string = '';
   timeLine: string = '';
+}
+
+class FilterOption {
+  id: string = '';
+  label: string = '';
+
+  constructor(id: string, label: string) {
+    this.id = id;
+    this.label = label;
+  }
 }
 
 @Component
@@ -22,6 +34,10 @@ export struct RecordsTab {
   @State periodCount: number = 0;
   @State periodMins: number = 0;
   @State uiTick: number = 0;
+  @State filterSceneId: string = '';
+  @State filterLabel: string = '';
+  @State filterOptions: FilterOption[] = [];
+  @State showFilter: boolean = false;
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -68,11 +84,13 @@ export struct RecordsTab {
   /** Called by parent when tab becomes visible. */
   async reload(): Promise<void> {
     this.customScenes = await this.prefs.getCustomScenes();
-    const hist = await this.history.getHistory();
+    this.buildFilterOptions();
+    const hist = await this.history.getHistory(this.filterSceneId);
     this.historyRows = this.formatHistory(hist);
     const period = await this.history.periodStats();
     this.periodCount = period[0];
     this.periodMins = period[1];
+    this.filterLabel = this.currentFilterLabel();
   }
 
   t(key: string, vars?: Record<string, string>): string {
@@ -95,7 +113,6 @@ export struct RecordsTab {
   }
 
   private formatHistory(items: HistoryItem[]): HistoryRowView[] {
-    // getHistory() already returns newest-first.
     const out: HistoryRowView[] = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -108,13 +125,89 @@ export struct RecordsTab {
       timeVars['time'] = this.formatDateTime(item.at);
 
       const row = new HistoryRowView();
-      row.key = `${item.at}-${item.minutes}-${item.sceneId}-${i}`;
+      row.id = item.id;
+      row.key = `${item.id}-${item.at}-${i}`;
       row.sceneLine = this.t('historySceneLine', sceneVars);
       row.durationLine = this.t('historyDurationLine', durVars);
       row.timeLine = this.t('historyTimeLine', timeVars);
       out.push(row);
     }
     return out;
+  }
+
+  private buildFilterOptions(): void {
+    const all = await this.history.getHistory();
+    const seen: string[] = [];
+    const opts: FilterOption[] = [];
+    opts.push(new FilterOption('', this.t('historyFilterAll')));
+    for (let i = 0; i < all.length; i++) {
+      const sid = all[i].sceneId;
+      if (!sid || seen.indexOf(sid) >= 0) {
+        continue;
+      }
+      seen.push(sid);
+      opts.push(new FilterOption(sid, this.resolveSceneTitle(sid)));
+    }
+    this.filterOptions = opts;
+  }
+
+  private currentFilterLabel(): string {
+    const found = this.filterOptions.find((o) => o.id === this.filterSceneId);
+    if (found) {
+      return found.label;
+    }
+    return this.t('historyFilterAll');
+  }
+
+  async setFilter(sceneId: string): Promise<void> {
+    this.filterSceneId = sceneId;
+    this.showFilter = false;
+    await this.reload();
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async deleteRow(id: number): Promise<void> {
+    try {
+      const buttons: promptAction.Button[] = [
+        { text: this.t('cancelLabel'), color: '#5F6F66' },
+        { text: this.t('historyDelete'), color: '#D2554A' }
+      ];
+      const res = await promptAction.showDialog({
+        title: this.t('historyDelete'),
+        message: this.t('historyDeleteConfirm'),
+        buttons: buttons
+      });
+      if (res.index !== 1) {
+        return;
+      }
+    } catch (_) {
+      return;
+    }
+    await this.history.deleteSession(id);
+    await this.reload();
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async clearAll(): Promise<void> {
+    try {
+      const buttons: promptAction.Button[] = [
+        { text: this.t('cancelLabel'), color: '#5F6F66' },
+        { text: this.t('historyClear'), color: '#D2554A' }
+      ];
+      const res = await promptAction.showDialog({
+        title: this.t('historyClear'),
+        message: this.t('historyClearConfirm'),
+        buttons: buttons
+      });
+      if (res.index !== 1) {
+        return;
+      }
+    } catch (_) {
+      return;
+    }
+    await this.history.clearHistory();
+    await this.reload();
+    this.uiTick = this.uiTick + 1;
   }
 
   /** yyyy-MM-dd HH:mm:ss */
@@ -130,137 +223,246 @@ export struct RecordsTab {
   }
 
   build() {
-    Column() {
-      Row() {
-        Text(this.ready ? this.t('tabRecords') : '…')
-          .fontSize(20)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.ink'))
-          .key(`records-title-${this.uiTick}`)
-      }
-      .width('100%')
-      .height(52)
-      .padding({ left: 20, right: 20 })
-      .alignItems(VerticalAlign.Center)
-      .backgroundColor($r('app.color.surface'))
-      .border({ width: { bottom: 1 }, color: $r('app.color.line') })
+    Stack({ alignContent: Alignment.TopStart }) {
+      Column() {
+        Row() {
+          Text(this.ready ? this.t('tabRecords') : '…')
+            .fontSize(20)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .key(`records-title-${this.uiTick}`)
+        }
+        .width('100%')
+        .height(52)
+        .padding({ left: 20, right: 20 })
+        .alignItems(VerticalAlign.Center)
+        .backgroundColor($r('app.color.surface'))
+        .border({ width: { bottom: 1 }, color: $r('app.color.line') })
 
-      if (!this.ready) {
-        Text('…')
-          .fontColor($r('app.color.muted'))
-          .margin({ top: 24 })
-          .width('100%')
-          .textAlign(TextAlign.Center)
-      } else {
-        Scroll() {
-          Column({ space: 16 }) {
-            Text(this.t('weekStatsLabel'))
-              .fontSize(13)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.muted'))
-              .width('100%')
-              .padding({ left: 4 })
-              .key(`rec-period-${this.uiTick}-${HISTORY_DAYS}`)
+        if (!this.ready) {
+          Text('…')
+            .fontColor($r('app.color.muted'))
+            .margin({ top: 24 })
+            .width('100%')
+            .textAlign(TextAlign.Center)
+        } else {
+          Scroll() {
+            Column({ space: 16 }) {
+              Text(this.t('weekStatsLabel'))
+                .fontSize(13)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.muted'))
+                .width('100%')
+                .padding({ left: 4 })
+                .key(`rec-period-${this.uiTick}-${HISTORY_DAYS}`)
 
-            Row({ space: 10 }) {
-              Column({ space: 6 }) {
-                Text(this.t('weekStatsCountLabel'))
-                  .fontSize(12)
-                  .fontColor($r('app.color.muted'))
-                Text(`${this.periodCount}`)
-                  .fontSize(28)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.ink'))
-              }
-              .layoutWeight(1)
-              .padding(16)
-              .alignItems(HorizontalAlign.Start)
-              .backgroundColor($r('app.color.surface'))
-              .borderRadius(14)
-
-              Column({ space: 6 }) {
-                Text(this.t('weekStatsMinsLabel'))
-                  .fontSize(12)
-                  .fontColor($r('app.color.muted'))
-                Row({ space: 4 }) {
-                  Text(`${this.periodMins}`)
+              Row({ space: 10 }) {
+                Column({ space: 6 }) {
+                  Text(this.t('weekStatsCountLabel'))
+                    .fontSize(12)
+                    .fontColor($r('app.color.muted'))
+                  Text(`${this.periodCount}`)
                     .fontSize(28)
                     .fontWeight(FontWeight.Medium)
                     .fontColor($r('app.color.ink'))
-                  Text(this.t('customUnit'))
-                    .fontSize(13)
-                    .fontColor($r('app.color.muted'))
-                    .margin({ top: 10 })
                 }
+                .layoutWeight(1)
+                .padding(16)
+                .alignItems(HorizontalAlign.Start)
+                .backgroundColor($r('app.color.surface'))
+                .borderRadius(14)
+
+                Column({ space: 6 }) {
+                  Text(this.t('weekStatsMinsLabel'))
+                    .fontSize(12)
+                    .fontColor($r('app.color.muted'))
+                  Row({ space: 4 }) {
+                    Text(`${this.periodMins}`)
+                      .fontSize(28)
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor($r('app.color.ink'))
+                    Text(this.t('customUnit'))
+                      .fontSize(13)
+                      .fontColor($r('app.color.muted'))
+                      .margin({ top: 10 })
+                  }
+                }
+                .layoutWeight(1)
+                .padding(16)
+                .alignItems(HorizontalAlign.Start)
+                .backgroundColor($r('app.color.surface'))
+                .borderRadius(14)
               }
-              .layoutWeight(1)
-              .padding(16)
-              .alignItems(HorizontalAlign.Start)
-              .backgroundColor($r('app.color.surface'))
-              .borderRadius(14)
-            }
-            .width('100%')
-
-            Text(this.t('historyLabel'))
-              .fontSize(13)
-              .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.muted'))
               .width('100%')
-              .padding({ left: 4, top: 4 })
 
-            Column({ space: 0 }) {
-              if (this.historyRows.length === 0) {
-                Text(this.t('historyEmpty'))
-                  .width('100%')
-                  .fontSize(14)
+              Row() {
+                Text(this.t('historyLabel'))
+                  .fontSize(13)
+                  .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.muted'))
-                  .padding(20)
-                  .textAlign(TextAlign.Center)
-              } else {
-                ForEach(this.historyRows, (row: HistoryRowView) => {
-                  Column() {
-                    Column({ space: 6 }) {
-                      Text(row.sceneLine)
-                        .width('100%')
-                        .fontSize(14)
-                        .fontColor($r('app.color.ink'))
-                      Text(row.durationLine)
-                        .width('100%')
-                        .fontSize(14)
-                        .fontColor($r('app.color.ink'))
-                      Text(row.timeLine)
-                        .width('100%')
-                        .fontSize(14)
-                        .fontColor($r('app.color.ink'))
+                  .layoutWeight(1)
+                Text(this.t('historyClear'))
+                  .fontSize(13)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.brand_strong'))
+                  .onClick(() => this.clearAll())
+              }
+              .width('100%')
+              .padding({ left: 4, right: 4, top: 4 })
+
+              Row() {
+                Text(this.t('historyFilterLabel'))
+                  .fontSize(13)
+                  .fontColor($r('app.color.muted'))
+                  .margin({ right: 8 })
+                Text(this.filterLabel)
+                  .fontSize(14)
+                  .fontColor($r('app.color.ink'))
+                  .layoutWeight(1)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                Text('▾')
+                  .fontSize(12)
+                  .fontColor($r('app.color.muted'))
+              }
+              .width('100%')
+              .height(40)
+              .padding({ left: 14, right: 14 })
+              .backgroundColor($r('app.color.surface'))
+              .border({ width: 1, color: $r('app.color.line') })
+              .borderRadius(14)
+              .onClick(() => {
+                this.showFilter = true;
+              })
+
+              Column({ space: 0 }) {
+                if (this.historyRows.length === 0) {
+                  Text(this.t('historyEmpty'))
+                    .width('100%')
+                    .fontSize(14)
+                    .fontColor($r('app.color.muted'))
+                    .padding(20)
+                    .textAlign(TextAlign.Center)
+                } else {
+                  ForEach(this.historyRows, (row: HistoryRowView) => {
+                    Column() {
+                      Row({ space: 8 }) {
+                        Column({ space: 6 }) {
+                          Text(row.sceneLine)
+                            .width('100%')
+                            .fontSize(14)
+                            .fontColor($r('app.color.ink'))
+                          Text(row.durationLine)
+                            .width('100%')
+                            .fontSize(14)
+                            .fontColor($r('app.color.ink'))
+                          Text(row.timeLine)
+                            .width('100%')
+                            .fontSize(14)
+                            .fontColor($r('app.color.ink'))
+                        }
+                        .layoutWeight(1)
+                        .alignItems(HorizontalAlign.Start)
+
+                        Text(this.t('historyDelete'))
+                          .fontSize(13)
+                          .fontWeight(FontWeight.Medium)
+                          .fontColor($r('app.color.danger'))
+                          .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                          .onClick(() => this.deleteRow(row.id))
+                      }
+                      .width('100%')
+                      .padding({ left: 16, right: 16, top: 14, bottom: 14 })
+                      Divider().color($r('app.color.line')).margin({ left: 16 })
                     }
                     .width('100%')
-                    .alignItems(HorizontalAlign.Start)
-                    .padding({ left: 16, right: 16, top: 14, bottom: 14 })
-                    Divider().color($r('app.color.line')).margin({ left: 16 })
-                  }
-                  .width('100%')
-                }, (row: HistoryRowView) => row.key)
+                  }, (row: HistoryRowView) => row.key)
+                }
               }
+              .width('100%')
+              .backgroundColor($r('app.color.surface'))
+              .borderRadius(14)
+              .clip(true)
             }
             .width('100%')
-            .backgroundColor($r('app.color.surface'))
-            .borderRadius(14)
-            .clip(true)
+            .padding({ left: 16, right: 16, top: 16, bottom: 24 })
+          }
+          .layoutWeight(1)
+          .width('100%')
+          .align(Alignment.Top)
+          .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
+        }
+      }
+      .width('100%')
+      .height('100%')
+      .justifyContent(FlexAlign.Start)
+      .alignItems(HorizontalAlign.Start)
+      .backgroundColor('#F2F5F3')
+
+      if (this.showFilter) {
+        Column() {
+          Column()
+            .width('100%')
+            .layoutWeight(1)
+            .backgroundColor('#00000066')
+            .onClick(() => {
+              this.showFilter = false;
+            })
+
+          Column({ space: 0 }) {
+            Row() {
+              Text(this.t('historyFilterLabel'))
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.ink'))
+                .layoutWeight(1)
+              Text('✕')
+                .fontSize(18)
+                .fontColor($r('app.color.muted'))
+                .onClick(() => {
+                  this.showFilter = false;
+                })
+            }
+            .width('100%')
+            .padding({ left: 20, right: 16, top: 16, bottom: 8 })
+
+            Scroll() {
+              Column({ space: 4 }) {
+                ForEach(this.filterOptions, (opt: FilterOption) => {
+                  Row() {
+                    Text(opt.label)
+                      .fontSize(15)
+                      .fontColor(opt.id === this.filterSceneId ?
+                        $r('app.color.brand_strong') : $r('app.color.ink'))
+                      .layoutWeight(1)
+                    if (opt.id === this.filterSceneId) {
+                      Text('✓')
+                        .fontSize(16)
+                        .fontColor($r('app.color.brand_strong'))
+                    }
+                  }
+                  .width('100%')
+                  .height(48)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => this.setFilter(opt.id))
+                }, (opt: FilterOption) => `filt-${opt.id}`)
+              }
+              .width('100%')
+              .padding({ bottom: 24 })
+            }
+            .width('100%')
+            .constraintSize({ maxHeight: 360 })
           }
           .width('100%')
-          .padding({ left: 16, right: 16, top: 16, bottom: 24 })
+          .backgroundColor($r('app.color.surface'))
+          .borderRadius({ topLeft: 18, topRight: 18 })
         }
-        .layoutWeight(1)
         .width('100%')
-        .align(Alignment.Top)
-        .scrollBar(BarState.Off)
-        .edgeEffect(EdgeEffect.Spring)
+        .height('100%')
       }
     }
     .width('100%')
     .height('100%')
-    .justifyContent(FlexAlign.Start)
-    .alignItems(HorizontalAlign.Start)
-    .backgroundColor('#F2F5F3')
   }
 }

@@ -19,11 +19,11 @@ import kotlinx.coroutines.launch
 object FinishAlerter {
     private var job: Job? = null
 
-    fun play(context: Context, withSound: Boolean = true) {
+    fun play(context: Context, withSound: Boolean = true, withVibrate: Boolean = true) {
         val app = FiveMinApp.instance
         val pattern = app.catalog.vibratePatternMs
         val duration = app.catalog.alertDurationMs
-        vibrate(context, pattern)
+        if (withVibrate) vibrate(context, pattern)
         job?.cancel()
         if (!withSound) return
         job = CoroutineScope(Dispatchers.Default).launch {

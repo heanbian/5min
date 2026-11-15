@@ -25,7 +25,8 @@
 共享文案与场景由 Web 子项目导出（会同步到本目录 `assets/shared`）：
 
 ```bash
-cd ../5min-web && node scripts/export-shared.mjs
+cd ../5min-web && npm run export-shared
+# 文案源：public/js/i18n/locales.js
 ```
 
 ## 打包正式版（AAB / APK）

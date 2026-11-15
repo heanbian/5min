@@ -31,6 +31,10 @@ data class CustomScene(
 class PrefsStore(context: Context) {
     private val sp = context.getSharedPreferences("5min_prefs", Context.MODE_PRIVATE)
 
+    init {
+        migrateFinishAlertPrefs()
+    }
+
     var locale: String
         get() = sp.getString(KEY_LOCALE, null).orEmpty()
         set(value) {
@@ -41,6 +45,24 @@ class PrefsStore(context: Context) {
         get() = sp.getString(KEY_AMBIENT, "off") ?: "off"
         set(value) {
             sp.edit().putString(KEY_AMBIENT, value).apply()
+        }
+
+    var finishTone: Boolean
+        get() = sp.getBoolean(KEY_FINISH_TONE, true)
+        set(value) {
+            sp.edit().putBoolean(KEY_FINISH_TONE, value).apply()
+        }
+
+    var finishVibrate: Boolean
+        get() = sp.getBoolean(KEY_FINISH_VIBRATE, true)
+        set(value) {
+            sp.edit().putBoolean(KEY_FINISH_VIBRATE, value).apply()
+        }
+
+    var finishNotify: Boolean
+        get() = sp.getBoolean(KEY_FINISH_NOTIFY, true)
+        set(value) {
+            sp.edit().putBoolean(KEY_FINISH_NOTIFY, value).apply()
         }
 
     var privacyAccepted: Boolean
@@ -108,9 +130,22 @@ class PrefsStore(context: Context) {
         sp.edit().putBoolean(KEY_CUSTOM_SCENES_MIGRATED, true).apply()
     }
 
+    private fun migrateFinishAlertPrefs() {
+        if (sp.contains(KEY_FINISH_TONE)) return
+        val legacyTone = (sp.getString(KEY_AMBIENT, "off") ?: "off") != "off"
+        sp.edit()
+            .putBoolean(KEY_FINISH_TONE, legacyTone)
+            .putBoolean(KEY_FINISH_VIBRATE, true)
+            .putBoolean(KEY_FINISH_NOTIFY, true)
+            .apply()
+    }
+
     companion object {
         private const val KEY_LOCALE = "locale"
         private const val KEY_AMBIENT = "ambient"
+        private const val KEY_FINISH_TONE = "finish_tone"
+        private const val KEY_FINISH_VIBRATE = "finish_vibrate"
+        private const val KEY_FINISH_NOTIFY = "finish_notify"
         private const val KEY_PRIVACY = "privacy_accepted"
         private const val KEY_CUSTOM_MIN = "custom_min"
         private const val KEY_CUSTOM_SCENES = "custom_scenes"

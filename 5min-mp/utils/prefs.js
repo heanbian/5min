@@ -10,6 +10,9 @@ const PRIVACY_KEY = '5min.privacyAccepted';
 const CUSTOM_MIN_KEY = '5min.customMin';
 const CUSTOM_SCENES_KEY = '5min.custom_scenes';
 const CUSTOM_SCENES_MIGRATED_KEY = '5min.custom_scenes_migrated';
+const FINISH_TONE_KEY = '5min.finish_tone';
+const FINISH_VIBRATE_KEY = '5min.finish_vibrate';
+const FINISH_NOTIFY_KEY = '5min.finish_notify';
 
 const MAX_COUNT = 30;
 const MAX_NAME = 24;
@@ -160,6 +163,83 @@ function markCustomScenesMigrated() {
   }
 }
 
+function migrateFinishAlertPrefsIfNeeded() {
+  try {
+    const info = wx.getStorageInfoSync();
+    if (info.keys && info.keys.indexOf(FINISH_TONE_KEY) >= 0) {
+      return;
+    }
+  } catch (e) {
+    /* fall through to migration */
+  }
+  const ambient = getAmbient();
+  const legacyTone = ambient !== 'off';
+  try {
+    wx.setStorageSync(FINISH_TONE_KEY, legacyTone);
+    wx.setStorageSync(FINISH_VIBRATE_KEY, true);
+    wx.setStorageSync(FINISH_NOTIFY_KEY, true);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function getFinishTone() {
+  migrateFinishAlertPrefsIfNeeded();
+  try {
+    const v = wx.getStorageSync(FINISH_TONE_KEY);
+    if (v === '' || v == null) return getAmbient() !== 'off';
+    return !!v;
+  } catch (e) {
+    return true;
+  }
+}
+
+function setFinishTone(on) {
+  try {
+    wx.setStorageSync(FINISH_TONE_KEY, !!on);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function getFinishVibrate() {
+  migrateFinishAlertPrefsIfNeeded();
+  try {
+    const v = wx.getStorageSync(FINISH_VIBRATE_KEY);
+    if (v === '' || v == null) return true;
+    return !!v;
+  } catch (e) {
+    return true;
+  }
+}
+
+function setFinishVibrate(on) {
+  try {
+    wx.setStorageSync(FINISH_VIBRATE_KEY, !!on);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function getFinishNotify() {
+  migrateFinishAlertPrefsIfNeeded();
+  try {
+    const v = wx.getStorageSync(FINISH_NOTIFY_KEY);
+    if (v === '' || v == null) return true;
+    return !!v;
+  } catch (e) {
+    return true;
+  }
+}
+
+function setFinishNotify(on) {
+  try {
+    wx.setStorageSync(FINISH_NOTIFY_KEY, !!on);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 module.exports = {
   MAX_COUNT,
   MAX_NAME,
@@ -178,4 +258,10 @@ module.exports = {
   setCustomScenes,
   isCustomScenesMigrated,
   markCustomScenesMigrated,
+  getFinishTone,
+  setFinishTone,
+  getFinishVibrate,
+  setFinishVibrate,
+  getFinishNotify,
+  setFinishNotify,
 };

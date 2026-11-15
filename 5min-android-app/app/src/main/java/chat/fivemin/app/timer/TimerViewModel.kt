@@ -29,9 +29,12 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     private val i18n = FiveMinApp.instance.i18n
 
     private var endAt = 0L
+    private var overtimeAt = 0L
     private var tickJob: Job? = null
+    private var overtimeJob: Job? = null
     private var finishedHandled = false
     private var pendingSceneId: String? = null
+    private var lastRecordedId = -1L
 
     private val suggestedGroup = SceneGroup(SceneRanker.GROUP_ID, SceneRanker.LABEL_KEY)
     private val customGroup = SceneGroup(CustomScene.GROUP_ID, "sceneGroupCustom")
@@ -75,6 +78,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 finished = false,
                 activeSceneId = activeSceneId,
                 ambient = prefs.ambient,
+                finishTone = prefs.finishTone,
+                finishVibrate = prefs.finishVibrate,
+                finishNotify = prefs.finishNotify,
                 statsCount = count,
                 statsMs = ms,
                 phase = TimerPhase.Idle,
@@ -88,7 +94,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         )
         state = _state.asStateFlow()
         viewModelScope.launch {
-            TimerBus.finished.collect { onExternalFinish() }
+            TimerBus.finished.collect { onExternalFinish(it.sessionId) }
         }
     }
 
@@ -194,6 +200,22 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         if (mode == "off") FinishAlerter.stop()
     }
 
+    fun setFinishTone(on: Boolean) {
+        prefs.finishTone = on
+        _state.update { it.copy(finishTone = on) }
+        if (!on) FinishAlerter.stop()
+    }
+
+    fun setFinishVibrate(on: Boolean) {
+        prefs.finishVibrate = on
+        _state.update { it.copy(finishVibrate = on) }
+    }
+
+    fun setFinishNotify(on: Boolean) {
+        prefs.finishNotify = on
+        _state.update { it.copy(finishNotify = on) }
+    }
+
     fun consumePendingScene() {
         val pending = pendingSceneId ?: return
         if (_state.value.running) return
@@ -273,10 +295,26 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
     }
 
+    fun deleteHistorySession(id: Long) {
+        history.deleteSession(id)
+        bumpRecordsEpoch()
+        refreshTodayStats()
+        refreshSuggested()
+    }
+
+    fun clearHistory() {
+        history.clearHistory()
+        bumpRecordsEpoch()
+        refreshTodayStats()
+        refreshSuggested()
+    }
+
     fun setPresetMinutes(min: Int, sceneId: String? = null) {
         if (_state.value.running) return
         val total = min.coerceAtLeast(1) * 60_000L
+        stopOvertimeTicker()
         finishedHandled = false
+        lastRecordedId = -1L
         _state.update {
             it.copy(
                 totalMs = total,
@@ -284,6 +322,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 finished = false,
                 activeSceneId = sceneId,
                 phase = TimerPhase.Idle,
+                overtimeMs = 0L,
+                sessionLogged = false,
             )
         }
     }
@@ -313,23 +353,40 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun reset() {
         stopTicker()
+        stopOvertimeTicker()
         FinishAlerter.stop()
         TimerScheduler.cancel(getApplication())
         TimerForegroundService.stop(getApplication())
         finishedHandled = false
+        lastRecordedId = -1L
         _state.update {
             it.copy(
                 remainMs = it.totalMs,
                 running = false,
                 finished = false,
                 phase = TimerPhase.Idle,
+                overtimeMs = 0L,
+                sessionLogged = false,
             )
         }
     }
 
+    fun ignoreFinish() {
+        val id = lastRecordedId
+        if (id > 0L) {
+            history.deleteSession(id)
+            lastRecordedId = -1L
+            refreshTodayStats()
+            refreshSuggested()
+            _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
+        }
+        reset()
+    }
+
     fun realert() {
         if (!_state.value.finished) return
-        FinishAlerter.play(getApplication(), _state.value.alertSoundOn)
+        val s = _state.value
+        FinishAlerter.play(getApplication(), s.finishTone, s.finishVibrate)
     }
 
     private fun start() {
@@ -368,7 +425,24 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun restart() {
-        _state.update { it.copy(remainMs = it.totalMs, finished = false, phase = TimerPhase.Idle) }
+        val s = _state.value
+        if (s.finished && s.overtimeMs > 0L && lastRecordedId > 0L) {
+            history.updateSessionElapsed(lastRecordedId, s.totalMs + s.overtimeMs)
+            refreshTodayStats()
+            refreshSuggested()
+            _state.update { it.copy(recordsEpoch = it.recordsEpoch + 1) }
+        }
+        stopOvertimeTicker()
+        lastRecordedId = -1L
+        _state.update {
+            it.copy(
+                remainMs = it.totalMs,
+                finished = false,
+                phase = TimerPhase.Idle,
+                overtimeMs = 0L,
+                sessionLogged = false,
+            )
+        }
         start()
     }
 
@@ -400,11 +474,30 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         tickJob = null
     }
 
-    private fun onExternalFinish() {
-        viewModelScope.launch { handleFinish(fromTicker = false) }
+    private fun startOvertimeTicker() {
+        overtimeAt = System.currentTimeMillis()
+        overtimeJob?.cancel()
+        overtimeJob = viewModelScope.launch {
+            while (isActive) {
+                val s = _state.value
+                if (!s.finished || s.running) break
+                val overtime = max(0L, System.currentTimeMillis() - overtimeAt)
+                _state.update { it.copy(overtimeMs = overtime, phase = TimerPhase.Done) }
+                delay(250)
+            }
+        }
     }
 
-    private fun handleFinish(fromTicker: Boolean) {
+    private fun stopOvertimeTicker() {
+        overtimeJob?.cancel()
+        overtimeJob = null
+    }
+
+    private fun onExternalFinish(alarmSessionId: Long) {
+        viewModelScope.launch { handleFinish(fromTicker = false, alarmSessionId = alarmSessionId) }
+    }
+
+    private fun handleFinish(fromTicker: Boolean, alarmSessionId: Long = -1L) {
         if (finishedHandled) return
         finishedHandled = true
         stopTicker()
@@ -414,9 +507,19 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val total = s.totalMs
         val sceneId = s.activeSceneId.orEmpty()
         if (fromTicker) {
-            history.recordSession(total, sceneId)
-            FinishNotifier.show(getApplication(), total, notifySceneName(), s.alertSoundOn)
-            FinishAlerter.play(getApplication(), s.alertSoundOn)
+            lastRecordedId = history.recordSession(total, sceneId)
+            if (s.finishNotify) {
+                FinishNotifier.show(
+                    getApplication(),
+                    total,
+                    notifySceneName(),
+                    s.finishTone,
+                    s.finishVibrate,
+                )
+            }
+            FinishAlerter.play(getApplication(), s.finishTone, s.finishVibrate)
+        } else if (alarmSessionId > 0L) {
+            lastRecordedId = alarmSessionId
         }
         val (count, ms) = history.todayStats()
         val suggested = computeSuggested()
@@ -430,8 +533,11 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 statsMs = ms,
                 suggestedSceneIds = suggested,
                 recordsEpoch = it.recordsEpoch + 1,
+                overtimeMs = 0L,
+                sessionLogged = lastRecordedId > 0L,
             )
         }
+        startOvertimeTicker()
     }
 
     private fun phaseFor(remain: Long, running: Boolean, finished: Boolean): TimerPhase = when {

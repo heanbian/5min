@@ -20,7 +20,7 @@ const path = require('path');
 const { Resvg } = require('@resvg/resvg-js');
 
 const root = path.join(__dirname, '..');
-const svg = fs.readFileSync(path.join(root, 'img/logo.svg'));
+const svg = fs.readFileSync(path.join(root, 'public', 'img', 'logo.svg'));
 
 function png(size) {
   const resvg = new Resvg(svg, {
@@ -51,11 +51,11 @@ function ico(images) {
   return Buffer.concat([head, ...entries, ...images.map((image) => image.png)]);
 }
 
-const img = path.join(root, 'img');
+const img = path.join(root, 'public', 'img');
 fs.writeFileSync(path.join(img, 'apple-touch-icon.png'), png(180));
 fs.writeFileSync(path.join(img, 'logo.png'), png(512));
 fs.writeFileSync(
-  path.join(root, 'favicon.ico'),
+  path.join(root, 'public', 'favicon.ico'),
   ico([
     { size: 16, png: png(16) },
     { size: 32, png: png(32) }

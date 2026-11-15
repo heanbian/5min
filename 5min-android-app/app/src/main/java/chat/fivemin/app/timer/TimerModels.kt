@@ -12,6 +12,9 @@ data class TimerUiState(
     val finished: Boolean,
     val activeSceneId: String?,
     val ambient: String,
+    val finishTone: Boolean = true,
+    val finishVibrate: Boolean = true,
+    val finishNotify: Boolean = true,
     val statsCount: Int,
     val statsMs: Long,
     val phase: TimerPhase,
@@ -21,9 +24,9 @@ data class TimerUiState(
     val suggestedSceneIds: List<String> = emptyList(),
     val recordsEpoch: Int = 0,
     val selectedTab: Int = 1,
+    val overtimeMs: Long = 0L,
+    val sessionLogged: Boolean = false,
 ) {
     val progress: Float
         get() = if (totalMs <= 0L) 0f else (remainMs.toFloat() / totalMs.toFloat()).coerceIn(0f, 1f)
-
-    val alertSoundOn: Boolean get() = ambient != "off"
 }

@@ -65,8 +65,8 @@ node scripts/verify.mjs
 ## 同步共享文案
 
 ```bash
-# 以 Web locales.js 为源；会同步 Android / 鸿蒙 / iOS，并生成小程序 JSON + .js
-cd ../5min-web && node scripts/export-shared.mjs
+# 以 5min-web/public/js/i18n/locales.js 为源；会同步 Android / 鸿蒙 / iOS，并生成小程序 JSON + .js
+cd ../5min-web && npm run export-shared
 ```
 
 同步后请复查小程序侧专有键（如 `invalidLink`、`feedbackEmail`、`beianIcp`）。

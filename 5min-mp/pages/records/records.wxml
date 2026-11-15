@@ -25,7 +25,25 @@
       </view>
     </view>
 
-    <view class="section-label section-label-gap">{{historyLabel}}</view>
+    <view class="history-head">
+      <text class="section-label section-label-gap">{{historyLabel}}</text>
+      <text class="clear-link" bindtap="onClearHistory">{{historyClear}}</text>
+    </view>
+
+    <picker
+      mode="selector"
+      range="{{filterOptions}}"
+      range-key="label"
+      value="{{filterIndex}}"
+      bindchange="onFilterChange"
+    >
+      <view class="filter-row">
+        <text class="filter-hint">{{historyFilterLabel}}</text>
+        <text class="filter-value">{{filterLabel}}</text>
+        <text class="filter-caret">▾</text>
+      </view>
+    </picker>
+
     <view class="card">
       <block wx:if="{{rows.length === 0}}">
         <text class="empty">{{historyEmpty}}</text>
@@ -33,9 +51,16 @@
       <block wx:else>
         <block wx:for="{{rows}}" wx:key="key">
           <view class="hist-row">
-            <text class="hist-scene">{{item.sceneLine}}</text>
-            <text class="hist-dur">{{item.durationLine}}</text>
-            <text class="hist-time">{{item.timeLine}}</text>
+            <view class="hist-main">
+              <text class="hist-scene">{{item.sceneLine}}</text>
+              <text class="hist-dur">{{item.durationLine}}</text>
+              <text class="hist-time">{{item.timeLine}}</text>
+            </view>
+            <text
+              class="hist-delete"
+              data-id="{{item.id}}"
+              bindtap="onDeleteRow"
+            >{{historyDelete}}</text>
           </view>
           <view wx:if="{{index < rows.length - 1}}" class="row-line"></view>
         </block>

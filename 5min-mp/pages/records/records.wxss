@@ -104,11 +104,72 @@
   padding: 40rpx;
 }
 
+.history-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 8rpx;
+}
+
+.clear-link {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--brand-strong);
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 80rpx;
+  padding: 0 28rpx;
+  margin-bottom: 16rpx;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.filter-hint {
+  font-size: 26rpx;
+  color: var(--muted);
+  margin-right: 16rpx;
+}
+
+.filter-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-caret {
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
 .hist-row {
   padding: 28rpx 32rpx;
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.hist-main {
+  flex: 1;
+  display: flex;
   flex-direction: column;
   gap: 12rpx;
+}
+
+.hist-delete {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--danger);
+  padding: 8rpx 0;
 }
 
 .hist-scene,

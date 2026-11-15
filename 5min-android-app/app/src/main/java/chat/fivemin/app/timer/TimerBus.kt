@@ -5,10 +5,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object TimerBus {
-    private val _finished = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val finished: SharedFlow<Unit> = _finished.asSharedFlow()
+    data class FinishEvent(val sessionId: Long = -1L)
 
-    fun publishFinished() {
-        _finished.tryEmit(Unit)
+    private val _finished = MutableSharedFlow<FinishEvent>(extraBufferCapacity = 1)
+    val finished: SharedFlow<FinishEvent> = _finished.asSharedFlow()
+
+    fun publishFinished(sessionId: Long = -1L) {
+        _finished.tryEmit(FinishEvent(sessionId))
     }
 }

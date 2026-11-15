@@ -10,13 +10,15 @@ final class AlertService {
     private var workItem: DispatchWorkItem?
     private var hapticDeadline: Date?
 
-    func play(durationMs: Int = 5000, withSound: Bool = true) {
+    func play(durationMs: Int = 5000, withSound: Bool = true, withVibrate: Bool = true) {
         stop()
         if withSound {
             configureSession()
             startToneLoop(durationMs: durationMs)
         }
-        startHaptics(durationMs: durationMs)
+        if withVibrate {
+            startHaptics(durationMs: durationMs)
+        }
     }
 
     func stop() {

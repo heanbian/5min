@@ -5,7 +5,7 @@
 import { writeFileSync, mkdirSync, cpSync, existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { LOCALES, LOCALE_CODES } from '../js/i18n/locales.js';
+import { LOCALES, LOCALE_CODES } from '../public/js/i18n/locales.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const exportDir = join(root, 'shared-export');

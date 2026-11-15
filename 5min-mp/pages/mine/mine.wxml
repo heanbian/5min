@@ -31,6 +31,24 @@
       </view>
     </view>
 
+    <view class="section-label section-gap">{{prefAlertsSection}}</view>
+    <view class="card">
+      <view class="row row-switch">
+        <text class="row-title">{{prefFinishTone}}</text>
+        <switch checked="{{finishTone}}" color="#2f9a68" bindchange="onToggleFinishTone" />
+      </view>
+      <view class="row-line"></view>
+      <view class="row row-switch">
+        <text class="row-title">{{prefFinishVibrate}}</text>
+        <switch checked="{{finishVibrate}}" color="#2f9a68" bindchange="onToggleFinishVibrate" />
+      </view>
+      <view class="row-line"></view>
+      <view class="row row-switch">
+        <text class="row-title">{{prefFinishNotify}}</text>
+        <switch checked="{{finishNotify}}" color="#2f9a68" bindchange="onToggleFinishNotify" />
+      </view>
+    </view>
+
     <view class="section-label section-gap">{{mineSectionSupport}}</view>
     <view class="card">
       <view class="row" bindtap="onOpenPrivacy">

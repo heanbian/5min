@@ -57,6 +57,12 @@
       >{{resetLabel}}</button>
     </view>
 
+    <button
+      wx:if="{{showIgnore}}"
+      class="btn btn-ghost btn-ignore"
+      bindtap="onIgnoreFinish"
+    >{{finishIgnoreLabel}}</button>
+
     <picker
       mode="multiSelector"
       range="{{sceneRange}}"

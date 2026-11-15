@@ -102,6 +102,9 @@ struct Index {
   @State setupEnabled: boolean = true;
   @State showScenes: boolean = false;
   @StorageLink('appAmbient') @Watch('onAmbientLink') ambient: string = 'off';
+  @StorageLink('appFinishTone') finishTone: boolean = true;
+  @StorageLink('appFinishVibrate') finishVibrate: boolean = true;
+  @StorageLink('appFinishNotify') finishNotify: boolean = true;
   @StorageLink('appLocale') @Watch('onLocaleLink') linkedLocale: string = 'zh-CN';
   @State groups: SceneGroup[] = [];
   @State scenes: SceneItem[] = [];
@@ -116,6 +119,8 @@ struct Index {
   @State currentTab: number = 1;
   @State recordsEpoch: number = 0;
   @State localeTick: number = 0;
+  @State showIgnore: boolean = false;
+  @State ignoreLabel: string = '';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -123,6 +128,10 @@ struct Index {
   private state: TimerState = new TimerState();
   private tickId: number = -1;
   private finishedHandled: boolean = false;
+  private lastRecordedSessionId: number = 0;
+  private inOvertime: boolean = false;
+  private overtimeMs: number = 0;
+  private overtimeAt: number = 0;
   private context: common.UIAbilityContext | null = null;
 
   aboutToAppear(): void {
@@ -155,11 +164,6 @@ struct Index {
     });
   }
 
-  /** Finish alert ringtone enabled unless user chose 关闭 / mute. */
-  private alertSoundOn(): boolean {
-    return this.ambient !== 'off';
-  }
-
   async bootstrap(): Promise<void> {
     if (!this.context) {
       return;
@@ -185,6 +189,12 @@ struct Index {
     this.ambient = this.state.ambient;
     AppStorage.setOrCreate('appLocale', this.locale);
     AppStorage.setOrCreate('appAmbient', this.ambient);
+    this.finishTone = await this.prefs.getFinishTone();
+    this.finishVibrate = await this.prefs.getFinishVibrate();
+    this.finishNotify = await this.prefs.getFinishNotify();
+    AppStorage.setOrCreate('appFinishTone', this.finishTone);
+    AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
+    AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
     this.linkedLocale = this.locale;
     this.localeTick = this.localeTick + 1;
     const custom = await this.prefs.getCustomMin(this.catalog.defaultMin);
@@ -293,9 +303,6 @@ struct Index {
 
   onAmbientLink(): void {
     this.state.ambient = this.ambient;
-    if (this.ambient === 'off') {
-      FinishAlerter.stop();
-    }
   }
 
   onTabChange(index: number): void {
@@ -303,12 +310,75 @@ struct Index {
     if (index === 0) {
       this.recordsEpoch = this.recordsEpoch + 1;
     } else if (index === 1) {
+      this.prefs.getFinishTone().then((v) => {
+        this.finishTone = v;
+      });
+      this.prefs.getFinishVibrate().then((v) => {
+        this.finishVibrate = v;
+      });
+      this.prefs.getFinishNotify().then((v) => {
+        this.finishNotify = v;
+      });
       this.reloadCustomScenes().then(() => {
         this.consumePendingScene();
         this.refreshTodayStats();
         this.refreshSuggested();
       });
     }
+  }
+
+  private formatOvertime(ms: number): string {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    const ss = s < 10 ? `0${s}` : `${s}`;
+    if (m > 0) {
+      return `${m}:${ss}`;
+    }
+    return `0:${ss}`;
+  }
+
+  private async commitOvertimeToHistoryIfNeeded(): Promise<void> {
+    if (!this.inOvertime || this.overtimeMs <= 0 || this.lastRecordedSessionId <= 0) {
+      return;
+    }
+    const elapsed = this.state.totalMs + this.overtimeMs;
+    await this.history.updateSessionElapsed(this.lastRecordedSessionId, elapsed);
+    this.recordsEpoch = this.recordsEpoch + 1;
+    await this.refreshTodayStats();
+    await this.refreshSuggested();
+  }
+
+  private clearOvertimeState(): void {
+    this.inOvertime = false;
+    this.overtimeMs = 0;
+    this.overtimeAt = 0;
+  }
+
+  async ignoreLastSession(): Promise<void> {
+    if (this.lastRecordedSessionId <= 0) {
+      return;
+    }
+    await this.history.deleteSession(this.lastRecordedSessionId);
+    this.lastRecordedSessionId = 0;
+    this.recordsEpoch = this.recordsEpoch + 1;
+    await this.refreshTodayStats();
+    await this.refreshSuggested();
+    await this.resetToIdleAfterFinish();
+  }
+
+  private async resetToIdleAfterFinish(): Promise<void> {
+    this.stopTicker();
+    this.setKeepScreenOn(false);
+    await FinishAlerter.stop();
+    await cancelFinishReminder();
+    this.finishedHandled = false;
+    this.clearOvertimeState();
+    this.state.remainMs = this.state.totalMs;
+    this.state.running = false;
+    this.state.finished = false;
+    this.state.phase = 'idle';
+    this.refreshUi();
   }
 
   private async refreshTodayStats(): Promise<void> {
@@ -468,8 +538,13 @@ struct Index {
 
   refreshUi(): void {
     this.state.phase = phaseOf(this.state);
-    this.progress = this.state.progress();
-    this.clock = formatMs(this.state.remainMs);
+    if (this.inOvertime) {
+      this.progress = 0;
+      this.clock = `+${this.formatOvertime(this.overtimeMs)}`;
+    } else {
+      this.progress = this.state.progress();
+      this.clock = formatMs(this.state.remainMs);
+    }
     this.running = this.state.running;
     this.setupEnabled = !this.state.running;
     this.resetEnabled = this.state.running || this.state.remainMs < this.state.totalMs || this.state.finished;
@@ -506,7 +581,11 @@ struct Index {
 
     this.localeLabel = this.catalog.t(this.locale, 'nativeName');
 
-    if (this.state.phase === 'done') {
+    if (this.inOvertime) {
+      const otVars: Record<string, string> = {};
+      otVars['n'] = this.formatOvertime(this.overtimeMs);
+      this.status = this.t('statusOvertime', otVars);
+    } else if (this.state.phase === 'done') {
       this.status = this.t('statusDone');
     } else if (this.state.phase === 'warn') {
       this.status = this.t('statusWarn');
@@ -536,12 +615,18 @@ struct Index {
       this.statsText =
         `${this.state.statsCount}${this.t('dailyStatsCountUnit')} · ${mins}${this.t('dailyStatsMinutesUnit')}`;
     }
+
+    this.showIgnore = this.state.phase === 'done' && this.lastRecordedSessionId > 0;
+    this.ignoreLabel = this.t('finishIgnore');
   }
 
   setPreset(min: number, sceneId: string): void {
     if (this.state.running) {
       return;
     }
+  this.commitOvertimeToHistoryIfNeeded();
+    this.clearOvertimeState();
+    this.lastRecordedSessionId = 0;
     this.finishedHandled = false;
     this.state.totalMs = Math.max(1, min) * 60 * 1000;
     this.state.remainMs = this.state.totalMs;
@@ -570,9 +655,13 @@ struct Index {
 
   async toggleStart(): Promise<void> {
     if (this.state.finished && !this.state.running) {
+      await this.commitOvertimeToHistoryIfNeeded();
+      this.clearOvertimeState();
+      this.lastRecordedSessionId = 0;
       await FinishAlerter.stop();
       this.state.remainMs = this.state.totalMs;
       this.state.finished = false;
+      this.finishedHandled = false;
       await this.start();
       return;
     }
@@ -596,12 +685,14 @@ struct Index {
     this.state.finished = false;
     const secs = Math.max(1, Math.ceil(this.state.remainMs / 1000));
     const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
-    await scheduleFinishReminder(
-      secs,
-      this.t('notifyTitle', notifyVars),
-      this.t('notifyBody', notifyVars),
-      this.alertSoundOn()
-    );
+    if (this.finishNotify) {
+      await scheduleFinishReminder(
+        secs,
+        this.t('notifyTitle', notifyVars),
+        this.t('notifyBody', notifyVars),
+        this.finishTone
+      );
+    }
     this.startTicker();
     this.setKeepScreenOn(true);
     this.refreshUi();
@@ -620,11 +711,14 @@ struct Index {
   }
 
   async reset(): Promise<void> {
+    await this.commitOvertimeToHistoryIfNeeded();
     this.stopTicker();
     this.setKeepScreenOn(false);
     await FinishAlerter.stop();
     await cancelFinishReminder();
     this.finishedHandled = false;
+    this.clearOvertimeState();
+    this.lastRecordedSessionId = 0;
     this.state.remainMs = this.state.totalMs;
     this.state.running = false;
     this.state.finished = false;
@@ -638,12 +732,22 @@ struct Index {
       return;
     }
     await FinishAlerter.stop();
-    await FinishAlerter.play(this.context, this.catalog.alertDurationMs, this.alertSoundOn());
+    await FinishAlerter.play(
+      this.context,
+      this.catalog.alertDurationMs,
+      this.finishTone,
+      this.finishVibrate
+    );
   }
 
   startTicker(): void {
     this.stopTicker();
     this.tickId = setInterval(() => {
+      if (this.inOvertime) {
+        this.overtimeMs = Math.max(0, Date.now() - this.overtimeAt);
+        this.refreshUi();
+        return;
+      }
       if (!this.state.running) {
         return;
       }
@@ -675,22 +779,30 @@ struct Index {
     this.state.remainMs = 0;
     this.state.running = false;
     this.state.finished = true;
-    await this.history.recordSession(this.state.totalMs, this.state.activeSceneId);
+    this.lastRecordedSessionId =
+      await this.history.recordSession(this.state.totalMs, this.state.activeSceneId);
+    this.recordsEpoch = this.recordsEpoch + 1;
     await this.refreshTodayStats();
     await this.refreshSuggested();
+    this.inOvertime = true;
+    this.overtimeAt = Date.now();
+    this.overtimeMs = 0;
+    if (this.tickId < 0) {
+      this.startTicker();
+    }
     const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
     const title = this.t('notifyTitle', notifyVars);
     const body = this.t('notifyBody', notifyVars);
     const ack = this.t('notifyAck');
-    const withSound = this.alertSoundOn();
-    // System shade/banner notification (respect mute: no custom ringtone when off).
-    await showFinishNotification(title, body, withSound);
-    // Guaranteed visible popup + optional alarm sound (stop tone when user acknowledges).
+    if (this.finishNotify) {
+      await showFinishNotification(title, body, this.finishTone);
+    }
     const soundP = this.context
-      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs, withSound)
+      ? FinishAlerter.play(this.context, this.catalog.alertDurationMs, this.finishTone, this.finishVibrate)
       : Promise.resolve();
-    const dialogP = this.ackFinishDialog(title, body, ack);
+    const dialogP = this.finishNotify ? this.ackFinishDialog(title, body, ack) : Promise.resolve();
     await Promise.all([soundP, dialogP]);
+    this.refreshUi();
   }
 
   private async ackFinishDialog(title: string, body: string, ack: string): Promise<void> {
@@ -993,6 +1105,20 @@ struct Index {
               })
           }
           .width('100%')
+
+          if (this.showIgnore) {
+            Text(this.ignoreLabel)
+              .width('100%')
+              .height(44)
+              .fontSize(14)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.muted'))
+              .textAlign(TextAlign.Center)
+              .backgroundColor($r('app.color.ghost_bg'))
+              .border({ width: 1, color: $r('app.color.ghost_line') })
+              .borderRadius(14)
+              .onClick(() => this.ignoreLastSession())
+          }
 
           Row() {
             Text(this.sceneLabel)

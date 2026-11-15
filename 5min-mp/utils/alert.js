@@ -51,28 +51,31 @@ function pulseVibrate() {
 }
 
 /**
- * 到期提醒：振动若干秒（小程序无铃声文件；withSound=false 时仅振动，仍可 toast）
- * @param {{ title?: string, body?: string, durationMs?: number, withSound?: boolean }} [opts]
+ * 到期提醒：振动若干秒（小程序无铃声；finishNotify 控制 toast，finishVibrate 控制振动）
+ * @param {{ title?: string, body?: string, durationMs?: number, withNotify?: boolean, withVibrate?: boolean }} [opts]
  */
 function alertFinish(opts) {
   const options = opts || {};
   clearAlerts();
   const duration = Math.max(1000, options.durationMs || ALERT_DURATION_MS);
-  vibrateUntil = Date.now() + duration;
+  const withVibrate = options.withVibrate !== false;
+  const withNotify = options.withNotify !== false;
 
-  pulseVibrate();
-  const step =
-    (VIBRATE_PATTERN_MS[0] || 500) + (VIBRATE_PATTERN_MS[1] || 150);
-  vibrateTimer = setInterval(() => {
-    if (Date.now() >= vibrateUntil) {
-      clearAlerts();
-      return;
-    }
+  if (withVibrate) {
+    vibrateUntil = Date.now() + duration;
     pulseVibrate();
-  }, step);
+    const step =
+      (VIBRATE_PATTERN_MS[0] || 500) + (VIBRATE_PATTERN_MS[1] || 150);
+    vibrateTimer = setInterval(() => {
+      if (Date.now() >= vibrateUntil) {
+        clearAlerts();
+        return;
+      }
+      pulseVibrate();
+    }, step);
+  }
 
-  // Toast is the only audible/visual cue besides vibration; always show when titled.
-  if (options.title || options.body) {
+  if (withNotify && (options.title || options.body)) {
     wx.showToast({
       title: options.title || options.body || t('statusDone'),
       icon: 'none',

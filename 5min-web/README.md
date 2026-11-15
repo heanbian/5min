@@ -1,6 +1,6 @@
 # 5min-web · 如厕计时器(5min)
 
-端侧倒计时工具（Web 子项目）。官网：[https://5min.chat](https://5min.chat/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
+端侧倒计时工具的 **Web 服务**子项目（Node.js + Express + PostgreSQL，静态资源位于 `public/`）。官网：[https://5min.chat](https://5min.chat/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
 
 **定名**：如厕计时器(5min)。**运营方**：学记宝。**官网**：https://5min.chat。建议单次如厕约 5 分钟内完成；使用手机易低估耗时。默认 5 分钟（亦可选 3 / 10 分钟），结束后以振动、提示音与系统通知提醒起身。
 
@@ -12,156 +12,143 @@
 |------|------|
 | 时长预设 | 3 / 5 / 10 分钟快速切换 |
 | 场景预设 | 分组场景选择：日常 / 烹饪 / 护肤 / 休息 / 学习 / 办公 / 班次 / 农事 / 家务等 |
-| 今日累计 | 本机记录当日完成次数与累计时长（localStorage） |
+| 今日累计 | 浏览器本机记录当日完成次数与累计时长（`localStorage`） |
 | 环境音 | 雨声 / 海浪声 / 钟声（Web Audio 程序化，无外部音源文件） |
 | 计时控制 | 开始、暂停、重置；以绝对时间戳结算，减轻后台定时器节流导致的漂移 |
 | 状态反馈 | 进行中（绿）→ 剩余不足 1 分钟（琥珀）→ 超时（红） |
 | 到期提醒 | Vibration API（设备支持时）、Web Audio 提示音、Notification API（用户授权后） |
-| 屏幕唤醒 | 计时过程中尝试申请 Screen Wake Lock，以降低因熄屏而错过提醒的可能性 |
-| 轻量 PWA | `site.webmanifest` + 根目录 `sw.js` 预缓存计时壳（HTML / CSS / JS / 字体 / 图标），便于「加到主屏幕」复访；改壳资源后请 bump `sw.js` 内 `CACHE` |
+| 屏幕唤醒 | 计时过程中尝试申请 Screen Wake Lock |
+| 轻量 PWA | `public/site.webmanifest` + `public/sw.js` 预缓存计时壳；改壳资源后请 bump `CACHE` |
+| 访客记录 | 服务端写入 PostgreSQL 表 `fivemin_visitor_log`（无管理页） |
+| 健康检查 | `GET /api/status` → `{ success, data }` |
 
 ## 技术栈
 
-纯 **HTML5 + 现代原生 JavaScript（ES modules）**：HTML 只写结构与 SEO；样式在 `css/`，逻辑在 `js/`，无框架、无打包、无第三方运行时依赖。
+| 层 | 说明 |
+|----|------|
+| 服务端 | Node.js ≥ 24 · Express 5 · Helmet · `pg`；目录布局对齐学记宝 [`tools`](https://github.com/heanbian) 类项目：`server.js` / `bizjs/` / `routes/` / `public/` |
+| 前端 | `public/` 内 HTML5 + 原生 ES modules，无框架、无前端打包 |
+| 数据 | **计时与统计仅存浏览器本机**；PostgreSQL 仅用于站点托管侧的访客日志 |
 
-使用的浏览器原生能力包括：绝对时间戳倒计时、`Notification`、`Vibration`、`AudioContext`、Screen Wake Lock、Page Visibility、SVG 进度环、Service Worker（壳缓存）。
+多语言（`public/js/i18n/locales.js`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
 
-多语言（`js/i18n/locales.js`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
-
-> **本地预览须用 HTTP 服务。** Chrome 等浏览器在 `file://` 下会拦截 ES module 的跨文件 `import`，请勿直接双击打开。
-
-```bash
-./run.sh # 默认 8080
-./run.sh 3000 # 指定端口
-```
-
-可部署至任意静态托管（对象存储、CDN、Nginx 等）。
-
-字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL Open Font License 1.1](https://scripts.sil.org/OFL)，可免费商用），不依赖第三方字体 CDN。
-
-## 术语与文案约定
-
-- **定名（产品名）**：`如厕计时器(5min)`；运营方：`学记宝`；官网：`https://5min.chat`。
-- **SEO 标题常用**：`如厕计时器(5min)`。
-- 界面默认标题（`brandTitle`）展示「如厕计时器(5min)」；选中场景时展示场景名；简称可用「5min」。
-- 对外说明优先使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知、Screen Wake Lock 等；文案宜简洁，避免堆砌「无广告 / 无需注册 / 数据存本机 / 不上传」等口号。
-- 界面状态优先使用「倒计时中 / 计时结束，请起身活动 / 重新开始」等书面表述，避免「再响」「再来一次」等口语。
-- 合规底线：仅供习惯提醒；不作疗效/预防/诊断宣称；不采集健康敏感个人信息。JSON-LD `applicationCategory` 使用 `UtilitiesApplication`（勿用 `HealthApplication`）。
-- `site.json` 的 `description` / FAQ 须包含产品名、运营方与官网 `https://5min.chat`；修改后同步 `index.html`、`about.html`、`faq.html`、`llms.txt`、`site.webmanifest`、`sitemap.xml` 与 JSON-LD。
-- `site.json` 的 `origin` 为 `https://5min.chat`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
-
-### GEO（生成式引擎优化）
-
-面向 AI 检索与引用，需提供可独立引用的说明与问答，且与结构化数据一致：
-
-- `llms.txt`：站点摘要、关键事实与页面链接（[llmstxt.org](https://llmstxt.org/) 约定），置于站点根路径。
-- `about.html` / `faq.html`：关于页与常见问题页相互独立（`lang="zh-CN"`），供爬虫与模型直接读取；首页脚注链向两页。
-- JSON-LD：`about.html` 使用 `AboutPage`；`faq.html` 使用 `FAQPage`。FAQ 的问题与答案须与页面可见文案**逐字一致**；修改 FAQ 时同步 `site.json` 对应页的 `faqs`。
-- 首页与关于页的 `WebApplication` / `WebPage` 描述须含产品定名、运营方与官网；`applicationCategory` 保持 `UtilitiesApplication`。
-- 回答中保留产品名「如厕计时器(5min)」、运营方「学记宝」、官网 `https://5min.chat`、仅供习惯提醒等关键事实。
+字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL OFL 1.1](https://scripts.sil.org/OFL)）。
 
 ## 目录结构
 
 ```
-5min/
-├── index.html # 计时主页（纯 HTML + SEO / JSON-LD）
-├── about.html # 关于 / FAQ（纯 HTML + GEO）
-├── privacy.html # 隐私政策（应用商店可引用）
-├── terms.html # 用户协议
-├── css/
-│ ├── fonts.css # @font-face（Noto Sans SC）
-│ ├── app.css # 计时页样式
-│ └── about.css # 关于页样式
-├── js/
-│ ├── boot.js # file:// 协议提示
-│ ├── app.js # 计时逻辑（ES module）
-│ ├── alert.js # 跨端到期声音 / 振动
-│ ├── stats.js # 今日累计（localStorage）
-│ ├── ambient.js # 背景白噪音（Web Audio）
-│ └── i18n/
-│ └── locales.js # 多语言文案
-├── fonts/ # 自托管 woff2 + OFL.txt
-├── img/
-│ ├── logo.svg # 标识主源
-│ ├── logo.png
-│ └── apple-touch-icon.png
+5min-web/
+├── server.js                 # HTTP 入口（中间件、静态托管、页面路由、优雅退出）
+├── server.conf.example       # 配置模板 → 复制为 server.conf（已 gitignore）
+├── package.json              # npm scripts：dev / start / test / export-shared / build:pkg
+├── bizjs/
+│   ├── db.js                 # PostgreSQL 连接池（读 server.conf）
+│   ├── paths.js              # 应用根 / public 路径解析（pkg 友好）
+│   └── visitor-log.js        # 访客 DDL、中间件、地理解析与限流
+├── routes/
+│   └── public.js             # GET /api/status
+├── public/                   # 对外静态根（部署时与二进制同级，勿打进 ncc/pkg）
+│   ├── index.html            # 计时主页
+│   ├── about.html            # 关于
+│   ├── faq.html              # 常见问题
+│   ├── privacy.html          # 隐私政策
+│   ├── terms.html            # 用户协议
+│   ├── 404.html
+│   ├── css/                  # fonts.css · app.css · about.css
+│   ├── js/
+│   │   ├── boot.js           # SW 注册 / file:// 提示
+│   │   ├── app.js            # 计时主逻辑
+│   │   ├── alert.js          # 到期声音 / 振动
+│   │   ├── ambient.js        # 环境音
+│   │   ├── stats.js          # 今日累计
+│   │   └── i18n/locales.js   # 多语言文案（各端共享源）
+│   ├── fonts/ · img/
+│   ├── site.json             # 站点元数据、页面列表、faqs
+│   ├── site.webmanifest · sw.js
+│   ├── llms.txt · robots.txt · sitemap.xml
+│   └── favicon.ico
 ├── scripts/
-│ └── raster-logo.js # SVG 栅格化为 PNG / ICO
-├── site.json # 站点元数据、页面文案与 faqs
-├── site.webmanifest # PWA 清单
-├── sw.js # Service Worker（计时壳预缓存）
-├── llms.txt # 面向大模型的站点说明
-├── robots.txt
-├── sitemap.xml
-├── favicon.ico
-├── run.sh # 本地预览（可指定端口）
-├── LICENSE # Apache License 2.0 全文
-├── NOTICE # 署名、品牌与第三方声明
-├── .gitignore
+│   ├── export-shared.mjs     # 导出场景 / 文案到 Android · 鸿蒙 · iOS · 小程序
+│   └── raster-logo.js        # SVG → PNG / ICO
+├── shared-export/            # 导出中间产物（勿当长期编辑源）
+├── test/
+│   ├── http-security-perf.test.js
+│   └── visitor-log.test.js
+├── run.sh                    # → npm run dev
+├── start.sh / stop.sh        # 后台启停（fivemin.pid）
+├── LICENSE · NOTICE
 └── README.md
 ```
 
-## 本地预览
+## 本地运行
 
 ```bash
-./run.sh # 默认端口 8080 → http://127.0.0.1:8080/
-./run.sh 3000 # 指定端口
-PORT=9000 ./run.sh # 环境变量指定端口
+cp -n server.conf.example server.conf   # 填写 DB_*、PORT（默认 8080）
+npm install
+npm run dev                             # 或 ./run.sh → http://127.0.0.1:8080/
 ```
 
-开发联调：
-
-- 短时结束：`?sec=2`（单位：秒）
-- 指定语言：`?lang=zh-CN` / `zh-TW` / `en` / `de` / `ru` / `fr` / `bo`
-
-## 部署
-
-将仓库静态文件原样发布至站点根目录即可；无需 Node.js 生产依赖。确保生产域名与 `site.json` 的 `origin` 及 SEO 绝对 URL 一致。Service Worker 作用域为站点根；静态托管勿对 `sw.js` 做错误 MIME（应为 `application/javascript`）或过长强制缓存，否则壳更新会滞后。
-
-## 品牌标识
-
-主标识为 `img/logo.svg`。重新导出 PNG 与 favicon：
+生产 / 后台：
 
 ```bash
-npm install --no-save @resvg/resvg-js
-node scripts/raster-logo.js
+npm start                 # 前台
+node server.js -d         # 或 ./start.sh（写 fivemin.pid）
+./stop.sh
 ```
 
-## 行为说明
+测试：
 
-- 页面重新可见时按结束时间戳校准剩余时间；后台 `setTimeout` 被节流时，回到前台仍可正确结束。
-- 首次开始计时时按需请求通知权限；拒绝授权不影响计时。
-- 计时进行中禁用时长预设，降低误触；空格键可切换开始 / 暂停（焦点不在表单控件时）。
-- 到期提醒（`js/alert.js`）同时走多条通道，以覆盖各端差异：
- - **声音**：Web Audio 提示音 + 内嵌 WAV 的 `HTMLAudioElement`；开始手势内解锁，计时中保活。
- - **iPhone**：无 Vibration API；将 `navigator.audioSession.type` 设为 `playback`，避免静音键导致 Web Audio 无声；旧系统辅以静音循环音频打开媒体通道；以低频方波提示音代替振动体感。
- - **Android / 鸿蒙**：`navigator.vibrate` 多段重试；熄屏或后台时常忽略振动，回到前台后将补发声音与振动。
- - **PC**：振动接口为空操作；依赖扬声器与（若已授权）系统通知提醒。
- - 结束后轻触表盘，可在用户手势下再次触发声音与振动（对 iOS 及部分机型尤为重要）。
+```bash
+npm test                  # node --test（安全头 / 路径穿越 / 延迟与并发）
+```
 
-## 许可
+打包（`public/` **不**打进包，须与二进制同级部署）：
 
-| 内容 | 许可 |
+```bash
+npm run build:pkg
+# 产物旁放置 public/ + server.conf
+```
+
+## 配置说明
+
+见 `server.conf.example`：
+
+| 变量 | 含义 |
 |------|------|
-| 本仓库源代码与站点资源（除字体外） | [Apache License 2.0](LICENSE) |
-| `fonts/` 中的 Noto Sans SC | [SIL Open Font License 1.1](fonts/OFL.txt) |
+| `PORT` | 监听端口，默认 `8080` |
+| `TRUST_PROXY` | 置于可信反代后设为 `1`；须由反代剥离/覆写伪造头 |
+| `DB_*` | PostgreSQL 连接；启动时 `CREATE TABLE IF NOT EXISTS fivemin_visitor_log` |
+| `VISITOR_GEO_ENABLED` | 访客地理解析（默认开；可关） |
+| `FIVEMIN_ROOT` / `FIVEMIN_PUBLIC` | 覆盖应用根 / `public` 路径（打包部署用） |
 
-**SPDX-License-Identifier:** `Apache-2.0 AND OFL-1.1`（字体文件为 OFL-1.1）
+无独立 migration 目录；表结构在进程监听后按需确保（与 `tools` 一致）。
 
-再分发或修改时须：
+## 共享文案导出
 
-1. 保留版权声明与本许可副本；
-2. 保留 [`NOTICE`](NOTICE) 中的归属与品牌说明；
-3. 对修改过的文件作出显著变更说明（Apache-2.0 §4(b)）。
+```bash
+npm run export-shared
+# 等价：node scripts/export-shared.mjs
+```
 
-Apache-2.0 **不授予**「5min」「五分钟」「如厕计时器」及官方域名等名称、标识的商标或品牌使用权；衍生作品可自由使用代码，但不得在未经许可的情况下冒用官方品牌。
+文案源：`public/js/i18n/locales.js`。同步至 Android / HarmonyOS / iOS / 微信小程序 `shared/`。
 
-## 同仓库其他端
+## 术语与文案约定
 
-本仓库为 monorepo，根目录见 [`../README.md`](../README.md)。
+- **定名**：`如厕计时器(5min)`；运营方：`学记宝`；官网：`https://5min.chat`。
+- 对外说明使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知等；避免堆砌「无广告 / 无需注册」等口号。
+- 界面状态优先「倒计时中 / 计时结束，请起身活动 / 重新开始」。
+- 合规：仅供习惯提醒；不作疗效/诊断宣称；JSON-LD `applicationCategory` 使用 `UtilitiesApplication`。
+- 修改对外文案时同步 `public/site.json`、对应 HTML、`llms.txt`、`site.webmanifest`、`sitemap.xml` 与 JSON-LD；`origin` 保持 `https://5min.chat`。
+
+### GEO
+
+- `public/llms.txt`：站点摘要与链接。
+- `public/about.html` / `public/faq.html`：独立可读页（`lang="zh-CN"`）。
+- FAQ 可见文案须与 `site.json` 中 `faqs` 及 JSON-LD `FAQPage` 一致。
+
+## 关联项目
 
 - Android：[`../5min-android-app`](../5min-android-app)（`applicationId`：`chat.fivemin.app`）
 - HarmonyOS：[`../5min-harmony-app`](../5min-harmony-app)（`bundleName`：`chat.5min.app`）
 - iOS：[`../5min-ios-app`](../5min-ios-app)（`PRODUCT_BUNDLE_IDENTIFIER`：`chat.5min.app`）
 - 微信小程序：[`../5min-mp`](../5min-mp)
-- 共享场景 / 文案导出：`node scripts/export-shared.mjs`

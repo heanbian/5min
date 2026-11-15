@@ -91,6 +91,13 @@ Page({
     privacyMessage: '',
     privacyCheckLabel: '',
     privacyAgree: '',
+    prefAlertsSection: '',
+    prefFinishTone: '',
+    prefFinishVibrate: '',
+    prefFinishNotify: '',
+    finishTone: true,
+    finishVibrate: true,
+    finishNotify: true,
   },
 
   onLoad() {
@@ -142,6 +149,13 @@ Page({
       customSceneNameLabel: t('customSceneNameLabel'),
       customSceneNamePlaceholder: t('customSceneNamePlaceholder'),
       customMinutesLabel: t('customMinutesLabel'),
+      prefAlertsSection: t('prefAlertsSection'),
+      prefFinishTone: t('prefFinishTone'),
+      prefFinishVibrate: t('prefFinishVibrate'),
+      prefFinishNotify: t('prefFinishNotify'),
+      finishTone: prefs.getFinishTone(),
+      finishVibrate: prefs.getFinishVibrate(),
+      finishNotify: prefs.getFinishNotify(),
       localeOptions: appLocaleCodes().map((code) => ({
         code,
         label: nativeName(code),
@@ -343,6 +357,24 @@ Page({
     prefs.setAmbient(id);
     this.setData({ dialog: '' });
     this.refresh();
+  },
+
+  onToggleFinishTone(e) {
+    const on = !!e.detail.value;
+    prefs.setFinishTone(on);
+    this.setData({ finishTone: on });
+  },
+
+  onToggleFinishVibrate(e) {
+    const on = !!e.detail.value;
+    prefs.setFinishVibrate(on);
+    this.setData({ finishVibrate: on });
+  },
+
+  onToggleFinishNotify(e) {
+    const on = !!e.detail.value;
+    prefs.setFinishNotify(on);
+    this.setData({ finishNotify: on });
   },
 
   onFeedback() {
