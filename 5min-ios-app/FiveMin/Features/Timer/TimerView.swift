@@ -252,7 +252,8 @@ struct TimerView: View {
 
             if model.canIgnoreFinish {
                 Button(model.t("finishIgnore")) { model.ignoreLastSession() }
-                    .buttonStyle(SecondaryButtonStyle())
+                    .buttonStyle(IgnoreButtonStyle())
+                    .frame(maxWidth: .infinity)
             }
 
             Button {
@@ -407,11 +408,26 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 16, weight: .semibold))
-            .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH)
-            .background(FiveMinColor.brand)
+            .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH, maxHeight: FiveMinDimens.controlH)
             .foregroundStyle(.white)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0x36 / 255, green: 0xA8 / 255, blue: 0x72 / 255),
+                        FiveMinColor.brand,
+                        FiveMinColor.brandStrong,
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
-            .opacity(configuration.isPressed ? 0.85 : 1)
+            .shadow(
+                color: FiveMinColor.brand.opacity(configuration.isPressed ? 0.18 : 0.32),
+                radius: configuration.isPressed ? 4 : 10,
+                y: configuration.isPressed ? 2 : 6
+            )
+            .opacity(configuration.isPressed ? 0.92 : 1)
     }
 }
 
@@ -421,14 +437,42 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 16, weight: .semibold))
-            .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH)
-            .background(configuration.isPressed ? Color(red: 0xDD / 255, green: 0xE3 / 255, blue: 0xE0 / 255) : FiveMinColor.ghostBg)
-            .foregroundStyle(FiveMinColor.ghostInk.opacity(enabled ? 1 : 0.4))
+            .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH, maxHeight: FiveMinDimens.controlH)
+            .foregroundStyle(FiveMinColor.muted.opacity(enabled ? 1 : 0.38))
+            .background(configuration.isPressed ? FiveMinColor.brandSoft : FiveMinColor.surface)
             .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                    .stroke(FiveMinColor.ghostLine, lineWidth: 1)
+                    .stroke(
+                        configuration.isPressed
+                            ? FiveMinColor.brand.opacity(0.35)
+                            : FiveMinColor.line,
+                        lineWidth: 1.5
+                    )
             )
-            .opacity(configuration.isPressed ? 0.92 : 1)
+            .shadow(color: Color.black.opacity(0.04), radius: 4, y: 2)
+    }
+}
+
+/// Tertiary undo — quieter than primary/secondary, danger accent only.
+struct IgnoreButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 15, weight: .medium))
+            .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH, maxHeight: FiveMinDimens.controlH)
+            .foregroundStyle(FiveMinColor.danger)
+            .background(
+                configuration.isPressed
+                    ? FiveMinColor.dangerSoft
+                    : FiveMinColor.surface.opacity(0.82)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
+                    .stroke(
+                        FiveMinColor.danger.opacity(configuration.isPressed ? 0.55 : 0.35),
+                        style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                    )
+            )
     }
 }

@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -341,8 +342,22 @@ fun TimerHome(
                         modifier = Modifier
                             .weight(1f)
                             .height(FiveMinDimens.controlH)
+                            .shadow(
+                                elevation = 8.dp,
+                                shape = radius,
+                                ambientColor = FiveMinColors.brand.copy(alpha = 0.28f),
+                                spotColor = FiveMinColors.brand.copy(alpha = 0.35f),
+                            )
                             .clip(radius)
-                            .background(FiveMinColors.brand)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0xFF36A872),
+                                        FiveMinColors.brand,
+                                        FiveMinColors.brandStrong,
+                                    ),
+                                ),
+                            )
                             .clickable {
                                 if (state.running) {
                                     vm.toggleStart()
@@ -363,9 +378,10 @@ fun TimerHome(
                         modifier = Modifier
                             .weight(1f)
                             .height(FiveMinDimens.controlH)
+                            .shadow(elevation = 2.dp, shape = radius, clip = false)
                             .clip(radius)
-                            .border(1.dp, FiveMinColors.ghostLine, radius)
-                            .background(FiveMinColors.ghostBg)
+                            .border(1.5.dp, FiveMinColors.line, radius)
+                            .background(FiveMinColors.surface)
                             .then(
                                 if (resetEnabled) {
                                     Modifier.clickable { vm.reset() }
@@ -377,7 +393,7 @@ fun TimerHome(
                     ) {
                         Text(
                             text = vm.t("reset"),
-                            color = FiveMinColors.ghostInk.copy(alpha = if (resetEnabled) 1f else 0.4f),
+                            color = FiveMinColors.muted.copy(alpha = if (resetEnabled) 1f else 0.38f),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                         )
@@ -390,16 +406,16 @@ fun TimerHome(
                             .fillMaxWidth()
                             .height(FiveMinDimens.controlH)
                             .clip(radius)
-                            .border(1.dp, FiveMinColors.line, radius)
-                            .background(FiveMinColors.surface)
+                            .border(1.dp, FiveMinColors.danger.copy(alpha = 0.35f), radius)
+                            .background(FiveMinColors.surface.copy(alpha = 0.82f))
                             .clickable { vm.ignoreFinish() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = vm.t("finishIgnore"),
-                            color = FiveMinColors.muted,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
+                            color = FiveMinColors.danger,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp,
                         )
                     }
                 }

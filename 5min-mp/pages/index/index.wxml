@@ -59,7 +59,7 @@
 
     <button
       wx:if="{{showIgnore}}"
-      class="btn btn-ghost btn-ignore"
+      class="btn-ignore"
       bindtap="onIgnoreFinish"
     >{{finishIgnoreLabel}}</button>
 

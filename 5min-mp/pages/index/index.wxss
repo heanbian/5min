@@ -207,16 +207,10 @@
   gap: 20rpx;
 }
 
-.btn-ignore {
-  width: 100%;
-  margin-top: 16rpx;
-  flex: none;
-  font-size: 28rpx;
-  font-weight: 500;
-}
-
+/* 三级操作：主按钮抬升 → 次按钮描边 → 忽略为弱化文字动作 */
 .btn {
   flex: 1;
+  box-sizing: border-box;
   height: var(--control-h);
   line-height: var(--control-h);
   margin: 0;
@@ -231,31 +225,62 @@
 }
 
 .btn-primary {
-  background: var(--brand);
   color: #fff;
+  background: linear-gradient(180deg, #36a872 0%, var(--brand) 55%, var(--brand-strong) 100%);
+  box-shadow: 0 10rpx 24rpx rgba(47, 154, 104, 0.32);
 }
 
 .btn-primary:active {
   background: var(--brand-strong);
+  box-shadow: 0 4rpx 12rpx rgba(47, 154, 104, 0.22);
 }
 
 .btn-ghost {
-  background: var(--ghost-bg);
-  color: var(--ghost-ink);
-  border: 2rpx solid var(--ghost-line);
+  color: var(--muted);
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  line-height: calc(var(--control-h) - 4rpx);
+  box-shadow: 0 4rpx 12rpx rgba(31, 42, 36, 0.04);
 }
 
 .btn-ghost:active {
-  background: #dde3e0;
-  border-color: #c8d0cc;
-  color: #4a554f;
+  background: var(--brand-soft);
+  border-color: rgba(47, 154, 104, 0.35);
+  color: var(--brand-strong);
 }
 
 .btn-ghost-disabled,
 .btn-ghost[disabled] {
-  color: rgba(107, 117, 112, 0.4);
-  background: var(--ghost-bg);
-  border-color: var(--ghost-line);
+  color: rgba(95, 111, 102, 0.38);
+  background: rgba(255, 255, 255, 0.65);
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+.btn-ignore {
+  display: block;
+  width: 100% !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+  padding: 0;
+  height: var(--control-h);
+  line-height: calc(var(--control-h) - 4rpx);
+  border-radius: var(--radius);
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--danger);
+  background: rgba(255, 255, 255, 0.72);
+  border: 2rpx dashed rgba(210, 85, 74, 0.45);
+}
+
+.btn-ignore::after {
+  border: none;
+}
+
+.btn-ignore:active {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: #b9443b;
 }
 
 .suggested-chips {

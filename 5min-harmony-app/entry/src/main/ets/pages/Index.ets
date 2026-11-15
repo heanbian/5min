@@ -1133,19 +1133,34 @@ struct Index {
               .fontWeight(FontWeight.Medium)
               .fontColor(Color.White)
               .textAlign(TextAlign.Center)
-              .backgroundColor($r('app.color.brand'))
+              .linearGradient({
+                angle: 180,
+                colors: [['#36A872', 0], ['#2F9A68', 0.55], ['#248556', 1]]
+              })
               .borderRadius(14)
+              .shadow({
+                radius: 12,
+                color: 'rgba(47, 154, 104, 0.32)',
+                offsetX: 0,
+                offsetY: 6
+              })
               .onClick(() => this.toggleStart())
             Text(this.t('reset'))
               .layoutWeight(1)
               .height(52)
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.ghost_ink'))
+              .fontColor($r('app.color.muted'))
               .textAlign(TextAlign.Center)
-              .backgroundColor($r('app.color.ghost_bg'))
-              .border({ width: 1, color: $r('app.color.ghost_line') })
+              .backgroundColor($r('app.color.surface'))
+              .border({ width: 1.5, color: $r('app.color.line') })
               .borderRadius(14)
+              .shadow({
+                radius: 4,
+                color: 'rgba(31, 42, 36, 0.06)',
+                offsetX: 0,
+                offsetY: 2
+              })
               .opacity(this.resetEnabled ? 1 : 0.4)
               .onClick(() => {
                 if (this.resetEnabled) {
@@ -1158,13 +1173,17 @@ struct Index {
           if (this.showIgnore) {
             Text(this.ignoreLabel)
               .width('100%')
-              .height(44)
-              .fontSize(14)
+              .height(52)
+              .fontSize(15)
               .fontWeight(FontWeight.Medium)
-              .fontColor($r('app.color.muted'))
+              .fontColor($r('app.color.danger'))
               .textAlign(TextAlign.Center)
-              .backgroundColor($r('app.color.ghost_bg'))
-              .border({ width: 1, color: $r('app.color.ghost_line') })
+              .backgroundColor('rgba(255, 255, 255, 0.82)')
+              .border({
+                width: 1,
+                color: 'rgba(210, 85, 74, 0.35)',
+                style: BorderStyle.Dashed
+              })
               .borderRadius(14)
               .onClick(() => this.ignoreLastSession())
           }
