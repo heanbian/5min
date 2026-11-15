@@ -11,8 +11,8 @@
 | 功能 | 说明 |
 |------|------|
 | 时长预设 | 3 / 5 / 10 分钟快速切换 |
-| 场景预设 | 自定义下拉（分组）：日常 / 烹饪 / 护理 / 休憩 / 学习备考 / 工作办公 / 工勤劳作 / 农事劳作 / 家务等常用场景 |
-| 今日累计 | 本机记录当日完成次数与累计时长（localStorage，不上传） |
+| 场景预设 | 分组场景选择：日常 / 烹饪 / 护肤 / 休息 / 学习 / 办公 / 班次 / 农事 / 家务等 |
+| 今日累计 | 本机记录当日完成次数与累计时长（localStorage） |
 | 环境音 | 雨声 / 海浪声 / 钟声（Web Audio 程序化，无外部音源文件） |
 | 计时控制 | 开始、暂停、重置；以绝对时间戳结算，减轻后台定时器节流导致的漂移 |
 | 状态反馈 | 进行中（绿）→ 剩余不足 1 分钟（琥珀）→ 超时（红） |
@@ -45,7 +45,7 @@
 - **SEO 标题常用**：`如厕计时器(5min)`。
 - 界面默认标题（`brandTitle`）展示「如厕计时器(5min)」；选中场景时展示场景名；简称可用「5min」。
 - 对外说明优先使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知、Screen Wake Lock 等；文案宜简洁，避免堆砌「无广告 / 无需注册 / 数据存本机 / 不上传」等口号。
-- 界面状态优先使用「倒计时中 / 计时已结束 / 重新开始」等书面表述，避免「再响」「再来一次」等口语。
+- 界面状态优先使用「倒计时中 / 计时结束，请起身活动 / 重新开始」等书面表述，避免「再响」「再来一次」等口语。
 - 合规底线：仅供习惯提醒；不作疗效/预防/诊断宣称；不采集健康敏感个人信息。JSON-LD `applicationCategory` 使用 `UtilitiesApplication`（勿用 `HealthApplication`）。
 - `site.json` 的 `description` / FAQ 须包含产品名、运营方与官网 `https://5min.chat`；修改后同步 `index.html`、`about.html`、`faq.html`、`llms.txt`、`site.webmanifest`、`sitemap.xml` 与 JSON-LD。
 - `site.json` 的 `origin` 为 `https://5min.chat`，并与 `robots.txt`、`sitemap.xml`、canonical、`og:url`、`og:image` 保持一致。
@@ -160,7 +160,8 @@ Apache-2.0 **不授予**「5min」「五分钟」「如厕计时器」及官方�
 
 本仓库为 monorepo，根目录见 [`../README.md`](../README.md)。
 
-- Android：[`../5min-android-app`](../5min-android-app)（`applicationId`：`chat.5min.app`）
+- Android：[`../5min-android-app`](../5min-android-app)（`applicationId`：`chat.fivemin.app`）
 - HarmonyOS：[`../5min-harmony-app`](../5min-harmony-app)（`bundleName`：`chat.5min.app`）
-- iOS：[`../5min-ios-app`](../5min-ios-app)（`chat.5min.app`）
+- iOS：[`../5min-ios-app`](../5min-ios-app)（`PRODUCT_BUNDLE_IDENTIFIER`：`chat.5min.app`）
+- 微信小程序：[`../5min-mp`](../5min-mp)
 - 共享场景 / 文案导出：`node scripts/export-shared.mjs`

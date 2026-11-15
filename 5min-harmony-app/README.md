@@ -10,7 +10,7 @@
 
 - 时长预设与分组场景（与 Web / Android 共享 `rawfile/shared`）
 - 绝对时间戳倒计时；到期本地通知 + 约 5 秒报警音与振动
-- 今日累计、多语言
+- 今日累计；多语言（简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག）
 - 计时页常亮（`setWindowKeepScreenOn`）
 
 ## 打开工程
@@ -76,4 +76,4 @@ chmod +x scripts/release.sh
 - 系统通知：首次开始计时时会申请通知授权；到期通过 `notificationManager.publish` 弹出本机通知（自定义 `alert.wav`）；并尝试 `reminderAgentManager`（`PUBLISH_AGENT_REMINDER`）在后台/冻后仍提醒。前台结束时另播放应用内报警音 + 振动（不依赖通知声道是否被静音）。
 - 会话记录使用本地 RDB：`databaseDir/rdb/5min-chat/5min_chat_history.db`（近 14 日）；覆盖安装可保留。
 - 仅在倒计时中保持屏幕常亮，降低待机耗电。
-- 仅供习惯提醒；数据存本机，默认不上传。
+- 仅供习惯提醒；计时与统计原则上保存在本机。

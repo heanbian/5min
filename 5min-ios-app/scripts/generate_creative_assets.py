@@ -130,7 +130,7 @@ def draw_copy(
     gap: int,
 ) -> int:
     title = "如厕计时器"
-    sub = "端侧倒计时 · 习惯提醒 · 无账号无广告"
+    sub = "端侧倒计时 · 习惯提醒 · 数据原则上保存在本机"
     brand = "5min"
     tf = font(title_size, index=2)  # Semibold-ish if available
     sf = font(sub_size, index=0)

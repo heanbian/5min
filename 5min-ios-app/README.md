@@ -134,7 +134,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 ### 上架文案要点
 
 - 名称：如厕计时器(5min)；类别：**工具（Utilities）**
-- 描述：端侧倒计时、习惯提醒、本机完成、无账号无广告
+- 描述：端侧倒计时工具；习惯提醒；数据原则上保存在本机；不要求注册账户
 - 隐私政策：`https://5min.chat/privacy.html`
 - 通知用途：倒计时结束后本机提醒起身（见 `NSUserNotificationsUsageDescription`）
 
