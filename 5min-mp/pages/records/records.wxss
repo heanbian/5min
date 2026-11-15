@@ -115,7 +115,7 @@
 .clear-link {
   font-size: 26rpx;
   font-weight: 500;
-  color: var(--brand-strong);
+  color: var(--danger);
 }
 
 .filter-row {

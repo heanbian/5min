@@ -153,6 +153,7 @@ Page({
       content: t('historyDeleteConfirm'),
       confirmText: t('historyDelete'),
       cancelText: t('cancelLabel'),
+      confirmColor: '#d2554a',
       success: (res) => {
         if (!res.confirm) return;
         history.deleteSession(id);

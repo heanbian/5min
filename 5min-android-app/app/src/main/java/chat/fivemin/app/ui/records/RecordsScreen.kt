@@ -99,7 +99,7 @@ fun RecordsScreen(vm: TimerViewModel) {
             if (rows.isNotEmpty() || filterOptions.isNotEmpty()) {
                 Text(
                     text = vm.t("historyClear"),
-                    color = FiveMinColors.brandStrong,
+                    color = FiveMinColors.danger,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable { dialog = RecordsDialog.ClearAll },
@@ -262,7 +262,7 @@ fun RecordsScreen(vm: TimerViewModel) {
 
 @Composable
 private fun FilterChip(label: String, active: Boolean, onClick: () -> Unit) {
-    val radius = RoundedCornerShape(FiveMinDimens.radiusSm)
+    val radius = RoundedCornerShape(FiveMinDimens.radius)
     Text(
         text = label,
         modifier = Modifier
@@ -334,7 +334,7 @@ private fun HistoryRow(vm: TimerViewModel, item: HistoryItem, onDelete: () -> Un
         Icon(
             imageVector = Icons.Default.Delete,
             contentDescription = vm.t("historyDelete"),
-            tint = FiveMinColors.muted,
+            tint = FiveMinColors.danger,
             modifier = Modifier
                 .size(22.dp)
                 .clickable(onClick = onDelete)

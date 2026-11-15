@@ -1012,7 +1012,6 @@ struct Index {
     }
     .width('100%')
     .height('100%')
-    .fontFamily('PlusJakartaSans')
     .backgroundColor(this.privacyAccepted && this.ready ? this.bgColor : $r('app.color.bg'))
     .direction(this.locale.indexOf('ar') === 0 ? Direction.Rtl : Direction.Ltr)
   }
@@ -1299,6 +1298,8 @@ struct Index {
                       .height(32)
                       .padding({ left: 14, right: 14 })
                       .textAlign(TextAlign.Center)
+                      .constraintSize({ minHeight: 32 })
+                      .flexShrink(0)
                       .linearGradient({
                         angle: 180,
                         colors: [['#36A872', 0], ['#2F9A68', 1]]
@@ -1324,6 +1325,8 @@ struct Index {
                       .height(32)
                       .padding({ left: 14, right: 14 })
                       .textAlign(TextAlign.Center)
+                      .constraintSize({ minHeight: 32 })
+                      .flexShrink(0)
                       .backgroundColor('rgba(255, 255, 255, 0.55)')
                       .border({ width: 1, color: 'rgba(47, 154, 104, 0.18)' })
                       .borderRadius(22)
@@ -1336,10 +1339,14 @@ struct Index {
                   }
                 }, (id: string) => id)
               }
+              .width('100%')
+              .justifyContent(FlexAlign.Start)
+              .alignItems(VerticalAlign.Center)
               .padding(6)
             }
             .scrollable(ScrollDirection.Horizontal)
             .scrollBar(BarState.Off)
+            .align(Alignment.Start)
             .width('100%')
             .backgroundColor('rgba(229, 245, 236, 0.72)')
             .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })

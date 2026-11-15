@@ -87,7 +87,7 @@ export struct RecordsTab {
   /** Called by parent when tab becomes visible. */
   async reload(): Promise<void> {
     this.customScenes = await this.prefs.getCustomScenes();
-    this.buildFilterOptions();
+    await this.buildFilterOptions();
     const hist = await this.history.getHistory(this.filterSceneId);
     this.historyRows = this.formatHistory(hist);
     const period = await this.history.periodStats();
@@ -138,7 +138,7 @@ export struct RecordsTab {
     return out;
   }
 
-  private buildFilterOptions(): void {
+  private async buildFilterOptions(): Promise<void> {
     const all = await this.history.getHistory();
     const seen: string[] = [];
     const opts: FilterOption[] = [];
@@ -313,7 +313,7 @@ export struct RecordsTab {
                 Text(this.t('historyClear'))
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.brand_strong'))
+                  .fontColor($r('app.color.danger'))
                   .onClick(() => this.clearAll())
               }
               .width('100%')

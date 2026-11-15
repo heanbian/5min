@@ -22,6 +22,8 @@ page {
   --ink: #1f2a24;
   --muted: #5f6f66;
   --line: #d7e5dc;
+  --danger: #d2554a;
+  --danger-soft: #ffefed;
   --bg: #eef6f1;
   --bg2: #f2f5f3;
   --radius: 28rpx;
