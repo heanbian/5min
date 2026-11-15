@@ -48,11 +48,11 @@ struct RootTabView: View {
             Color.black.opacity(0.45).ignoresSafeArea()
             VStack(alignment: .leading, spacing: 16) {
                 Text(model.t("privacyTitle"))
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(FiveMinFont.ui(18, weight: .semibold))
                     .foregroundStyle(FiveMinColor.ink)
 
                 Text(model.t("privacyMessage"))
-                    .font(.system(size: 14))
+                    .font(FiveMinFont.ui(14))
                     .foregroundStyle(FiveMinColor.muted)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -63,7 +63,7 @@ struct RootTabView: View {
                         Image(systemName: privacyChecked ? "checkmark.square.fill" : "square")
                             .foregroundStyle(privacyChecked ? FiveMinColor.brand : FiveMinColor.muted)
                         Text(model.t("privacyCheckLabel"))
-                            .font(.system(size: 14))
+                            .font(FiveMinFont.ui(14))
                             .foregroundStyle(FiveMinColor.ink)
                             .multilineTextAlignment(.leading)
                     }
@@ -74,13 +74,13 @@ struct RootTabView: View {
                     Button(model.t("privacyLink")) {
                         openURL("https://5min.chat/privacy.html")
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(FiveMinFont.ui(13, weight: .medium))
                     .foregroundStyle(FiveMinColor.brandStrong)
 
                     Button(model.t("termsLink")) {
                         openURL("https://5min.chat/terms.html")
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(FiveMinFont.ui(13, weight: .medium))
                     .foregroundStyle(FiveMinColor.brandStrong)
                 }
 

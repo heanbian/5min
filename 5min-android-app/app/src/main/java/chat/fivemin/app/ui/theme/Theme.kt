@@ -7,12 +7,23 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import chat.fivemin.app.R
 
 /** Design tokens mirrored from 5min-web/css/app.css */
+
+/** Plus Jakarta Sans — Latin UI；缺字时系统回退到中日韩字体 */
+val FiveMinFontFamily = FontFamily(
+    Font(R.font.plus_jakarta_sans_regular, FontWeight.Normal),
+    Font(R.font.plus_jakarta_sans_medium, FontWeight.Medium),
+    Font(R.font.plus_jakarta_sans_semibold, FontWeight.SemiBold),
+    Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold),
+)
+
 object FiveMinColors {
     val brand = Color(0xFF2F9A68)
     val brandStrong = Color(0xFF248556)
@@ -71,48 +82,61 @@ private val LightColors = lightColorScheme(
     tertiary = FiveMinColors.warn,
 )
 
+private fun TextStyle.withAppFont(): TextStyle = copy(fontFamily = FiveMinFontFamily)
+
+private val BaseTypography = Typography()
+
 private val AppTypography = Typography(
+    displayLarge = BaseTypography.displayLarge.withAppFont(),
+    displayMedium = BaseTypography.displayMedium.withAppFont(),
+    displaySmall = BaseTypography.displaySmall.withAppFont(),
+    headlineLarge = BaseTypography.headlineLarge.withAppFont(),
+    headlineMedium = BaseTypography.headlineMedium.withAppFont(),
+    headlineSmall = BaseTypography.headlineSmall.withAppFont(),
     titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = FiveMinFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 19.sp,
         letterSpacing = 0.01.sp,
         color = FiveMinColors.ink,
         lineHeight = 24.sp,
     ),
+    titleMedium = BaseTypography.titleMedium.withAppFont(),
+    titleSmall = BaseTypography.titleSmall.withAppFont(),
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = FiveMinFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         color = FiveMinColors.ink,
     ),
     bodyMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = FiveMinFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 21.sp,
         color = FiveMinColors.muted,
     ),
     bodySmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = FiveMinFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 20.sp,
         color = FiveMinColors.muted,
     ),
     labelLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = FiveMinFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         color = FiveMinColors.ink,
     ),
     labelMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = FiveMinFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         color = FiveMinColors.muted,
     ),
+    labelSmall = BaseTypography.labelSmall.withAppFont(),
 )
 
 val FiveMinShapes = androidx.compose.material3.Shapes(

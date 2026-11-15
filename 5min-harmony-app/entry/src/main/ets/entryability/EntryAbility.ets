@@ -1,10 +1,35 @@
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { window } from '@kit.ArkUI';
+import { font, window } from '@kit.ArkUI';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, '5min', 'Ability onCreate');
+    // Plus Jakarta Sans — Latin UI；缺字回退系统中日韩字体
+    try {
+      font.registerFont({
+        familyName: 'PlusJakartaSans',
+        familySrc: $rawfile('fonts/PlusJakartaSans.ttf')
+      });
+      font.registerFont({
+        familyName: 'PlusJakartaSans-Regular',
+        familySrc: $rawfile('fonts/PlusJakartaSans-Regular.ttf')
+      });
+      font.registerFont({
+        familyName: 'PlusJakartaSans-Medium',
+        familySrc: $rawfile('fonts/PlusJakartaSans-Medium.ttf')
+      });
+      font.registerFont({
+        familyName: 'PlusJakartaSans-SemiBold',
+        familySrc: $rawfile('fonts/PlusJakartaSans-SemiBold.ttf')
+      });
+      font.registerFont({
+        familyName: 'PlusJakartaSans-Bold',
+        familySrc: $rawfile('fonts/PlusJakartaSans-Bold.ttf')
+      });
+    } catch (e) {
+      hilog.warn(0x0000, '5min', 'registerFont failed %{public}s', JSON.stringify(e));
+    }
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {

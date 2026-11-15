@@ -12,6 +12,7 @@
     "build:pkg": "npm run build:ncc && npx pkg dist/index.js -o fivemin --targets node24-linux-x64,node24-win-x64,node24-macos-arm64 --no-bytecode --public-packages=* --public",
     "clean": "rm -rf dist fivemin-linux-x64 fivemin-macos-arm64 fivemin-win-x64.exe && find . -path ./node_modules -prune -o -name '*.log' -delete",
     "export-shared": "node scripts/export-shared.mjs",
+    "sync-icons": "node scripts/raster-logo.js",
     "test": "node --test",
     "lint": "eslint ."
   },

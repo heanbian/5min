@@ -95,7 +95,7 @@ fun TimerHome(
     val timeColor = when (state.phase) {
         TimerPhase.Warn -> FiveMinColors.warn
         TimerPhase.Done -> FiveMinColors.danger
-        else -> FiveMinColors.ink
+        else -> FiveMinColors.brand
     }
     val statusColor = when (state.phase) {
         TimerPhase.Warn -> FiveMinColors.warn
@@ -421,15 +421,16 @@ fun TimerHome(
                 }
 
                 // scene trigger
+                val sceneRadius = RoundedCornerShape(8.dp)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FiveMinDimens.rowH)
-                        .clip(radius)
+                        .clip(sceneRadius)
                         .border(
                             1.dp,
                             if (sceneOpen) FiveMinColors.brand.copy(alpha = 0.45f) else FiveMinColors.line,
-                            radius,
+                            sceneRadius,
                         )
                         .background(FiveMinColors.surface)
                         .then(
@@ -466,9 +467,15 @@ fun TimerHome(
 
                 val chipIds = vm.chipSceneIds()
                 if (chipIds.isNotEmpty()) {
+                    val chipRadius = RoundedCornerShape(8.dp)
+                    val railShape = RoundedCornerShape(8.dp)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clip(railShape)
+                            .background(FiveMinColors.brandSoft.copy(alpha = 0.72f))
+                            .border(1.dp, FiveMinColors.brand.copy(alpha = 0.12f), railShape)
+                            .padding(6.dp)
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -477,25 +484,44 @@ fun TimerHome(
                             Text(
                                 text = vm.sceneTitle(id) ?: id,
                                 modifier = Modifier
-                                    .height(FiveMinDimens.chipH)
-                                    .clip(radius)
-                                    .border(
-                                        1.dp,
-                                        if (active) FiveMinColors.brand.copy(alpha = 0.35f) else FiveMinColors.line,
-                                        radius,
+                                    .height(32.dp)
+                                    .then(
+                                        if (active) {
+                                            Modifier
+                                                .shadow(
+                                                    elevation = 4.dp,
+                                                    shape = chipRadius,
+                                                    ambientColor = FiveMinColors.brand.copy(alpha = 0.28f),
+                                                    spotColor = FiveMinColors.brand.copy(alpha = 0.3f),
+                                                )
+                                                .clip(chipRadius)
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        listOf(Color(0xFF36A872), FiveMinColors.brand),
+                                                    ),
+                                                )
+                                        } else {
+                                            Modifier
+                                                .clip(chipRadius)
+                                                .border(
+                                                    1.dp,
+                                                    FiveMinColors.brand.copy(alpha = 0.18f),
+                                                    chipRadius,
+                                                )
+                                                .background(FiveMinColors.surface.copy(alpha = 0.55f))
+                                        },
                                     )
-                                    .background(if (active) FiveMinColors.brandSoft else FiveMinColors.surface)
                                     .then(
                                         if (setupEnabled) {
                                             Modifier.clickable { vm.selectScene(id) }
                                         } else Modifier,
                                     )
-                                    .padding(horizontal = 12.dp)
+                                    .padding(horizontal = 14.dp)
                                     .wrapContentHeight(Alignment.CenterVertically),
                                 color = when {
                                     !setupEnabled -> FiveMinColors.muted.copy(alpha = 0.4f)
-                                    active -> FiveMinColors.brandStrong
-                                    else -> FiveMinColors.muted
+                                    active -> Color.White
+                                    else -> FiveMinColors.brandStrong
                                 },
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,

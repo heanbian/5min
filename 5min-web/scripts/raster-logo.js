@@ -15,28 +15,48 @@
  */
 'use strict';
 
+/**
+ * 从 Android 同款 App 图标生成 Web favicon / apple-touch / logo.png。
+ * 依赖本机 `sips`（macOS）。运行：node scripts/raster-logo.js
+ */
 const fs = require('fs');
 const path = require('path');
-const { Resvg } = require('@resvg/resvg-js');
+const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
-const svg = fs.readFileSync(path.join(root, 'public', 'img', 'logo.svg'));
+const repoRoot = path.join(root, '..');
+const srcCandidates = [
+  path.join(repoRoot, '5min-android-app/store/artwork/ic_launcher_512.png'),
+  path.join(repoRoot, '5min-ios-app/store/artwork/ic_launcher_512.png'),
+  path.join(repoRoot, '5min-ios-app/FiveMin/Assets.xcassets/AppIcon.appiconset/AppIcon.png'),
+];
+const src = srcCandidates.find((p) => fs.existsSync(p));
+if (!src) {
+  console.error('未找到 App 图标源文件');
+  process.exit(1);
+}
 
-function png(size) {
-  const resvg = new Resvg(svg, {
-    fitTo: { mode: 'width', value: size }
+const imgDir = path.join(root, 'public', 'img');
+fs.mkdirSync(imgDir, { recursive: true });
+
+function sipsResize(size, outPath) {
+  const r = spawnSync('sips', ['-z', String(size), String(size), src, '--out', outPath], {
+    encoding: 'utf8',
   });
-  return resvg.render().asPng();
+  if (r.status !== 0) {
+    console.error(r.stderr || r.stdout || 'sips failed');
+    process.exit(1);
+  }
 }
 
 function ico(images) {
   const count = images.length;
-  const header = 6 + count * 16;
-  let offset = header;
+  let offset = 6 + count * 16;
   const entries = images.map((image) => {
     const entry = Buffer.alloc(16);
     entry.writeUInt8(image.size >= 256 ? 0 : image.size, 0);
     entry.writeUInt8(image.size >= 256 ? 0 : image.size, 1);
+    entry.writeUInt16LE(0, 2);
     entry.writeUInt16LE(1, 4);
     entry.writeUInt16LE(32, 6);
     entry.writeUInt32LE(image.png.length, 8);
@@ -51,14 +71,23 @@ function ico(images) {
   return Buffer.concat([head, ...entries, ...images.map((image) => image.png)]);
 }
 
-const img = path.join(root, 'public', 'img');
-fs.writeFileSync(path.join(img, 'apple-touch-icon.png'), png(180));
-fs.writeFileSync(path.join(img, 'logo.png'), png(512));
+const out16 = path.join(imgDir, 'favicon-16.png');
+const out32 = path.join(imgDir, 'favicon-32.png');
+const out180 = path.join(imgDir, 'apple-touch-icon.png');
+const out512 = path.join(imgDir, 'logo.png');
+
+sipsResize(16, out16);
+sipsResize(32, out32);
+sipsResize(180, out180);
+sipsResize(512, out512);
+
 fs.writeFileSync(
   path.join(root, 'public', 'favicon.ico'),
   ico([
-    { size: 16, png: png(16) },
-    { size: 32, png: png(32) }
+    { size: 16, png: fs.readFileSync(out16) },
+    { size: 32, png: fs.readFileSync(out32) },
   ])
 );
-console.log('logo.png / apple-touch-icon.png / favicon.ico 已写出');
+
+console.log('已从 App 图标生成: favicon.ico / favicon-32.png / apple-touch-icon.png / logo.png');
+console.log('源:', src);

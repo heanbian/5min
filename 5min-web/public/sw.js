@@ -17,7 +17,7 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v4';
+const CACHE = '5min-shell-v5';
 
 const PRECACHE = [
   './',
@@ -30,10 +30,15 @@ const PRECACHE = [
   './js/ambient.js',
   './js/stats.js',
   './js/i18n/locales.js',
+  './fonts/PlusJakartaSans-Regular.woff2',
+  './fonts/PlusJakartaSans-Medium.woff2',
+  './fonts/PlusJakartaSans-SemiBold.woff2',
+  './fonts/PlusJakartaSans-Bold.woff2',
   './fonts/NotoSansSC-Regular.woff2',
   './fonts/NotoSansSC-Bold.woff2',
   './img/logo.svg',
   './img/logo.png',
+  './img/favicon-32.png',
   './img/apple-touch-icon.png',
   './img/beian.png',
   './favicon.ico',

@@ -12,13 +12,38 @@ App({
     /** Apply on next home show after Mine custom-scene Use / add. */
     pendingSceneId: null,
     privacyAccepted: false,
-    appVersion: '1.0.7',
+    appVersion: '1.0.8',
   },
 
   onLaunch() {
     initLocale();
     initAmbient();
     this.globalData.privacyAccepted = prefs.isPrivacyAccepted();
+    this.loadAppFonts();
+  },
+
+  /** Plus Jakarta Sans — Latin UI；中文回退系统字体 */
+  loadAppFonts() {
+    const faces = [
+      { weight: 400, file: 'PlusJakartaSans-Regular.ttf' },
+      { weight: 500, file: 'PlusJakartaSans-Medium.ttf' },
+      { weight: 600, file: 'PlusJakartaSans-SemiBold.ttf' },
+      { weight: 700, file: 'PlusJakartaSans-Bold.ttf' },
+    ];
+    faces.forEach(({ weight, file }) => {
+      try {
+        wx.loadFontFace({
+          global: true,
+          family: 'Plus Jakarta Sans',
+          source: `url("/fonts/${file}")`,
+          scopes: ['webview', 'native'],
+          desc: { style: 'normal', weight: String(weight) },
+          fail: () => {},
+        });
+      } catch (e) {
+        /* ignore */
+      }
+    });
   },
 
   onShow() {

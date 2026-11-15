@@ -80,12 +80,12 @@ struct MineView: View {
                         }
                     }
                     Text(model.t("storageModeHint"))
-                        .font(.system(size: 12))
+                        .font(FiveMinFont.ui(12))
                         .foregroundStyle(FiveMinColor.muted)
                         .padding(.horizontal, 4)
                     if !model.storageSyncStatus.isEmpty {
                         Text(model.storageSyncStatus)
-                            .font(.system(size: 12))
+                            .font(FiveMinFont.ui(12))
                             .foregroundStyle(FiveMinColor.muted)
                             .padding(.horizontal, 4)
                     }
@@ -146,7 +146,7 @@ struct MineView: View {
     private var header: some View {
         HStack {
             Text(model.t("tabMine"))
-                .font(.system(size: 20, weight: .medium))
+                .font(FiveMinFont.ui(20, weight: .medium))
                 .foregroundStyle(FiveMinColor.ink)
             Spacer()
         }
@@ -160,7 +160,7 @@ struct MineView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13, weight: .medium))
+            .font(FiveMinFont.ui(13, weight: .medium))
             .foregroundStyle(FiveMinColor.muted)
             .padding(.leading, 4)
     }
@@ -178,7 +178,7 @@ struct MineView: View {
     private func alertToggleRow(_ title: String, isOn: Binding<Bool>) -> some View {
         Toggle(isOn: isOn) {
             Text(title)
-                .font(.system(size: 15))
+                .font(FiveMinFont.ui(15))
                 .foregroundStyle(FiveMinColor.ink)
         }
         .tint(FiveMinColor.brandStrong)
@@ -190,15 +190,15 @@ struct MineView: View {
         Button(action: action) {
             HStack {
                 Text(title)
-                    .font(.system(size: 15))
+                    .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
                 Spacer()
                 Text(value)
-                    .font(.system(size: 14))
+                    .font(FiveMinFont.ui(14))
                     .foregroundStyle(FiveMinColor.muted)
                     .lineLimit(1)
                 Text("›")
-                    .font(.system(size: 18))
+                    .font(FiveMinFont.ui(18))
                     .foregroundStyle(FiveMinColor.muted)
             }
             .padding(.horizontal, 16)
@@ -211,11 +211,11 @@ struct MineView: View {
         Button(action: action) {
             HStack {
                 Text(title)
-                    .font(.system(size: 15))
+                    .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
                 Spacer()
                 Text("›")
-                    .font(.system(size: 18))
+                    .font(FiveMinFont.ui(18))
                     .foregroundStyle(FiveMinColor.muted)
             }
             .padding(.horizontal, 16)
@@ -319,10 +319,10 @@ struct MineView: View {
             case .feedback:
                 VStack(alignment: .leading, spacing: 16) {
                     Text(model.t("feedbackBody"))
-                        .font(.system(size: 15))
+                        .font(FiveMinFont.ui(15))
                         .foregroundStyle(FiveMinColor.ink)
                     Text(model.t("feedbackEmail"))
-                        .font(.system(size: 15, weight: .medium))
+                        .font(FiveMinFont.ui(15, weight: .medium))
                         .foregroundStyle(FiveMinColor.ink)
                         .textSelection(.enabled)
                     Button(model.t("copyEmailLabel")) { copyFeedbackEmail() }
@@ -337,7 +337,7 @@ struct MineView: View {
                     ToolbarItem(placement: .cancellationAction) {
                         Button { sheet = nil } label: {
                             Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(FiveMinFont.ui(14, weight: .semibold))
                         }
                         .accessibilityLabel(model.t("cancelLabel"))
                     }
@@ -351,7 +351,7 @@ struct MineView: View {
             if model.customScenes.isEmpty {
                 VStack(spacing: 12) {
                     Text(model.t("customScenesEmptyHint"))
-                        .font(.system(size: 14))
+                        .font(FiveMinFont.ui(14))
                         .foregroundStyle(FiveMinColor.muted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
@@ -370,10 +370,10 @@ struct MineView: View {
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(scene.name)
-                                        .font(.system(size: 15, weight: .medium))
+                                        .font(FiveMinFont.ui(15, weight: .medium))
                                         .foregroundStyle(FiveMinColor.ink)
                                     Text("\(scene.min) \(model.t("customUnit"))")
-                                        .font(.system(size: 13))
+                                        .font(FiveMinFont.ui(13))
                                         .foregroundStyle(FiveMinColor.muted)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -387,7 +387,7 @@ struct MineView: View {
                                 model.selectedTab = 1
                             } label: {
                                 Text(model.t("customSceneUse"))
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(FiveMinFont.ui(13, weight: .semibold))
                                     .foregroundStyle(FiveMinColor.brandStrong)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 6)
@@ -435,7 +435,7 @@ struct MineView: View {
             VStack(spacing: FiveMinDimens.sectionGap) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(model.t("customSceneNameLabel"))
-                        .font(.system(size: 13, weight: .medium))
+                        .font(FiveMinFont.ui(13, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
                     TextField(model.t("customSceneNamePlaceholder"), text: $editorName)
                         .textInputAutocapitalization(.never)
@@ -453,7 +453,7 @@ struct MineView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(model.t("customMinutesLabel"))
-                        .font(.system(size: 13, weight: .medium))
+                        .font(FiveMinFont.ui(13, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
                     HStack(spacing: FiveMinDimens.controlGap) {
                         Button("-") { nudgeEditor(-1) }
@@ -463,7 +463,7 @@ struct MineView: View {
                         TextField("", text: $editorMinutes)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 24, weight: .medium))
+                            .font(FiveMinFont.ui(24, weight: .medium))
                             .frame(maxWidth: .infinity)
                             .frame(height: FiveMinDimens.fieldH)
                             .background(FiveMinColor.ghostBg)
@@ -485,7 +485,7 @@ struct MineView: View {
                         Button("\(m)") {
                             editorMinutes = "\(m)"
                         }
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(FiveMinFont.ui(14, weight: .semibold))
                         .foregroundStyle(FiveMinColor.brandStrong)
                         .frame(height: FiveMinDimens.chipH)
                         .padding(.horizontal, 12)

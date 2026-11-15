@@ -13,9 +13,15 @@
  "categories": ["utilities", "lifestyle"],
  "icons": [
   {
-   "src": "/img/logo.svg",
-   "sizes": "any",
-   "type": "image/svg+xml",
+   "src": "/img/favicon-32.png",
+   "sizes": "32x32",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/img/apple-touch-icon.png",
+   "sizes": "180x180",
+   "type": "image/png",
    "purpose": "any"
   },
   {
@@ -23,11 +29,6 @@
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "any"
-  },
-  {
-   "src": "/img/apple-touch-icon.png",
-   "sizes": "180x180",
-   "type": "image/png"
   }
  ]
 }

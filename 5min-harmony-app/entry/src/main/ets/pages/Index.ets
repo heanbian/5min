@@ -95,7 +95,7 @@ struct Index {
   @State scenePlaceholder: boolean = true;
   @State progress: number = 1;
   @State ringColor: string = '#2F9A68';
-  @State timeColor: string = '#1F2A24';
+  @State timeColor: string = '#2F9A68';
   @State statusColor: string = '#5F6F66';
   @State bgColor: string = '#EEF6F1';
   @State running: boolean = false;
@@ -608,7 +608,7 @@ struct Index {
       this.bgColor = '#FFEFED';
     } else {
       this.ringColor = '#2F9A68';
-      this.timeColor = '#1F2A24';
+      this.timeColor = '#2F9A68';
       this.statusColor = '#5F6F66';
       this.bgColor = '#EEF6F1';
     }
@@ -1009,6 +1009,7 @@ struct Index {
     }
     .width('100%')
     .height('100%')
+    .fontFamily('PlusJakartaSans')
     .backgroundColor(this.privacyAccepted && this.ready ? this.bgColor : $r('app.color.bg'))
   }
 
@@ -1208,7 +1209,7 @@ struct Index {
             width: 1,
             color: this.showScenes ? $r('app.color.brand') : $r('app.color.line')
           })
-          .borderRadius(14)
+          .borderRadius(8)
           .opacity(this.setupEnabled ? 1 : 0.4)
           .onClick(() => {
             if (this.setupEnabled) {
@@ -1274,33 +1275,59 @@ struct Index {
             Scroll() {
               Row({ space: 8 }) {
                 ForEach(this.chipSceneIds, (id: string) => {
-                  Text(this.sceneTitle(id) || id)
-                    .fontSize(13)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor(id === this.state.activeSceneId ?
-                      $r('app.color.brand_strong') : $r('app.color.muted'))
-                    .height(40)
-                    .padding({ left: 12, right: 12 })
-                    .textAlign(TextAlign.Center)
-                    .backgroundColor(id === this.state.activeSceneId ?
-                      $r('app.color.brand_soft') : $r('app.color.surface'))
-                    .border({
-                      width: 1,
-                      color: id === this.state.activeSceneId ? $r('app.color.brand') : $r('app.color.line')
-                    })
-                    .borderRadius(14)
-                    .opacity(this.setupEnabled ? 1 : 0.4)
-                    .onClick(() => {
-                      if (this.setupEnabled) {
-                        this.selectScene(id);
-                      }
-                    })
+                  if (id === this.state.activeSceneId) {
+                    Text(this.sceneTitle(id) || id)
+                      .fontSize(13)
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor(Color.White)
+                      .height(32)
+                      .padding({ left: 14, right: 14 })
+                      .textAlign(TextAlign.Center)
+                      .linearGradient({
+                        angle: 180,
+                        colors: [['#36A872', 0], ['#2F9A68', 1]]
+                      })
+                      .borderRadius(8)
+                      .shadow({
+                        radius: 8,
+                        color: 'rgba(47, 154, 104, 0.28)',
+                        offsetX: 0,
+                        offsetY: 3
+                      })
+                      .opacity(this.setupEnabled ? 1 : 0.4)
+                      .onClick(() => {
+                        if (this.setupEnabled) {
+                          this.selectScene(id);
+                        }
+                      })
+                  } else {
+                    Text(this.sceneTitle(id) || id)
+                      .fontSize(13)
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor($r('app.color.brand_strong'))
+                      .height(32)
+                      .padding({ left: 14, right: 14 })
+                      .textAlign(TextAlign.Center)
+                      .backgroundColor('rgba(255, 255, 255, 0.55)')
+                      .border({ width: 1, color: 'rgba(47, 154, 104, 0.18)' })
+                      .borderRadius(8)
+                      .opacity(this.setupEnabled ? 1 : 0.4)
+                      .onClick(() => {
+                        if (this.setupEnabled) {
+                          this.selectScene(id);
+                        }
+                      })
+                  }
                 }, (id: string) => id)
               }
+              .padding(6)
             }
             .scrollable(ScrollDirection.Horizontal)
             .scrollBar(BarState.Off)
             .width('100%')
+            .backgroundColor('rgba(229, 245, 236, 0.72)')
+            .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
+            .borderRadius(8)
           }
         }
         .width('100%')

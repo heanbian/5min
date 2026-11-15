@@ -174,31 +174,44 @@ const fmt = (ms) => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 };
 
-/** 七段电子表：a 顶 / b 右上 / c 右下 / d 底 / e 左下 / f 左上 / g 中 */
+/** 七段电子表：现代细段 + 鼠尾草绿底盘（a 顶 / b 右上 / c 右下 / d 底 / e 左下 / f 左上 / g 中） */
 const DIGIT_SEGS = Object.freeze([
   'abcdef', 'bc', 'abged', 'abgcd', 'fgbc',
   'afgcd', 'afgcde', 'abc', 'abcdefg', 'abfgcd',
 ]);
 const ALL_SEGS = 'abcdefg';
+/** 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色 */
+const WATCH_CHASSIS = '#d0ded6';
 
 const svgN = (v) => Math.round(Number(v) * 10) / 10;
 
-const hBar = (x, y, w, t) =>
-  `M${svgN(x)} ${svgN(y + t / 2)} L${svgN(x + t / 2)} ${svgN(y)} H${svgN(x + w - t / 2)} L${svgN(x + w)} ${svgN(y + t / 2)} L${svgN(x + w - t / 2)} ${svgN(y + t)} H${svgN(x + t / 2)} Z`;
+const hBar = (x, y, w, t) => {
+  const tip = t * 0.55;
+  return (
+    `M${svgN(x)} ${svgN(y + t / 2)} L${svgN(x + tip)} ${svgN(y)} H${svgN(x + w - tip)} ` +
+    `L${svgN(x + w)} ${svgN(y + t / 2)} L${svgN(x + w - tip)} ${svgN(y + t)} H${svgN(x + tip)} Z`
+  );
+};
 
-const vBar = (x, y, h, t) =>
-  `M${svgN(x + t / 2)} ${svgN(y)} L${svgN(x + t)} ${svgN(y + t / 2)} V${svgN(y + h - t / 2)} L${svgN(x + t / 2)} ${svgN(y + h)} L${svgN(x)} ${svgN(y + h - t / 2)} V${svgN(y + t / 2)} Z`;
+const vBar = (x, y, h, t) => {
+  const tip = t * 0.55;
+  return (
+    `M${svgN(x + t / 2)} ${svgN(y)} L${svgN(x + t)} ${svgN(y + tip)} V${svgN(y + h - tip)} ` +
+    `L${svgN(x + t / 2)} ${svgN(y + h)} L${svgN(x)} ${svgN(y + h - tip)} V${svgN(y + tip)} Z`
+  );
+};
 
 const digitSegMap = (ox, oy) => {
-  const dw = 22;
-  const dh = 36;
-  const t = 4;
-  const gap = 1;
+  const dw = 24;
+  const dh = 38;
+  const t = 3;
+  const gap = 1.25;
   const mid = dh / 2;
+  const inset = 2.2;
   return {
-    a: hBar(ox + 2.5, oy, dw - 5, t),
-    g: hBar(ox + 2.5, oy + mid - t / 2, dw - 5, t),
-    d: hBar(ox + 2.5, oy + dh - t, dw - 5, t),
+    a: hBar(ox + inset, oy, dw - inset * 2, t),
+    g: hBar(ox + inset, oy + mid - t / 2, dw - inset * 2, t),
+    d: hBar(ox + inset, oy + dh - t, dw - inset * 2, t),
     f: vBar(ox, oy + t + gap, mid - t - gap * 2, t),
     b: vBar(ox + dw - t, oy + t + gap, mid - t - gap * 2, t),
     e: vBar(ox, oy + mid + gap, mid - t - gap * 2, t),
@@ -212,7 +225,7 @@ const digitPaths = (d, ox, oy) => {
   let out = '';
   for (const k of ALL_SEGS) {
     if (on.includes(k)) out += `<path fill="currentColor" d="${segs[k]}"/>`;
-    else out += `<path fill="currentColor" opacity="0.05" d="${segs[k]}"/>`;
+    else out += `<path fill="${WATCH_CHASSIS}" d="${segs[k]}"/>`;
   }
   return out;
 };
@@ -220,8 +233,8 @@ const digitPaths = (d, ox, oy) => {
 const colonPaths = (ox, oy) => {
   const cx = svgN(ox + 6);
   return (
-    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 10)}" r="2.6"/>` +
-    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 26)}" r="2.6"/>`
+    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 11)}" r="2.15"/>` +
+    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 27)}" r="2.15"/>`
   );
 };
 
@@ -229,18 +242,18 @@ const colonPaths = (ox, oy) => {
 const WATCH_W = 144;
 const WATCH_H = 48;
 const WATCH_SLOTS = Object.freeze([
-  { kind: 'digit', x: 4 },
+  { kind: 'digit', x: 2 },
   { kind: 'digit', x: 34 },
   { kind: 'colon', x: 64 },
-  { kind: 'digit', x: 80 },
+  { kind: 'digit', x: 78 },
   { kind: 'digit', x: 110 },
 ]);
 
-/** 计时数字：电子表七段液晶风格（恒定画布） */
+/** 计时数字：现代七段风格（恒定画布） */
 const digitalWatchSvg = (text) => {
   const raw = String(text).replace(/\D/g, '').padStart(4, '0').slice(-4);
   const digits = [raw[0], raw[1], raw[2], raw[3]].map(Number);
-  const oy = 6;
+  const oy = 5;
   let di = 0;
   let glyphs = '';
   for (const slot of WATCH_SLOTS) {
@@ -395,10 +408,7 @@ const applyStaticI18n = () => {
       { href: 'faq.html', label: pack.footerFaq },
     ];
     const frag = document.createDocumentFragment();
-    links.forEach((item, i) => {
-      if (i > 0) {
-        frag.appendChild(document.createTextNode(' · '));
-      }
+    links.forEach((item) => {
       frag.appendChild(
         Object.assign(document.createElement('a'), {
           href: item.href,

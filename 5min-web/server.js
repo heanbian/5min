@@ -118,10 +118,110 @@ function computeAssetVersion() {
   hash.update(pkgVersion);
   feedAssetTree(hash, path.join(publicPath, 'js'));
   feedAssetTree(hash, path.join(publicPath, 'css'));
+  feedAssetTree(hash, path.join(publicPath, 'fonts'));
+  feedAssetTree(hash, path.join(publicPath, 'img'));
+  const favicon = path.join(publicPath, 'favicon.ico');
+  if (fs.existsSync(favicon)) {
+    const st = fs.statSync(favicon);
+    hash.update('favicon.ico');
+    hash.update(String(st.size));
+    hash.update(String(Math.floor(st.mtimeMs)));
+  }
   return hash.digest('hex').slice(0, 12);
 }
 
 const ASSET_VERSION = computeAssetVersion();
+
+/** 本站静态资源路径（相对 / 绝对 / 5min.chat）是否需要追加 ?v= */
+function isVersionableAssetUrl(url) {
+  const u = String(url || '').trim();
+  if (!u || u.startsWith('data:') || u.startsWith('blob:') || u.startsWith('#')) return false;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u) && !/^https?:\/\/5min\.chat\//i.test(u)) return false;
+  const pathOnly = u.replace(/^https?:\/\/5min\.chat/i, '').split('?')[0].split('#')[0];
+  const base = pathOnly.split('/').pop() || '';
+  if (
+    base === 'favicon.ico' ||
+    base === 'site.webmanifest' ||
+    base === 'sw.js' ||
+    pathOnly === '/favicon.ico' ||
+    pathOnly === '/site.webmanifest' ||
+    pathOnly === '/sw.js'
+  ) {
+    return true;
+  }
+  // ES module / CSS 相对引用：./alert.js、../fonts/x.woff2
+  if (/^\.\.?\/.+\.(?:js|mjs|css|png|svg|jpe?g|webp|woff2?|ico)$/i.test(pathOnly)) return true;
+  return /(?:^|\/)(?:css|js|fonts|img)\//.test(pathOnly);
+}
+
+function appendAssetVersion(url) {
+  const u = String(url || '');
+  if (!isVersionableAssetUrl(u) || /[?&]v=/.test(u)) return u;
+  const hashIdx = u.indexOf('#');
+  const base = hashIdx >= 0 ? u.slice(0, hashIdx) : u;
+  const hash = hashIdx >= 0 ? u.slice(hashIdx) : '';
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}v=${ASSET_VERSION}${hash}`;
+}
+
+function rewriteHtmlAssets(html) {
+  let out = String(html);
+  out = out.replace(/\b(href|src)=(["'])([^"']+)\2/gi, (full, attr, quote, url) => {
+    if (!isVersionableAssetUrl(url)) return full;
+    return `${attr}=${quote}${appendAssetVersion(url)}${quote}`;
+  });
+  out = out.replace(/\bcontent=(["'])(https:\/\/5min\.chat\/(?:img|css|js|fonts)\/[^"']+)\1/gi, (full, quote, url) => {
+    return `content=${quote}${appendAssetVersion(url)}${quote}`;
+  });
+  return out;
+}
+
+function rewriteCssUrls(css) {
+  return String(css).replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (full, quote, url) => {
+    const trimmed = String(url || '').trim();
+    if (!isVersionableAssetUrl(trimmed)) return full;
+    const q = quote || '';
+    return `url(${q}${appendAssetVersion(trimmed)}${q})`;
+  });
+}
+
+function rewriteJsModules(js) {
+  let out = String(js);
+  out = out.replace(/\b(from|import)\s*(['"])(\.\/[^'"]+\.js)\2/g, (full, kw, quote, url) => {
+    return `${kw} ${quote}${appendAssetVersion(url)}${quote}`;
+  });
+  out = out.replace(
+    /navigator\.serviceWorker\.register\(\s*(['"])(\.\/sw\.js)\1\s*\)/g,
+    (full, quote, url) => `navigator.serviceWorker.register(${quote}${appendAssetVersion(url)}${quote})`
+  );
+  out = out.replace(
+    /(['"])((?:\.\.?\/)*(?:css|js|fonts|img)\/[^'"]+\.(?:js|css|png|svg|jpe?g|webp|woff2?|ico))\1/gi,
+    (full, quote, url) => `${quote}${appendAssetVersion(url)}${quote}`
+  );
+  return out;
+}
+
+function rewriteServiceWorker(js) {
+  let out = String(js);
+  out = out.replace(
+    /const CACHE = ['"]([^'"]+)['"]/,
+    (full, name) => `const CACHE = '${name}-${ASSET_VERSION}'`
+  );
+  out = out.replace(
+    /(['"])(\.\/(?:css|js|fonts|img)\/[^'"]+|\.\/favicon\.ico|\.\/site\.webmanifest)\1/g,
+    (full, quote, url) => `${quote}${appendAssetVersion(url)}${quote}`
+  );
+  return out;
+}
+
+function rewriteManifest(jsonText) {
+  let out = String(jsonText);
+  out = out.replace(/("src"\s*:\s*")([^"]+)(")/g, (full, a, url, b) => {
+    if (!isVersionableAssetUrl(url)) return full;
+    return `${a}${appendAssetVersion(url)}${b}`;
+  });
+  return out;
+}
 
 function clearPidFile() {
   try {
@@ -151,9 +251,27 @@ function sendHtmlFile(res, fileName) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     return res.send('页面不存在');
   }
+  const html = rewriteHtmlAssets(fs.readFileSync(filePath, 'utf8'));
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
-  return res.sendFile(filePath);
+  return res.send(html);
+}
+
+function resolvePublicFile(relUrlPath) {
+  const raw = String(relUrlPath || '').replace(/\\/g, '/').replace(/^\//, '');
+  if (!raw || raw.includes('\0') || raw.split('/').includes('..')) return null;
+  const rootResolved = path.resolve(publicPath);
+  const filePath = path.resolve(rootResolved, raw);
+  const prefix = rootResolved.endsWith(path.sep) ? rootResolved : rootResolved + path.sep;
+  if (filePath !== rootResolved && !filePath.startsWith(prefix)) return null;
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return null;
+  return filePath;
+}
+
+function sendRewrittenText(res, filePath, contentType, body) {
+  res.setHeader('Content-Type', contentType);
+  staticHeaders(res, filePath);
+  return res.send(body);
 }
 
 const app = express();
@@ -225,7 +343,8 @@ function staticHeaders(res, filePath) {
   }
 
   const versioned = Boolean(res.req && res.req.query && res.req.query.v);
-  const fingerprinted = versioned && /\.(js|mjs|css)$/i.test(filePath);
+  const fingerprinted =
+    versioned && /\.(js|mjs|css|png|jpe?g|gif|webp|ico|svg|woff2?)$/i.test(filePath);
   if (ext === '.html' || ext === '.json' || ext === '.webmanifest') {
     res.setHeader('Cache-Control', 'no-cache');
   } else if (fingerprinted) {
@@ -238,6 +357,35 @@ function staticHeaders(res, filePath) {
     res.setHeader('Cache-Control', 'public, max-age=3600');
   }
 }
+
+/** CSS / JS / SW / manifest：注入资产版本号后再输出 */
+app.get('/sw.js', (req, res) => {
+  const filePath = resolvePublicFile('sw.js');
+  if (!filePath) return res.status(404).send('Not found');
+  const body = rewriteServiceWorker(fs.readFileSync(filePath, 'utf8'));
+  return sendRewrittenText(res, filePath, 'text/javascript; charset=utf-8', body);
+});
+
+app.get('/site.webmanifest', (req, res) => {
+  const filePath = resolvePublicFile('site.webmanifest');
+  if (!filePath) return res.status(404).send('Not found');
+  const body = rewriteManifest(fs.readFileSync(filePath, 'utf8'));
+  return sendRewrittenText(res, filePath, 'application/manifest+json; charset=utf-8', body);
+});
+
+app.get(/^\/css\/.+\.css$/i, (req, res, next) => {
+  const filePath = resolvePublicFile(req.path);
+  if (!filePath) return next();
+  const body = rewriteCssUrls(fs.readFileSync(filePath, 'utf8'));
+  return sendRewrittenText(res, filePath, 'text/css; charset=utf-8', body);
+});
+
+app.get(/^\/js\/.+\.js$/i, (req, res, next) => {
+  const filePath = resolvePublicFile(req.path);
+  if (!filePath) return next();
+  const body = rewriteJsModules(fs.readFileSync(filePath, 'utf8'));
+  return sendRewrittenText(res, filePath, 'text/javascript; charset=utf-8', body);
+});
 
 app.use(
   express.static(publicPath, {
@@ -269,10 +417,8 @@ app.use((req, res) => {
   if (accept.includes('application/json') && !accept.includes('text/html')) {
     return res.json({ success: false, message: '页面不存在' });
   }
-  const notFound = path.join(publicPath, '404.html');
-  if (fs.existsSync(notFound)) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.sendFile(notFound);
+  if (fs.existsSync(path.join(publicPath, '404.html'))) {
+    return sendHtmlFile(res, '404.html');
   }
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   return res.send('页面不存在');

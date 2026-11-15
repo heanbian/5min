@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/** 七段电子表：与 5min-web / Android DigitalWatch 对齐（viewBox 144×48） */
+/** 七段电子表：现代细段 + 鼠尾草绿底盘（viewBox 144×48，与各端对齐） */
 
 const DIGIT_SEGS = Object.freeze([
   'abcdef',
@@ -29,48 +29,53 @@ const DIGIT_SEGS = Object.freeze([
   'abfgcd',
 ]);
 const ALL_SEGS = 'abcdefg';
+/** 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色 */
+const CHASSIS = '#D0DED6';
 const WATCH_W = 144;
 const WATCH_H = 48;
 const WATCH_SLOTS = Object.freeze([
-  { kind: 'digit', x: 4 },
+  { kind: 'digit', x: 2 },
   { kind: 'digit', x: 34 },
   { kind: 'colon', x: 64 },
-  { kind: 'digit', x: 80 },
+  { kind: 'digit', x: 78 },
   { kind: 'digit', x: 110 },
 ]);
 
 function hBarPath(ctx, x, y, w, t) {
+  const tip = t * 0.55;
   ctx.beginPath();
   ctx.moveTo(x, y + t / 2);
-  ctx.lineTo(x + t / 2, y);
-  ctx.lineTo(x + w - t / 2, y);
+  ctx.lineTo(x + tip, y);
+  ctx.lineTo(x + w - tip, y);
   ctx.lineTo(x + w, y + t / 2);
-  ctx.lineTo(x + w - t / 2, y + t);
-  ctx.lineTo(x + t / 2, y + t);
+  ctx.lineTo(x + w - tip, y + t);
+  ctx.lineTo(x + tip, y + t);
   ctx.closePath();
 }
 
 function vBarPath(ctx, x, y, h, t) {
+  const tip = t * 0.55;
   ctx.beginPath();
   ctx.moveTo(x + t / 2, y);
-  ctx.lineTo(x + t, y + t / 2);
-  ctx.lineTo(x + t, y + h - t / 2);
+  ctx.lineTo(x + t, y + tip);
+  ctx.lineTo(x + t, y + h - tip);
   ctx.lineTo(x + t / 2, y + h);
-  ctx.lineTo(x, y + h - t / 2);
-  ctx.lineTo(x, y + t / 2);
+  ctx.lineTo(x, y + h - tip);
+  ctx.lineTo(x, y + tip);
   ctx.closePath();
 }
 
 function digitSegMap(ox, oy) {
-  const dw = 22;
-  const dh = 36;
-  const t = 4;
-  const gap = 1;
+  const dw = 24;
+  const dh = 38;
+  const t = 3;
+  const gap = 1.25;
   const mid = dh / 2;
+  const inset = 2.2;
   return {
-    a: (ctx) => hBarPath(ctx, ox + 2.5, oy, dw - 5, t),
-    g: (ctx) => hBarPath(ctx, ox + 2.5, oy + mid - t / 2, dw - 5, t),
-    d: (ctx) => hBarPath(ctx, ox + 2.5, oy + dh - t, dw - 5, t),
+    a: (ctx) => hBarPath(ctx, ox + inset, oy, dw - inset * 2, t),
+    g: (ctx) => hBarPath(ctx, ox + inset, oy + mid - t / 2, dw - inset * 2, t),
+    d: (ctx) => hBarPath(ctx, ox + inset, oy + dh - t, dw - inset * 2, t),
     f: (ctx) => vBarPath(ctx, ox, oy + t + gap, mid - t - gap * 2, t),
     b: (ctx) => vBarPath(ctx, ox + dw - t, oy + t + gap, mid - t - gap * 2, t),
     e: (ctx) => vBarPath(ctx, ox, oy + mid + gap, mid - t - gap * 2, t),
@@ -86,11 +91,11 @@ function drawDigit(ctx, d, ox, oy, color) {
     const draw = segs[k];
     if (!draw) continue;
     draw(ctx);
-    ctx.fillStyle = color;
-    ctx.globalAlpha = on.indexOf(k) >= 0 ? 1 : 0.05;
+    const lit = on.indexOf(k) >= 0;
+    ctx.fillStyle = lit ? color : CHASSIS;
+    ctx.globalAlpha = 1;
     ctx.fill();
   }
-  ctx.globalAlpha = 1;
 }
 
 function drawColon(ctx, ox, oy, color) {
@@ -98,10 +103,10 @@ function drawColon(ctx, ox, oy, color) {
   ctx.fillStyle = color;
   ctx.globalAlpha = 1;
   ctx.beginPath();
-  ctx.arc(cx, oy + 10, 2.6, 0, Math.PI * 2);
+  ctx.arc(cx, oy + 11, 2.15, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(cx, oy + 26, 2.6, 0, Math.PI * 2);
+  ctx.arc(cx, oy + 27, 2.15, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -110,7 +115,7 @@ function drawColon(ctx, ox, oy, color) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} size dial 边长（CSS px）
  * @param {string} timeText 如 "5:00"
- * @param {string} color
+ * @param {string} color 亮段色
  */
 function drawDigitalWatch(ctx, size, timeText, color) {
   const raw = String(timeText).replace(/\D/g, '').padStart(4, '0').slice(-4);
@@ -120,7 +125,7 @@ function drawDigitalWatch(ctx, size, timeText, color) {
   const scale = Math.min(watchW / WATCH_W, watchH / WATCH_H);
   const dx = (size - WATCH_W * scale) / 2;
   const dy = (size - WATCH_H * scale) / 2;
-  const oy = 6;
+  const oy = 5;
 
   ctx.save();
   ctx.translate(dx, dy);
@@ -142,5 +147,6 @@ function drawDigitalWatch(ctx, size, timeText, color) {
 module.exports = {
   WATCH_W,
   WATCH_H,
+  CHASSIS,
   drawDigitalWatch,
 };

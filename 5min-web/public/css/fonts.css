@@ -13,9 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Font files under fonts/ (Noto Sans SC) are licensed separately under
- * the SIL Open Font License 1.1; see fonts/OFL.txt.
+ * Font files under fonts/:
+ * - Plus Jakarta Sans — SIL OFL 1.1 (see OFL-PlusJakartaSans.txt)
+ * - Noto Sans SC — SIL OFL 1.1 (see OFL.txt)
  */
+
+/* Latin UI — Plus Jakarta Sans */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../fonts/PlusJakartaSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../fonts/PlusJakartaSans-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../fonts/PlusJakartaSans-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("../fonts/PlusJakartaSans-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* CJK — Noto Sans SC */
 @font-face {
   font-family: "Noto Sans SC";
   src: url("../fonts/NotoSansSC-Regular.woff2") format("woff2");

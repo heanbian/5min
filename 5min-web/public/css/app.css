@@ -41,7 +41,7 @@
     --fs-base:1rem;
     --fs-lg:1.1875rem;
     --lh-body:1.55;
-    --font:"Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
+    --font:"Plus Jakarta Sans","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
     --control-h:52px;
     --safe-top:env(safe-area-inset-top, 0px);
     --safe-bottom:env(safe-area-inset-bottom, 0px);
@@ -275,14 +275,14 @@
   html[lang="bo"] body,
   html[lang="bo"] button,
   html[lang="bo"] select{
-    font-family:"Noto Sans Tibetan","Kailasa","Microsoft Himalaya","Jomolhari","Noto Sans SC",system-ui,sans-serif;
+    font-family:"Noto Sans Tibetan","Kailasa","Microsoft Himalaya","Jomolhari","Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;
     line-height:1.7;
   }
   /* 阿拉伯文：系统阿拉伯字体 + RTL 逻辑属性 */
   html[lang="ar"] body,
   html[lang="ar"] button,
   html[lang="ar"] select{
-    font-family:"Noto Sans Arabic","Segoe UI","Tahoma","Noto Sans SC",system-ui,sans-serif;
+    font-family:"Noto Sans Arabic","Segoe UI","Tahoma","Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;
     line-height:1.65;
   }
   html[dir="rtl"] .topbar{
@@ -343,7 +343,7 @@
     aspect-ratio:144 / 48;
     line-height:0;
     pointer-events:none;
-    color:var(--ink);
+    color:var(--brand);
     transition:color .3s ease;
   }
   body.warn .time{color:var(--warn)}
@@ -613,7 +613,7 @@
     flex-wrap:wrap;
     justify-content:center;
     align-items:center;
-    gap:0 2px;
+    gap:6px 16px;
     font-size:var(--fs-xs);
     color:var(--muted);
     text-align:center;
@@ -623,6 +623,7 @@
     color:var(--brand-strong);
     text-decoration:none;
     font-weight:500;
+    padding:2px 0;
   }
   .beian{
     display:flex;

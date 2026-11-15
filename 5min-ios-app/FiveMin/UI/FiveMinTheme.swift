@@ -1,6 +1,27 @@
 import SwiftUI
 
 /// Design tokens mirrored from Android `FiveMinColors` / `FiveMinDimens` (5min-web/css/app.css).
+
+/// Plus Jakarta Sans — Latin UI；缺字时系统回退到中日韩字体。
+enum FiveMinFont {
+    static func ui(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Font.custom(postScriptName(for: weight), size: size)
+    }
+
+    private static func postScriptName(for weight: Font.Weight) -> String {
+        switch weight {
+        case .bold, .heavy, .black:
+            return "PlusJakartaSans-Bold"
+        case .semibold:
+            return "PlusJakartaSans-SemiBold"
+        case .medium:
+            return "PlusJakartaSans-Medium"
+        default:
+            return "PlusJakartaSans-Regular"
+        }
+    }
+}
+
 enum FiveMinColor {
     static let brand = Color(red: 0x2F / 255, green: 0x9A / 255, blue: 0x68 / 255)
     static let brandStrong = Color(red: 0x24 / 255, green: 0x85 / 255, blue: 0x56 / 255)

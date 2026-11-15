@@ -18,7 +18,7 @@ struct RecordsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(model.t("weekStatsLabel"))
-                        .font(.system(size: 13, weight: .medium))
+                        .font(FiveMinFont.ui(13, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
                         .padding(.leading, 4)
 
@@ -29,14 +29,14 @@ struct RecordsView: View {
 
                     HStack {
                         Text(model.t("historyLabel"))
-                            .font(.system(size: 13, weight: .medium))
+                            .font(FiveMinFont.ui(13, weight: .medium))
                             .foregroundStyle(FiveMinColor.muted)
                         Spacer()
                         if !rows.isEmpty {
                             Button(model.t("historyClear")) {
                                 showClearConfirm = true
                             }
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(FiveMinFont.ui(13, weight: .semibold))
                             .foregroundStyle(FiveMinColor.danger)
                         }
                     }
@@ -50,7 +50,7 @@ struct RecordsView: View {
                     VStack(spacing: 0) {
                         if rows.isEmpty {
                             Text(model.t("historyEmpty"))
-                                .font(.system(size: 14))
+                                .font(FiveMinFont.ui(14))
                                 .foregroundStyle(FiveMinColor.muted)
                                 .frame(maxWidth: .infinity)
                                 .padding(20)
@@ -105,7 +105,7 @@ struct RecordsView: View {
     private var sceneFilterPicker: some View {
         HStack(spacing: 8) {
             Text(model.t("historyFilterLabel"))
-                .font(.system(size: 13, weight: .medium))
+                .font(FiveMinFont.ui(13, weight: .medium))
                 .foregroundStyle(FiveMinColor.muted)
             Picker("", selection: $filterSceneId) {
                 Text(model.t("historyFilterAll")).tag(historyFilterAll)
@@ -122,7 +122,7 @@ struct RecordsView: View {
     private var header: some View {
         HStack {
             Text(model.t("tabRecords"))
-                .font(.system(size: 20, weight: .medium))
+                .font(FiveMinFont.ui(20, weight: .medium))
                 .foregroundStyle(FiveMinColor.ink)
             Spacer()
         }
@@ -137,15 +137,15 @@ struct RecordsView: View {
     private func statCard(title: String, value: String, unit: String?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 12))
+                .font(FiveMinFont.ui(12))
                 .foregroundStyle(FiveMinColor.muted)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
-                    .font(.system(size: 28, weight: .medium))
+                    .font(FiveMinFont.ui(28, weight: .medium))
                     .foregroundStyle(FiveMinColor.ink)
                 if let unit {
                     Text(unit)
-                        .font(.system(size: 13))
+                        .font(FiveMinFont.ui(13))
                         .foregroundStyle(FiveMinColor.muted)
                 }
             }
@@ -161,13 +161,13 @@ struct RecordsView: View {
         return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(model.t("historySceneLine", ["scene": scene]))
-                    .font(.system(size: 15))
+                    .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
                 Text(model.t("historyDurationLine", ["n": "\(item.minutes)"]))
-                    .font(.system(size: 15))
+                    .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
                 Text(model.t("historyTimeLine", ["time": formatDateTime(item.at)]))
-                    .font(.system(size: 15))
+                    .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -176,7 +176,7 @@ struct RecordsView: View {
                 pendingDeleteId = item.id
             } label: {
                 Text(model.t("historyDelete"))
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(FiveMinFont.ui(13, weight: .semibold))
                     .foregroundStyle(FiveMinColor.danger)
             }
             .buttonStyle(.plain)

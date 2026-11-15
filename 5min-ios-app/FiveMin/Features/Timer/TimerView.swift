@@ -17,7 +17,7 @@ struct TimerView: View {
         switch model.phase {
         case .warn: return FiveMinColor.warn
         case .done: return FiveMinColor.danger
-        default: return FiveMinColor.ink
+        default: return FiveMinColor.brand
         }
     }
 
@@ -156,7 +156,7 @@ struct TimerView: View {
                     .frame(width: 22 * 108 / 32, height: 22)
                     .accessibilityLabel("5min")
                 Text(model.brandTitle)
-                    .font(.system(size: 19, weight: .semibold))
+                    .font(FiveMinFont.ui(19, weight: .semibold))
                     .foregroundStyle(FiveMinColor.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
@@ -168,7 +168,7 @@ struct TimerView: View {
                 model.selectedTab = 2
             } label: {
                 Image(systemName: model.ambient == "off" ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 17, weight: .medium))
+                    .font(FiveMinFont.ui(17, weight: .medium))
                     .foregroundStyle(model.ambient == "off" ? FiveMinColor.muted.opacity(0.85) : FiveMinColor.muted.opacity(0.55))
                     .frame(width: FiveMinDimens.topbarH, height: FiveMinDimens.topbarH)
                     .contentShape(Rectangle())
@@ -202,7 +202,7 @@ struct TimerView: View {
 
             VStack(spacing: 6) {
                 Text(model.statusText)
-                    .font(.system(size: 14, weight: model.phase == .done ? .semibold : .medium))
+                    .font(FiveMinFont.ui(14, weight: model.phase == .done ? .semibold : .medium))
                     .foregroundStyle(statusColor)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -219,18 +219,18 @@ struct TimerView: View {
         Group {
             if model.statsCount <= 0 {
                 Text("\(model.t("dailyStatsLabel")) · \(model.t("dailyStatsEmpty"))")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(FiveMinFont.ui(12, weight: .medium))
                     .foregroundStyle(FiveMinColor.muted)
             } else {
                 HStack(spacing: 6) {
                     Text(model.t("dailyStatsLabel"))
-                        .font(.system(size: 12, weight: .medium))
+                        .font(FiveMinFont.ui(12, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
                     Text("·")
-                        .font(.system(size: 12))
+                        .font(FiveMinFont.ui(12))
                         .foregroundStyle(FiveMinColor.muted)
                     Text("\(model.statsCount)\(model.t("dailyStatsCountUnit")) · \(model.statsMinutes())\(model.t("dailyStatsMinutesUnit"))")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(FiveMinFont.ui(12, weight: .semibold))
                         .foregroundStyle(FiveMinColor.ink)
                 }
             }
@@ -261,7 +261,7 @@ struct TimerView: View {
             } label: {
                 HStack {
                     Text(sceneLabel)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(FiveMinFont.ui(14, weight: .semibold))
                         .foregroundStyle(
                             !setupEnabled
                             ? FiveMinColor.muted.opacity(0.4)
@@ -270,15 +270,15 @@ struct TimerView: View {
                         .lineLimit(1)
                     Spacer()
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(FiveMinFont.ui(12, weight: .semibold))
                         .foregroundStyle(FiveMinColor.muted)
                 }
                 .padding(.horizontal, 14)
                 .frame(maxWidth: .infinity, minHeight: FiveMinDimens.rowH)
                 .background(FiveMinColor.surface)
-                .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(FiveMinColor.line, lineWidth: 1)
                 )
             }
@@ -301,16 +301,39 @@ struct TimerView: View {
                         model.selectScene(id)
                     } label: {
                         Text(model.sceneTitle(for: id) ?? id)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
+                            .font(FiveMinFont.ui(13, weight: .semibold))
+                            .foregroundStyle(active ? Color.white : FiveMinColor.brandStrong)
                             .lineLimit(1)
-                            .padding(.horizontal, 12)
-                            .frame(height: FiveMinDimens.chipH)
-                            .background(active ? FiveMinColor.brandSoft : FiveMinColor.surface)
-                            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
+                            .padding(.horizontal, 14)
+                            .frame(height: 32)
+                            .background(
+                                Group {
+                                    if active {
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 0x36 / 255, green: 0xA8 / 255, blue: 0x72 / 255),
+                                                FiveMinColor.brand,
+                                            ],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    } else {
+                                        FiveMinColor.surface.opacity(0.55)
+                                    }
+                                }
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                             .overlay(
-                                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                                    .stroke(active ? FiveMinColor.brand.opacity(0.35) : FiveMinColor.line, lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(
+                                        active ? Color.clear : FiveMinColor.brand.opacity(0.18),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(
+                                color: active ? FiveMinColor.brand.opacity(0.28) : .clear,
+                                radius: active ? 6 : 0,
+                                y: active ? 3 : 0
                             )
                     }
                     .buttonStyle(.plain)
@@ -318,7 +341,14 @@ struct TimerView: View {
                     .opacity(setupEnabled ? 1 : 0.55)
                 }
             }
+            .padding(6)
         }
+        .background(FiveMinColor.brandSoft.opacity(0.72))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(FiveMinColor.brand.opacity(0.12), lineWidth: 1)
+        )
         .accessibilityLabel(model.t(SceneRanker.labelKey))
     }
 
@@ -348,7 +378,7 @@ struct ScenePickerView: View {
                                     dismiss()
                                 } label: {
                                     Text(model.sceneLabel(for: scene.id) ?? scene.id)
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(FiveMinFont.ui(14, weight: .semibold))
                                         .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.horizontal, 12)
@@ -384,7 +414,7 @@ struct ScenePickerView: View {
                 .fill(FiveMinColor.brand)
                 .frame(width: 3, height: 12)
             Text(title)
-                .font(.system(size: 11, weight: .bold))
+                .font(FiveMinFont.ui(11, weight: .bold))
                 .tracking(0.8)
                 .foregroundStyle(FiveMinColor.brandStrong)
         }
@@ -407,7 +437,7 @@ struct ScenePickerView: View {
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(FiveMinFont.ui(16, weight: .semibold))
             .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH, maxHeight: FiveMinDimens.controlH)
             .foregroundStyle(.white)
             .background(
@@ -436,7 +466,7 @@ struct SecondaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(FiveMinFont.ui(16, weight: .semibold))
             .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH, maxHeight: FiveMinDimens.controlH)
             .foregroundStyle(FiveMinColor.muted.opacity(enabled ? 1 : 0.38))
             .background(configuration.isPressed ? FiveMinColor.brandSoft : FiveMinColor.surface)
@@ -458,7 +488,7 @@ struct SecondaryButtonStyle: ButtonStyle {
 struct IgnoreButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 15, weight: .medium))
+            .font(FiveMinFont.ui(15, weight: .medium))
             .frame(maxWidth: .infinity, minHeight: FiveMinDimens.controlH, maxHeight: FiveMinDimens.controlH)
             .foregroundStyle(FiveMinColor.danger)
             .background(

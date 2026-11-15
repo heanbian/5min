@@ -66,7 +66,8 @@ function phaseColor(phase, kind) {
   if (phase === 'warn') return '#c9862d';
   if (phase === 'done') return '#d2554a';
   if (kind === 'ring') return '#2f9a68';
-  return '#1f2a24';
+  // 计时数字安全态用品牌绿，与现代七段亮段一致
+  return '#2f9a68';
 }
 
 Page({
