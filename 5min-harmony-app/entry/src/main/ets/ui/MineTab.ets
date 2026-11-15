@@ -1,4 +1,4 @@
-import { common } from '@kit.AbilityKit';
+import { bundleManager, common } from '@kit.AbilityKit';
 import { promptAction } from '@kit.ArkUI';
 import pasteboard from '@ohos.pasteboard';
 import { SharedCatalog } from '../common/SharedCatalog';
@@ -42,6 +42,7 @@ export struct MineTab {
   @State storageMode: string = STORAGE_MODE_LOCAL;
   @State storageModeName: string = '';
   @State storageSyncStatus: string = '';
+  @State appVersion: string = '—';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -91,8 +92,27 @@ export struct MineTab {
     this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
     await this.migrateLegacyCustomMinIfNeeded();
     await this.reloadCustomScenes();
+    this.appVersion = this.readAppVersion();
     this.refreshLabels();
     this.ready = true;
+  }
+
+  private readAppVersion(): string {
+    try {
+      const info = bundleManager.getBundleInfoForSelfSync(
+        bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT
+      );
+      const name = String(info.versionName ?? '');
+      return name.length > 0 ? name : '—';
+    } catch (_) {
+      return '—';
+    }
+  }
+
+  private versionLabel(): string {
+    const vars: Record<string, string> = {};
+    vars['n'] = this.appVersion;
+    return this.t('aboutVersion', vars);
   }
 
   /** Same one-shot migration as Index; safe if already migrated. */
@@ -766,6 +786,13 @@ export struct MineTab {
                 .clip(true)
               }
               .width('100%')
+
+              Text(this.versionLabel())
+                .fontSize(12)
+                .fontColor($r('app.color.muted'))
+                .width('100%')
+                .textAlign(TextAlign.Center)
+                .margin({ top: 8, bottom: 4 })
             }
             .width('100%')
             .padding({ left: 16, right: 16, top: 16, bottom: 28 })

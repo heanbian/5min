@@ -23,7 +23,8 @@
   --warn-soft: #fff6e8;
   --danger: #d2554a;
   --danger-soft: #ffefed;
-  --radius: 28rpx;
+  /* 首页操作按钮 / 场景选择 / 芯片统一大圆角（22px） */
+  --radius: 44rpx;
   --control-h: 104rpx;
   --row-h: 80rpx;
   --pad-x: 40rpx;
@@ -195,6 +196,33 @@
   text-align: center;
 }
 
+.stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.stats-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.stats-val {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* 实心圆分隔点：比 · 更粗、品牌色更醒目 */
+.stats-sep-dot {
+  width: 9rpx;
+  height: 9rpx;
+  border-radius: 50%;
+  background: var(--brand-strong);
+  flex-shrink: 0;
+}
+
 .actions {
   display: flex;
   flex-direction: column;
@@ -290,7 +318,7 @@
   height: auto;
   padding: 12rpx;
   box-sizing: border-box;
-  border-radius: 12rpx;
+  border-radius: var(--radius);
   background: rgba(229, 245, 236, 0.72);
   border: 2rpx solid rgba(47, 154, 104, 0.12);
 }
@@ -302,7 +330,7 @@
   height: 64rpx;
   padding: 0 28rpx;
   margin-right: 12rpx;
-  border-radius: 12rpx;
+  border-radius: var(--radius);
   border: 2rpx solid rgba(47, 154, 104, 0.18);
   background: rgba(255, 255, 255, 0.55);
   color: var(--brand-strong);
@@ -336,7 +364,7 @@
   gap: 20rpx;
   height: var(--row-h);
   padding: 0 28rpx;
-  border-radius: 12rpx;
+  border-radius: var(--radius);
   border: 2rpx solid var(--line);
   background: var(--surface);
 }

@@ -17,7 +17,7 @@ describe('cloud-storage sanitize', () => {
     });
     assert.equal(p.ambient, 'rain');
     assert.equal(p.storageMode, 'cloud');
-    assert.equal(p.customMin, 120);
+    assert.equal(p.customMin, 90);
     assert.equal(p.customScenes.length, 1);
     assert.equal(p.customScenes[0].name, 'Focus');
     assert.equal(p.customScenes[0].min, 3);

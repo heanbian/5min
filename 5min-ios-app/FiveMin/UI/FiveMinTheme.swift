@@ -51,7 +51,8 @@ enum FiveMinColor {
 
 enum FiveMinDimens {
     static let radiusSm: CGFloat = 12
-    static let radius: CGFloat = 14
+    /// 首页操作按钮 / 场景选择 / 芯片统一大圆角
+    static let radius: CGFloat = 22
     static let controlH: CGFloat = 52
     static let fieldH: CGFloat = 52
     static let rowH: CGFloat = 40

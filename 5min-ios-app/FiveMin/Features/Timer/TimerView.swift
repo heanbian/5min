@@ -17,7 +17,7 @@ struct TimerView: View {
         switch model.phase {
         case .warn: return FiveMinColor.warn
         case .done: return FiveMinColor.danger
-        default: return FiveMinColor.brand
+        default: return .black
         }
     }
 
@@ -215,6 +215,13 @@ struct TimerView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// 统计行分隔点：加粗、品牌色更醒目（· 字重几乎无效，用实心圆点）
+    private var statsSepDot: some View {
+        Circle()
+            .fill(FiveMinColor.brandStrong)
+            .frame(width: 4.5, height: 4.5)
+    }
+
     private var statsRow: some View {
         Group {
             if model.statsCount <= 0 {
@@ -226,10 +233,12 @@ struct TimerView: View {
                     Text(model.t("dailyStatsLabel"))
                         .font(FiveMinFont.ui(12, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
-                    Text("·")
-                        .font(FiveMinFont.ui(12))
-                        .foregroundStyle(FiveMinColor.muted)
-                    Text("\(model.statsCount)\(model.t("dailyStatsCountUnit")) · \(model.statsMinutes())\(model.t("dailyStatsMinutesUnit"))")
+                    statsSepDot
+                    Text("\(model.statsCount)\(model.t("dailyStatsCountUnit"))")
+                        .font(FiveMinFont.ui(12, weight: .semibold))
+                        .foregroundStyle(FiveMinColor.ink)
+                    statsSepDot
+                    Text("\(model.statsMinutes())\(model.t("dailyStatsMinutesUnit"))")
                         .font(FiveMinFont.ui(12, weight: .semibold))
                         .foregroundStyle(FiveMinColor.ink)
                 }
@@ -276,9 +285,9 @@ struct TimerView: View {
                 .padding(.horizontal, 14)
                 .frame(maxWidth: .infinity, minHeight: FiveMinDimens.rowH)
                 .background(FiveMinColor.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
                         .stroke(FiveMinColor.line, lineWidth: 1)
                 )
             }
@@ -322,9 +331,9 @@ struct TimerView: View {
                                     }
                                 }
                             )
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
                                     .stroke(
                                         active ? Color.clear : FiveMinColor.brand.opacity(0.18),
                                         lineWidth: 1
@@ -344,9 +353,9 @@ struct TimerView: View {
             .padding(6)
         }
         .background(FiveMinColor.brandSoft.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
                 .stroke(FiveMinColor.brand.opacity(0.12), lineWidth: 1)
         )
         .accessibilityLabel(model.t(SceneRanker.labelKey))

@@ -137,7 +137,7 @@ function sanitizePrefs(raw) {
     finishTone: raw.finishTone !== false,
     finishVibrate: raw.finishVibrate !== false,
     finishNotify: raw.finishNotify !== false,
-    customMin: Math.max(1, Math.min(120, Math.floor(Number(raw.customMin) || 5))),
+    customMin: Math.max(1, Math.min(90, Math.floor(Number(raw.customMin) || 5))),
     customScenes: []
   };
   const scenes = Array.isArray(raw.customScenes) ? raw.customScenes : [];
@@ -146,7 +146,7 @@ function sanitizePrefs(raw) {
     if (!s || typeof s !== 'object') continue;
     const id = clampStr(s.id, 64);
     const name = clampStr(s.name, 24);
-    const min = Math.max(1, Math.min(120, Math.floor(Number(s.min) || 5)));
+    const min = Math.max(1, Math.min(90, Math.floor(Number(s.min) || 5)));
     if (!id || !name) continue;
     out.customScenes.push({ id, name, min });
   }

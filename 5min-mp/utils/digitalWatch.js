@@ -29,8 +29,8 @@ const DIGIT_SEGS = Object.freeze([
   'abfgcd',
 ]);
 const ALL_SEGS = 'abcdefg';
-/** 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色 */
-const CHASSIS = '#D0DED6';
+/** 熄灭段底盘：浅鼠尾草灰绿，不随亮段染色 */
+const CHASSIS = '#E4ECE8';
 const WATCH_W = 144;
 const WATCH_H = 48;
 const WATCH_SLOTS = Object.freeze([

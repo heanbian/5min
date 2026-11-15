@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppLocales {
-    static let supported: [String] = ["zh-CN", "zh-TW", "en", "de", "ru", "fr", "bo"]
+    static let supported: [String] = ["zh-CN", "zh-TW", "en", "de", "ru", "fr", "bo", "ja", "es", "ar"]
 
     static func isSupported(_ code: String) -> Bool {
         supported.contains(code)
@@ -21,7 +21,7 @@ enum AppLocales {
             }
             return "zh-CN"
         }
-        if ["en", "de", "ru", "fr", "bo"].contains(base), isSupported(base) {
+        if ["en", "de", "ru", "fr", "bo", "ja", "es", "ar"].contains(base), isSupported(base) {
             return base
         }
         return fallback

@@ -112,6 +112,13 @@ struct MineView: View {
                             showBeianAlert = true
                         }
                     }
+
+                    Text(model.t("aboutVersion", ["n": appVersion]))
+                        .font(FiveMinFont.ui(12))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                        .padding(.bottom, 12)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
@@ -141,6 +148,10 @@ struct MineView: View {
         let n = model.customScenes.count
         if n <= 0 { return model.t("customScenesEmpty") }
         return model.t("customScenesCount", ["n": "\(n)"])
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
 
     private var header: some View {

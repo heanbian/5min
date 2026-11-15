@@ -72,7 +72,7 @@ function setPrivacyAccepted(ok) {
 
 function clampMinutes(value) {
   const n = Math.floor(Number(value) || 0);
-  return Math.max(1, Math.min(120, n));
+  return Math.max(1, Math.min(90, n));
 }
 
 function normalizeName(raw) {
@@ -95,7 +95,7 @@ function getCustomMin(fallback) {
   try {
     const n = Number(wx.getStorageSync(CUSTOM_MIN_KEY));
     if (!Number.isFinite(n) || n < 1) return fb;
-    return Math.min(120, Math.floor(n));
+    return Math.min(90, Math.floor(n));
   } catch (e) {
     return fb;
   }

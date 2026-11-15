@@ -399,7 +399,10 @@ module.exports = {
     "de",
     "ru",
     "fr",
-    "bo"
+    "bo",
+    "ja",
+    "es",
+    "ar"
   ],
   "defaultLocale": "zh-CN"
 };

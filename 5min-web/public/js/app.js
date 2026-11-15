@@ -181,7 +181,7 @@ const DIGIT_SEGS = Object.freeze([
 ]);
 const ALL_SEGS = 'abcdefg';
 /** 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色 */
-const WATCH_CHASSIS = '#d0ded6';
+const WATCH_CHASSIS = '#e4ece8';
 
 const svgN = (v) => Math.round(Number(v) * 10) / 10;
 

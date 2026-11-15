@@ -31,7 +31,8 @@
     --danger:#d2554a;
     --danger-soft:#ffefed;
     --radius-sm:12px;
-    --radius:14px;
+    /* 操作按钮 / 场景选择统一大圆角（与各 App 端对齐） */
+    --radius:22px;
     --space:8px;
     --space-2:12px;
     --space-3:16px;
@@ -343,7 +344,7 @@
     aspect-ratio:144 / 48;
     line-height:0;
     pointer-events:none;
-    color:var(--brand);
+    color:#000;
     transition:color .3s ease;
   }
   body.warn .time{color:var(--warn)}
@@ -409,7 +410,13 @@
   }
   .cue[data-tone="warn"] .cue-meta-vals strong{color:var(--warn)}
   .cue[data-tone="danger"] .cue-meta-vals strong{color:var(--danger)}
-  .cue-meta-sep{color:var(--muted); font-weight:500}
+  .cue-meta-sep{
+    color:var(--brand-strong);
+    font-weight:800;
+    font-size:1.2em;
+    line-height:1;
+    transform:scale(1.15);
+  }
   .cue-meta.is-empty{
     color:var(--muted);
     font-weight:500;
@@ -562,7 +569,7 @@
     color:var(--brand-strong);
     background:color-mix(in srgb, var(--brand-soft) 72%, var(--surface));
     border:1px solid color-mix(in srgb, var(--brand) 14%, var(--line));
-    border-radius:8px;
+    border-radius:var(--radius);
     user-select:none;
     pointer-events:none;
   }
@@ -593,7 +600,7 @@
     color:var(--muted);
     background:transparent;
     border:none;
-    border-radius:calc(var(--radius-sm) - 1px);
+    border-radius:var(--radius);
     box-shadow:none;
     text-align:left;
   }

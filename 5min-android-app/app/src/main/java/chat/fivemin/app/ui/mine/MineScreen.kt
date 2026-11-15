@@ -211,6 +211,21 @@ fun MineScreen(vm: TimerViewModel) {
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("beianEntry")) { dialog = MineDialog.Beian }
             }
+
+            val appVersion = remember(context) {
+                runCatching {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                }.getOrNull().orEmpty().ifBlank { "—" }
+            }
+            Text(
+                text = vm.t("aboutVersion", mapOf("n" to appVersion)),
+                color = FiveMinColors.muted,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 12.dp),
+            )
         }
     }
 

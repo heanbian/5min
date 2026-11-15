@@ -20,8 +20,8 @@ private val DigitSegs = arrayOf(
     "afgcd", "afgcde", "abc", "abcdefg", "abfgcd",
 )
 private const val AllSegs = "abcdefg"
-/** 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色 */
-private val Chassis = Color(0xFFD0DED6)
+/** 熄灭段底盘：浅鼠尾草灰绿，不随亮段染色 */
+private val Chassis = Color(0xFFE4ECE8)
 private const val WatchW = 144f
 private const val WatchH = 48f
 private val WatchSlots = listOf(

@@ -6,6 +6,7 @@ struct RootTabView: View {
     @State private var privacyChecked = false
 
     var body: some View {
+        let isRTL = model.locale.hasPrefix("ar")
         ZStack {
             TabView(selection: $model.selectedTab) {
                 RecordsView()
@@ -32,6 +33,7 @@ struct RootTabView: View {
                 privacyGate
             }
         }
+        .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
         .onChange(of: model.selectedTab) { _, newValue in
             if newValue == 0 {
                 model.recordsEpoch += 1

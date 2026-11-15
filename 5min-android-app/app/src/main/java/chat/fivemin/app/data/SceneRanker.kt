@@ -7,7 +7,7 @@ object SceneRanker {
     const val GROUP_ID = "suggested"
     const val LABEL_KEY = "sceneGroupSuggested"
     const val TOP_N = 6
-    const val CHIP_N = 3
+    const val CHIP_N = 5
     const val MIN_COUNT = 2
     const val RECENT_DAYS = 3
     const val HISTORY_WINDOW_DAYS = 14

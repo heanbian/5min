@@ -5,15 +5,15 @@ const DIGIT_SEGS: string[] = [
   'afgcd', 'afgcde', 'abc', 'abcdefg', 'abfgcd'
 ];
 const ALL_SEGS = 'abcdefg';
-/** 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色 */
-const CHASSIS = '#D0DED6';
+/** 熄灭段底盘：浅鼠尾草灰绿，不随亮段染色 */
+const CHASSIS = '#E4ECE8';
 const WATCH_W = 144;
 const WATCH_H = 48;
 
 @Component
 export struct DigitalWatchTime {
   @Watch('onStyleChange') @Prop text: string = '00:00';
-  @Watch('onStyleChange') @Prop color: string = '#2F9A68';
+  @Watch('onStyleChange') @Prop color: string = '#000000';
   private settings: RenderingContextSettings = new RenderingContextSettings(true);
   private ctx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings);
   private areaW: number = 0;

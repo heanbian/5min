@@ -10,6 +10,9 @@ const de = require('../shared/locales/de.js');
 const ru = require('../shared/locales/ru.js');
 const fr = require('../shared/locales/fr.js');
 const bo = require('../shared/locales/bo.js');
+const ja = require('../shared/locales/ja.js');
+const es = require('../shared/locales/es.js');
+const ar = require('../shared/locales/ar.js');
 const { normalize, SUPPORTED, filter } = require('./appLocales');
 const prefs = require('./prefs');
 
@@ -21,6 +24,9 @@ const PACKS = Object.freeze({
   ru,
   fr,
   bo,
+  ja,
+  es,
+  ar,
 });
 
 let currentLocale = 'zh-CN';

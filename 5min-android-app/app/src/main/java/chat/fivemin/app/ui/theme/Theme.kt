@@ -53,7 +53,8 @@ object FiveMinColors {
 
 object FiveMinDimens {
     val radiusSm = 12.dp
-    val radius = 14.dp
+    /** 首页操作按钮 / 场景选择 / 芯片统一大圆角 */
+    val radius = 22.dp
     val controlH = 52.dp
     val fieldH = 52.dp
     val rowH = 40.dp

@@ -28,7 +28,7 @@ export class CustomScene {
     if (isNaN(value)) {
       return 1;
     }
-    return Math.max(1, Math.min(120, Math.floor(value)));
+    return Math.max(1, Math.min(90, Math.floor(value)));
   }
 
   static normalizedName(raw: string): string {
@@ -149,7 +149,7 @@ export class PrefsStore {
     if (isNaN(n) || n < 1) {
       return fallback;
     }
-    return Math.min(120, Math.floor(n));
+    return Math.min(90, Math.floor(n));
   }
 
   async setCustomMin(min: number): Promise<void> {

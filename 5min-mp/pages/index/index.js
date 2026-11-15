@@ -66,8 +66,8 @@ function phaseColor(phase, kind) {
   if (phase === 'warn') return '#c9862d';
   if (phase === 'done') return '#d2554a';
   if (kind === 'ring') return '#2f9a68';
-  // 计时数字安全态用品牌绿，与现代七段亮段一致
-  return '#2f9a68';
+  // 计时数字默认最黑，不使用品牌色
+  return '#000000';
 }
 
 Page({
@@ -82,6 +82,12 @@ Page({
     timeText: formatTime(DEFAULT_MIN * 60 * 1000),
     statusText: '',
     statsText: '',
+    statsEmpty: true,
+    statsLabel: '',
+    statsCountText: '',
+    statsMinutesText: '',
+    statsCountUnit: '',
+    statsMinutesUnit: '',
     primaryLabel: '',
     resetLabel: '',
     canReset: false,
@@ -401,16 +407,28 @@ Page({
 
   refreshStats() {
     const stats = getTodayStats();
-    let statsText = '';
     if (stats.count <= 0) {
-      statsText = `${t('dailyStatsLabel')} · ${t('dailyStatsEmpty')}`;
-    } else {
-      const minutes = statsMinutes(stats.totalMs);
-      statsText = `${t('dailyStatsLabel')} · ${stats.count} ${t(
-        'dailyStatsCountUnit'
-      )} · ${minutes} ${t('dailyStatsMinutesUnit')}`;
+      this.setData({
+        statsEmpty: true,
+        statsText: `${t('dailyStatsLabel')} · ${t('dailyStatsEmpty')}`,
+        statsLabel: t('dailyStatsLabel'),
+        statsCountText: '',
+        statsMinutesText: '',
+        statsCountUnit: t('dailyStatsCountUnit'),
+        statsMinutesUnit: t('dailyStatsMinutesUnit'),
+      });
+      return;
     }
-    this.setData({ statsText });
+    const minutes = statsMinutes(stats.totalMs);
+    this.setData({
+      statsEmpty: false,
+      statsText: '',
+      statsLabel: t('dailyStatsLabel'),
+      statsCountText: String(stats.count),
+      statsMinutesText: String(minutes),
+      statsCountUnit: t('dailyStatsCountUnit'),
+      statsMinutesUnit: t('dailyStatsMinutesUnit'),
+    });
   },
 
   commitOvertimeToHistoryIfNeeded() {

@@ -7,8 +7,8 @@ struct DigitalWatchTime: View {
 
     private static let watchW: CGFloat = 144
     private static let watchH: CGFloat = 48
-    /// 熄灭段底盘：固定鼠尾草灰绿，不随亮段染色
-    private static let chassis = Color(red: 0xD0 / 255, green: 0xDE / 255, blue: 0xD6 / 255)
+    /// 熄灭段底盘：浅鼠尾草灰绿，不随亮段染色
+    private static let chassis = Color(red: 0xE4 / 255, green: 0xEC / 255, blue: 0xE8 / 255)
 
     var body: some View {
         Canvas { context, size in

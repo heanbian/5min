@@ -18,7 +18,7 @@ data class CustomScene(
 
         fun makeId(): String = "$ID_PREFIX${UUID.randomUUID().toString().lowercase()}"
 
-        fun clampMinutes(value: Int): Int = value.coerceIn(1, 120)
+        fun clampMinutes(value: Int): Int = value.coerceIn(1, 90)
 
         fun normalizedName(raw: String): String {
             val trimmed = raw.trim()
@@ -98,7 +98,7 @@ class PrefsStore(context: Context) {
 
     fun customMin(fallback: Int = 5): Int {
         val n = sp.getInt(KEY_CUSTOM_MIN, fallback)
-        return if (n < 1) fallback else n.coerceAtMost(120)
+        return if (n < 1) fallback else n.coerceAtMost(90)
     }
 
     fun setCustomMin(value: Int) {

@@ -95,7 +95,7 @@ fun TimerHome(
     val timeColor = when (state.phase) {
         TimerPhase.Warn -> FiveMinColors.warn
         TimerPhase.Done -> FiveMinColors.danger
-        else -> FiveMinColors.brand
+        else -> Color.Black
     }
     val statusColor = when (state.phase) {
         TimerPhase.Warn -> FiveMinColors.warn
@@ -307,19 +307,16 @@ fun TimerHome(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                             )
+                            StatsSepDot()
                             Text(
-                                text = "·",
-                                color = FiveMinColors.muted,
+                                text = "${state.statsCount}${vm.t("dailyStatsCountUnit")}",
+                                color = FiveMinColors.ink,
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
                             )
+                            StatsSepDot()
                             Text(
-                                text = buildString {
-                                    append(state.statsCount)
-                                    append(vm.t("dailyStatsCountUnit"))
-                                    append(" · ")
-                                    append(vm.statsMinutes())
-                                    append(vm.t("dailyStatsMinutesUnit"))
-                                },
+                                text = "${vm.statsMinutes()}${vm.t("dailyStatsMinutesUnit")}",
                                 color = FiveMinColors.ink,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -420,8 +417,8 @@ fun TimerHome(
                     }
                 }
 
-                // scene trigger
-                val sceneRadius = RoundedCornerShape(8.dp)
+                // scene trigger — 与操作按钮统一大圆角
+                val sceneRadius = RoundedCornerShape(FiveMinDimens.radius)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -467,8 +464,8 @@ fun TimerHome(
 
                 val chipIds = vm.chipSceneIds()
                 if (chipIds.isNotEmpty()) {
-                    val chipRadius = RoundedCornerShape(8.dp)
-                    val railShape = RoundedCornerShape(8.dp)
+                    val chipRadius = RoundedCornerShape(FiveMinDimens.radius)
+                    val railShape = RoundedCornerShape(FiveMinDimens.radius)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -615,4 +612,15 @@ fun TimerHome(
             },
         )
     }
+}
+
+/** 统计行分隔点：实心圆，品牌色更醒目 */
+@Composable
+private fun StatsSepDot() {
+    Box(
+        modifier = Modifier
+            .size(4.5.dp)
+            .clip(RoundedCornerShape(50))
+            .background(FiveMinColors.brandStrong),
+    )
 }

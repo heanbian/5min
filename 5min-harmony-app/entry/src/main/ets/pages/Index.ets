@@ -89,13 +89,14 @@ struct Index {
   @State status: string = '';
   @State brandTitle: string = '';
   @State statsText: string = '';
+  @State statsMinutesText: string = '0';
   @State statsEmpty: boolean = true;
   @State startLabel: string = '';
   @State sceneLabel: string = '';
   @State scenePlaceholder: boolean = true;
   @State progress: number = 1;
   @State ringColor: string = '#2F9A68';
-  @State timeColor: string = '#2F9A68';
+  @State timeColor: string = '#000000';
   @State statusColor: string = '#5F6F66';
   @State bgColor: string = '#EEF6F1';
   @State running: boolean = false;
@@ -608,7 +609,7 @@ struct Index {
       this.bgColor = '#FFEFED';
     } else {
       this.ringColor = '#2F9A68';
-      this.timeColor = '#2F9A68';
+      this.timeColor = '#000000';
       this.statusColor = '#5F6F66';
       this.bgColor = '#EEF6F1';
     }
@@ -656,8 +657,10 @@ struct Index {
     this.statsEmpty = this.state.statsCount <= 0;
     if (this.statsEmpty) {
       this.statsText = `${this.t('dailyStatsLabel')} · ${this.t('dailyStatsEmpty')}`;
+      this.statsMinutesText = '0';
     } else {
       const mins = Math.max(1, Math.ceil(this.state.statsMs / 60000));
+      this.statsMinutesText = `${mins}`;
       this.statsText =
         `${this.state.statsCount}${this.t('dailyStatsCountUnit')} · ${mins}${this.t('dailyStatsMinutesUnit')}`;
     }
@@ -1011,6 +1014,7 @@ struct Index {
     .height('100%')
     .fontFamily('PlusJakartaSans')
     .backgroundColor(this.privacyAccepted && this.ready ? this.bgColor : $r('app.color.bg'))
+    .direction(this.locale.indexOf('ar') === 0 ? Direction.Rtl : Direction.Ltr)
   }
 
   @Builder
@@ -1109,10 +1113,22 @@ struct Index {
                   .fontSize(12)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.muted'))
-                Text('·')
+                // 实心圆分隔点：加粗、品牌色更醒目
+                Row()
+                  .width(4.5)
+                  .height(4.5)
+                  .borderRadius(50)
+                  .backgroundColor($r('app.color.brand_strong'))
+                Text(`${this.state.statsCount}${this.t('dailyStatsCountUnit')}`)
                   .fontSize(12)
-                  .fontColor($r('app.color.muted'))
-                Text(this.statsText)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.ink'))
+                Row()
+                  .width(4.5)
+                  .height(4.5)
+                  .borderRadius(50)
+                  .backgroundColor($r('app.color.brand_strong'))
+                Text(`${this.statsMinutesText}${this.t('dailyStatsMinutesUnit')}`)
                   .fontSize(12)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.ink'))
@@ -1138,7 +1154,7 @@ struct Index {
                 angle: 180,
                 colors: [['#36A872', 0], ['#2F9A68', 0.55], ['#248556', 1]]
               })
-              .borderRadius(14)
+              .borderRadius(22)
               .shadow({
                 radius: 12,
                 color: 'rgba(47, 154, 104, 0.32)',
@@ -1155,7 +1171,7 @@ struct Index {
               .textAlign(TextAlign.Center)
               .backgroundColor($r('app.color.surface'))
               .border({ width: 1.5, color: $r('app.color.line') })
-              .borderRadius(14)
+              .borderRadius(22)
               .shadow({
                 radius: 4,
                 color: 'rgba(31, 42, 36, 0.06)',
@@ -1185,7 +1201,7 @@ struct Index {
                 color: 'rgba(210, 85, 74, 0.35)',
                 style: BorderStyle.Dashed
               })
-              .borderRadius(14)
+              .borderRadius(22)
               .onClick(() => this.ignoreLastSession())
           }
 
@@ -1209,7 +1225,7 @@ struct Index {
             width: 1,
             color: this.showScenes ? $r('app.color.brand') : $r('app.color.line')
           })
-          .borderRadius(8)
+          .borderRadius(22)
           .opacity(this.setupEnabled ? 1 : 0.4)
           .onClick(() => {
             if (this.setupEnabled) {
@@ -1268,7 +1284,7 @@ struct Index {
             .height(280)
             .backgroundColor($r('app.color.surface'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(14)
+            .borderRadius(22)
           }
 
           if (this.chipSceneIds.length > 0) {
@@ -1287,7 +1303,7 @@ struct Index {
                         angle: 180,
                         colors: [['#36A872', 0], ['#2F9A68', 1]]
                       })
-                      .borderRadius(8)
+                      .borderRadius(22)
                       .shadow({
                         radius: 8,
                         color: 'rgba(47, 154, 104, 0.28)',
@@ -1310,7 +1326,7 @@ struct Index {
                       .textAlign(TextAlign.Center)
                       .backgroundColor('rgba(255, 255, 255, 0.55)')
                       .border({ width: 1, color: 'rgba(47, 154, 104, 0.18)' })
-                      .borderRadius(8)
+                      .borderRadius(22)
                       .opacity(this.setupEnabled ? 1 : 0.4)
                       .onClick(() => {
                         if (this.setupEnabled) {
@@ -1327,7 +1343,7 @@ struct Index {
             .width('100%')
             .backgroundColor('rgba(229, 245, 236, 0.72)')
             .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
-            .borderRadius(8)
+            .borderRadius(22)
           }
         }
         .width('100%')

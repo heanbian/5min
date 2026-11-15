@@ -5,7 +5,7 @@ enum SceneRanker {
     static let groupId = "suggested"
     static let labelKey = "sceneGroupSuggested"
     static let topN = 6
-    static let chipN = 3
+    static let chipN = 5
     static let minCount = 2
     static let recentDays = 3
     static let historyWindowDays = 14

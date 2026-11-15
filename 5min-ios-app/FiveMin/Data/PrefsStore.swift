@@ -15,7 +15,7 @@ struct CustomScene: Codable, Identifiable, Equatable {
     }
 
     static func clampMinutes(_ value: Int) -> Int {
-        Swift.max(1, Swift.min(120, value))
+        Swift.max(1, Swift.min(90, value))
     }
 
     static func normalizedName(_ raw: String) -> String {
@@ -87,7 +87,7 @@ final class PrefsStore {
     func customMin(fallback: Int = 5) -> Int {
         let n = defaults.object(forKey: customMinKey) as? Int ?? fallback
         if n < 1 { return fallback }
-        return Swift.min(120, n)
+        return Swift.min(90, n)
     }
 
     func setCustomMin(_ value: Int) {

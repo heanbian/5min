@@ -43,7 +43,14 @@
     </view>
     <view class="cue">
       <text class="status {{phase === 'done' ? 'status-done' : ''}}">{{statusText}}</text>
-      <text class="stats">{{statsText}}</text>
+      <text wx:if="{{statsEmpty}}" class="stats">{{statsText}}</text>
+      <view wx:else class="stats stats-row">
+        <text class="stats-label">{{statsLabel}}</text>
+        <view class="stats-sep-dot"></view>
+        <text class="stats-val">{{statsCountText}}{{statsCountUnit}}</text>
+        <view class="stats-sep-dot"></view>
+        <text class="stats-val">{{statsMinutesText}}{{statsMinutesUnit}}</text>
+      </view>
     </view>
   </view>
 
