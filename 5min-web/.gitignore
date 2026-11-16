@@ -30,3 +30,5 @@ fivemin.pid
 fivemin-linux-x64
 fivemin-macos-arm64
 fivemin-win-x64.exe
+package-lock.json
+yarn.lock

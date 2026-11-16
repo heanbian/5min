@@ -72,7 +72,7 @@
     "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
-  "libVersion": "3.17.4",
+  "libVersion": "3.18.0",
   "appid": "----",
   "projectname": "如厕计时器",
   "condition": {},
