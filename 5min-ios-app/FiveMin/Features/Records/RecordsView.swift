@@ -57,7 +57,8 @@ struct RecordsView: View {
                                 .font(FiveMinFont.ui(14))
                                 .foregroundStyle(FiveMinColor.muted)
                                 .frame(maxWidth: .infinity)
-                                .padding(20)
+                                .padding(.vertical, 28)
+                                .padding(.horizontal, 20)
                         } else {
                             ForEach(rows) { item in
                                 historyRow(item)
@@ -65,13 +66,24 @@ struct RecordsView: View {
                             }
                         }
                     }
-                    .background(FiveMinColor.surface)
+                    .background(FiveMinColor.surface.opacity(0.88))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
+                            .strokeBorder(FiveMinColor.line.opacity(0.9), lineWidth: 1)
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
+                    .shadow(color: FiveMinColor.ink.opacity(0.04), radius: 8, y: 2)
                 }
                 .padding(.horizontal, FiveMinDimens.padBody)
                 .padding(.vertical, FiveMinDimens.padBody)
             }
-            .background(FiveMinColor.bg2)
+            .background(
+                LinearGradient(
+                    colors: [FiveMinColor.bg, FiveMinColor.bg2, FiveMinColor.bgBottom],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
         }
         .onAppear(perform: reload)
         .onChange(of: model.recordsEpoch) { _, _ in reload() }
@@ -126,27 +138,28 @@ struct RecordsView: View {
     private var header: some View {
         HStack {
             Text(model.t("tabRecords"))
-                .font(FiveMinFont.ui(20, weight: .medium))
+                .font(FiveMinFont.ui(20, weight: .semibold))
                 .foregroundStyle(FiveMinColor.ink)
             Spacer()
         }
         .padding(.horizontal, 20)
         .frame(height: 52)
-        .background(FiveMinColor.surface)
+        .background(FiveMinColor.surface.opacity(0.72))
         .overlay(alignment: .bottom) {
-            Rectangle().fill(FiveMinColor.line).frame(height: 1)
+            Rectangle().fill(FiveMinColor.line.opacity(0.85)).frame(height: 1)
         }
     }
 
     private func statCard(title: String, value: String, unit: String?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(FiveMinFont.ui(12))
+                .font(FiveMinFont.ui(12, weight: .medium))
                 .foregroundStyle(FiveMinColor.muted)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
-                    .font(FiveMinFont.ui(28, weight: .medium))
-                    .foregroundStyle(FiveMinColor.ink)
+                    .font(FiveMinFont.ui(28, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.brandStrong)
+                    .monospacedDigit()
                 if let unit {
                     Text(unit)
                         .font(FiveMinFont.ui(13))
@@ -156,7 +169,11 @@ struct RecordsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(FiveMinColor.surface)
+        .background(FiveMinColor.brandSoft.opacity(0.55))
+        .overlay(
+            RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
+                .strokeBorder(FiveMinColor.brand.opacity(0.12), lineWidth: 1)
+        )
         .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
     }
 
@@ -184,7 +201,11 @@ struct RecordsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(FiveMinColor.surface)
+        .background(FiveMinColor.warnSoft.opacity(0.72))
+        .overlay(
+            RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
+                .strokeBorder(FiveMinColor.warn.opacity(0.16), lineWidth: 1)
+        )
         .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
     }
 

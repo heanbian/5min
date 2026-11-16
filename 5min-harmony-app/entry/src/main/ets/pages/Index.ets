@@ -25,6 +25,7 @@ import {
 import { DigitalWatchTime } from '../ui/DigitalWatch';
 import { RecordsTab } from '../ui/RecordsTab';
 import { MineTab } from '../ui/MineTab';
+import { FiveMinFont } from '../common/FiveMinDimens';
 import { i18n } from '@kit.LocalizationKit';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
@@ -104,6 +105,7 @@ struct Index {
   @State timeColor: string = '#000000';
   @State statusColor: string = '#5F6F66';
   @State bgColor: string = '#EEF6F1';
+  @State glowColor: string = '#DFF0E6';
   @State running: boolean = false;
   @State resetEnabled: boolean = false;
   @State setupEnabled: boolean = true;
@@ -637,16 +639,19 @@ struct Index {
       this.timeColor = '#C9862D';
       this.statusColor = '#C9862D';
       this.bgColor = '#FFF6E8';
+      this.glowColor = '#FFE9C8';
     } else if (this.state.phase === 'done') {
       this.ringColor = '#D2554A';
       this.timeColor = '#D2554A';
       this.statusColor = '#D2554A';
       this.bgColor = '#FFEFED';
+      this.glowColor = '#FFD7D2';
     } else {
       this.ringColor = '#2F9A68';
       this.timeColor = '#000000';
       this.statusColor = '#5F6F66';
       this.bgColor = '#EEF6F1';
+      this.glowColor = '#DFF0E6';
     }
 
     if (this.state.activeSceneId) {
@@ -1231,15 +1236,27 @@ struct Index {
 
   @Builder
   HomePane() {
-    Scroll() {
+    Stack() {
+      Column()
+        .width('100%')
+        .height('100%')
+        .radialGradient({
+          center: ['50%', '0%'],
+          radius: 420,
+          colors: [[this.glowColor, 0], [Color.Transparent, 0.62]]
+        })
+        .hitTestBehavior(HitTestMode.None)
+
+      Scroll() {
       Column({ space: 20 }) {
         Row() {
           Row({ space: 10 }) {
             Image($r('app.media.logo'))
-              .height(22)
+              .height(24)
               .objectFit(ImageFit.Contain)
             Text(this.brandTitle)
               .fontSize(19)
+              .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.ink'))
               .layoutWeight(1)
@@ -1289,6 +1306,7 @@ struct Index {
           Column({ space: 6 }) {
             Text(this.status)
               .fontSize(14)
+              .fontFamily(FiveMinFont.medium)
               .fontWeight(this.state.phase === 'done' ? FontWeight.Medium : FontWeight.Regular)
               .fontColor(this.statusColor)
               .textAlign(TextAlign.Center)
@@ -1297,6 +1315,7 @@ struct Index {
             if (this.statsEmpty) {
               Text(this.statsText)
                 .fontSize(12)
+                .fontFamily(FiveMinFont.medium)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r('app.color.muted'))
                 .textAlign(TextAlign.Center)
@@ -1304,6 +1323,7 @@ struct Index {
               Row({ space: 6 }) {
                 Text(this.t('dailyStatsLabel'))
                   .fontSize(12)
+                  .fontFamily(FiveMinFont.medium)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.muted'))
                 // 实心圆分隔点：加粗、品牌色更醒目
@@ -1314,6 +1334,7 @@ struct Index {
                   .backgroundColor($r('app.color.brand_strong'))
                 Text(`${this.state.statsCount}${this.t('dailyStatsCountUnit')}`)
                   .fontSize(12)
+                  .fontFamily(FiveMinFont.semiBold)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.ink'))
                 Row()
@@ -1323,6 +1344,7 @@ struct Index {
                   .backgroundColor($r('app.color.brand_strong'))
                 Text(`${this.statsMinutesText}${this.t('dailyStatsMinutesUnit')}`)
                   .fontSize(12)
+                  .fontFamily(FiveMinFont.semiBold)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.ink'))
               }
@@ -1340,6 +1362,7 @@ struct Index {
               .layoutWeight(1)
               .height(52)
               .fontSize(16)
+              .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor(Color.White)
               .textAlign(TextAlign.Center)
@@ -1359,6 +1382,7 @@ struct Index {
               .layoutWeight(1)
               .height(52)
               .fontSize(16)
+              .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.muted'))
               .textAlign(TextAlign.Center)
@@ -1556,5 +1580,8 @@ struct Index {
     .height('100%')
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)
+    }
+    .width('100%')
+    .height('100%')
   }
 }

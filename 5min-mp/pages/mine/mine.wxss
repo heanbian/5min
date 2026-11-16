@@ -5,7 +5,9 @@
 
 .shell {
   height: 100vh;
-  background: var(--bg2);
+  background:
+    radial-gradient(720rpx 360rpx at 50% -6%, #dff0e6 0%, transparent 58%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 48%, #f4f8f5 100%);
   display: flex;
   flex-direction: column;
 }
@@ -14,18 +16,19 @@
   display: flex;
   align-items: center;
   padding: 0 40rpx;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .title {
   font-size: var(--title-size);
   font-weight: 600;
   color: var(--ink);
+  letter-spacing: 0.01em;
 }
 
 .title-line {
   height: 1px;
-  background: var(--line);
+  background: rgba(215, 229, 220, 0.85);
 }
 
 .body {
@@ -56,9 +59,11 @@
 }
 
 .card {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.88);
+  border: 2rpx solid rgba(215, 229, 220, 0.9);
   border-radius: var(--radius-card, 28rpx);
   overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(31, 42, 36, 0.04);
 }
 
 .row {

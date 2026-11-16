@@ -17,8 +17,10 @@
 :root{
     --brand:#2f9a68;
     --brand-strong:#248556;
+    --brand-soft:#e5f5ec;
     --bg:#eef6f1;
     --bg-2:#f7faf8;
+    --surface:#ffffff;
     --ink:#1f2a24;
     --muted:#5f6f66;
     --line:#d7e5dc;
@@ -90,13 +92,14 @@
   .brand-row{
     display:flex;
     align-items:center;
-    gap:10px;
-    margin:0 0 18px;
+    gap:12px;
+    margin:0 0 20px;
   }
   .brand-row img{
-    height:1.25rem;
+    height:1.5rem;
     width:auto;
     display:block;
+    flex-shrink:0;
   }
   h1{
     margin:0;

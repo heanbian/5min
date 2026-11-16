@@ -37,6 +37,11 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -203,8 +209,8 @@ fun TimerHome(
                         painter = painterResource(R.drawable.logo),
                         contentDescription = "5min",
                         modifier = Modifier
-                            .height(22.dp)
-                            .width(22.dp * 108f / 32f),
+                            .height(24.dp)
+                            .width(24.dp * 108f / 32f),
                         contentScale = ContentScale.Fit,
                     )
                     Text(
@@ -252,9 +258,21 @@ fun TimerHome(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(FiveMinDimens.stageGap),
             ) {
+                val pulsePhase = state.phase == TimerPhase.Warn || state.phase == TimerPhase.Done
+                val pulseTransition = rememberInfiniteTransition(label = "dialPulse")
+                val dialScale by pulseTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = if (pulsePhase) 1.018f else 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(if (state.phase == TimerPhase.Done) 625 else 900),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                    label = "dialScale",
+                )
                 Box(
                     modifier = Modifier
                         .size(FiveMinDimens.dialSize)
+                        .scale(if (pulsePhase) dialScale else 1f)
                         .clickable(enabled = state.finished) { vm.realert() },
                     contentAlignment = Alignment.Center,
                 ) {

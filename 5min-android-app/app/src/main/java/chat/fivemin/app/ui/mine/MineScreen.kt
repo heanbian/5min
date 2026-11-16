@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -131,18 +132,22 @@ fun MineScreen(vm: TimerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FiveMinColors.bg2),
+            .background(
+                Brush.verticalGradient(
+                    listOf(FiveMinColors.bg, FiveMinColors.bg2, FiveMinColors.bgBottom),
+                ),
+            ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .background(FiveMinColors.surface)
+                .background(FiveMinColors.surface.copy(alpha = 0.72f))
                 .padding(horizontal = 20.dp, vertical = 14.dp),
         ) {
-            Text(vm.t("tabMine"), color = FiveMinColors.ink, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+            Text(vm.t("tabMine"), color = FiveMinColors.ink, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
         }
-        HorizontalDivider(color = FiveMinColors.line)
+        HorizontalDivider(color = FiveMinColors.line.copy(alpha = 0.85f))
 
         Column(
             modifier = Modifier
@@ -754,7 +759,15 @@ private fun CardBlock(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard)),
+            .background(
+                FiveMinColors.surface.copy(alpha = 0.88f),
+                RoundedCornerShape(FiveMinDimens.radiusCard),
+            )
+            .border(
+                1.dp,
+                FiveMinColors.line.copy(alpha = 0.9f),
+                RoundedCornerShape(FiveMinDimens.radiusCard),
+            ),
     ) { content() }
 }
 

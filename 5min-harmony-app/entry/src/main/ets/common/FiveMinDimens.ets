@@ -1,6 +1,15 @@
 /**
  * Spacing / radius / control sizes — aligned with Android FiveMinDimens & MP tokens.
+ * Font family registered in EntryAbility (Plus Jakarta Sans).
  */
+export class FiveMinFont {
+  static readonly family: string = 'PlusJakartaSans';
+  static readonly regular: string = 'PlusJakartaSans-Regular';
+  static readonly medium: string = 'PlusJakartaSans-Medium';
+  static readonly semiBold: string = 'PlusJakartaSans-SemiBold';
+  static readonly bold: string = 'PlusJakartaSans-Bold';
+}
+
 export class FiveMinDimens {
   static readonly radiusSm: number = 12;
   /** 首页操作按钮 / 场景选择 / 芯片 */

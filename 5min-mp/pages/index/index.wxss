@@ -153,6 +153,26 @@
   justify-content: center;
 }
 
+@keyframes dial-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.018);
+    opacity: 0.92;
+  }
+}
+
+.page-warn .dial {
+  animation: dial-pulse 1.8s ease-in-out infinite;
+}
+
+.page-done .dial {
+  animation: dial-pulse 1.25s ease-in-out infinite;
+}
+
 .dial-canvas {
   width: 100%;
   height: 100%;

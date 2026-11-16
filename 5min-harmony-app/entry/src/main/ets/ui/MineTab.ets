@@ -15,6 +15,7 @@ import {
 import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
+import { FiveMinFont } from '../common/FiveMinDimens';
 import { i18n } from '@kit.LocalizationKit';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
@@ -539,6 +540,7 @@ export struct MineTab {
         Row() {
           Text(this.ready ? this.t('tabMine') : '…')
             .fontSize(20)
+            .fontFamily(FiveMinFont.semiBold)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .key(`mine-title-${this.uiTick}`)
@@ -547,8 +549,8 @@ export struct MineTab {
         .height(52)
         .padding({ left: 20, right: 20 })
         .alignItems(VerticalAlign.Center)
-        .backgroundColor($r('app.color.surface'))
-        .border({ width: { bottom: 1 }, color: $r('app.color.line') })
+        .backgroundColor('rgba(255, 255, 255, 0.72)')
+        .border({ width: { bottom: 1 }, color: 'rgba(215, 229, 220, 0.85)' })
 
         if (!this.ready) {
           Text('…')
@@ -631,9 +633,16 @@ export struct MineTab {
                   .onClick(() => this.openDialog('customScenes'))
                 }
                 .width('100%')
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(255, 255, 255, 0.88)')
+                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
                 .borderRadius(14)
                 .clip(true)
+                .shadow({
+                  radius: 8,
+                  color: 'rgba(31, 42, 36, 0.04)',
+                  offsetX: 0,
+                  offsetY: 2
+                })
               }
               .width('100%')
 
@@ -711,9 +720,16 @@ export struct MineTab {
                   .onClick(() => this.openDialog('alertProfile'))
                 }
                 .width('100%')
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(255, 255, 255, 0.88)')
+                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
                 .borderRadius(14)
                 .clip(true)
+                .shadow({
+                  radius: 8,
+                  color: 'rgba(31, 42, 36, 0.04)',
+                  offsetX: 0,
+                  offsetY: 2
+                })
 
                 Text(this.t('alertProfileHint'))
                   .fontSize(12)
@@ -753,9 +769,16 @@ export struct MineTab {
                   .onClick(() => this.openDialog('ritual'))
                 }
                 .width('100%')
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(255, 255, 255, 0.88)')
+                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
                 .borderRadius(14)
                 .clip(true)
+                .shadow({
+                  radius: 8,
+                  color: 'rgba(31, 42, 36, 0.04)',
+                  offsetX: 0,
+                  offsetY: 2
+                })
               }
               .width('100%')
 
@@ -788,9 +811,16 @@ export struct MineTab {
                   .onClick(() => this.openDialog('storage'))
                 }
                 .width('100%')
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(255, 255, 255, 0.88)')
+                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
                 .borderRadius(14)
                 .clip(true)
+                .shadow({
+                  radius: 8,
+                  color: 'rgba(31, 42, 36, 0.04)',
+                  offsetX: 0,
+                  offsetY: 2
+                })
 
                 Text(this.t('storageModeHint'))
                   .fontSize(12)
@@ -897,9 +927,16 @@ export struct MineTab {
                   .onClick(() => this.openBeian())
                 }
                 .width('100%')
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(255, 255, 255, 0.88)')
+                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
                 .borderRadius(14)
                 .clip(true)
+                .shadow({
+                  radius: 8,
+                  color: 'rgba(31, 42, 36, 0.04)',
+                  offsetX: 0,
+                  offsetY: 2
+                })
               }
               .width('100%')
 
@@ -926,7 +963,10 @@ export struct MineTab {
       .height('100%')
       .justifyContent(FlexAlign.Start)
       .alignItems(HorizontalAlign.Start)
-      .backgroundColor('#F2F5F3')
+      .linearGradient({
+        angle: 180,
+        colors: [['#EEF6F1', 0], ['#F2F5F3', 0.48], ['#F4F8F5', 1]]
+      })
 
       if (this.dialog !== '') {
         this.DialogLayer()

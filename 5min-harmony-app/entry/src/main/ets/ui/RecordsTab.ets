@@ -6,6 +6,7 @@ import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore'
 import { CloudSync } from '../common/CloudSync';
 import { insightMinutes } from '../common/P0Features';
 import { resolveLocale } from '../common/I18n';
+import { FiveMinFont } from '../common/FiveMinDimens';
 import { i18n } from '@kit.LocalizationKit';
 
 /** One list row: scene / duration / time on separate lines. */
@@ -250,6 +251,7 @@ export struct RecordsTab {
         Row() {
           Text(this.ready ? this.t('tabRecords') : '…')
             .fontSize(20)
+            .fontFamily(FiveMinFont.semiBold)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .key(`records-title-${this.uiTick}`)
@@ -258,8 +260,8 @@ export struct RecordsTab {
         .height(52)
         .padding({ left: 20, right: 20 })
         .alignItems(VerticalAlign.Center)
-        .backgroundColor($r('app.color.surface'))
-        .border({ width: { bottom: 1 }, color: $r('app.color.line') })
+        .backgroundColor('rgba(255, 255, 255, 0.72)')
+        .border({ width: { bottom: 1 }, color: 'rgba(215, 229, 220, 0.85)' })
 
         if (!this.ready) {
           Text('…')
@@ -282,27 +284,32 @@ export struct RecordsTab {
                 Column({ space: 6 }) {
                   Text(this.t('weekStatsCountLabel'))
                     .fontSize(12)
+                    .fontFamily(FiveMinFont.medium)
                     .fontColor($r('app.color.muted'))
                   Text(`${this.periodCount}`)
                     .fontSize(28)
+                    .fontFamily(FiveMinFont.semiBold)
                     .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.ink'))
+                    .fontColor($r('app.color.brand_strong'))
                 }
                 .layoutWeight(1)
                 .padding(16)
                 .alignItems(HorizontalAlign.Start)
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(229, 245, 236, 0.55)')
+                .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
                 .borderRadius(14)
 
                 Column({ space: 6 }) {
                   Text(this.t('weekStatsMinsLabel'))
                     .fontSize(12)
+                    .fontFamily(FiveMinFont.medium)
                     .fontColor($r('app.color.muted'))
                   Row({ space: 4 }) {
                     Text(`${this.periodMins}`)
                       .fontSize(28)
+                      .fontFamily(FiveMinFont.semiBold)
                       .fontWeight(FontWeight.Medium)
-                      .fontColor($r('app.color.ink'))
+                      .fontColor($r('app.color.brand_strong'))
                     Text(this.t('customUnit'))
                       .fontSize(13)
                       .fontColor($r('app.color.muted'))
@@ -312,7 +319,8 @@ export struct RecordsTab {
                 .layoutWeight(1)
                 .padding(16)
                 .alignItems(HorizontalAlign.Start)
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(229, 245, 236, 0.55)')
+                .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
                 .borderRadius(14)
               }
               .width('100%')
@@ -321,11 +329,13 @@ export struct RecordsTab {
                 Column({ space: 8 }) {
                   Text(this.t('overtimeInsightTitle'))
                     .fontSize(15)
+                    .fontFamily(FiveMinFont.semiBold)
                     .fontWeight(FontWeight.Medium)
                     .fontColor($r('app.color.ink'))
                     .width('100%')
                   Text(this.overtimeInsightLine)
                     .fontSize(14)
+                    .fontFamily(FiveMinFont.medium)
                     .fontWeight(FontWeight.Medium)
                     .fontColor($r('app.color.ink'))
                     .width('100%')
@@ -338,7 +348,8 @@ export struct RecordsTab {
                 .width('100%')
                 .padding(16)
                 .alignItems(HorizontalAlign.Start)
-                .backgroundColor($r('app.color.surface'))
+                .backgroundColor('rgba(255, 246, 232, 0.72)')
+                .border({ width: 1, color: 'rgba(201, 134, 45, 0.16)' })
                 .borderRadius(14)
               }
 
@@ -427,9 +438,16 @@ export struct RecordsTab {
                 }
               }
               .width('100%')
-              .backgroundColor($r('app.color.surface'))
+              .backgroundColor('rgba(255, 255, 255, 0.88)')
+              .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
               .borderRadius(14)
               .clip(true)
+              .shadow({
+                radius: 8,
+                color: 'rgba(31, 42, 36, 0.04)',
+                offsetX: 0,
+                offsetY: 2
+              })
             }
             .width('100%')
             .padding({ left: 16, right: 16, top: 16, bottom: 24 })
@@ -445,7 +463,10 @@ export struct RecordsTab {
       .height('100%')
       .justifyContent(FlexAlign.Start)
       .alignItems(HorizontalAlign.Start)
-      .backgroundColor('#F2F5F3')
+      .linearGradient({
+        angle: 180,
+        colors: [['#EEF6F1', 0], ['#F2F5F3', 0.48], ['#F4F8F5', 1]]
+      })
 
       if (this.showFilter) {
         Column() {

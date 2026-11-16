@@ -5,7 +5,9 @@
 
 .shell {
   height: 100vh;
-  background: var(--bg2);
+  background:
+    radial-gradient(720rpx 360rpx at 50% -6%, #dff0e6 0%, transparent 58%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 48%, #f4f8f5 100%);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -15,18 +17,19 @@
   display: flex;
   align-items: center;
   padding: 0 40rpx;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .title {
   font-size: var(--title-size);
   font-weight: 600;
   color: var(--ink);
+  letter-spacing: 0.01em;
 }
 
 .title-line {
   height: 1px;
-  background: var(--line);
+  background: rgba(215, 229, 220, 0.85);
 }
 
 .body {
@@ -56,7 +59,8 @@
 }
 
 .insight-card {
-  background: var(--surface);
+  background: rgba(255, 246, 232, 0.72);
+  border: 2rpx solid rgba(201, 134, 45, 0.16);
   border-radius: var(--radius-card, 28rpx);
   padding: 32rpx;
   margin-bottom: var(--section-gap);
@@ -85,7 +89,8 @@
 
 .stat-card {
   flex: 1;
-  background: var(--surface);
+  background: rgba(229, 245, 236, 0.55);
+  border: 2rpx solid rgba(47, 154, 104, 0.12);
   border-radius: var(--radius-card, 28rpx);
   padding: 32rpx;
   display: flex;
@@ -96,13 +101,15 @@
 .stat-title {
   font-size: 24rpx;
   color: var(--muted);
+  font-weight: 500;
 }
 
 .stat-value {
   font-size: 56rpx;
-  font-weight: 500;
-  color: var(--ink);
+  font-weight: 600;
+  color: var(--brand-strong);
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-value-row {
@@ -119,9 +126,11 @@
 }
 
 .card {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.88);
+  border: 2rpx solid rgba(215, 229, 220, 0.9);
   border-radius: var(--radius-card, 28rpx);
   overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(31, 42, 36, 0.04);
 }
 
 .empty {
@@ -129,7 +138,8 @@
   text-align: center;
   color: var(--muted);
   font-size: var(--body-size);
-  padding: 40rpx;
+  padding: 56rpx 40rpx;
+  line-height: 1.55;
 }
 
 .history-head {

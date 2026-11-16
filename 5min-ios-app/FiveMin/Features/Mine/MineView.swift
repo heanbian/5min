@@ -138,7 +138,13 @@ struct MineView: View {
                 .padding(.horizontal, FiveMinDimens.padBody)
                 .padding(.vertical, FiveMinDimens.padBody)
             }
-            .background(FiveMinColor.bg2)
+            .background(
+                LinearGradient(
+                    colors: [FiveMinColor.bg, FiveMinColor.bg2, FiveMinColor.bgBottom],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
         }
         .sheet(item: $sheet, onDismiss: { sceneEditor = nil }) { kind in
             sheetContent(kind)
@@ -186,15 +192,15 @@ struct MineView: View {
     private var header: some View {
         HStack {
             Text(model.t("tabMine"))
-                .font(FiveMinFont.ui(20, weight: .medium))
+                .font(FiveMinFont.ui(20, weight: .semibold))
                 .foregroundStyle(FiveMinColor.ink)
             Spacer()
         }
         .padding(.horizontal, 20)
         .frame(height: 52)
-        .background(FiveMinColor.surface)
+        .background(FiveMinColor.surface.opacity(0.72))
         .overlay(alignment: .bottom) {
-            Rectangle().fill(FiveMinColor.line).frame(height: 1)
+            Rectangle().fill(FiveMinColor.line.opacity(0.85)).frame(height: 1)
         }
     }
 
@@ -207,8 +213,13 @@ struct MineView: View {
 
     private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
-            .background(FiveMinColor.surface)
+            .background(FiveMinColor.surface.opacity(0.88))
+            .overlay(
+                RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
+                    .strokeBorder(FiveMinColor.line.opacity(0.9), lineWidth: 1)
+            )
             .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
+            .shadow(color: FiveMinColor.ink.opacity(0.04), radius: 8, y: 2)
     }
 
     private func alertBinding(get: @escaping () -> Bool, set: @escaping (Bool) -> Void) -> Binding<Bool> {

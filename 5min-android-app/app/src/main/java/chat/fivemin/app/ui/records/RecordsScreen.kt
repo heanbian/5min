@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -78,13 +79,17 @@ fun RecordsScreen(vm: TimerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FiveMinColors.bg2),
+            .background(
+                Brush.verticalGradient(
+                    listOf(FiveMinColors.bg, FiveMinColors.bg2, FiveMinColors.bgBottom),
+                ),
+            ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .background(FiveMinColors.surface)
+                .background(FiveMinColors.surface.copy(alpha = 0.72f))
                 .padding(horizontal = 20.dp)
                 .padding(vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -93,7 +98,7 @@ fun RecordsScreen(vm: TimerViewModel) {
                 text = vm.t("tabRecords"),
                 color = FiveMinColors.ink,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
             )
             if (rows.isNotEmpty() || filterOptions.isNotEmpty()) {
@@ -153,7 +158,15 @@ fun RecordsScreen(vm: TimerViewModel) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard))
+                        .background(
+                            FiveMinColors.warnSoft.copy(alpha = 0.72f),
+                            RoundedCornerShape(FiveMinDimens.radiusCard),
+                        )
+                        .border(
+                            1.dp,
+                            FiveMinColors.warn.copy(alpha = 0.16f),
+                            RoundedCornerShape(FiveMinDimens.radiusCard),
+                        )
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -214,7 +227,15 @@ fun RecordsScreen(vm: TimerViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard)),
+                    .background(
+                        FiveMinColors.surface.copy(alpha = 0.88f),
+                        RoundedCornerShape(FiveMinDimens.radiusCard),
+                    )
+                    .border(
+                        1.dp,
+                        FiveMinColors.line.copy(alpha = 0.9f),
+                        RoundedCornerShape(FiveMinDimens.radiusCard),
+                    ),
             ) {
                 if (rows.isEmpty()) {
                     Text(
@@ -332,13 +353,26 @@ private fun StatCard(
 ) {
     Column(
         modifier = modifier
-            .background(FiveMinColors.surface, RoundedCornerShape(FiveMinDimens.radiusCard))
+            .background(
+                FiveMinColors.brandSoft.copy(alpha = 0.55f),
+                RoundedCornerShape(FiveMinDimens.radiusCard),
+            )
+            .border(
+                1.dp,
+                FiveMinColors.brand.copy(alpha = 0.12f),
+                RoundedCornerShape(FiveMinDimens.radiusCard),
+            )
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(title, color = FiveMinColors.muted, fontSize = 12.sp)
+        Text(title, color = FiveMinColors.muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(value, color = FiveMinColors.ink, fontSize = 28.sp, fontWeight = FontWeight.Medium)
+            Text(
+                value,
+                color = FiveMinColors.brandStrong,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
             if (unit != null) {
                 Text(
                     unit,

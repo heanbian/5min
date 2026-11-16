@@ -235,7 +235,7 @@ struct TimerView: View {
                     .resizable()
                     .renderingMode(.original)
                     .scaledToFit()
-                    .frame(width: 22 * 108 / 32, height: 22)
+                    .frame(width: 24 * 108 / 32, height: 24)
                     .accessibilityLabel("5min")
                 Text(model.brandTitle)
                     .font(FiveMinFont.ui(19, weight: .semibold))
@@ -278,6 +278,13 @@ struct TimerView: View {
                     .frame(width: dial * 0.64)
             }
             .frame(width: dial, height: dial)
+            .scaleEffect(model.phase == .warn || model.phase == .done ? 1.018 : 1)
+            .animation(
+                (model.phase == .warn || model.phase == .done)
+                    ? .easeInOut(duration: model.phase == .done ? 0.625 : 0.9).repeatForever(autoreverses: true)
+                    : .easeOut(duration: 0.2),
+                value: model.phase
+            )
             .onTapGesture {
                 if model.phase == .done { model.realert() }
             }
