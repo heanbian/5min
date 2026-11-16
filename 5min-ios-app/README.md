@@ -6,7 +6,7 @@
 |------|------|
 | Bundle ID | `chat.5min.app` |
 | 显示名 | 如厕计时器(5min)（`CFBundleDisplayName`） |
-| 版本 | `FiveMin/Info.plist` → `CFBundleShortVersionString` / `CFBundleVersion`（与工程 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 保持一致；当前 `1.0.5` / `6`） |
+| 版本 | `FiveMin/Info.plist` → `CFBundleShortVersionString` / `CFBundleVersion`（与工程 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 保持一致；当前 `1.0.6` / `7`） |
 | 技术 | SwiftUI · UserNotifications · AVAudioEngine · Core Haptics |
 | 最低系统 | iOS 17（建议用 **Xcode 27.1+ / iOS 27.1 SDK** 构建以优化 iPhone Duo） |
 | 设备 | iPhone / iPad；支持 **iPhone Duo**（外屏紧凑 + 内屏宽布局自适应） |
@@ -107,7 +107,7 @@ cp ExportOptions.plist.example ExportOptions.plist
 2. Xcode Target → General → Version / Build
  （或 `project.pbxproj` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`）
 
-当前：`1.0.5`（Build `6`）。每次上架递增 Build；对外版本变了再改 Version。
+当前：`1.0.6`（Build `7`）。每次上架递增 Build；对外版本变了再改 Version。
 
 ---
 
