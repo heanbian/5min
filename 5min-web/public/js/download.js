@@ -7,29 +7,26 @@
     ios: {
       // 例：https://apps.apple.com/app/idXXXXXXXX
       url: '',
-      label: '前往 App Store',
+      label: 'App Store',
     },
     android: {
       // 例：https://play.google.com/store/apps/details?id=chat.fivemin.app
       url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.10.apk',
-      label: '点击下载',
+      label: '下载',
     },
     harmony: {
       // 例：华为应用市场详情页
       url: '',
-      label: '前往应用市场',
+      label: '应用市场',
     },
   };
 
-  const MP_TIP =
-    '在微信中打开「搜索」，输入「五分钟如厕计时器」，选择官方小程序即可使用。';
-
   const SUGGEST = {
-    ios: '当前设备更可能适合使用 iOS 客户端，可优先查看本页 iOS 入口。',
-    android: '当前设备更可能适合使用 Android 客户端，可优先查看本页 Android 入口。',
-    harmony: '当前设备更可能适合使用 HarmonyOS 客户端，可优先查看本页 HarmonyOS 入口。',
-    mp: '当前处于微信内，可按本页说明打开小程序，或先使用网页版。',
-    web: '也可先使用网页版；商店上架后可再安装官方客户端。',
+    ios: '当前设备更适合使用 iOS 客户端，上架后可从本页安装。',
+    android: '当前设备更适合使用 Android 客户端，可优先下载官方安装包。',
+    harmony: '当前设备更适合使用 HarmonyOS 客户端，上架后可从本页安装。',
+    mp: '当前处于微信内，可展开小程序码后长按识别打开。',
+    web: '也可先使用网页版；商店上架后再安装官方客户端。',
   };
 
   const detectPlatform = () => {
@@ -45,16 +42,25 @@
     if (!el || !url) return;
     el.href = url;
     el.textContent = label;
-    el.classList.remove('is-disabled', 'btn-muted');
-    el.classList.add('btn-primary');
+    el.classList.remove('is-disabled');
+    el.classList.add('action-primary');
     el.removeAttribute('aria-disabled');
     el.setAttribute('target', '_blank');
     el.setAttribute('rel', 'noopener noreferrer');
   };
 
+  const setMpOpen = (row, toggle, drawer, open) => {
+    if (!row || !toggle || !drawer) return;
+    row.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.textContent = open ? '收起' : '扫码打开';
+    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+  };
+
+  const root = document.getElementById('channels');
   const list = document.getElementById('platform-list');
   const hint = document.getElementById('platform-hint');
-  if (!list) return;
+  if (!root || !list) return;
 
   Object.keys(STORES).forEach((key) => {
     const row = list.querySelector(`[data-platform="${key}"]`);
@@ -64,21 +70,29 @@
     if (cfg.url) enableStoreLink(btn, cfg.url, cfg.label);
   });
 
+  const mpRow = list.querySelector('[data-platform="mp"]');
+  const mpToggle = mpRow && mpRow.querySelector('[data-role="mp-toggle"]');
+  const mpDrawer = document.getElementById('mp-drawer');
+  if (mpRow && mpToggle && mpDrawer) {
+    mpRow.addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-role="mp-toggle"]');
+      if (!toggle || !mpRow.contains(toggle)) return;
+      event.preventDefault();
+      const open = !mpRow.classList.contains('is-open');
+      setMpOpen(mpRow, mpToggle, mpDrawer, open);
+    });
+  }
+
   const suggested = detectPlatform();
-  const suggestedRow = list.querySelector(`[data-platform="${suggested}"]`);
-  if (suggestedRow) {
-    suggestedRow.classList.add('is-suggested');
+  const suggestedEl = root.querySelector(`[data-platform="${suggested}"]`);
+  if (suggestedEl) {
+    suggestedEl.classList.add('is-suggested');
     if (hint && SUGGEST[suggested]) {
       hint.hidden = false;
       hint.textContent = SUGGEST[suggested];
     }
-  }
-
-  const mpBtn = list.querySelector('[data-role="mp-tip"]');
-  if (mpBtn && hint) {
-    mpBtn.addEventListener('click', () => {
-      hint.hidden = false;
-      hint.textContent = MP_TIP;
-    });
+    if (suggested === 'mp' && mpRow && mpToggle && mpDrawer) {
+      setMpOpen(mpRow, mpToggle, mpDrawer, true);
+    }
   }
 })();

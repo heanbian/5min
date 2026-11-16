@@ -17,7 +17,7 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v6';
+const CACHE = '5min-shell-v7';
 
 const PRECACHE = [
   './',

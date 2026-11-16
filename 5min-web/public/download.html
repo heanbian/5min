@@ -23,7 +23,7 @@
 <meta name="format-detection" content="telephone=no">
 <title>下载 App · 如厕计时器(5min)</title>
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/download.css?v=7">
+<link rel="stylesheet" href="css/download.css?v=12">
 <meta name="description" content="获取如厕计时器(5min) 官方客户端与网页版：iOS、Android、HarmonyOS、微信小程序。由学记宝运营，官网 https://5min.chat。仅供习惯提醒。">
 <meta name="keywords" content="如厕计时器,如厕计时器(5min),下载,App,iOS,Android,HarmonyOS,微信小程序,5min,学记宝">
 <meta name="author" content="学记宝">
@@ -83,62 +83,86 @@
 </head>
 <body>
 <main class="wrap" id="channels">
-  <div class="brand-row">
-    <img src="img/logo.svg" width="108" height="32" alt="5min">
-  </div>
-  <h1>下载 App</h1>
-  <p class="lede">获取如厕计时器(5min) 官方客户端、微信小程序与网页版。请通过本站与正规应用商店、小程序入口获取；各端功能以实际发布版本为准。</p>
+  <header class="page-head">
+    <a class="brand" href="./" aria-label="如厕计时器首页">
+      <img src="img/logo.svg" width="108" height="32" alt="5min">
+    </a>
+    <h1>下载 App</h1>
+    <p class="lede">官方客户端、微信小程序与网页版，请通过本站与正规渠道获取。</p>
+  </header>
 
-  <ul class="platform-list" id="platform-list">
-    <li class="platform" data-platform="ios">
-      <div class="platform-meta">
-        <h2 class="platform-name">iOS</h2>
-        <p class="platform-desc">App Store 官方客户端</p>
-      </div>
-      <a class="btn btn-muted is-disabled" href="#" data-role="store" aria-disabled="true">待商店上架</a>
-    </li>
-    <li class="platform" data-platform="android">
-      <div class="platform-meta">
-        <h2 class="platform-name">Android</h2>
-        <p class="platform-desc">应用商店官方客户端</p>
-      </div>
-      <a class="btn btn-muted is-disabled" href="#" data-role="store" aria-disabled="true">待商店上架</a>
-    </li>
-    <li class="platform" data-platform="harmony">
-      <div class="platform-meta">
-        <h2 class="platform-name">HarmonyOS</h2>
-        <p class="platform-desc">华为应用市场官方客户端</p>
-      </div>
-      <a class="btn btn-muted is-disabled" href="#" data-role="store" aria-disabled="true">待商店上架</a>
-    </li>
-    <li class="platform" data-platform="mp">
-      <div class="platform-meta">
-        <h2 class="platform-name">微信小程序</h2>
-        <p class="platform-desc">微信内搜索「五分钟如厕计时器」，认准运营方学记宝</p>
-      </div>
-      <button type="button" class="btn btn-ghost" data-role="mp-tip">如何打开</button>
-    </li>
-    <li class="platform" data-platform="web">
-      <div class="platform-meta">
-        <h2 class="platform-name">网页版</h2>
-        <p class="platform-desc">浏览器打开 5min.chat，可添加至主屏幕</p>
-      </div>
-      <a class="btn btn-primary" href="./">打开网页版</a>
-    </li>
-  </ul>
+  <section class="block" aria-label="获取方式">
+    <ul class="platform-list" id="platform-list">
+      <li class="platform" data-platform="ios">
+        <div class="platform-row">
+          <div class="platform-meta">
+            <h3 class="platform-name">iOS</h3>
+            <p class="platform-desc">App Store</p>
+          </div>
+          <a class="action is-disabled" href="#" data-role="store" aria-disabled="true">待上架</a>
+        </div>
+      </li>
+      <li class="platform" data-platform="android">
+        <div class="platform-row">
+          <div class="platform-meta">
+            <h3 class="platform-name">Android</h3>
+            <p class="platform-desc">官方安装包</p>
+          </div>
+          <a class="action is-disabled" href="#" data-role="store" aria-disabled="true">待上架</a>
+        </div>
+      </li>
+      <li class="platform" data-platform="harmony">
+        <div class="platform-row">
+          <div class="platform-meta">
+            <h3 class="platform-name">HarmonyOS</h3>
+            <p class="platform-desc">华为应用市场</p>
+          </div>
+          <a class="action is-disabled" href="#" data-role="store" aria-disabled="true">待上架</a>
+        </div>
+      </li>
+      <li class="platform platform-mp" data-platform="mp">
+        <div class="platform-row">
+          <div class="platform-meta">
+            <h3 class="platform-name">微信小程序</h3>
+            <p class="platform-desc">微信扫一扫打开</p>
+          </div>
+          <button type="button" class="action action-primary" data-role="mp-toggle" aria-expanded="false" aria-controls="mp-drawer">扫码打开</button>
+        </div>
+        <div class="mp-drawer" id="mp-drawer" aria-hidden="true">
+          <div class="mp-drawer-inner">
+            <figure class="mp-code">
+              <img src="img/mp-code.png" width="610" height="610" alt="微信扫一扫打开「五分钟如厕计时器」小程序" decoding="async">
+              <figcaption>微信扫一扫 · 也可搜索「五分钟如厕计时器」</figcaption>
+            </figure>
+          </div>
+        </div>
+      </li>
+      <li class="platform" data-platform="web">
+        <div class="platform-row">
+          <div class="platform-meta">
+            <h3 class="platform-name">网页版</h3>
+            <p class="platform-desc">5min.chat · 可添加至主屏幕</p>
+          </div>
+          <a class="action action-primary" href="./">打开</a>
+        </div>
+      </li>
+    </ul>
+  </section>
 
-  <p class="hint hint-suggest" id="platform-hint" hidden></p>
-  <p class="hint">运营方学记宝 · 意见反馈 <a href="mailto:5min-chat@heanbian.com">5min-chat@heanbian.com</a> · 仅供习惯提醒，不构成医疗或健康建议。</p>
+  <p class="hint-suggest" id="platform-hint" hidden></p>
 
-  <nav class="foot-nav" aria-label="相关页面">
-    <a href="./">如厕计时器</a>
-    <a href="about.html">关于</a>
-    <a href="faq.html">常见问题</a>
-    <a href="privacy.html">隐私政策</a>
-    <a href="terms.html">用户协议</a>
-  </nav>
+  <footer class="page-foot">
+    <p class="note">运营方学记宝 · 意见反馈 <a href="mailto:5min-chat@heanbian.com">5min-chat@heanbian.com</a><br>仅供习惯提醒，不构成医疗或健康建议。</p>
+    <nav class="foot-nav" aria-label="相关页面">
+      <a href="./">如厕计时器</a>
+      <a href="about.html">关于</a>
+      <a href="faq.html">常见问题</a>
+      <a href="privacy.html">隐私政策</a>
+      <a href="terms.html">用户协议</a>
+    </nav>
+  </footer>
 </main>
 
-<script src="js/download.js" defer></script>
+<script src="js/download.js?v=12" defer></script>
 </body>
 </html>
