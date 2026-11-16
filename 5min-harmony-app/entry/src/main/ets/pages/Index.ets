@@ -231,7 +231,66 @@ struct Index {
     this.privacyReady = true;
     this.ready = true;
     this.refreshUi();
+    await this.applyStoreScreenshotSceneIfNeeded();
     await this.syncCloudOnLaunchIfNeeded();
+  }
+
+  /** Store marketing scenes via Want param FIVEMIN_SCREENSHOT=home|running|done (also idle/warn). */
+  private async applyStoreScreenshotSceneIfNeeded(): Promise<void> {
+    const scene = AppStorage.get('FIVEMIN_SCREENSHOT') as string;
+    if (!scene) {
+      return;
+    }
+    AppStorage.delete('FIVEMIN_SCREENSHOT');
+    this.privacyAccepted = true;
+    this.privacyReady = true;
+    await this.prefs.setPrivacyAccepted(true);
+    this.currentTab = 1;
+    this.setPreset(5, 'toilet');
+    this.refreshUi();
+    if (scene === 'home' || scene === 'idle') {
+      return;
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 400));
+    if (scene === 'running') {
+      this.state.remainMs = 3 * 60 * 1000 + 42 * 1000;
+      this.state.endAt = Date.now() + this.state.remainMs;
+      this.state.running = true;
+      this.state.finished = false;
+      this.finishedHandled = false;
+      this.startTicker();
+      this.setKeepScreenOn(true);
+      this.refreshUi();
+      return;
+    }
+    if (scene === 'warn') {
+      this.state.remainMs = 42 * 1000;
+      this.state.endAt = Date.now() + this.state.remainMs;
+      this.state.running = true;
+      this.state.finished = false;
+      this.finishedHandled = false;
+      this.startTicker();
+      this.setKeepScreenOn(true);
+      this.refreshUi();
+      return;
+    }
+    if (scene === 'done') {
+      this.finishedHandled = true;
+      this.stopTicker();
+      await FinishAlerter.stop();
+      this.state.remainMs = 0;
+      this.state.running = false;
+      this.state.finished = true;
+      this.state.phase = 'done';
+      this.inOvertime = true;
+      this.overtimeAt = Date.now() - 12_000;
+      this.overtimeMs = 12_000;
+      this.lastRecordedSessionId = await this.history.recordSession(this.state.totalMs, 'toilet');
+      await this.refreshTodayStats();
+      await this.refreshSuggested();
+      this.recordsEpoch = this.recordsEpoch + 1;
+      this.refreshUi();
+    }
   }
 
   /** Pull/push cloud snapshot when storageMode is cloud (matches Android app start). */

@@ -152,7 +152,7 @@ final class TimerViewModel: ObservableObject {
         privacyAccepted = true
         prefs.privacyAccepted = true
         switch scene {
-        case "home":
+        case "home", "idle":
             selectedTab = 1
             setPreset(minutes: 5, sceneId: "toilet")
         case "running":
@@ -171,6 +171,31 @@ final class TimerViewModel: ObservableObject {
                 guard let self else { return }
                 self.remainMs = 42_000
                 self.start()
+            }
+        case "done":
+            selectedTab = 1
+            setPreset(minutes: 5, sceneId: "toilet")
+            // Finished UI without sound / notification (store marketing shot).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                guard let self else { return }
+                self.finishedHandled = true
+                self.stopTicker()
+                NotificationService.cancelFinish()
+                self.running = false
+                self.finished = true
+                self.remainMs = 0
+                self.inOvertime = true
+                self.overtimeStart = Date().addingTimeInterval(-12)
+                self.overtimeMs = 12_000
+                self.lastRecordedSessionId = self.history.recordSession(
+                    elapsedMs: self.totalMs,
+                    sceneId: "toilet"
+                )
+                self.refreshTodayStats()
+                self.refreshSuggested()
+                self.recordsEpoch += 1
+                self.refreshPhase()
+                self.startTicker()
             }
         case "records":
             seedStoreScreenshotHistory()

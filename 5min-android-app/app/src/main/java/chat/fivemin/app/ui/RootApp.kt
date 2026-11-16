@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,6 +60,13 @@ fun RootApp(
     val context = LocalContext.current
     val layoutDirection =
         if (state.locale.startsWith("ar")) LayoutDirection.Rtl else LayoutDirection.Ltr
+
+    LaunchedEffect(Unit) {
+        val scene = (context as? Activity)?.intent?.getStringExtra("FIVEMIN_SCREENSHOT")
+        if (!scene.isNullOrBlank()) {
+            vm.applyStoreScreenshot(scene)
+        }
+    }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
     Box(modifier = Modifier.fillMaxSize()) {

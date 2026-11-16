@@ -14,7 +14,8 @@ BUNDLE_ID="chat.5min.app"
 IPHONE_NAME="${IPHONE_NAME:-iPhone 17}"
 IPAD_NAME="${IPAD_NAME:-iPad Pro 13-inch (M5)}"
 
-SCENES=(home running warn records mine)
+# Default: store trio (开始前 / 进行中 / 结束后). Override: SCENES="home running warn records mine"
+SCENES=(${SCENES:-idle running done})
 
 die() { echo "error: $*" >&2; exit 1; }
 
@@ -78,9 +79,16 @@ capture_device() {
     # First-frame paint + deferred start() for running/warn (~0.4s) + ticker.
     case "$scene" in
       running|warn) sleep 2.8 ;;
+      done) sleep 2.2 ;;
       *) sleep 2.0 ;;
     esac
     local file="$OUT/${prefix}-${scene}.png"
+    # Canonical store trio aliases
+    case "$scene" in
+      idle|home) file="$OUT/${prefix}-01_idle_start.png" ;;
+      running) file="$OUT/${prefix}-02_running.png" ;;
+      done) file="$OUT/${prefix}-03_done_restart.png" ;;
+    esac
     xcrun simctl io "$udid" screenshot "$file" >/dev/null
     local w h bytes
     w="$(sips -g pixelWidth "$file" 2>/dev/null | awk '/pixelWidth/ {print $2}')"

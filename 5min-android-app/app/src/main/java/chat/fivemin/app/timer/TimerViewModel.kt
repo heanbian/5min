@@ -3,6 +3,7 @@ package chat.fivemin.app.timer
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.pm.ApplicationInfo
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.alert.FinishAlerter
 import chat.fivemin.app.data.AppLocales
@@ -103,6 +104,91 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             TimerBus.finished.collect { onExternalFinish(it.sessionId) }
         }
+    }
+
+    /**
+     * DEBUG / store marketing: launch with
+     * `adb shell am start -n chat.fivemin.app/.MainActivity --es FIVEMIN_SCREENSHOT home|running|done`
+     * (also accepts idle / warn). Skips privacy sheet and finish alerts.
+     */
+    fun applyStoreScreenshot(scene: String) {
+        val debuggable =
+            (getApplication<Application>().applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (!debuggable) return
+        acceptPrivacy()
+        // CN store listings: force Simplified Chinese copy on marketing shots.
+        setLocale("zh-CN")
+        when (scene) {
+            "home", "idle" -> {
+                setSelectedTab(1)
+                setPresetMinutes(5, "toilet")
+            }
+            "running" -> {
+                setSelectedTab(1)
+                setPresetMinutes(5, "toilet")
+                viewModelScope.launch {
+                    delay(400)
+                    startForScreenshot(3 * 60_000L + 42_000L)
+                }
+            }
+            "warn" -> {
+                setSelectedTab(1)
+                setPresetMinutes(5, "toilet")
+                viewModelScope.launch {
+                    delay(400)
+                    startForScreenshot(42_000L)
+                }
+            }
+            "done" -> {
+                setSelectedTab(1)
+                setPresetMinutes(5, "toilet")
+                viewModelScope.launch {
+                    delay(350)
+                    applyDoneScreenshot()
+                }
+            }
+        }
+    }
+
+    private fun startForScreenshot(remain: Long) {
+        finishedHandled = false
+        endAt = System.currentTimeMillis() + remain
+        _state.update {
+            it.copy(
+                remainMs = remain,
+                running = true,
+                finished = false,
+                phase = phaseFor(remain, true, false),
+            )
+        }
+        startTicker()
+    }
+
+    private fun applyDoneScreenshot() {
+        finishedHandled = true
+        stopTicker()
+        TimerScheduler.cancel(getApplication())
+        TimerForegroundService.stop(getApplication())
+        FinishAlerter.stop()
+        lastRecordedId = history.recordSession(_state.value.totalMs, "toilet")
+        val (count, ms) = history.todayStats()
+        overtimeAt = System.currentTimeMillis() - 12_000L
+        _state.update {
+            it.copy(
+                remainMs = 0L,
+                running = false,
+                finished = true,
+                phase = TimerPhase.Done,
+                overtimeMs = 12_000L,
+                statsCount = count,
+                statsMs = ms,
+                suggestedSceneIds = computeSuggested(),
+                recordsEpoch = it.recordsEpoch + 1,
+                sessionLogged = lastRecordedId > 0L,
+                showStandRitual = false,
+            )
+        }
+        startOvertimeTicker()
     }
 
     private fun computeSuggested(customScenes: List<CustomScene> = _state.value.customScenes): List<String> {

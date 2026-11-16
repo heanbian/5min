@@ -5,6 +5,12 @@ import { font, window } from '@kit.ArkUI';
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, '5min', 'Ability onCreate');
+    // Store marketing: hdc shell aa start -a EntryAbility -b chat.5min.app
+    //   --ps FIVEMIN_SCREENSHOT home|running|done
+    const shot = want?.parameters?.['FIVEMIN_SCREENSHOT'];
+    if (typeof shot === 'string' && shot.length > 0) {
+      AppStorage.setOrCreate('FIVEMIN_SCREENSHOT', shot);
+    }
     // Plus Jakarta Sans — Latin UI；缺字回退系统中日韩字体
     try {
       font.registerFont({
