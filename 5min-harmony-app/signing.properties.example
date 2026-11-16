@@ -1,15 +1,16 @@
 # Copy to signing.properties (gitignored) after downloading release materials
 # from AppGallery Connect → 用户与访问 / 证书指纹 / Profile.
+# AGC App ID: 6917621936327753309  bundleName: chat.5min.app
 #
 # Then run:  python3 scripts/apply-signing.py
 # Or fill the same paths into DevEco: File → Project Structure → Signing Configs
 
-name=release
+name=default
 type=HarmonyOS
-storeFile=signing/material/5min-release.p12
+storeFile=signing/material/5min_chat.p12
 storePassword=CHANGE_ME
-keyAlias=5min
+keyAlias=5min_chat
 keyPassword=CHANGE_ME
-certpath=signing/material/5min-release.cer
-profile=signing/material/5min-release.p7b
+certpath=signing/material/5min_chat.cer
+profile=signing/material/5min_chatRelease.p7b
 signAlg=SHA256withECDSA

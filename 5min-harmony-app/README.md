@@ -3,6 +3,7 @@
 **如厕计时器(5min)** — HarmonyOS 原生客户端。运营方：学记宝。官网：https://5min.chat。
 
 - **bundleName**：`chat.5min.app`
+- **App ID（AGC）**：`6917621936327753309`
 - **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（与 Android `1.0.0` 对齐；`versionCode` 采用 `major*1000000+minor*1000+patch`）
 - **技术**：ArkTS · ArkUI（Stage）· Preferences · Vibrator · Notification
 
@@ -41,14 +42,18 @@ cd ../5min-web && npm run export-shared
 
 ### 正式发布（AppGallery）
 
-1. 在 [AppGallery Connect](https://developer.huawei.com/consumer/cn/service/josp/agc/index.html) 创建应用（包名 `chat.5min.app`），申请发布证书 / Profile。
-2. 将 `.p12` / `.cer` / `.p7b` 放到 `signing/material/`（已 gitignore）。
+1. 在 [AppGallery Connect](https://developer.huawei.com/consumer/cn/service/josp/agc/index.html) 使用应用 **App ID `6917621936327753309`**（包名 `chat.5min.app`），申请/下载发布证书与 Profile。
+2. 将 `.p12` / `.cer` / `.p7b` 放到 `signing/material/`（已 gitignore）。当前发布材料约定：
+   - 证书：`signing/material/5min_chat.cer`（亦可保留桌面下载名 `fivemin_chat.cer` 副本）
+   - Profile：`signing/material/5min_chatRelease.p7b`（须含上述 App ID）
+   - 密钥库：`signing/material/5min_chat.p12`（alias `5min_chat`）
 3. **在 DevEco 里配置签名（推荐）**
  `File` → `Project Structure` → `Signing Configs` → 取消「Automatically generate signature」
  填入 Store File / Cert / Profile / 密码 / Alias → `Apply`。
  IDE 会把 `storePassword` / `keyPassword` **加密**写入 `build-profile.json5`（明文密码长度不足 32 会报 `00303116`）。
 4. 可选：复制 `signing.properties.example` → `signing.properties` 仅作路径备忘；正式注入密码请用上一步 IDE，不要手写明文进 `build-profile.json5`。
 
+> 若在 AGC 删除旧应用并新建，必须换用绑定新 App ID 的 Profile（`.p7b`），仅换证书不够。
 > `signing.properties`、`signing/material/`、注入后的本地 `build-profile.json5` 密钥信息勿提交 Git。
 
 ## 打包正式版（HAP / APP）
