@@ -8,11 +8,14 @@ Thumbs.db
 .idea/
 .vscode/
 *.code-workspace
+.cursor/
+*.iml
 
 # 微信开发者工具本地私有配置 / 上传密钥（勿提交）
 project.private.config.json
 private.*.key
 *.key
+local.properties
 
 node_modules/
 miniprogram_npm/

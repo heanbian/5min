@@ -129,7 +129,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 2. **Product → Archive**
 3. Organizer → **Distribute App** → App Store Connect
 
-上传也可用 Transporter。图标可用 `store/artwork/ic_launcher_1024.png`；截图放 `store/artwork/screenshots/`。
+上传也可用 Transporter。图标可用 `store/artwork/ic_launcher_1024.png`；截图本地生成到 `store/artwork/screenshots/`（已 gitignore，勿提交）。
 
 ### 上架文案要点
 
@@ -157,7 +157,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 **应提交**
 
 - 源码、`FiveMin.xcodeproj`、`Info.plist`、`Assets.xcassets`（含 AppIcon / Logo）
-- `scripts/`、`store/artwork/`（图标、商店截图、标题创意素材）
+- `scripts/`、`store/artwork/` 下图标（`ic_launcher_*.png`、`logo.png`）
 - `ExportOptions.plist.example`、`signing.properties.example`、`signing/README.md`
 - `LICENSE`、`README.md`、`.gitignore`
 
@@ -165,6 +165,8 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 
 - `ExportOptions.plist`、`signing.properties`、`signing/material/`
 - `build/`、`DerivedData/`、`*.ipa`、`*.xcarchive`、`store/release/`
+- `store/artwork/screenshots/`、`store/artwork/creative/`（本地生成的商店截图 / 创意图）
+- 本地测试目录与 `*.xcresult`
 - `xcuserdata/`、证书与描述文件、本地虚拟环境
 ---
 
@@ -182,8 +184,9 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 │ └── Services/
 ├── scripts/
 │ ├── generate_icons.py
+│ ├── capture_store_screenshots.sh
 │ └── release.sh
-├── store/artwork/ # 商店图标 / 截图目录
+├── store/artwork/ # 图标可入库；screenshots/ · creative/ 已忽略
 ├── signing/ # 本地签名说明；material/ 不入库
 ├── ExportOptions.plist.example
 ├── signing.properties.example

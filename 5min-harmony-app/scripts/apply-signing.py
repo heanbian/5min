@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PROPS = ROOT / "signing.properties"
 PROFILE = ROOT / "build-profile.json5"
+PROFILE_EXAMPLE = ROOT / "build-profile.json5.example"
 
 
 def load_props(path: Path) -> dict[str, str]:
@@ -24,10 +25,24 @@ def load_props(path: Path) -> dict[str, str]:
     return out
 
 
+def ensure_profile() -> None:
+    """Local build-profile.json5 is gitignored; bootstrap from example when missing."""
+    if PROFILE.exists():
+        return
+    if not PROFILE_EXAMPLE.exists():
+        raise SystemExit(
+            f"Missing {PROFILE.name} and {PROFILE_EXAMPLE.name}. "
+            "Restore build-profile.json5.example from the repo."
+        )
+    PROFILE.write_text(PROFILE_EXAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
+    print(f"Created {PROFILE.name} from {PROFILE_EXAMPLE.name}")
+
+
 def main() -> int:
     if not PROPS.exists():
         print(f"Missing {PROPS.name}. Copy signing.properties.example → signing.properties")
         return 1
+    ensure_profile()
     p = load_props(PROPS)
     required = (
         "name", "type", "storeFile", "storePassword", "keyAlias",

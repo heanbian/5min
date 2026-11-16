@@ -1,4 +1,4 @@
-# Local SDK / machine config
+# Local SDK / machine config (Android Studio / SDK path)
 /local.properties
 *.keystore
 *.jks
@@ -29,6 +29,19 @@ keystore.properties
 *.ap_
 *.dex
 *.class
+/store/release/
+
+# Store marketing (regenerate locally; do not commit)
+/store/artwork/screenshots/
+/store/artwork/creative/
+
+# Local / instrumented tests (keep out of the product repo)
+/app/src/test/
+/app/src/androidTest/
+/app/src/androidTestDebug/
+*.xcresult/
+/test-results/
+/coverage/
 
 # Misc
 .DS_Store

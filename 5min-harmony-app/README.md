@@ -54,7 +54,8 @@ cd ../5min-web && npm run export-shared
 4. 可选：复制 `signing.properties.example` → `signing.properties` 仅作路径备忘；正式注入密码请用上一步 IDE，不要手写明文进 `build-profile.json5`。
 
 > 若在 AGC 删除旧应用并新建，必须换用绑定新 App ID 的 Profile（`.p7b`），仅换证书不够。
-> `signing.properties`、`signing/material/`、注入后的本地 `build-profile.json5` 密钥信息勿提交 Git。
+> `signing.properties`、`signing/material/`、本地 `build-profile.json5`（含本机路径与加密密码）勿提交 Git；仓库只保留 `build-profile.json5.example`。
+> 商店截图放 `store/artwork/screenshots/`（已 gitignore）；可用 `scripts/capture_store_screenshots.sh` 本地生成。
 
 ## 打包正式版（HAP / APP）
 

@@ -38,8 +38,8 @@ npm run dev                             # 或 ./run.sh → http://127.0.0.1:8080
 
 ## 仓库约定
 
-- **勿提交**：签名密钥 / `*.jks` / `ExportOptions.plist` / `signing.properties` / `keystore.properties` / `local.properties` / 微信 `project.private.config.json` 与 `private.*.key` / 各端 `build` 与本地虚拟环境 / `5min-web/server.conf`
-- **商店素材**：各端 `store/artwork/` 可入库；正式包产物放 `store/release/`（已忽略）
+- **勿提交**：签名密钥 / `*.jks` / `ExportOptions.plist` / `signing.properties` / `keystore.properties` / `local.properties` / 鸿蒙本地 `build-profile.json5`（用 `build-profile.json5.example`）/ 微信 `project.private.config.json` 与 `private.*.key` / IDE 与 AI 工具目录（`.idea/`、`.vscode/`、`.cursor/`）/ 各端 `build` 与本地虚拟环境 / `5min-web/server.conf` / 各端商店截图与创意图（`store/artwork/screenshots/`、`store/artwork/creative/`）/ 本地测试产物
+- **商店素材**：各端 `store/artwork/` 下图标可入库；截图 / 创意图 / `store/release/` 包体本地生成，已忽略
 - **共享文案**：以 `5min-web/public/js/i18n/locales.js` 为源，用 `export-shared.mjs` 同步到 Android / 鸿蒙 / iOS / 小程序
 
 ## 许可

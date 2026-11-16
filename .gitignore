@@ -7,7 +7,7 @@ Thumbs.db
 *~
 *.cache
 
-# IDE / editor (all platforms)
+# IDE / editor / AI tooling (all platforms)
 .idea/
 *.iml
 .vscode/
@@ -19,21 +19,43 @@ Thumbs.db
 .springBeans
 .sts4-cache
 .workbuddy/
+.cursor/
+.claude/
+.codex/
+*.hprof
+*.prefs
 
-# Tooling caches accidentally created at monorepo root
+# Tooling caches / local SDK state
 .hvigor/
 .gradle/
+.kotlin/
+.preview/
+.cxx/
+.externalNativeBuild/
+.navigation/
+captures/
 node_modules/
+oh_modules/
 .tools-venv/
 .venv/
 .venv-*/
 __pycache__/
 *.pyc
+*.orig
 
-# Local env / secrets (never commit)
+# Local env / machine SDK & signing (never commit)
 .env
 .env.*
 !.env.example
+**/local.properties
+**/signing.properties
+**/ExportOptions.plist
+**/server.conf
+**/project.private.config.json
+# Harmony DevEco local signing profile (absolute paths + encrypted passwords)
+**/build-profile.json5
+!**/entry/build-profile.json5
+!**/build-profile.json5.example
 *.jks
 *.keystore
 *.p12
@@ -41,3 +63,17 @@ __pycache__/
 *.pem
 AuthKey_*.p8
 private.*.key
+
+# Native apps (Android / iOS / Harmony): local-only store & test artifacts
+**/store/artwork/screenshots/
+**/store/artwork/creative/
+**/store/release/
+**/androidTest/
+**/src/test/
+**/ohosTest/
+**/*Tests/
+**/*UITests/
+*.xcresult/
+**/test-results/
+**/coverage/
+.review-frames/

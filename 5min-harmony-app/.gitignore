@@ -1,5 +1,6 @@
-# Local SDK / machine config
+# Local SDK / machine config / DevEco signing (paths + encrypted passwords)
 /local.properties
+/build-profile.json5
 *.p12
 *.pem
 *.key
@@ -35,6 +36,17 @@ oh-package-lock.json5
 *.app
 *.hsp
 *.har
+
+# Store marketing (regenerate via scripts/capture_store_screenshots.sh)
+/store/artwork/screenshots/
+/store/artwork/creative/
+
+# Local / instrumented tests (Hypium etc.)
+**/src/test/
+**/src/ohosTest/
+**/ohosTest/
+/test-results/
+/coverage/
 
 # Misc / local tooling
 .DS_Store

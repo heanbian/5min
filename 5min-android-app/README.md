@@ -70,6 +70,7 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
  正式发布前在「应用内容」中声明前台服务（specialUse / 计时提醒）与通知用途。
 
 > `keystore/` 与 `keystore.properties` 已忽略，勿提交到 Git。密钥丢失将无法更新同一应用。
+> 商店截图放 `store/artwork/screenshots/`（已 gitignore）；可用 `scripts/capture_store_screenshots.sh` 本地生成。
 
 ## 隐私
 

@@ -35,10 +35,14 @@ Package.resolved
 Pods/
 Carthage/Build/
 
-# IDE / playground
+# IDE / playground / editor
 *.playground
 timeline.xctimeline
 playground.xcworkspace
+.idea/
+.vscode/
+.cursor/
+*.iml
 
 # Misc
 .DS_Store
@@ -50,7 +54,14 @@ playground.xcworkspace
 .venv/
 .venv-*/
 
-# Local screenshot / capture scratch
-store/artwork/screenshots/_debug_*.png
-store/artwork/screenshots/_tmp_*.png
+# Store marketing (regenerate via scripts/capture_store_screenshots.sh etc.)
+/store/artwork/screenshots/
+/store/artwork/creative/
+
+# Local unit / UI tests
+/*Tests/
+/*UITests/
+*.xcresult/
+/test-results/
+/coverage/
 /tmp/
