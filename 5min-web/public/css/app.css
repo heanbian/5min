@@ -18,8 +18,9 @@
     --brand:#2f9a68;
     --brand-strong:#248556;
     --brand-soft:#e5f5ec;
+    --brand-lift:#36a872;
     --bg:#eef6f1;
-    --bg-2:#f7faf8;
+    --bg-2:#f2f5f3;
     --surface:#ffffff;
     --ink:#1f2a24;
     --muted:#5f6f66;
@@ -67,7 +68,7 @@
     background:
       radial-gradient(900px 420px at 50% -8%, #dff0e6 0%, transparent 60%),
       linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 52%, #f4f8f5 100%);
-    transition:background-color .35s ease;
+    transition:background .35s ease;
     overscroll-behavior:none;
   }
   body.warn{
@@ -365,6 +366,13 @@
     width:100%;
     height:auto;
   }
+  @keyframes colon-blink{
+    0%,49%{opacity:1}
+    50%,100%{opacity:0.22}
+  }
+  .time.is-running .watch-colon{
+    animation:colon-blink 1s steps(1, end) infinite;
+  }
   .progress.is-warn{stroke:var(--warn)}
   .progress.is-danger{stroke:var(--danger)}
   .progress.is-safe{stroke:var(--safe)}
@@ -473,7 +481,7 @@
   }
   .primary{
     color:#fff;
-    background:linear-gradient(180deg, #36a872 0%, var(--brand) 55%, var(--brand-strong) 100%);
+    background:linear-gradient(180deg, var(--brand-lift) 0%, var(--brand) 55%, var(--brand-strong) 100%);
     box-shadow:0 8px 20px rgba(47, 154, 104, 0.28);
   }
   .primary:active:not(:disabled){
@@ -735,7 +743,7 @@
 
     button:active:not(:disabled){transform:translateY(1px) scale(1)}
     .primary:hover:not(:disabled){
-      background:linear-gradient(180deg, #3ab078 0%, var(--brand-strong) 100%);
+      background:linear-gradient(180deg, var(--brand-lift) 0%, var(--brand-strong) 100%);
       box-shadow:0 10px 24px rgba(47, 154, 104, 0.34);
     }
     .ghost:hover:not(:disabled){

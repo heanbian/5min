@@ -4,6 +4,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -302,6 +304,7 @@ fun TimerHome(
                     DigitalWatchTime(
                         text = vm.format(dialMs),
                         color = timeColor,
+                        blinking = state.running,
                     )
                 }
 
@@ -380,7 +383,7 @@ fun TimerHome(
                             .background(
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color(0xFF36A872),
+                                        FiveMinColors.brandLift,
                                         FiveMinColors.brand,
                                         FiveMinColors.brandStrong,
                                     ),
@@ -429,14 +432,27 @@ fun TimerHome(
                 }
 
                 if (state.sessionLogged && state.finished && !state.running) {
+                    val ignoreInteraction = remember { MutableInteractionSource() }
+                    val ignorePressed by ignoreInteraction.collectIsPressedAsState()
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(FiveMinDimens.controlH)
                             .clip(radius)
-                            .border(1.dp, FiveMinColors.danger.copy(alpha = 0.35f), radius)
-                            .background(FiveMinColors.surface.copy(alpha = 0.82f))
-                            .clickable { vm.ignoreFinish() },
+                            .border(
+                                1.dp,
+                                FiveMinColors.danger.copy(alpha = if (ignorePressed) 0.55f else 0.35f),
+                                radius,
+                            )
+                            .background(
+                                if (ignorePressed) FiveMinColors.dangerSoft
+                                else FiveMinColors.surface.copy(alpha = 0.82f),
+                            )
+                            .clickable(
+                                interactionSource = ignoreInteraction,
+                                indication = null,
+                                onClick = { vm.ignoreFinish() },
+                            ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -454,6 +470,7 @@ fun TimerHome(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FiveMinDimens.rowH)
+                        .shadow(elevation = 2.dp, shape = sceneRadius, clip = false)
                         .clip(sceneRadius)
                         .border(
                             1.dp,
@@ -525,7 +542,7 @@ fun TimerHome(
                                                 .clip(chipRadius)
                                                 .background(
                                                     Brush.verticalGradient(
-                                                        listOf(Color(0xFF36A872), FiveMinColors.brand),
+                                                        listOf(FiveMinColors.brandLift, FiveMinColors.brand),
                                                     ),
                                                 )
                                         } else {

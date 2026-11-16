@@ -157,7 +157,7 @@
   "aboutVersion": "الإصدار {n}",
   "aboutWebsite": "https://5min.chat",
   "historyLabel": "آخر 14 يومًا",
-  "historyEmpty": "لا سجلات بعد",
+  "historyEmpty": "أنهِ جلسة وستظهر هنا",
   "historyItem": "{scene} · {n} د · {time}",
   "historySceneDefault": "غير محدّد",
   "customMinutesLabel": "مدّة مخصّصة",

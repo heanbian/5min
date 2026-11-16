@@ -26,6 +26,8 @@ enum FiveMinColor {
     static let brand = Color(red: 0x2F / 255, green: 0x9A / 255, blue: 0x68 / 255)
     static let brandStrong = Color(red: 0x24 / 255, green: 0x85 / 255, blue: 0x56 / 255)
     static let brandSoft = Color(red: 0xE5 / 255, green: 0xF5 / 255, blue: 0xEC / 255)
+    /// Primary gradient top stop — aligned with web `--brand-lift`
+    static let brandLift = Color(red: 0x36 / 255, green: 0xA8 / 255, blue: 0x72 / 255)
     static let bg = Color(red: 0xEE / 255, green: 0xF6 / 255, blue: 0xF1 / 255)
     /// Records / Mine list page — aligned with MP `#F2F5F3`
     static let bg2 = Color(red: 0xF2 / 255, green: 0xF5 / 255, blue: 0xF3 / 255)

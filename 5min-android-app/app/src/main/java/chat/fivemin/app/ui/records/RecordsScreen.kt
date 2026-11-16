@@ -35,7 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -245,7 +247,7 @@ fun RecordsScreen(vm: TimerViewModel) {
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
+                            .padding(vertical = 28.dp, horizontal = 20.dp),
                     )
                 } else {
                     rows.forEachIndexed { index, item ->
@@ -327,17 +329,32 @@ private fun FilterChip(label: String, active: Boolean, onClick: () -> Unit) {
         text = label,
         modifier = Modifier
             .height(FiveMinDimens.chipH)
-            .clip(radius)
-            .border(
-                1.dp,
-                if (active) FiveMinColors.brand.copy(alpha = 0.35f) else FiveMinColors.line,
-                radius,
+            .then(
+                if (active) {
+                    Modifier
+                        .shadow(
+                            elevation = 3.dp,
+                            shape = radius,
+                            ambientColor = FiveMinColors.brand.copy(alpha = 0.22f),
+                            spotColor = FiveMinColors.brand.copy(alpha = 0.28f),
+                        )
+                        .clip(radius)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(FiveMinColors.brandLift, FiveMinColors.brand),
+                            ),
+                        )
+                } else {
+                    Modifier
+                        .clip(radius)
+                        .border(1.dp, FiveMinColors.brand.copy(alpha = 0.14f), radius)
+                        .background(FiveMinColors.surface.copy(alpha = 0.72f))
+                },
             )
-            .background(if (active) FiveMinColors.brandSoft else FiveMinColors.surface)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 14.dp)
             .wrapContentHeight(Alignment.CenterVertically),
-        color = if (active) FiveMinColors.brandStrong else FiveMinColors.muted,
+        color = if (active) Color.White else FiveMinColors.brandStrong,
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         maxLines = 1,

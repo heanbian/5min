@@ -156,7 +156,7 @@
   "aboutVersion": "Версия {n}",
   "aboutWebsite": "https://5min.chat",
   "historyLabel": "За последние 14 дней",
-  "historyEmpty": "Записей пока нет",
+  "historyEmpty": "Завершите сеанс — запись появится здесь",
   "historyItem": "{scene} · {n} мин · {time}",
   "historySceneDefault": "Не указано",
   "customMinutesLabel": "Произвольная длительность",

@@ -98,16 +98,18 @@ function drawDigit(ctx, d, ox, oy, color) {
   }
 }
 
-function drawColon(ctx, ox, oy, color) {
+function drawColon(ctx, ox, oy, color, alpha) {
   const cx = ox + 6;
+  const a = typeof alpha === 'number' ? alpha : 1;
   ctx.fillStyle = color;
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = a;
   ctx.beginPath();
   ctx.arc(cx, oy + 11, 2.15, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
   ctx.arc(cx, oy + 27, 2.15, 0, Math.PI * 2);
   ctx.fill();
+  ctx.globalAlpha = 1;
 }
 
 /**
@@ -116,8 +118,9 @@ function drawColon(ctx, ox, oy, color) {
  * @param {number} size dial 边长（CSS px）
  * @param {string} timeText 如 "5:00"
  * @param {string} color 亮段色
+ * @param {{ blinking?: boolean }} [opts]
  */
-function drawDigitalWatch(ctx, size, timeText, color) {
+function drawDigitalWatch(ctx, size, timeText, color, opts) {
   const raw = String(timeText).replace(/\D/g, '').padStart(4, '0').slice(-4);
   const digits = [raw[0], raw[1], raw[2], raw[3]].map(Number);
   const watchW = size * 0.64;
@@ -126,6 +129,8 @@ function drawDigitalWatch(ctx, size, timeText, color) {
   const dx = (size - WATCH_W * scale) / 2;
   const dy = (size - WATCH_H * scale) / 2;
   const oy = 5;
+  const blinking = !!(opts && opts.blinking);
+  const colonAlpha = blinking && Math.floor(Date.now() / 500) % 2 === 1 ? 0.22 : 1;
 
   ctx.save();
   ctx.translate(dx, dy);
@@ -135,7 +140,7 @@ function drawDigitalWatch(ctx, size, timeText, color) {
   for (let i = 0; i < WATCH_SLOTS.length; i += 1) {
     const slot = WATCH_SLOTS[i];
     if (slot.kind === 'colon') {
-      drawColon(ctx, slot.x, oy, color);
+      drawColon(ctx, slot.x, oy, color, colonAlpha);
     } else {
       drawDigit(ctx, digits[di], slot.x, oy, color);
       di += 1;

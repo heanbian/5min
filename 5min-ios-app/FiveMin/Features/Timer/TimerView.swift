@@ -136,9 +136,15 @@ struct TimerView: View {
             }
             .padding(20)
             .frame(maxWidth: 360)
-            .background(FiveMinColor.surface)
+            .background(
+                LinearGradient(
+                    colors: [FiveMinColor.brandSoft.opacity(0.45), FiveMinColor.surface],
+                    startPoint: .top,
+                    endPoint: .center
+                )
+            )
             .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusDialog, style: .continuous))
-            .shadow(color: Color.black.opacity(0.18), radius: 20, y: 8)
+            .shadow(color: FiveMinColor.ink.opacity(0.16), radius: 20, y: 8)
             .padding(.horizontal, 28)
         }
     }
@@ -274,7 +280,11 @@ struct TimerView: View {
                     .stroke(ringColor, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 0.2), value: model.progress)
-                DigitalWatchTime(text: model.dialTimeText, color: timeColor)
+                DigitalWatchTime(
+                    text: model.dialTimeText,
+                    color: timeColor,
+                    blinking: model.running
+                )
                     .frame(width: dial * 0.64)
             }
             .frame(width: dial, height: dial)
@@ -409,7 +419,7 @@ struct TimerView: View {
                                     if active {
                                         LinearGradient(
                                             colors: [
-                                                Color(red: 0x36 / 255, green: 0xA8 / 255, blue: 0x72 / 255),
+                                                FiveMinColor.brandLift,
                                                 FiveMinColor.brand,
                                             ],
                                             startPoint: .top,
@@ -541,7 +551,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .background(
                 LinearGradient(
                     colors: [
-                        Color(red: 0x36 / 255, green: 0xA8 / 255, blue: 0x72 / 255),
+                        FiveMinColor.brandLift,
                         FiveMinColor.brand,
                         FiveMinColor.brandStrong,
                     ],
@@ -582,7 +592,7 @@ struct SecondaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Tertiary undo — quieter than primary/secondary, danger accent only.
+/// Tertiary undo — quieter than primary/secondary, solid danger border (aligned with Android/MP).
 struct IgnoreButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -599,8 +609,9 @@ struct IgnoreButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
                     .stroke(
                         FiveMinColor.danger.opacity(configuration.isPressed ? 0.55 : 0.35),
-                        style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                        lineWidth: 1
                     )
             )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
 }

@@ -28,6 +28,8 @@ object FiveMinColors {
     val brand = Color(0xFF2F9A68)
     val brandStrong = Color(0xFF248556)
     val brandSoft = Color(0xFFE5F5EC)
+    /** Primary gradient top stop — aligned with web `--brand-lift` */
+    val brandLift = Color(0xFF36A872)
     val bg = Color(0xFFEEF6F1)
     /** Records / Mine list page background — aligned with MP/iOS `#F2F5F3` */
     val bg2 = Color(0xFFF2F5F3)

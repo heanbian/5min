@@ -413,7 +413,7 @@ Page({
       ctx.stroke();
     }
 
-    drawDigitalWatch(ctx, size, timeText, timeColor);
+    drawDigitalWatch(ctx, size, timeText, timeColor, { blinking: this.running });
   },
 
   refreshStats() {

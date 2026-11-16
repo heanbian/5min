@@ -233,8 +233,10 @@ const digitPaths = (d, ox, oy) => {
 const colonPaths = (ox, oy) => {
   const cx = svgN(ox + 6);
   return (
+    `<g class="watch-colon">` +
     `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 11)}" r="2.15"/>` +
-    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 27)}" r="2.15"/>`
+    `<circle fill="currentColor" cx="${cx}" cy="${svgN(oy + 27)}" r="2.15"/>` +
+    `</g>`
   );
 };
 
@@ -567,6 +569,7 @@ const render = () => {
   const clock = fmt(remainMs);
   timeLabel.textContent = clock;
   timeText.innerHTML = digitalWatchSvg(clock);
+  timeText.classList.toggle('is-running', !!running);
   const ratio = totalMs > 0 ? Math.min(1, Math.max(0, remainMs / totalMs)) : 0;
   progress.style.strokeDashoffset = String(CIRC * (1 - ratio));
 

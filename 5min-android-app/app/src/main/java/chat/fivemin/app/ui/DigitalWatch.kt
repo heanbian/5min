@@ -1,9 +1,15 @@
 package chat.fivemin.app.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -39,7 +45,20 @@ fun DigitalWatchTime(
     text: String,
     color: Color,
     modifier: Modifier = Modifier,
+    blinking: Boolean = false,
 ) {
+    val blinkTransition = rememberInfiniteTransition(label = "colonBlink")
+    val colonAlpha by blinkTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (blinking) 0.22f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 500),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "colonAlpha",
+    )
+    val resolvedColon = if (blinking) colonAlpha else 1f
+
     Canvas(
         modifier = modifier
             .fillMaxWidth(0.64f)
@@ -50,20 +69,20 @@ fun DigitalWatchTime(
         val dy = (size.height - WatchH * scale) / 2f
         translate(dx, dy) {
             scale(scale, scale, pivot = Offset.Zero) {
-                drawDigitalWatch(text, color)
+                drawDigitalWatch(text, color, resolvedColon)
             }
         }
     }
 }
 
-private fun DrawScope.drawDigitalWatch(text: String, color: Color) {
+private fun DrawScope.drawDigitalWatch(text: String, color: Color, colonAlpha: Float) {
     val raw = text.filter { it.isDigit() }.padStart(4, '0').takeLast(4)
     val digits = raw.map { it.digitToInt() }
     val oy = 5f
     var di = 0
     for (slot in WatchSlots) {
         if (slot.kind == "colon") {
-            drawColon(slot.x, oy, color)
+            drawColon(slot.x, oy, color.copy(alpha = colonAlpha))
         } else {
             drawDigit(digits[di++], slot.x, oy, color)
         }

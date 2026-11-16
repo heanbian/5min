@@ -156,7 +156,7 @@
   "aboutVersion": "版本 {n}",
   "aboutWebsite": "https://5min.chat",
   "historyLabel": "近 14 日",
-  "historyEmpty": "暂无记录",
+  "historyEmpty": "完成一次计时后会出现在这里",
   "historyItem": "{scene} · {n} 分钟 · {time}",
   "historySceneDefault": "未指定",
   "customMinutesLabel": "自定义时长",

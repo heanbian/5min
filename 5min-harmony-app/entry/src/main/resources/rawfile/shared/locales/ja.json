@@ -156,7 +156,7 @@
   "aboutVersion": "バージョン {n}",
   "aboutWebsite": "https://5min.chat",
   "historyLabel": "直近14日",
-  "historyEmpty": "まだ記録がありません",
+  "historyEmpty": "計測を終えるとここに表示されます",
   "historyItem": "{scene} · {n} 分 · {time}",
   "historySceneDefault": "未指定",
   "customMinutesLabel": "カスタム時間",

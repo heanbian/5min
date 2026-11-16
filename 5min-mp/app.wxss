@@ -112,11 +112,25 @@ scroll-view {
 .privacy-card {
   width: 100%;
   background: var(--surface);
-  border-radius: 32rpx;
+  border-radius: var(--radius-dialog, 32rpx);
   padding: 40rpx;
   display: flex;
   flex-direction: column;
   gap: 28rpx;
+  box-shadow: 0 16rpx 40rpx rgba(31, 42, 36, 0.14);
+  position: relative;
+  overflow: hidden;
+}
+
+.privacy-card::before {
+  content: "";
+  position: absolute;
+  left: 40rpx;
+  right: 40rpx;
+  top: 20rpx;
+  height: 6rpx;
+  border-radius: 6rpx;
+  background: var(--brand-soft);
 }
 
 .privacy-title {
@@ -184,16 +198,19 @@ scroll-view {
   margin-top: 8rpx;
   height: 100rpx;
   border-radius: var(--radius);
-  background: var(--brand);
+  background: linear-gradient(180deg, #36a872 0%, var(--brand) 55%, var(--brand-strong) 100%);
   color: #fff;
   font-size: 32rpx;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8rpx 20rpx rgba(47, 154, 104, 0.28);
 }
 
 .privacy-btn-off {
-  background: #a8c4b4;
-  opacity: 0.7;
+  background: var(--brand-soft);
+  color: var(--muted);
+  box-shadow: none;
+  opacity: 0.85;
 }

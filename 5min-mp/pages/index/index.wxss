@@ -8,8 +8,9 @@
   --brand: #2f9a68;
   --brand-strong: #248556;
   --brand-soft: #e5f5ec;
+  --brand-lift: #36a872;
   --bg: #eef6f1;
-  --bg-2: #f7faf8;
+  --bg-2: #f2f5f3;
   --bg-bottom: #f4f8f5;
   --surface: #ffffff;
   --ink: #1f2a24;
@@ -274,7 +275,7 @@
 
 .btn-primary {
   color: #fff;
-  background: linear-gradient(180deg, #36a872 0%, var(--brand) 55%, var(--brand-strong) 100%);
+  background: linear-gradient(180deg, var(--brand-lift) 0%, var(--brand) 55%, var(--brand-strong) 100%);
   box-shadow: 0 10rpx 24rpx rgba(47, 154, 104, 0.32);
 }
 
@@ -317,8 +318,8 @@
   font-size: 30rpx;
   font-weight: 500;
   color: var(--danger);
-  background: rgba(255, 255, 255, 0.72);
-  border: 2rpx dashed rgba(210, 85, 74, 0.45);
+  background: rgba(255, 255, 255, 0.82);
+  border: 2rpx solid rgba(210, 85, 74, 0.35);
 }
 
 .btn-ignore::after {
@@ -327,8 +328,8 @@
 
 .btn-ignore:active {
   background: var(--danger-soft);
-  border-color: var(--danger);
-  color: #b9443b;
+  border-color: rgba(210, 85, 74, 0.55);
+  color: var(--danger);
 }
 
 /* 快捷芯片：薄荷软胶囊，与主区白底表单/按钮区分 */
@@ -366,9 +367,13 @@
 
 .suggested-chip.is-active {
   border-color: transparent;
-  background: linear-gradient(180deg, #36a872 0%, var(--brand) 100%);
+  background: linear-gradient(180deg, var(--brand-lift) 0%, var(--brand) 100%);
   color: #fff;
   box-shadow: 0 6rpx 14rpx rgba(47, 154, 104, 0.28);
+}
+
+.suggested-chip:active {
+  opacity: 0.88;
 }
 
 .suggested-chip.disabled {
@@ -387,6 +392,7 @@
   border-radius: var(--radius);
   border: 2rpx solid var(--line);
   background: var(--surface);
+  box-shadow: 0 4rpx 16rpx rgba(31, 42, 36, 0.04);
 }
 
 .scene-trigger.disabled {
@@ -433,10 +439,11 @@
 .ritual-card {
   width: 100%;
   max-width: 620rpx;
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(229, 245, 236, 0.55) 0%, var(--surface) 42%);
   border-radius: var(--radius-dialog, 32rpx);
   padding: 36rpx 32rpx 28rpx;
   box-sizing: border-box;
+  box-shadow: 0 16rpx 40rpx rgba(31, 42, 36, 0.14);
 }
 
 .ritual-title {

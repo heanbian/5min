@@ -156,7 +156,7 @@
   "aboutVersion": "པར་གཞི་{n}",
   "aboutWebsite": "https://5min.chat",
   "historyLabel": "ཉིན་༡༤་སྔོན་ཆད།",
-  "historyEmpty": "ད་དུང་ཟིན་ཐོ་མེད།",
+  "historyEmpty": "ཐེངས་གཅིག་རྫོགས་རྗེས་འདིར་འཆར།",
   "historyItem": "{scene} · སྐར་མ་{n} · {time}",
   "historySceneDefault": "གསལ་པོར་མ་བཀོད།",
   "customMinutesLabel": "རང་བཟོ་དུས་ཚོད།",

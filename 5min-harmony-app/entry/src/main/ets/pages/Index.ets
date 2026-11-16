@@ -956,7 +956,7 @@ struct Index {
                   .backgroundColor(this.privacyChecked ? $r('app.color.brand') : Color.Transparent)
                   .border({
                     width: 1.5,
-                    color: this.privacyChecked ? $r('app.color.brand') : '#8A9A90'
+                    color: this.privacyChecked ? $r('app.color.brand') : $r('app.color.muted')
                   })
                 if (this.privacyChecked) {
                   Text('✓')
@@ -1004,14 +1004,32 @@ struct Index {
 
             Text(this.t('privacyAgree'))
               .width('100%')
-              .height(50)
+              .height(52)
               .fontSize(16)
+              .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
-              .fontColor(Color.White)
+              .fontColor(this.privacyChecked ? Color.White : $r('app.color.muted'))
               .textAlign(TextAlign.Center)
-              .backgroundColor(this.privacyChecked ? $r('app.color.brand') : '#A8C4B4')
-              .borderRadius(14)
-              .opacity(this.privacyChecked ? 1 : 0.7)
+              .linearGradient(this.privacyChecked ? {
+                angle: 180,
+                colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55], [$r('app.color.brand_strong'), 1]]
+              } : {
+                angle: 180,
+                colors: [[$r('app.color.brand_soft'), 0], [$r('app.color.brand_soft'), 1]]
+              })
+              .borderRadius(22)
+              .shadow(this.privacyChecked ? {
+                radius: 10,
+                color: 'rgba(47, 154, 104, 0.28)',
+                offsetX: 0,
+                offsetY: 5
+              } : {
+                radius: 0,
+                color: Color.Transparent,
+                offsetX: 0,
+                offsetY: 0
+              })
+              .opacity(this.privacyChecked ? 1 : 0.85)
               .onClick(() => {
                 if (this.privacyChecked) {
                   this.acceptPrivacy();
@@ -1090,7 +1108,7 @@ struct Index {
               .backgroundColor(this.ritualUp ? $r('app.color.brand') : Color.Transparent)
               .border({
                 width: 1.5,
-                color: this.ritualUp ? $r('app.color.brand') : '#8A9A90'
+                color: this.ritualUp ? $r('app.color.brand') : $r('app.color.muted')
               })
             if (this.ritualUp) {
               Text('✓')
@@ -1122,7 +1140,7 @@ struct Index {
               .backgroundColor(this.ritualStretch ? $r('app.color.brand') : Color.Transparent)
               .border({
                 width: 1.5,
-                color: this.ritualStretch ? $r('app.color.brand') : '#8A9A90'
+                color: this.ritualStretch ? $r('app.color.brand') : $r('app.color.muted')
               })
             if (this.ritualStretch) {
               Text('✓')
@@ -1154,7 +1172,7 @@ struct Index {
               .backgroundColor(this.ritualLeave ? $r('app.color.brand') : Color.Transparent)
               .border({
                 width: 1.5,
-                color: this.ritualLeave ? $r('app.color.brand') : '#8A9A90'
+                color: this.ritualLeave ? $r('app.color.brand') : $r('app.color.muted')
               })
             if (this.ritualLeave) {
               Text('✓')
@@ -1205,8 +1223,17 @@ struct Index {
       }
       .width('86%')
       .padding({ left: 20, right: 20, top: 22, bottom: 20 })
-      .backgroundColor($r('app.color.surface'))
+      .linearGradient({
+        angle: 180,
+        colors: [['rgba(229, 245, 236, 0.55)', 0], [$r('app.color.surface'), 0.42]]
+      })
       .borderRadius(16)
+      .shadow({
+        radius: 20,
+        color: 'rgba(31, 42, 36, 0.16)',
+        offsetX: 0,
+        offsetY: 8
+      })
     }
     .width('100%')
     .height('100%')
@@ -1290,7 +1317,11 @@ struct Index {
             })
               .width(260)
               .height(260)
-            DigitalWatchTime({ text: this.clock, color: this.timeColor })
+            DigitalWatchTime({
+              text: this.clock,
+              color: this.timeColor,
+              blinking: this.running
+            })
               .width(166)
               .height(55)
           }
@@ -1368,7 +1399,7 @@ struct Index {
               .textAlign(TextAlign.Center)
               .linearGradient({
                 angle: 180,
-                colors: [['#36A872', 0], ['#2F9A68', 0.55], ['#248556', 1]]
+                colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55], [$r('app.color.brand_strong'), 1]]
               })
               .borderRadius(22)
               .shadow({
@@ -1409,6 +1440,7 @@ struct Index {
               .width('100%')
               .height(52)
               .fontSize(15)
+              .fontFamily(FiveMinFont.medium)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.danger'))
               .textAlign(TextAlign.Center)
@@ -1416,7 +1448,7 @@ struct Index {
               .border({
                 width: 1,
                 color: 'rgba(210, 85, 74, 0.35)',
-                style: BorderStyle.Dashed
+                style: BorderStyle.Solid
               })
               .borderRadius(22)
               .onClick(() => this.ignoreLastSession())
@@ -1426,13 +1458,16 @@ struct Index {
             Text(this.sceneLabel)
               .layoutWeight(1)
               .fontSize(14)
+              .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor(this.scenePlaceholder ? $r('app.color.muted') : $r('app.color.ink'))
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
             Text('▾')
               .fontSize(12)
+              .fontFamily(FiveMinFont.medium)
               .fontColor(this.showScenes ? $r('app.color.brand_strong') : $r('app.color.muted'))
+              .rotate({ angle: this.showScenes ? 180 : 0 })
           }
           .width('100%')
           .height(40)
@@ -1440,7 +1475,13 @@ struct Index {
           .backgroundColor($r('app.color.surface'))
           .border({
             width: 1,
-            color: this.showScenes ? $r('app.color.brand') : $r('app.color.line')
+            color: this.showScenes ? 'rgba(47, 154, 104, 0.45)' : $r('app.color.line')
+          })
+          .shadow({
+            radius: 6,
+            color: 'rgba(31, 42, 36, 0.05)',
+            offsetX: 0,
+            offsetY: 2
           })
           .borderRadius(22)
           .opacity(this.setupEnabled ? 1 : 0.4)
@@ -1520,7 +1561,7 @@ struct Index {
                       .flexShrink(0)
                       .linearGradient({
                         angle: 180,
-                        colors: [['#36A872', 0], ['#2F9A68', 1]]
+                        colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 1]]
                       })
                       .borderRadius(22)
                       .shadow({

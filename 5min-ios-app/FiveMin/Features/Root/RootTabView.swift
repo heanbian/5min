@@ -94,8 +94,16 @@ struct RootTabView: View {
                 .disabled(!privacyChecked)
             }
             .padding(20)
-            .background(FiveMinColor.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .frame(maxWidth: 360)
+            .background(
+                LinearGradient(
+                    colors: [FiveMinColor.brandSoft.opacity(0.5), FiveMinColor.surface],
+                    startPoint: .top,
+                    endPoint: .center
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusDialog, style: .continuous))
+            .shadow(color: FiveMinColor.ink.opacity(0.14), radius: 20, y: 8)
             .padding(.horizontal, 24)
         }
     }

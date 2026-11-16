@@ -156,7 +156,7 @@
   "aboutVersion": "Version {n}",
   "aboutWebsite": "https://5min.chat",
   "historyLabel": "Past 14 days",
-  "historyEmpty": "No records yet",
+  "historyEmpty": "Finish a session and it will show up here",
   "historyItem": "{scene} · {n} min · {time}",
   "historySceneDefault": "Unspecified",
   "customMinutesLabel": "Custom duration",

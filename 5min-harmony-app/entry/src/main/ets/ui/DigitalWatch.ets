@@ -14,13 +14,48 @@ const WATCH_H = 48;
 export struct DigitalWatchTime {
   @Watch('onStyleChange') @Prop text: string = '00:00';
   @Watch('onStyleChange') @Prop color: string = '#000000';
+  @Watch('onBlinkChange') @Prop blinking: boolean = false;
+  @State private colonLit: boolean = true;
   private settings: RenderingContextSettings = new RenderingContextSettings(true);
   private ctx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings);
   private areaW: number = 0;
   private areaH: number = 0;
+  private blinkTimer: number = -1;
+
+  aboutToAppear(): void {
+    this.syncBlinkTimer();
+  }
+
+  aboutToDisappear(): void {
+    this.clearBlinkTimer();
+  }
 
   onStyleChange(): void {
     this.redraw();
+  }
+
+  onBlinkChange(): void {
+    this.syncBlinkTimer();
+    this.redraw();
+  }
+
+  syncBlinkTimer(): void {
+    this.clearBlinkTimer();
+    if (!this.blinking) {
+      this.colonLit = true;
+      return;
+    }
+    this.blinkTimer = setInterval(() => {
+      this.colonLit = !this.colonLit;
+      this.redraw();
+    }, 500);
+  }
+
+  clearBlinkTimer(): void {
+    if (this.blinkTimer >= 0) {
+      clearInterval(this.blinkTimer);
+      this.blinkTimer = -1;
+    }
   }
 
   redraw(): void {
@@ -36,11 +71,11 @@ export struct DigitalWatchTime {
     this.ctx.save();
     this.ctx.translate(dx, dy);
     this.ctx.scale(scale, scale);
-    this.drawWatch(this.text, this.color);
+    this.drawWatch(this.text, this.color, this.blinking && !this.colonLit ? 0.22 : 1);
     this.ctx.restore();
   }
 
-  drawWatch(text: string, color: string): void {
+  drawWatch(text: string, color: string, colonAlpha: number): void {
     const digitsOnly = text.replace(/\D/g, '');
     let raw = digitsOnly;
     while (raw.length < 4) {
@@ -59,7 +94,7 @@ export struct DigitalWatchTime {
     let di = 0;
     for (let i = 0; i < slotKinds.length; i++) {
       if (slotKinds[i] === 'colon') {
-        this.drawColon(slotXs[i], oy, color);
+        this.drawColon(slotXs[i], oy, color, colonAlpha);
       } else {
         this.drawDigit(digits[di++], slotXs[i], oy, color);
       }
@@ -81,8 +116,9 @@ export struct DigitalWatchTime {
     }
   }
 
-  drawColon(ox: number, oy: number, color: string): void {
+  drawColon(ox: number, oy: number, color: string, alpha: number): void {
     const cx = ox + 6;
+    this.ctx.globalAlpha = alpha;
     this.ctx.fillStyle = color;
     this.ctx.beginPath();
     this.ctx.arc(cx, oy + 11, 2.15, 0, Math.PI * 2);
@@ -90,6 +126,7 @@ export struct DigitalWatchTime {
     this.ctx.beginPath();
     this.ctx.arc(cx, oy + 27, 2.15, 0, Math.PI * 2);
     this.ctx.fill();
+    this.ctx.globalAlpha = 1;
   }
 
   digitSegMap(ox: number, oy: number): Map<string, Path2D> {

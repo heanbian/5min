@@ -4,6 +4,8 @@ import SwiftUI
 struct DigitalWatchTime: View {
     let text: String
     let color: Color
+    /// 运行中冒号闪烁（约 1s 周期）
+    var blinking: Bool = false
 
     private static let watchW: CGFloat = 144
     private static let watchH: CGFloat = 48
@@ -11,21 +13,34 @@ struct DigitalWatchTime: View {
     private static let chassis = Color(red: 0xE4 / 255, green: 0xEC / 255, blue: 0xE8 / 255)
 
     var body: some View {
-        Canvas { context, size in
-            let scale = min(size.width / Self.watchW, size.height / Self.watchH)
-            let dx = (size.width - Self.watchW * scale) / 2
-            let dy = (size.height - Self.watchH * scale) / 2
-            context.concatenate(
-                CGAffineTransform.identity
-                    .translatedBy(x: dx, y: dy)
-                    .scaledBy(x: scale, y: scale)
-            )
-            drawWatch(context: context, text: text, color: color)
+        TimelineView(.animation(minimumInterval: blinking ? 0.5 : 60, paused: !blinking)) { context in
+            let colonLit = !blinking || Int(context.date.timeIntervalSinceReferenceDate * 2) % 2 == 0
+            Canvas { canvas, size in
+                let scale = min(size.width / Self.watchW, size.height / Self.watchH)
+                let dx = (size.width - Self.watchW * scale) / 2
+                let dy = (size.height - Self.watchH * scale) / 2
+                canvas.concatenate(
+                    CGAffineTransform.identity
+                        .translatedBy(x: dx, y: dy)
+                        .scaledBy(x: scale, y: scale)
+                )
+                drawWatch(
+                    context: canvas,
+                    text: text,
+                    color: color,
+                    colonOpacity: colonLit ? 1 : 0.22
+                )
+            }
         }
         .aspectRatio(Self.watchW / Self.watchH, contentMode: .fit)
     }
 
-    private func drawWatch(context: GraphicsContext, text: String, color: Color) {
+    private func drawWatch(
+        context: GraphicsContext,
+        text: String,
+        color: Color,
+        colonOpacity: Double
+    ) {
         let digits = text.filter(\.isNumber).map { Int(String($0)) ?? 0 }
         let padded = Array(repeating: 0, count: max(0, 4 - digits.count)) + digits.suffix(4)
         let oy: CGFloat = 5
@@ -35,7 +50,7 @@ struct DigitalWatchTime: View {
         var di = 0
         for slot in slots {
             if slot.kind == "colon" {
-                drawColon(context: context, ox: slot.x, oy: oy, color: color)
+                drawColon(context: context, ox: slot.x, oy: oy, color: color.opacity(colonOpacity))
             } else {
                 drawDigit(context: context, d: padded[di], ox: slot.x, oy: oy, color: color)
                 di += 1
