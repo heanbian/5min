@@ -21,6 +21,13 @@
    "description": "如厕计时器(5min)：由学记宝运营的端侧倒计时工具。默认「如厕 · 5 分钟」，支持场景预设与结束提醒；可添加至主屏幕。官网 https://5min.chat。仅供习惯提醒。"
   },
   {
+   "path": "/download.html",
+   "title": "下载 App · 如厕计时器(5min)",
+   "label": "下载 App",
+   "blurb": "官方客户端、微信小程序与网页版获取方式",
+   "description": "获取如厕计时器(5min) 官方客户端与网页版：iOS、Android、HarmonyOS、微信小程序。由学记宝运营，官网 https://5min.chat。仅供习惯提醒。"
+  },
+  {
    "path": "/about.html",
    "title": "关于 · 如厕计时器(5min)",
    "label": "关于",

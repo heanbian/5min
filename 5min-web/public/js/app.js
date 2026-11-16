@@ -404,6 +404,7 @@ const applyStaticI18n = () => {
   resetBtn.textContent = pack.reset;
   if (footnote) {
     const links = [
+      { href: 'download.html', label: pack.downloadLabel || '下载 App' },
       { href: 'about.html', label: pack.aboutLabel },
       { href: 'privacy.html', label: pack.footerPrivacy },
       { href: 'terms.html', label: pack.footerTerms },
