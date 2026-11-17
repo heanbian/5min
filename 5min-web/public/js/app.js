@@ -430,8 +430,9 @@ const applyStaticI18n = () => {
   renderDailyStats();
   syncStartLabel();
   if (!titleBlinkId) {
+    const suffix = pack.titleSuffix || '';
     document.title = (running || remainMs < totalMs)
-      ? `${fmt(remainMs)} · ${pack.titleSuffix}`
+      ? (suffix ? `${fmt(remainMs)} · ${suffix}` : fmt(remainMs))
       : pack.titleIdle;
   }
 };
@@ -575,8 +576,9 @@ const render = () => {
   progress.style.strokeDashoffset = String(CIRC * (1 - ratio));
 
   if (!titleBlinkId) {
+    const suffix = tr('titleSuffix') || '';
     document.title = (running || remainMs < totalMs)
-      ? `${fmt(remainMs)} · ${tr('titleSuffix')}`
+      ? (suffix ? `${fmt(remainMs)} · ${suffix}` : fmt(remainMs))
       : tr('titleIdle');
   }
 

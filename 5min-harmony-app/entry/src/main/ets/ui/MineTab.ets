@@ -16,6 +16,7 @@ import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
 import { FiveMinFont } from '../common/FiveMinDimens';
+import { AmbientPlayer } from '../alert/AmbientPlayer';
 import { i18n } from '@kit.LocalizationKit';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
@@ -295,6 +296,8 @@ export struct MineTab {
     await this.prefs.setAmbient(mode);
     this.ambientName = this.catalog.t(this.locale, this.ambientKeyOf(mode));
     this.uiTick = this.uiTick + 1;
+    // Start / stop procedural ambient immediately (reviewer: 选择后应有声音).
+    await AmbientPlayer.setMode(mode);
     this.pushPrefsIfCloud();
   }
 

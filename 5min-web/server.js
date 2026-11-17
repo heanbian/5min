@@ -20,7 +20,7 @@
   if (fs.existsSync(pidFile)) {
     const old = String(fs.readFileSync(pidFile, 'utf8') || '').trim();
     if (old && killable(old)) {
-      console.error(`如厕计时器(5min) 已在运行 pid=${old}，请先执行 ./stop.sh`);
+      console.error(`如厕计时器 已在运行 pid=${old}，请先执行 ./stop.sh`);
       process.exit(1);
     }
     try {
@@ -39,7 +39,7 @@
   });
   fs.writeFileSync(pidFile, String(child.pid), 'utf8');
   child.unref();
-  console.log(`如厕计时器(5min) 已后台启动 pid=${child.pid}`);
+  console.log(`如厕计时器 已后台启动 pid=${child.pid}`);
   console.log(`pid 文件: ${pidFile}`);
   console.log(`日志: ${outLog}`);
   process.exit(0);
@@ -435,7 +435,7 @@ app.use((err, req, res, next) => {
 
 const server = app.listen(PORT, () => {
   console.log(
-    `如厕计时器(5min) server running on port ${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'}, ASSET_V=${ASSET_VERSION})`
+    `如厕计时器 server running on port ${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'}, ASSET_V=${ASSET_VERSION})`
   );
   ensureVisitorLogTable()
     .then(() => console.log('访客记录表已就绪'))

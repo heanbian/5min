@@ -1,6 +1,6 @@
 # 5min-android-app
 
-**如厕计时器(5min)** — Android 原生客户端。运营方：学记宝。官网：https://5min.chat。
+**如厕计时器** — Android 原生客户端。运营方：学记宝。官网：https://5min.chat。
 
 - **applicationId / 源码包名**：`chat.fivemin.app`
  （Android 包名每一段不能以数字开头，故不能用 `chat.5min.app`；与 iOS/鸿蒙品牌 ID 对应关系见根 README）
@@ -15,7 +15,7 @@
 - 绝对时间戳倒计时；前台服务 + 精确闹钟到期提醒
 - 到期通知 / 振动 / 提示音；环境音选「关闭」则静音（仍可振动与横幅）
 - 记录：近 14 日本地 SQLite（`files/5min-chat/5min_chat_history.db`），三行展示，升级可查
-- 我的：语言（简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག）、提示音、默认时长、反馈 / 隐私 / 条款 / 关于
+- 我的：语言（简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག）、提示音、默认时长、反馈 / 隐私 / 条款 / 关于 / 软件更新（拉取 `https://5min.chat/app/android-latest.json`）
 - 首次启动隐私同意门；计时中常亮（`FLAG_KEEP_SCREEN_ON`）
 
 ## 打开工程

@@ -1,6 +1,6 @@
 # 5min-harmony-app
 
-**如厕计时器(5min)** — HarmonyOS 原生客户端。运营方：学记宝。官网：https://5min.chat。
+**如厕计时器** — HarmonyOS 原生客户端。官网：https://5min.chat。
 
 - **bundleName**：`chat.5min.app`
 - **App ID（AGC）**：`6917621936327753309`

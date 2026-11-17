@@ -1,8 +1,8 @@
-# 5min-web · 如厕计时器(5min)
+# 5min-web · 如厕计时器
 
 端侧倒计时工具的 **Web 服务**子项目（Node.js + Express + PostgreSQL，静态资源位于 `public/`）。官网：[https://5min.chat](https://5min.chat/)。源码仓库：[github.com/heanbian/5min](https://github.com/heanbian/5min)。
 
-**定名**：如厕计时器(5min)。**运营方**：学记宝。**官网**：https://5min.chat。建议单次如厕约 5 分钟内完成；使用手机易低估耗时。默认 5 分钟（亦可选 3 / 10 分钟），结束后以振动、提示音与系统通知提醒起身。
+**定名**：如厕计时器。**官网**：https://5min.chat。建议单次如厕约 5 分钟内完成；使用手机易低估耗时。默认 5 分钟（亦可选 3 / 10 分钟），结束后以振动、提示音与系统通知提醒起身。
 
 仅供习惯提醒。
 
@@ -154,7 +154,7 @@ npm run export-shared
 
 ## 术语与文案约定
 
-- **定名**：`如厕计时器(5min)`；运营方：`学记宝`；官网：`https://5min.chat`。
+- **定名**：`如厕计时器`；官网：`https://5min.chat`。
 - 对外说明使用书面用语：端侧、倒计时、振动（勿用口语「震动」）、提示音、系统通知等；避免堆砌「无广告 / 无需注册」等口号。
 - 界面状态优先「倒计时中 / 计时结束，请起身活动 / 重新开始」。
 - 合规：仅供习惯提醒；不作疗效/诊断宣称；JSON-LD `applicationCategory` 使用 `UtilitiesApplication`。

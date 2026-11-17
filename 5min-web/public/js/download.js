@@ -11,7 +11,7 @@
     },
     android: {
       // 例：https://play.google.com/store/apps/details?id=chat.fivemin.app
-      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.10.apk',
+      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.11.apk',
       label: '下载',
     },
     harmony: {

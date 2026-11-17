@@ -3,7 +3,6 @@ package chat.fivemin.app.ui.records
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,15 +12,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,9 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chat.fivemin.app.FiveMinApp
@@ -53,6 +56,7 @@ import java.util.Locale
 
 private enum class RecordsDialog { None, ClearAll, DeleteOne }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordsScreen(vm: TimerViewModel) {
     val state by vm.state.collectAsState()
@@ -60,6 +64,7 @@ fun RecordsScreen(vm: TimerViewModel) {
     var periodCount by remember { mutableIntStateOf(0) }
     var periodMins by remember { mutableIntStateOf(0) }
     var filterSceneId by remember { mutableStateOf<String?>(null) }
+    var filterExpanded by remember { mutableStateOf(false) }
     var dialog by remember { mutableStateOf(RecordsDialog.None) }
     var pendingDeleteId by remember { mutableStateOf<Long?>(null) }
 
@@ -198,31 +203,113 @@ fun RecordsScreen(vm: TimerViewModel) {
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp),
             )
             if (filterOptions.isNotEmpty()) {
-                Text(
-                    text = vm.t("historyFilterLabel"),
-                    color = FiveMinColors.muted,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 4.dp),
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                val selectedLabel = filterSceneId
+                    ?.let { id -> vm.sceneTitle(id) ?: id }
+                    ?: vm.t("historyFilterAll")
+                // 与主页场景选择触发器同尺寸：rowH 40 / radius 22
+                val filterRadius = RoundedCornerShape(FiveMinDimens.radius)
+                ExposedDropdownMenuBox(
+                    expanded = filterExpanded,
+                    onExpandedChange = { filterExpanded = it },
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    FilterChip(
-                        label = vm.t("historyFilterAll"),
-                        active = filterSceneId == null,
-                        onClick = { filterSceneId = null },
-                    )
-                    filterOptions.forEach { sceneId ->
-                        val label = vm.sceneTitle(sceneId) ?: sceneId
-                        FilterChip(
-                            label = label,
-                            active = filterSceneId == sceneId,
-                            onClick = { filterSceneId = sceneId },
+                    Row(
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth()
+                            .height(FiveMinDimens.rowH)
+                            .shadow(elevation = 2.dp, shape = filterRadius, clip = false)
+                            .clip(filterRadius)
+                            .border(
+                                1.dp,
+                                if (filterExpanded) {
+                                    FiveMinColors.brand.copy(alpha = 0.45f)
+                                } else {
+                                    FiveMinColors.line
+                                },
+                                filterRadius,
+                            )
+                            .background(FiveMinColors.surface)
+                            .padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = selectedLabel,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = if (filterSceneId == null) {
+                                FiveMinColors.muted
+                            } else {
+                                FiveMinColors.ink
+                            },
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
                         )
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = vm.t("historyFilterLabel"),
+                            tint = if (filterExpanded) {
+                                FiveMinColors.brandStrong
+                            } else {
+                                FiveMinColors.muted
+                            },
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    ExposedDropdownMenu(
+                        expanded = filterExpanded,
+                        onDismissRequest = { filterExpanded = false },
+                        containerColor = FiveMinColors.surface,
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = vm.t("historyFilterAll"),
+                                    color = if (filterSceneId == null) {
+                                        FiveMinColors.brandStrong
+                                    } else {
+                                        FiveMinColors.ink
+                                    },
+                                    fontWeight = if (filterSceneId == null) {
+                                        FontWeight.SemiBold
+                                    } else {
+                                        FontWeight.Normal
+                                    },
+                                    fontSize = 14.sp,
+                                )
+                            },
+                            onClick = {
+                                filterSceneId = null
+                                filterExpanded = false
+                            },
+                        )
+                        filterOptions.forEach { sceneId ->
+                            val label = vm.sceneTitle(sceneId) ?: sceneId
+                            val active = filterSceneId == sceneId
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = label,
+                                        color = if (active) {
+                                            FiveMinColors.brandStrong
+                                        } else {
+                                            FiveMinColors.ink
+                                        },
+                                        fontWeight = if (active) {
+                                            FontWeight.SemiBold
+                                        } else {
+                                            FontWeight.Normal
+                                        },
+                                        fontSize = 14.sp,
+                                    )
+                                },
+                                onClick = {
+                                    filterSceneId = sceneId
+                                    filterExpanded = false
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -320,45 +407,6 @@ fun RecordsScreen(vm: TimerViewModel) {
         )
         RecordsDialog.None -> Unit
     }
-}
-
-@Composable
-private fun FilterChip(label: String, active: Boolean, onClick: () -> Unit) {
-    val radius = RoundedCornerShape(FiveMinDimens.radius)
-    Text(
-        text = label,
-        modifier = Modifier
-            .height(FiveMinDimens.chipH)
-            .then(
-                if (active) {
-                    Modifier
-                        .shadow(
-                            elevation = 3.dp,
-                            shape = radius,
-                            ambientColor = FiveMinColors.brand.copy(alpha = 0.22f),
-                            spotColor = FiveMinColors.brand.copy(alpha = 0.28f),
-                        )
-                        .clip(radius)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(FiveMinColors.brandLift, FiveMinColors.brand),
-                            ),
-                        )
-                } else {
-                    Modifier
-                        .clip(radius)
-                        .border(1.dp, FiveMinColors.brand.copy(alpha = 0.14f), radius)
-                        .background(FiveMinColors.surface.copy(alpha = 0.72f))
-                },
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp)
-            .wrapContentHeight(Alignment.CenterVertically),
-        color = if (active) Color.White else FiveMinColors.brandStrong,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 13.sp,
-        maxLines = 1,
-    )
 }
 
 @Composable

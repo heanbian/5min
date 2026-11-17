@@ -1,11 +1,11 @@
 # 5min-ios-app
 
-**如厕计时器(5min)** — iOS 原生客户端。运营方：学记宝。官网：https://5min.chat。
+**如厕计时器** — iOS 原生客户端。运营方：学记宝。官网：https://5min.chat。
 
 | 项 | 值 |
 |------|------|
 | Bundle ID | `chat.5min.app` |
-| 显示名 | 如厕计时器(5min)（`CFBundleDisplayName`） |
+| 显示名 | 如厕计时器（`CFBundleDisplayName`） |
 | 版本 | `FiveMin/Info.plist` → `CFBundleShortVersionString` / `CFBundleVersion`（与工程 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 保持一致；当前 `1.0.6` / `7`） |
 | 技术 | SwiftUI · UserNotifications · AVAudioEngine · Core Haptics |
 | 最低系统 | iOS 17（建议用 **Xcode 27.1+ / iOS 27.1 SDK** 构建以优化 iPhone Duo） |
@@ -133,7 +133,7 @@ cp ExportOptions.plist.example ExportOptions.plist # 首次
 
 ### 上架文案要点
 
-- 名称：如厕计时器(5min)；类别：**工具（Utilities）**
+- 名称：如厕计时器；类别：**工具（Utilities）**
 - 描述：端侧倒计时工具；习惯提醒；数据原则上保存在本机；不要求注册账户
 - 隐私政策：`https://5min.chat/privacy.html`
 - 通知用途：倒计时结束后本机提醒起身（见 `NSUserNotificationsUsageDescription`）

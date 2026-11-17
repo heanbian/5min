@@ -2,7 +2,7 @@
   "name": "5min-web",
   "author": "xuejibao",
   "version": "1.0.0",
-  "description": "如厕计时器(5min) · 5min.chat",
+  "description": "如厕计时器 · 5min.chat",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

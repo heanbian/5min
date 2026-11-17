@@ -15,6 +15,7 @@ import {
 } from '../common/P0Features';
 import { TimerState, formatMs, phaseOf } from '../timer/TimerState';
 import { FinishAlerter } from '../alert/FinishAlerter';
+import { AmbientPlayer } from '../alert/AmbientPlayer';
 import {
   ensureNotificationPermission,
   showFinishNotification,
@@ -231,6 +232,9 @@ struct Index {
     this.privacyReady = true;
     this.ready = true;
     this.refreshUi();
+    if (this.ambient !== 'off') {
+      await AmbientPlayer.setMode(this.ambient);
+    }
     await this.applyStoreScreenshotSceneIfNeeded();
     await this.syncCloudOnLaunchIfNeeded();
   }
@@ -414,6 +418,7 @@ struct Index {
 
   onAmbientLink(): void {
     this.state.ambient = this.ambient;
+    void AmbientPlayer.setMode(this.ambient);
   }
 
   onTabChange(index: number): void {
@@ -883,6 +888,8 @@ struct Index {
       return;
     }
     const alerts = await this.effectiveFinishAlerts();
+    const ambientMode = this.ambient;
+    await AmbientPlayer.stop();
     await FinishAlerter.stop();
     await FinishAlerter.play(
       this.context,
@@ -890,6 +897,9 @@ struct Index {
       alerts.withTone,
       alerts.withVibrate
     );
+    if (ambientMode !== 'off') {
+      await AmbientPlayer.setMode(ambientMode);
+    }
   }
 
   startTicker(): void {
@@ -953,11 +963,16 @@ struct Index {
     if (alerts.withNotify) {
       await showFinishNotification(title, body, alerts.withTone);
     }
+    const ambientMode = this.ambient;
+    await AmbientPlayer.stop();
     const soundP = this.context
       ? FinishAlerter.play(this.context, this.catalog.alertDurationMs, alerts.withTone, alerts.withVibrate)
       : Promise.resolve();
     const dialogP = alerts.withNotify ? this.ackFinishDialog(title, body, ack) : Promise.resolve();
     await Promise.all([soundP, dialogP]);
+    if (ambientMode !== 'off') {
+      await AmbientPlayer.setMode(ambientMode);
+    }
     await this.maybeShowRitual();
     this.refreshUi();
   }

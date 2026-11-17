@@ -8,7 +8,7 @@ function registerPublicRoutes(app) {
   app.get('/api/status', (req, res) => {
     sendOk(res, {
       name: '5min',
-      product: '如厕计时器(5min)',
+      product: '如厕计时器',
       origin: 'https://5min.chat'
     });
   });

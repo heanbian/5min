@@ -8,7 +8,7 @@
   ],
   "window": {
     "navigationStyle": "custom",
-    "navigationBarTitleText": "如厕计时器(5min)",
+    "navigationBarTitleText": "如厕计时器",
     "navigationBarBackgroundColor": "#eef6f1",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#eef6f1",
@@ -29,7 +29,7 @@
       },
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
+        "text": "主页",
         "iconPath": "assets/tab/home.png",
         "selectedIconPath": "assets/tab/home-active.png"
       },

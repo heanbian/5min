@@ -3,8 +3,6 @@ package chat.fivemin.app.ui.mine
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,14 +52,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chat.fivemin.app.FiveMinApp
+import chat.fivemin.app.data.AndroidLatest
+import chat.fivemin.app.data.AppUpdate
 import chat.fivemin.app.data.CustomScene
 import chat.fivemin.app.data.P0Features
+import chat.fivemin.app.data.UpdateCheckResult
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 import chat.fivemin.app.ui.theme.FiveMinDimens
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private enum class MineDialog {
-    None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian, Storage, StandRitual, AlertProfile,
+    None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian, Storage, StandRitual, AlertProfile, UpdateAvailable,
 }
 
 @Composable
@@ -68,18 +73,41 @@ fun MineScreen(vm: TimerViewModel) {
     val state by vm.state.collectAsState()
     val context = LocalContext.current
     val catalog = FiveMinApp.instance.catalog
+    val scope = rememberCoroutineScope()
     var dialog by remember { mutableStateOf(MineDialog.None) }
     var confirmCloud by remember { mutableStateOf(false) }
     var editingSceneId by remember { mutableStateOf<String?>(null) }
     var editorName by remember { mutableStateOf("") }
     var editorMinutes by remember { mutableStateOf(state.customMin.toString()) }
+    var checkingUpdate by remember { mutableStateOf(false) }
+    var pendingUpdate by remember { mutableStateOf<AndroidLatest?>(null) }
+    val appVersion = remember(context) { AppUpdate.localVersionName(context) }
     val soundIds = listOf("off", "rain", "waves", "clock")
     val quickMins = listOf(3, 5, 10, 15, 25)
 
     fun openUrl(url: String) {
-        if (!url.startsWith("https://", ignoreCase = true)) return
-        runCatching {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        AppUpdate.openUrl(context, url)
+    }
+
+    fun checkSoftwareUpdate() {
+        if (checkingUpdate) return
+        checkingUpdate = true
+        Toast.makeText(context, vm.t("softwareUpdateChecking"), Toast.LENGTH_SHORT).show()
+        scope.launch {
+            val result = withContext(Dispatchers.IO) { AppUpdate.check(context) }
+            checkingUpdate = false
+            when (result) {
+                is UpdateCheckResult.Latest -> {
+                    Toast.makeText(context, vm.t("softwareUpdateLatest"), Toast.LENGTH_SHORT).show()
+                }
+                is UpdateCheckResult.Available -> {
+                    pendingUpdate = result.latest
+                    dialog = MineDialog.UpdateAvailable
+                }
+                is UpdateCheckResult.Failed -> {
+                    Toast.makeText(context, vm.t("softwareUpdateFailed"), Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -244,22 +272,13 @@ fun MineScreen(vm: TimerViewModel) {
                 LinkRow(vm.t("feedbackLabel")) { dialog = MineDialog.Feedback }
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 LinkRow(vm.t("beianEntry")) { dialog = MineDialog.Beian }
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                PrefRow(
+                    title = vm.t("softwareUpdateLabel"),
+                    value = if (checkingUpdate) "…" else appVersion,
+                    onClick = { checkSoftwareUpdate() },
+                )
             }
-
-            val appVersion = remember(context) {
-                runCatching {
-                    context.packageManager.getPackageInfo(context.packageName, 0).versionName
-                }.getOrNull().orEmpty().ifBlank { "—" }
-            }
-            Text(
-                text = vm.t("aboutVersion", mapOf("n" to appVersion)),
-                color = FiveMinColors.muted,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 12.dp),
-            )
         }
     }
 
@@ -739,6 +758,58 @@ fun MineScreen(vm: TimerViewModel) {
                 )
             },
         )
+        MineDialog.UpdateAvailable -> {
+            val latest = pendingUpdate
+            AlertDialog(
+                onDismissRequest = {
+                    dialog = MineDialog.None
+                    pendingUpdate = null
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val url = latest?.apkUrl?.takeIf { it.startsWith("https://", true) }
+                                ?: latest?.pageUrl
+                                ?: "https://5min.chat/download.html"
+                            openUrl(url)
+                            dialog = MineDialog.None
+                            pendingUpdate = null
+                        },
+                    ) {
+                        Text(
+                            vm.t("softwareUpdateAction"),
+                            color = FiveMinColors.brandStrong,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            dialog = MineDialog.None
+                            pendingUpdate = null
+                        },
+                    ) {
+                        Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
+                    }
+                },
+                title = { Text(vm.t("softwareUpdateLabel"), fontWeight = FontWeight.SemiBold) },
+                containerColor = FiveMinColors.surface,
+                text = {
+                    Text(
+                        text = vm.t(
+                            "softwareUpdateAvailable",
+                            mapOf("n" to (latest?.versionName ?: "")),
+                        ),
+                        color = FiveMinColors.ink,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
+            )
+        }
         MineDialog.None -> Unit
     }
 }
