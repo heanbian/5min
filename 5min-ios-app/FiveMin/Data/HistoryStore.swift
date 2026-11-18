@@ -200,8 +200,7 @@ final class HistoryStore {
 
     func clearHistory() {
         queue.sync {
-            guard let db else { return }
-            exec("DELETE FROM sessions")
+            _ = exec("DELETE FROM sessions")
         }
     }
 

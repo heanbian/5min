@@ -11,12 +11,12 @@
     },
     android: {
       // 例：https://play.google.com/store/apps/details?id=chat.fivemin.app
-      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.11.apk',
+      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-latest.apk',
       label: '下载',
     },
     harmony: {
-      // 例：华为应用市场详情页
-      url: '',
+      // 同款 C 号形态例：https://appgallery.huawei.com/app/C10220136；有本应用 C 号后可替换
+      url: 'https://appgallery.huawei.com/app/detail?id=chat.5min.app',
       label: '应用市场',
     },
   };
@@ -24,7 +24,7 @@
   const SUGGEST = {
     ios: '当前设备更适合使用 iOS 客户端，上架后可从本页安装。',
     android: '当前设备更适合使用 Android 客户端，可优先下载官方安装包。',
-    harmony: '当前设备更适合使用 HarmonyOS 客户端，上架后可从本页安装。',
+    harmony: '当前设备更适合使用 HarmonyOS 客户端，可优先前往华为应用市场安装。',
     mp: '当前处于微信内，可展开小程序码后长按识别打开。',
     web: '也可先使用网页版；商店上架后再安装官方客户端。',
   };
