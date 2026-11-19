@@ -5,8 +5,7 @@
 (() => {
   const STORES = {
     ios: {
-      // 例：https://apps.apple.com/app/idXXXXXXXX
-      url: '',
+      url: 'https://apps.apple.com/app/id6831430796',
       label: 'App Store',
     },
     android: {
@@ -22,7 +21,7 @@
   };
 
   const SUGGEST = {
-    ios: '当前设备更适合使用 iOS 客户端，上架后可从本页安装。',
+    ios: '当前设备更适合使用 iOS 客户端，可优先前往 App Store 安装。',
     android: '当前设备更适合使用 Android 客户端，可优先下载官方安装包。',
     harmony: '当前设备更适合使用 HarmonyOS 客户端，可优先前往华为应用市场安装。',
     mp: '当前处于微信内，可展开小程序码后长按识别打开。',
