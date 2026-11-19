@@ -29,7 +29,8 @@
             "uris": [
               {
                 "scheme": "https",
-                "host": "5min.chat"
+                "host": "5min.chat",
+                "path": "5min-harmony-app"
               }
             ],
             "domainVerify": true

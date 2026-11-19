@@ -314,11 +314,18 @@ Page({
     const hasScene = !!this.activeSceneId;
     const selected = hasScene ? range1[si] : null;
     const suggested = this.scenePicker.suggested || [];
-    const suggestedChips = suggested.slice(0, CHIP_N).map((id) => ({
-      id,
-      title: resolveSceneTitle(id) || id,
-      active: id === this.activeSceneId,
-    }));
+    const suggestedChips = suggested
+      .slice(0, CHIP_N)
+      .map((id) => {
+        const title = resolveSceneTitle(id);
+        if (!title) return null;
+        return {
+          id,
+          title,
+          active: id === this.activeSceneId,
+        };
+      })
+      .filter(Boolean);
     this.setData({
       sceneRange: [range0, range1],
       sceneIndex: [gi, si],

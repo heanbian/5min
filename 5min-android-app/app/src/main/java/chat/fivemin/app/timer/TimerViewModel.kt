@@ -195,7 +195,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val known = catalog.scenes.map { it.id }.toMutableSet()
         customScenes.forEach { known.add(it.id) }
         val sessions = history.getHistory().map { SceneRanker.SessionRef(it.sceneId, it.at) }
-        return SceneRanker.rank(sessions, known)
+        return SceneRanker.rank(sessions, known).filter { id ->
+            sceneForId(id, SceneRanker.GROUP_ID) != null
+        }
     }
 
     fun refreshSuggested() {
@@ -211,10 +213,13 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     fun appLocaleCodes(): List<String> = i18n.appLocaleCodes()
 
     fun pickerGroups(): List<SceneGroup> {
+        // Only include groups with at least one resolvable scene (avoids blank sections).
         val groups = mutableListOf<SceneGroup>()
-        if (_state.value.suggestedSceneIds.isNotEmpty()) groups += suggestedGroup
-        if (_state.value.customScenes.isNotEmpty()) groups += customGroup
-        groups += catalog.groups
+        if (scenesInGroup(SceneRanker.GROUP_ID).isNotEmpty()) groups += suggestedGroup
+        if (scenesInGroup(CustomScene.GROUP_ID).isNotEmpty()) groups += customGroup
+        catalog.groups.forEach { group ->
+            if (scenesInGroup(group.id).isNotEmpty()) groups += group
+        }
         return groups
     }
 

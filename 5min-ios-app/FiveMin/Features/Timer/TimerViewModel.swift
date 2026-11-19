@@ -60,10 +60,14 @@ final class TimerViewModel: ObservableObject {
     }
 
     var pickerGroups: [SceneGroupDTO] {
+        // Only include groups with at least one resolvable scene (avoids blank sections /
+        // LazyVStack identity clashes from empty headers).
         var groups: [SceneGroupDTO] = []
-        if !suggestedSceneIds.isEmpty { groups.append(suggestedGroup) }
-        if !customScenes.isEmpty { groups.append(customGroup) }
-        groups.append(contentsOf: catalog.groups)
+        if !scenes(inGroup: SceneRanker.groupId).isEmpty { groups.append(suggestedGroup) }
+        if !scenes(inGroup: CustomScene.groupId).isEmpty { groups.append(customGroup) }
+        for group in catalog.groups where !scenes(inGroup: group.id).isEmpty {
+            groups.append(group)
+        }
         return groups
     }
 
@@ -139,6 +143,7 @@ final class TimerViewModel: ObservableObject {
             SceneRanker.SessionRef(sceneId: $0.sceneId, at: $0.at)
         }
         suggestedSceneIds = SceneRanker.rank(sessions: sessions, knownIds: known)
+            .filter { sceneDTO(for: $0) != nil }
     }
 
     private static var isStoreScreenshotLaunch: Bool {

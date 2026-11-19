@@ -44,29 +44,37 @@ function knownSceneIds(customScenes) {
 
 function suggestedSceneIds() {
   const customScenes = prefs.getCustomScenes();
+  const unit = t('customUnit');
   const sessions = history.getHistory().map((item) => ({
     sceneId: item.sceneId || '',
     at: item.at || 0,
   }));
-  return sceneRanker.rank(sessions, knownSceneIds(customScenes));
+  // Drop IDs that no longer resolve (deleted custom, etc.) — avoids empty picker rows.
+  return sceneRanker
+    .rank(sessions, knownSceneIds(customScenes))
+    .filter((id) => !!sceneRow(id, customScenes, unit));
 }
 
 function sceneRow(id, customScenes, unit) {
   const custom = (customScenes || []).find((s) => s.id === id);
   if (custom) {
+    const name = String(custom.name || '').trim();
+    if (!name) return null;
     return {
       id: custom.id,
       min: custom.min,
-      label: `${custom.name} · ${custom.min} ${unit}`,
-      title: custom.name,
+      label: `${name} · ${custom.min} ${unit}`,
+      title: name,
     };
   }
   const scene = sceneById(id);
   if (!scene) return null;
+  const label = t(scene.labelKey);
+  if (!label || !String(label).trim()) return null;
   return {
     id: scene.id,
     min: scene.min,
-    label: t(scene.labelKey),
+    label,
     title: t(scene.titleKey),
   };
 }
@@ -78,40 +86,39 @@ function buildScenePicker() {
   const range = [];
   const scenesByGroup = {};
 
-  if (suggested.length > 0) {
+  // multiSelector: never push a group whose second-column list is empty (shows blank rows).
+  const suggestedRows = suggested
+    .map((id) => sceneRow(id, customScenes, unit))
+    .filter(Boolean);
+  if (suggestedRows.length > 0) {
     range.push({
       id: SUGGESTED_GROUP_ID,
       label: t(sceneRanker.LABEL_KEY),
     });
-    scenesByGroup[SUGGESTED_GROUP_ID] = suggested
-      .map((id) => sceneRow(id, customScenes, unit))
-      .filter(Boolean);
+    scenesByGroup[SUGGESTED_GROUP_ID] = suggestedRows;
   }
 
-  if (customScenes.length > 0) {
+  const customRows = customScenes
+    .map((s) => sceneRow(s.id, customScenes, unit))
+    .filter(Boolean);
+  if (customRows.length > 0) {
     range.push({
       id: CUSTOM_GROUP_ID,
       label: t('sceneGroupCustom'),
     });
-    scenesByGroup[CUSTOM_GROUP_ID] = customScenes.map((s) => ({
-      id: s.id,
-      min: s.min,
-      label: `${s.name} · ${s.min} ${unit}`,
-      title: s.name,
-    }));
+    scenesByGroup[CUSTOM_GROUP_ID] = customRows;
   }
 
   GROUPS.forEach((g) => {
+    const rows = SCENES.filter((s) => s.group === g.id)
+      .map((s) => sceneRow(s.id, customScenes, unit))
+      .filter(Boolean);
+    if (rows.length === 0) return;
     range.push({
       id: g.id,
       label: t(g.labelKey),
     });
-    scenesByGroup[g.id] = SCENES.filter((s) => s.group === g.id).map((s) => ({
-      id: s.id,
-      min: s.min,
-      label: t(s.labelKey),
-      title: t(s.titleKey),
-    }));
+    scenesByGroup[g.id] = rows;
   });
 
   return { range, scenesByGroup, suggested };

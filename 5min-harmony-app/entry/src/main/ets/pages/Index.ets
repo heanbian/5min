@@ -362,28 +362,36 @@ struct Index {
     for (let i = 0; i < history.length; i++) {
       sessions.push(new SessionRef(history[i].sceneId, history[i].at));
     }
-    this.suggestedSceneIds = SceneRanker.rank(sessions, known);
+    this.suggestedSceneIds = SceneRanker.rank(sessions, known).filter((id: string) =>
+      this.sceneItemForId(id, SceneRanker.GROUP_ID) !== null);
     this.chipSceneIds = this.suggestedSceneIds.slice(0, SceneRanker.CHIP_N);
     this.refreshPickerGroups();
   }
 
   private refreshPickerGroups(): void {
+    // Only keep groups that resolve to ≥1 scene — avoids blank headers / ForEach ghosts.
     const groups: SceneGroup[] = [];
-    if (this.suggestedSceneIds.length > 0) {
+    if (this.scenesInGroup(SceneRanker.GROUP_ID).length > 0) {
       const suggestedGroup: SceneGroup = {
         id: SceneRanker.GROUP_ID,
         labelKey: SceneRanker.LABEL_KEY
       };
       groups.push(suggestedGroup);
     }
-    if (this.customScenes.length > 0) {
+    if (this.scenesInGroup(CustomScene.GROUP_ID).length > 0) {
       const customGroup: SceneGroup = {
         id: CustomScene.GROUP_ID,
         labelKey: 'sceneGroupCustom'
       };
       groups.push(customGroup);
     }
-    this.groups = groups.concat(this.catalog.groups);
+    for (let i = 0; i < this.catalog.groups.length; i++) {
+      const group = this.catalog.groups[i];
+      if (this.scenesInGroup(group.id).length > 0) {
+        groups.push(group);
+      }
+    }
+    this.groups = groups;
   }
 
   /** One-shot: turn the old single custom duration into a named scene. */
@@ -633,13 +641,6 @@ struct Index {
     }
     const scene = this.scenes.find((s) => s.id === id);
     return scene ? this.t(scene.labelKey) : '';
-  }
-
-  private pickerSceneLabel(scene: SceneItem): string {
-    if (scene.group === CustomScene.GROUP_ID) {
-      return this.sceneLabelText(scene.id);
-    }
-    return this.t(scene.labelKey);
   }
 
   async acceptPrivacy(): Promise<void> {
@@ -1640,8 +1641,9 @@ struct Index {
                     .borderRadius(8)
                     .opacity(0.85)
 
+                    // Key must include groupId: suggested + catalog reuse the same scene.id
                     ForEach(this.scenesInGroup(group.id), (scene: SceneItem) => {
-                      Text(this.pickerSceneLabel(scene))
+                      Text(this.sceneLabelText(scene.id) || scene.id)
                         .width('100%')
                         .height(40)
                         .fontSize(14)
@@ -1653,7 +1655,7 @@ struct Index {
                         .backgroundColor(scene.id === this.state.activeSceneId ?
                           $r('app.color.brand_soft') : Color.Transparent)
                         .onClick(() => this.selectScene(scene.id))
-                    }, (scene: SceneItem) => scene.id)
+                    }, (scene: SceneItem) => `${group.id}:${scene.id}`)
                   }
                   .width('100%')
                 }, (group: SceneGroup) => group.id)

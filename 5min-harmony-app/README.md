@@ -80,13 +80,15 @@ chmod +x scripts/release.sh
 
 ## App Linking（应用链接）
 
-域名 `https://5min.chat` 可直达已安装的客户端（未安装则打开网页版）。
+域名关联用于已安装时打开应用；下载引导使用应用市场详情页（不配置「直达应用市场」路径）。
 
 1. **网站关联文件**（须公网可访问）：`https://5min.chat/.well-known/applinking.json`  
    源文件：`../5min-web/public/.well-known/applinking.json`（`appIdentifier` = AGC App ID）。
-2. **开发者中心**：推广运营 → 增长运营 → App Linking → 应用链接 → 域名填 `https://5min.chat`（勿尾斜杠）→ 发布。校验依赖上一步 JSON。
-3. **客户端**：`entry/src/main/module.json5` 中独立 skill（`entity.system.browsable` + `ohos.want.action.viewData` + `host: 5min.chat` + `domainVerify: true`）。须用**手动签名**安装验证；自动签名无法完成域名校验。
-4. **设备校验**：安装后约等 20 秒，执行 `hdc shell hidumper -s AppDomainVerifyManager`，目标域名为 `success` 后再用备忘录/浏览器打开 `https://5min.chat` 测拉起。
+2. **开发者中心**：推广运营 → 增长运营 → App Linking → 应用链接 → 域名 `https://5min.chat` → 发布成功即可（无需配置直达应用市场）。
+3. **客户端**：`module.json5` 独立 skill（`host: 5min.chat` + `domainVerify: true`）。须用**手动签名**安装验证。
+4. **下载页**：`5min-web` Harmony 入口指向  
+   `https://appgallery.huawei.com/app/detail?id=chat.5min.app`。
+5. **设备校验**：安装后约等 20 秒，`hdc shell hidumper -s AppDomainVerifyManager` 见 `success`。
 
 ## 说明
 

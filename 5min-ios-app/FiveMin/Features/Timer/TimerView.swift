@@ -467,6 +467,17 @@ struct TimerView: View {
 
 // MARK: - Scene picker
 
+/// Suggested + catalog reuse the same scene.id; LazyVStack needs a group-scoped identity.
+private struct ScenePickerRow: Identifiable {
+    let id: String
+    let scene: SceneDTO
+
+    init(groupId: String, scene: SceneDTO) {
+        self.id = "\(groupId):\(scene.id)"
+        self.scene = scene
+    }
+}
+
 struct ScenePickerView: View {
     @EnvironmentObject private var model: TimerViewModel
     @Environment(\.dismiss) private var dismiss
@@ -479,7 +490,9 @@ struct ScenePickerView: View {
                         let items = model.scenes(inGroup: group.id)
                         if !items.isEmpty {
                             groupHeader(model.t(group.labelKey))
-                            ForEach(items) { scene in
+                                .id("hdr:\(group.id)")
+                            ForEach(items.map { ScenePickerRow(groupId: group.id, scene: $0) }) { row in
+                                let scene = row.scene
                                 let active = scene.id == model.activeSceneId
                                 Button {
                                     model.selectScene(scene.id)
