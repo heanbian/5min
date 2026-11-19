@@ -3,14 +3,24 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { font, window } from '@kit.ArkUI';
 
 export default class EntryAbility extends UIAbility {
-  onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
-    hilog.info(0x0000, '5min', 'Ability onCreate');
+  private applyLaunchWant(want: Want): void {
     // Store marketing: hdc shell aa start -a EntryAbility -b chat.5min.app
     //   --ps FIVEMIN_SCREENSHOT home|running|done
     const shot = want?.parameters?.['FIVEMIN_SCREENSHOT'];
     if (typeof shot === 'string' && shot.length > 0) {
       AppStorage.setOrCreate('FIVEMIN_SCREENSHOT', shot);
     }
+    // App Linking: https://5min.chat → open timer home
+    const link = want?.uri;
+    if (typeof link === 'string' && link.length > 0) {
+      hilog.info(0x0000, '5min', 'App Linking uri %{public}s', link);
+      AppStorage.setOrCreate('FIVEMIN_APP_LINK', link);
+    }
+  }
+
+  onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    hilog.info(0x0000, '5min', 'Ability onCreate');
+    this.applyLaunchWant(want);
     // Plus Jakarta Sans — Latin UI；缺字回退系统中日韩字体
     try {
       font.registerFont({
@@ -36,6 +46,11 @@ export default class EntryAbility extends UIAbility {
     } catch (e) {
       hilog.warn(0x0000, '5min', 'registerFont failed %{public}s', JSON.stringify(e));
     }
+  }
+
+  onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    hilog.info(0x0000, '5min', 'Ability onNewWant');
+    this.applyLaunchWant(want);
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {

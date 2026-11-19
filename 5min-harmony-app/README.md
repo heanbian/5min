@@ -78,6 +78,16 @@ chmod +x scripts/release.sh
  AppGallery Connect → 软件包管理 上传 `.app`；图标可用 `store/artwork/ic_launcher_1024.png`。
  若提示「软件包解析失败」，到软件包管理列表点错误码查看（常见：未签名包、调试 Profile、证书不匹配）。
 
+## App Linking（应用链接）
+
+域名 `https://5min.chat` 可直达已安装的客户端（未安装则打开网页版）。
+
+1. **网站关联文件**（须公网可访问）：`https://5min.chat/.well-known/applinking.json`  
+   源文件：`../5min-web/public/.well-known/applinking.json`（`appIdentifier` = AGC App ID）。
+2. **开发者中心**：推广运营 → 增长运营 → App Linking → 应用链接 → 域名填 `https://5min.chat`（勿尾斜杠）→ 发布。校验依赖上一步 JSON。
+3. **客户端**：`entry/src/main/module.json5` 中独立 skill（`entity.system.browsable` + `ohos.want.action.viewData` + `host: 5min.chat` + `domainVerify: true`）。须用**手动签名**安装验证；自动签名无法完成域名校验。
+4. **设备校验**：安装后约等 20 秒，执行 `hdc shell hidumper -s AppDomainVerifyManager`，目标域名为 `success` 后再用备忘录/浏览器打开 `https://5min.chat` 测拉起。
+
 ## 说明
 
 - 系统通知：首次开始计时时会申请通知授权；到期通过 `notificationManager.publish` 弹出本机通知（自定义 `alert.wav`）；并尝试 `reminderAgentManager`（`PUBLISH_AGENT_REMINDER`）在后台/冻后仍提醒。前台结束时另播放应用内报警音 + 振动（不依赖通知声道是否被静音）。

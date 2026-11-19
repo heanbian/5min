@@ -22,6 +22,17 @@
           {
             "entities": ["entity.system.home"],
             "actions": ["action.system.home"]
+          },
+          {
+            "entities": ["entity.system.browsable"],
+            "actions": ["ohos.want.action.viewData"],
+            "uris": [
+              {
+                "scheme": "https",
+                "host": "5min.chat"
+              }
+            ],
+            "domainVerify": true
           }
         ]
       }

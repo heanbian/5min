@@ -173,25 +173,13 @@ a:hover{text-decoration:underline}
 }
 .action:hover{text-decoration:none}
 .action:active{transform:scale(0.98)}
-.action-primary,
-.action:not(.is-disabled){
+.action-primary{
   color:#fff;
   background:linear-gradient(180deg, var(--brand-lift) 0%, var(--brand) 55%, var(--brand-strong) 100%);
   box-shadow:0 4px 12px rgba(47, 154, 104, 0.22);
 }
-.action-primary:hover,
-.action:not(.is-disabled):hover{
+.action-primary:hover{
   box-shadow:0 6px 14px rgba(47, 154, 104, 0.28);
-}
-.action.is-disabled{
-  color:var(--muted);
-  background:transparent;
-  border-color:transparent;
-  box-shadow:none;
-  cursor:default;
-  pointer-events:none;
-  font-weight:550;
-  opacity:0.9;
 }
 .platform-mp.is-open .action[data-role="mp-toggle"]{
   background:var(--brand-soft);

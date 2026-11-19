@@ -9,12 +9,10 @@
       label: 'App Store',
     },
     android: {
-      // 例：https://play.google.com/store/apps/details?id=chat.fivemin.app
       url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-latest.apk',
       label: '下载',
     },
     harmony: {
-      // 同款 C 号形态例：https://appgallery.huawei.com/app/C10220136；有本应用 C 号后可替换
       url: 'https://appgallery.huawei.com/app/detail?id=chat.5min.app',
       label: '应用市场',
     },
@@ -25,7 +23,6 @@
     android: '当前设备更适合使用 Android 客户端，可优先下载官方安装包。',
     harmony: '当前设备更适合使用 HarmonyOS 客户端，可优先前往华为应用市场安装。',
     mp: '当前处于微信内，可展开小程序码后长按识别打开。',
-    web: '也可先使用网页版；商店上架后再安装官方客户端。',
   };
 
   const detectPlatform = () => {
@@ -37,13 +34,11 @@
     return 'web';
   };
 
-  const enableStoreLink = (el, url, label) => {
+  const syncStoreLink = (el, url, label) => {
     if (!el || !url) return;
     el.href = url;
     el.textContent = label;
-    el.classList.remove('is-disabled');
     el.classList.add('action-primary');
-    el.removeAttribute('aria-disabled');
     el.setAttribute('target', '_blank');
     el.setAttribute('rel', 'noopener noreferrer');
   };
@@ -66,7 +61,7 @@
     const cfg = STORES[key];
     if (!row || !cfg) return;
     const btn = row.querySelector('[data-role="store"]');
-    if (cfg.url) enableStoreLink(btn, cfg.url, cfg.label);
+    syncStoreLink(btn, cfg.url, cfg.label);
   });
 
   const mpRow = list.querySelector('[data-platform="mp"]');
@@ -83,15 +78,17 @@
   }
 
   const suggested = detectPlatform();
+  if (suggested === 'web') return;
+
   const suggestedEl = root.querySelector(`[data-platform="${suggested}"]`);
-  if (suggestedEl) {
-    suggestedEl.classList.add('is-suggested');
-    if (hint && SUGGEST[suggested]) {
-      hint.hidden = false;
-      hint.textContent = SUGGEST[suggested];
-    }
-    if (suggested === 'mp' && mpRow && mpToggle && mpDrawer) {
-      setMpOpen(mpRow, mpToggle, mpDrawer, true);
-    }
+  if (!suggestedEl) return;
+
+  suggestedEl.classList.add('is-suggested');
+  if (hint && SUGGEST[suggested]) {
+    hint.hidden = false;
+    hint.textContent = SUGGEST[suggested];
+  }
+  if (suggested === 'mp' && mpRow && mpToggle && mpDrawer) {
+    setMpOpen(mpRow, mpToggle, mpDrawer, true);
   }
 })();
