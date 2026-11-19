@@ -387,16 +387,17 @@ app.get(/^\/js\/.+\.js$/i, (req, res, next) => {
   return sendRewrittenText(res, filePath, 'text/javascript; charset=utf-8', body);
 });
 
-// HarmonyOS App Linking association (dotfiles are ignored by express.static by default)
+// HarmonyOS App Linking：send / express.static 默认忽略 dotfiles，须显式放行
 app.get('/.well-known/applinking.json', (req, res) => {
   const filePath = path.join(publicPath, '.well-known', 'applinking.json');
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
     res.status(404);
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     return res.send('Not found');
   }
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
-  return res.sendFile(filePath);
+  return res.send(fs.readFileSync(filePath));
 });
 
 app.use(
