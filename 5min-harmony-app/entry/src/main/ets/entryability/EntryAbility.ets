@@ -21,16 +21,8 @@ export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, '5min', 'Ability onCreate');
     this.applyLaunchWant(want);
-    // Plus Jakarta Sans — Latin UI；缺字回退系统中日韩字体
+    // Only register weights used by FiveMinFont
     try {
-      font.registerFont({
-        familyName: 'PlusJakartaSans',
-        familySrc: $rawfile('fonts/PlusJakartaSans.ttf')
-      });
-      font.registerFont({
-        familyName: 'PlusJakartaSans-Regular',
-        familySrc: $rawfile('fonts/PlusJakartaSans-Regular.ttf')
-      });
       font.registerFont({
         familyName: 'PlusJakartaSans-Medium',
         familySrc: $rawfile('fonts/PlusJakartaSans-Medium.ttf')
@@ -38,10 +30,6 @@ export default class EntryAbility extends UIAbility {
       font.registerFont({
         familyName: 'PlusJakartaSans-SemiBold',
         familySrc: $rawfile('fonts/PlusJakartaSans-SemiBold.ttf')
-      });
-      font.registerFont({
-        familyName: 'PlusJakartaSans-Bold',
-        familySrc: $rawfile('fonts/PlusJakartaSans-Bold.ttf')
       });
     } catch (e) {
       hilog.warn(0x0000, '5min', 'registerFont failed %{public}s', JSON.stringify(e));

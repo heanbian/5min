@@ -91,7 +91,6 @@ struct DialRing {
 struct Index {
   @State ready: boolean = false;
   @State locale: string = 'zh-CN';
-  @State localeLabel: string = '';
   @State clock: string = '05:00';
   @State status: string = '';
   @State brandTitle: string = '';
@@ -106,7 +105,8 @@ struct Index {
   @State timeColor: string = '#000000';
   @State statusColor: string = '#5F6F66';
   @State bgColor: string = '#EEF6F1';
-  @State glowColor: string = '#DFF0E6';
+  /** Idle/running matches Records/Mine & other platforms: bg → bg2 → bgBottom */
+  @State bgGradient: Array<[string, number]> = [['#EEF6F1', 0], ['#F2F5F3', 0.48], ['#F4F8F5', 1]];
   @State running: boolean = false;
   @State resetEnabled: boolean = false;
   @State setupEnabled: boolean = true;
@@ -121,7 +121,6 @@ struct Index {
   @State customScenes: CustomScene[] = [];
   @State suggestedSceneIds: string[] = [];
   @State chipSceneIds: string[] = [];
-  @State localeCodes: string[] = [];
   @State dialKey: string = '1';
   @State privacyAccepted: boolean = false;
   @State privacyReady: boolean = false;
@@ -130,7 +129,6 @@ struct Index {
   @State recordsEpoch: number = 0;
   @State localeTick: number = 0;
   @State showIgnore: boolean = false;
-  @State ignoreLabel: string = '';
   @State showRitual: boolean = false;
   @State ritualUp: boolean = false;
   @State ritualStretch: boolean = false;
@@ -148,6 +146,10 @@ struct Index {
   private overtimeMs: number = 0;
   private overtimeAt: number = 0;
   private context: common.UIAbilityContext | null = null;
+  /** Avoid redundant @State writes on 250ms ticks */
+  private lastTickClock: string = '';
+  private lastTickPhase: string = '';
+  private lastTickProgressBucket: number = -1;
 
   aboutToAppear(): void {
     this.context = getContext(this) as common.UIAbilityContext;
@@ -155,10 +157,10 @@ struct Index {
   }
 
   onPageShow(): void {
+    this.consumeAppLink();
     this.reloadCustomScenes().then(() => {
       this.consumePendingScene();
       this.refreshTodayStats();
-      this.refreshSuggested();
     });
   }
 
@@ -188,7 +190,6 @@ struct Index {
     this.cloud = new CloudSync(this.prefs, this.history);
     this.catalog = await SharedCatalog.load(this.context);
     this.scenes = this.catalog.scenes;
-    this.localeCodes = this.catalog.localeCodes;
 
     const saved = await this.prefs.getLocale();
     const systemTags: string[] = [];
@@ -200,9 +201,7 @@ struct Index {
     if (!saved || saved !== this.locale) {
       await this.prefs.setLocale(this.locale);
     }
-    this.state.locale = this.locale;
-    this.state.ambient = await this.prefs.getAmbient();
-    this.ambient = this.state.ambient;
+    this.ambient = await this.prefs.getAmbient();
     AppStorage.setOrCreate('appLocale', this.locale);
     AppStorage.setOrCreate('appAmbient', this.ambient);
     this.finishTone = await this.prefs.getFinishTone();
@@ -214,29 +213,40 @@ struct Index {
     this.linkedLocale = this.locale;
     this.localeTick = this.localeTick + 1;
     const custom = await this.prefs.getCustomMin(this.catalog.defaultMin);
-    await this.reloadCustomScenes();
+    this.customScenes = await this.prefs.getCustomScenes();
     await this.migrateLegacyCustomMinIfNeeded();
-    await this.reloadCustomScenes();
+    this.customScenes = await this.prefs.getCustomScenes();
+    await this.refreshSuggested();
     const toilet = this.scenes.find((s) => s.id === 'toilet');
     const customMatch = this.customScenes.find((s) => s.min === custom);
     if (toilet && custom === toilet.min) {
-      this.setPreset(toilet.min, 'toilet');
+      await this.setPreset(toilet.min, 'toilet');
     } else if (customMatch) {
-      this.setPreset(customMatch.min, customMatch.id);
+      await this.setPreset(customMatch.min, customMatch.id);
     } else {
-      this.setPreset(custom, '');
+      await this.setPreset(custom, '');
     }
     await this.refreshTodayStats();
-    await this.refreshSuggested();
     this.privacyAccepted = await this.prefs.isPrivacyAccepted();
     this.privacyReady = true;
     this.ready = true;
     this.refreshUi();
+    this.consumeAppLink();
     if (this.ambient !== 'off') {
       await AmbientPlayer.setMode(this.ambient);
     }
     await this.applyStoreScreenshotSceneIfNeeded();
     await this.syncCloudOnLaunchIfNeeded();
+  }
+
+  /** App Linking / cold start: switch to home timer tab. */
+  private consumeAppLink(): void {
+    const link = AppStorage.get('FIVEMIN_APP_LINK') as string;
+    if (!link) {
+      return;
+    }
+    AppStorage.delete('FIVEMIN_APP_LINK');
+    this.currentTab = 1;
   }
 
   /** Store marketing scenes via Want param FIVEMIN_SCREENSHOT=home|running|done (also idle/warn). */
@@ -250,7 +260,7 @@ struct Index {
     this.privacyReady = true;
     await this.prefs.setPrivacyAccepted(true);
     this.currentTab = 1;
-    this.setPreset(5, 'toilet');
+    await this.setPreset(5, 'toilet');
     this.refreshUi();
     if (scene === 'home' || scene === 'idle') {
       return;
@@ -310,14 +320,12 @@ struct Index {
       const nextLocale = normalizeAppLocale(await this.prefs.getLocale(), 'zh-CN');
       if (nextLocale !== this.locale) {
         this.locale = nextLocale;
-        this.state.locale = nextLocale;
         this.linkedLocale = nextLocale;
         AppStorage.setOrCreate('appLocale', nextLocale);
         this.localeTick = this.localeTick + 1;
       }
       const amb = await this.prefs.getAmbient();
       this.ambient = amb;
-      this.state.ambient = amb;
       AppStorage.setOrCreate('appAmbient', amb);
       this.finishTone = await this.prefs.getFinishTone();
       this.finishVibrate = await this.prefs.getFinishVibrate();
@@ -409,7 +417,6 @@ struct Index {
     const next = normalizeAppLocale(this.linkedLocale, 'zh-CN');
     if (this.locale !== next) {
       this.locale = next;
-      this.state.locale = next;
       this.linkedLocale = next;
       this.localeTick = this.localeTick + 1;
       this.refreshUi();
@@ -417,7 +424,6 @@ struct Index {
   }
 
   onAmbientLink(): void {
-    this.state.ambient = this.ambient;
     void AmbientPlayer.setMode(this.ambient);
   }
 
@@ -438,7 +444,6 @@ struct Index {
       this.reloadCustomScenes().then(() => {
         this.consumePendingScene();
         this.refreshTodayStats();
-        this.refreshSuggested();
       });
     }
   }
@@ -548,7 +553,7 @@ struct Index {
       return;
     }
     AppStorage.delete('pendingSceneId');
-    this.selectScene(pending);
+    void this.selectScene(pending);
   }
 
   private scenesInGroup(groupId: string): SceneItem[] {
@@ -642,12 +647,6 @@ struct Index {
     this.privacyAccepted = true;
   }
 
-  async declinePrivacy(): Promise<void> {
-    if (this.context) {
-      this.context.terminateSelf();
-    }
-  }
-
   async openPrivacy(): Promise<void> {
     if (this.context) {
       await openExternalUrl(this.context, PRIVACY_URL);
@@ -684,6 +683,7 @@ struct Index {
     return this.t('sceneToiletTitle');
   }
 
+  /** Full UI sync (locale / scene / start-pause / finish). */
   refreshUi(): void {
     this.state.phase = phaseOf(this.state);
     if (this.inOvertime) {
@@ -696,27 +696,12 @@ struct Index {
     this.running = this.state.running;
     this.setupEnabled = !this.state.running;
     this.resetEnabled = this.state.running || this.state.remainMs < this.state.totalMs || this.state.finished;
-    this.dialKey = `${this.progress.toFixed(4)}|${this.state.phase}`;
+    this.dialKey = `${this.progress.toFixed(3)}|${this.state.phase}`;
+    this.lastTickClock = this.clock;
+    this.lastTickPhase = this.state.phase;
+    this.lastTickProgressBucket = Math.floor(this.progress * 200);
 
-    if (this.state.phase === 'warn') {
-      this.ringColor = '#C9862D';
-      this.timeColor = '#C9862D';
-      this.statusColor = '#C9862D';
-      this.bgColor = '#FFF6E8';
-      this.glowColor = '#FFE9C8';
-    } else if (this.state.phase === 'done') {
-      this.ringColor = '#D2554A';
-      this.timeColor = '#D2554A';
-      this.statusColor = '#D2554A';
-      this.bgColor = '#FFEFED';
-      this.glowColor = '#FFD7D2';
-    } else {
-      this.ringColor = '#2F9A68';
-      this.timeColor = '#000000';
-      this.statusColor = '#5F6F66';
-      this.bgColor = '#EEF6F1';
-      this.glowColor = '#DFF0E6';
-    }
+    this.applyPhaseColors(this.state.phase);
 
     if (this.state.activeSceneId) {
       const title = this.sceneTitle(this.state.activeSceneId);
@@ -730,33 +715,8 @@ struct Index {
       this.scenePlaceholder = true;
     }
 
-    this.localeLabel = this.catalog.t(this.locale, 'nativeName');
-
-    if (this.inOvertime) {
-      const otVars: Record<string, string> = {};
-      otVars['n'] = this.formatOvertime(this.overtimeMs);
-      this.status = this.t('statusOvertime', otVars);
-    } else if (this.state.phase === 'done') {
-      this.status = this.t('statusDone');
-    } else if (this.state.phase === 'warn') {
-      this.status = this.t('statusWarn');
-    } else if (this.state.phase === 'running') {
-      this.status = this.t('statusRunning');
-    } else if (this.state.phase === 'paused') {
-      this.status = this.t('statusPaused');
-    } else {
-      this.status = this.t('statusIdle');
-    }
-
-    if (this.state.finished && !this.state.running) {
-      this.startLabel = this.t('again');
-    } else if (this.state.running) {
-      this.startLabel = this.t('pause');
-    } else if (this.state.remainMs < this.state.totalMs && this.state.remainMs > 0) {
-      this.startLabel = this.t('resume');
-    } else {
-      this.startLabel = this.t('start');
-    }
+    this.status = this.statusTextForPhase(this.state.phase);
+    this.startLabel = this.startLabelForState();
 
     this.statsEmpty = this.state.statsCount <= 0;
     if (this.statsEmpty) {
@@ -770,14 +730,112 @@ struct Index {
     }
 
     this.showIgnore = this.state.phase === 'done' && this.lastRecordedSessionId > 0;
-    this.ignoreLabel = this.t('finishIgnore');
   }
 
-  setPreset(min: number, sceneId: string): void {
+  /** Lightweight tick sync — only mutate @State when display values change. */
+  private refreshTickUi(): void {
+    this.state.phase = phaseOf(this.state);
+    let nextClock: string;
+    let nextProgress: number;
+    if (this.inOvertime) {
+      nextProgress = 0;
+      nextClock = `+${this.formatOvertime(this.overtimeMs)}`;
+    } else {
+      nextProgress = this.state.progress();
+      nextClock = formatMs(this.state.remainMs);
+    }
+    const phase = this.state.phase;
+    const progressBucket = Math.floor(nextProgress * 200);
+    const clockChanged = nextClock !== this.lastTickClock;
+    const phaseChanged = phase !== this.lastTickPhase;
+    const progressChanged = progressBucket !== this.lastTickProgressBucket;
+
+    if (clockChanged) {
+      this.clock = nextClock;
+      this.lastTickClock = nextClock;
+    }
+    if (progressChanged || phaseChanged) {
+      this.progress = nextProgress;
+      this.dialKey = `${nextProgress.toFixed(3)}|${phase}`;
+      this.lastTickProgressBucket = progressBucket;
+    }
+    if (phaseChanged) {
+      this.lastTickPhase = phase;
+      this.applyPhaseColors(phase);
+      this.setupEnabled = !this.state.running;
+      this.resetEnabled = this.state.running || this.state.remainMs < this.state.totalMs || this.state.finished;
+      this.showIgnore = phase === 'done' && this.lastRecordedSessionId > 0;
+      this.startLabel = this.startLabelForState();
+    }
+    if (this.running !== this.state.running) {
+      this.running = this.state.running;
+    }
+    if (clockChanged || phaseChanged) {
+      this.status = this.statusTextForPhase(phase);
+    }
+  }
+
+  private applyPhaseColors(phase: string): void {
+    if (phase === 'warn') {
+      this.ringColor = '#C9862D';
+      this.timeColor = '#C9862D';
+      this.statusColor = '#C9862D';
+      this.bgColor = '#FFF6E8';
+      this.bgGradient = [['#FFF6E8', 0], ['#FFFAF2', 1]];
+    } else if (phase === 'done') {
+      this.ringColor = '#D2554A';
+      this.timeColor = '#D2554A';
+      this.statusColor = '#D2554A';
+      this.bgColor = '#FFEFED';
+      this.bgGradient = [['#FFEFED', 0], ['#FFF7F6', 1]];
+    } else {
+      this.ringColor = '#2F9A68';
+      this.timeColor = '#000000';
+      this.statusColor = '#5F6F66';
+      this.bgColor = '#EEF6F1';
+      this.bgGradient = [['#EEF6F1', 0], ['#F2F5F3', 0.48], ['#F4F8F5', 1]];
+    }
+  }
+
+  private statusTextForPhase(phase: string): string {
+    if (this.inOvertime) {
+      const otVars: Record<string, string> = {};
+      otVars['n'] = this.formatOvertime(this.overtimeMs);
+      return this.t('statusOvertime', otVars);
+    }
+    if (phase === 'done') {
+      return this.t('statusDone');
+    }
+    if (phase === 'warn') {
+      return this.t('statusWarn');
+    }
+    if (phase === 'running') {
+      return this.t('statusRunning');
+    }
+    if (phase === 'paused') {
+      return this.t('statusPaused');
+    }
+    return this.t('statusIdle');
+  }
+
+  private startLabelForState(): string {
+    if (this.state.finished && !this.state.running) {
+      return this.t('again');
+    }
+    if (this.state.running) {
+      return this.t('pause');
+    }
+    if (this.state.remainMs < this.state.totalMs && this.state.remainMs > 0) {
+      return this.t('resume');
+    }
+    return this.t('start');
+  }
+
+  async setPreset(min: number, sceneId: string): Promise<void> {
     if (this.state.running) {
       return;
     }
-    this.commitOvertimeToHistoryIfNeeded();
+    await this.commitOvertimeToHistoryIfNeeded();
     this.clearOvertimeState();
     this.dismissRitual();
     this.lastRecordedSessionId = 0;
@@ -790,11 +848,11 @@ struct Index {
     this.refreshUi();
   }
 
-  selectScene(id: string): void {
+  async selectScene(id: string): Promise<void> {
     const custom = this.customScenes.find((s) => s.id === id);
     if (custom) {
-      this.prefs.setCustomMin(custom.min);
-      this.setPreset(custom.min, custom.id);
+      await this.prefs.setCustomMin(custom.min);
+      await this.setPreset(custom.min, custom.id);
       this.showScenes = false;
       return;
     }
@@ -802,8 +860,8 @@ struct Index {
     if (!scene) {
       return;
     }
-    this.prefs.setCustomMin(scene.min);
-    this.setPreset(scene.min, scene.id);
+    await this.prefs.setCustomMin(scene.min);
+    await this.setPreset(scene.min, scene.id);
     this.showScenes = false;
   }
 
@@ -840,12 +898,13 @@ struct Index {
     this.state.finished = false;
     const secs = Math.max(1, Math.ceil(this.state.remainMs / 1000));
     const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
-    if (this.finishNotify) {
+    const alerts = await this.effectiveFinishAlerts();
+    if (alerts.withNotify) {
       await scheduleFinishReminder(
         secs,
         this.t('notifyTitle', notifyVars),
         this.t('notifyBody', notifyVars),
-        this.finishTone
+        alerts.withTone
       );
     }
     this.startTicker();
@@ -907,7 +966,7 @@ struct Index {
     this.tickId = setInterval(() => {
       if (this.inOvertime) {
         this.overtimeMs = Math.max(0, Date.now() - this.overtimeAt);
-        this.refreshUi();
+        this.refreshTickUi();
         return;
       }
       if (!this.state.running) {
@@ -919,7 +978,7 @@ struct Index {
         this.handleFinish();
         return;
       }
-      this.refreshUi();
+      this.refreshTickUi();
     }, 250);
   }
 
@@ -1337,18 +1396,7 @@ struct Index {
 
   @Builder
   HomePane() {
-    Stack() {
-      Column()
-        .width('100%')
-        .height('100%')
-        .radialGradient({
-          center: ['50%', '0%'],
-          radius: 420,
-          colors: [[this.glowColor, 0], [Color.Transparent, 0.62]]
-        })
-        .hitTestBehavior(HitTestMode.None)
-
-      Scroll() {
+    Scroll() {
       Column({ space: 20 }) {
         Row() {
           Row({ space: 10 }) {
@@ -1510,7 +1558,7 @@ struct Index {
           .width('100%')
 
           if (this.showIgnore) {
-            Text(this.ignoreLabel)
+            Text(this.t('finishIgnore'))
               .width('100%')
               .height(52)
               .fontSize(15)
@@ -1695,8 +1743,9 @@ struct Index {
     .height('100%')
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Spring)
-    }
-    .width('100%')
-    .height('100%')
+    .linearGradient({
+      angle: 180,
+      colors: this.bgGradient
+    })
   }
 }

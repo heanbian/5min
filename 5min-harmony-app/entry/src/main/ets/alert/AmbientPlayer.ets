@@ -21,10 +21,6 @@ export class AmbientPlayer {
   private static swellFramesLeft: number = 0;
   private static noiseState: number = 0;
 
-  static getMode(): string {
-    return AmbientPlayer.mode;
-  }
-
   static async setMode(mode: string): Promise<void> {
     const next = (mode === 'rain' || mode === 'waves' || mode === 'clock') ? mode : 'off';
     if (next === AmbientPlayer.mode && (next === 'off' || AmbientPlayer.renderer !== null)) {

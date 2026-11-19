@@ -295,7 +295,6 @@ export struct MineTab {
     AppStorage.setOrCreate('appAmbient', mode);
     await this.prefs.setAmbient(mode);
     this.ambientName = this.catalog.t(this.locale, this.ambientKeyOf(mode));
-    this.uiTick = this.uiTick + 1;
     // Start / stop procedural ambient immediately (reviewer: 选择后应有声音).
     await AmbientPlayer.setMode(mode);
     this.pushPrefsIfCloud();
@@ -305,7 +304,6 @@ export struct MineTab {
     this.finishTone = on;
     AppStorage.setOrCreate('appFinishTone', on);
     await this.prefs.setFinishTone(on);
-    this.uiTick = this.uiTick + 1;
     this.pushPrefsIfCloud();
   }
 
@@ -313,7 +311,6 @@ export struct MineTab {
     this.finishVibrate = on;
     AppStorage.setOrCreate('appFinishVibrate', on);
     await this.prefs.setFinishVibrate(on);
-    this.uiTick = this.uiTick + 1;
     this.pushPrefsIfCloud();
   }
 
@@ -321,7 +318,6 @@ export struct MineTab {
     this.finishNotify = on;
     AppStorage.setOrCreate('appFinishNotify', on);
     await this.prefs.setFinishNotify(on);
-    this.uiTick = this.uiTick + 1;
     this.pushPrefsIfCloud();
   }
 
@@ -330,7 +326,6 @@ export struct MineTab {
     this.standRitual = mode === RITUAL_BASIC ? RITUAL_BASIC : RITUAL_OFF;
     await this.prefs.setStandRitual(this.standRitual);
     this.standRitualName = this.ritualLabelOf(this.standRitual);
-    this.uiTick = this.uiTick + 1;
   }
 
   async setAlertProfile(mode: string): Promise<void> {
@@ -342,7 +337,6 @@ export struct MineTab {
     }
     await this.prefs.setAlertProfile(this.alertProfile);
     this.alertProfileName = this.alertProfileLabelOf(this.alertProfile);
-    this.uiTick = this.uiTick + 1;
   }
 
   async pickStorageMode(mode: string): Promise<void> {

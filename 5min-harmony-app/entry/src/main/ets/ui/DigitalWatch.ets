@@ -9,6 +9,9 @@ const ALL_SEGS = 'abcdefg';
 const CHASSIS = '#E4ECE8';
 const WATCH_W = 144;
 const WATCH_H = 48;
+/** Fixed digit origins (ox) at oy=5 — cache Path2D once */
+const DIGIT_OX: number[] = [2, 34, 78, 110];
+const DIGIT_OY = 5;
 
 @Component
 export struct DigitalWatchTime {
@@ -21,8 +24,10 @@ export struct DigitalWatchTime {
   private areaW: number = 0;
   private areaH: number = 0;
   private blinkTimer: number = -1;
+  private digitSegCache: Array<Map<string, Path2D>> | null = null;
 
   aboutToAppear(): void {
+    this.ensureDigitCache();
     this.syncBlinkTimer();
   }
 
@@ -64,6 +69,7 @@ export struct DigitalWatchTime {
     if (canvasW <= 0 || canvasH <= 0) {
       return;
     }
+    this.ensureDigitCache();
     this.ctx.clearRect(0, 0, canvasW, canvasH);
     const scale = Math.min(canvasW / WATCH_W, canvasH / WATCH_H);
     const dx = (canvasW - WATCH_W * scale) / 2;
@@ -88,21 +94,25 @@ export struct DigitalWatchTime {
       Number.parseInt(raw.charAt(2), 10),
       Number.parseInt(raw.charAt(3), 10)
     ];
-    const oy = 5;
     const slotKinds: string[] = ['digit', 'digit', 'colon', 'digit', 'digit'];
     const slotXs: number[] = [2, 34, 64, 78, 110];
     let di = 0;
     for (let i = 0; i < slotKinds.length; i++) {
       if (slotKinds[i] === 'colon') {
-        this.drawColon(slotXs[i], oy, color, colonAlpha);
+        this.drawColon(slotXs[i], DIGIT_OY, color, colonAlpha);
       } else {
-        this.drawDigit(digits[di++], slotXs[i], oy, color);
+        this.drawDigit(digits[di], di, color);
+        di += 1;
       }
     }
   }
 
-  drawDigit(d: number, ox: number, oy: number, color: string): void {
-    const segs = this.digitSegMap(ox, oy);
+  drawDigit(d: number, slotIndex: number, color: string): void {
+    const cache = this.digitSegCache;
+    if (!cache || slotIndex < 0 || slotIndex >= cache.length) {
+      return;
+    }
+    const segs = cache[slotIndex];
     const on = DIGIT_SEGS[d] ?? '';
     for (let i = 0; i < ALL_SEGS.length; i++) {
       const k = ALL_SEGS.charAt(i);
@@ -127,6 +137,17 @@ export struct DigitalWatchTime {
     this.ctx.arc(cx, oy + 27, 2.15, 0, Math.PI * 2);
     this.ctx.fill();
     this.ctx.globalAlpha = 1;
+  }
+
+  private ensureDigitCache(): void {
+    if (this.digitSegCache) {
+      return;
+    }
+    const cache: Array<Map<string, Path2D>> = [];
+    for (let i = 0; i < DIGIT_OX.length; i++) {
+      cache.push(this.digitSegMap(DIGIT_OX[i], DIGIT_OY));
+    }
+    this.digitSegCache = cache;
   }
 
   digitSegMap(ox: number, oy: number): Map<string, Path2D> {

@@ -16,24 +16,25 @@ export interface SceneItem {
 }
 
 export class SharedCatalog {
-  presetsMin: number[] = [3, 5, 10];
   defaultMin: number = 5;
   alertDurationMs: number = 5000;
-  vibratePatternMs: number[] = [];
   groups: SceneGroup[] = [];
   scenes: SceneItem[] = [];
   localeCodes: string[] = [];
   defaultLocale: string = 'zh-CN';
   private localeMaps: Map<string, Map<string, string>> = new Map();
+  private static cached: SharedCatalog | null = null;
 
+  /** Shared across Index / Records / Mine — parse scenes + locales once per process. */
   static async load(context: common.UIAbilityContext): Promise<SharedCatalog> {
+    if (SharedCatalog.cached) {
+      return SharedCatalog.cached;
+    }
     const cat = new SharedCatalog();
     const scenesText = await SharedCatalog.readRaw(context, 'shared/scenes.json');
     const root: Record<string, Object> = JSON.parse(scenesText);
-    cat.presetsMin = root['presetsMin'] as number[];
     cat.defaultMin = root['defaultMin'] as number;
     cat.alertDurationMs = root['alertDurationMs'] as number;
-    cat.vibratePatternMs = root['vibratePatternMs'] as number[];
     cat.groups = root['groups'] as SceneGroup[];
     cat.scenes = root['scenes'] as SceneItem[];
     cat.localeCodes = filterAppLocales(root['localeCodes'] as string[]);
@@ -50,6 +51,7 @@ export class SharedCatalog {
       }
       cat.localeMaps.set(code, map);
     }
+    SharedCatalog.cached = cat;
     return cat;
   }
 

@@ -305,11 +305,6 @@ export class PrefsStore {
     return Boolean(await this.pref?.get(OVERTIME_INSIGHT_KEY, true) ?? true);
   }
 
-  async setShowOvertimeInsight(on: boolean): Promise<void> {
-    await this.pref?.put(OVERTIME_INSIGHT_KEY, on);
-    await this.pref?.flush();
-  }
-
   async getStandRitual(): Promise<string> {
     const v = String(await this.pref?.get(STAND_RITUAL_KEY, RITUAL_BASIC) ?? RITUAL_BASIC);
     return normalizeStandRitual(v.length > 0 ? v : RITUAL_BASIC);

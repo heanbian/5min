@@ -37,16 +37,6 @@ export class CloudSync {
     return [deviceId, deviceSecret];
   }
 
-  /** Fire-and-forget full sync when cloud mode is on. */
-  scheduleSync(): void {
-    CloudSync.runAsync(async () => {
-      if (!(await this.isCloud())) {
-        return;
-      }
-      await this.syncNow();
-    });
-  }
-
   schedulePushPrefs(): void {
     CloudSync.runAsync(async () => {
       await this.pushPrefsOnly();

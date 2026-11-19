@@ -1,13 +1,11 @@
 export type TimerPhase = 'idle' | 'running' | 'paused' | 'warn' | 'done';
 
 export class TimerState {
-  locale: string = 'zh-CN';
   totalMs: number = 5 * 60 * 1000;
   remainMs: number = 5 * 60 * 1000;
   running: boolean = false;
   finished: boolean = false;
   activeSceneId: string = '';
-  ambient: string = 'off';
   statsCount: number = 0;
   statsMs: number = 0;
   phase: TimerPhase = 'idle';
