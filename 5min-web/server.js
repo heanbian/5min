@@ -387,6 +387,12 @@ app.get(/^\/js\/.+\.js$/i, (req, res, next) => {
   return sendRewrittenText(res, filePath, 'text/javascript; charset=utf-8', body);
 });
 
+// HarmonyOS App Linking 直达回落：浏览器打开 /5min-harmony-app 时跳转应用市场详情
+const HARMONY_AG_URL = 'https://appgallery.huawei.com/app/detail?id=chat.5min.app';
+app.get(['/5min-harmony-app', '/5min-harmony-app/'], (req, res) => {
+  res.redirect(302, HARMONY_AG_URL);
+});
+
 // HarmonyOS App Linking：send / express.static 默认忽略 dotfiles，须显式放行
 app.get('/.well-known/applinking.json', (req, res) => {
   const filePath = path.join(publicPath, '.well-known', 'applinking.json');

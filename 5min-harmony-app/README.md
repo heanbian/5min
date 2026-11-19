@@ -80,15 +80,15 @@ chmod +x scripts/release.sh
 
 ## App Linking（应用链接）
 
-域名关联用于已安装时打开应用；下载引导使用应用市场详情页（不配置「直达应用市场」路径）。
+直达链接：`https://5min.chat/5min-harmony-app`  
+（已安装 → 打开客户端；未安装 → 应用市场详情；浏览器打开由站点 302 回落到应用市场。）
 
 1. **网站关联文件**（须公网可访问）：`https://5min.chat/.well-known/applinking.json`  
    源文件：`../5min-web/public/.well-known/applinking.json`（`appIdentifier` = AGC App ID）。
-2. **开发者中心**：推广运营 → 增长运营 → App Linking → 应用链接 → 域名 `https://5min.chat` → 发布成功即可（无需配置直达应用市场）。
-3. **客户端**：`module.json5` 独立 skill（`host: 5min.chat` + `domainVerify: true`）。须用**手动签名**安装验证。
-4. **下载页**：`5min-web` Harmony 入口指向  
-   `https://appgallery.huawei.com/app/detail?id=chat.5min.app`。
-5. **设备校验**：安装后约等 20 秒，`hdc shell hidumper -s AppDomainVerifyManager` 见 `success`。
+2. **开发者中心**：推广运营 → 增长运营 → App Linking → 应用链接 → 域名 `https://5min.chat` → 发布成功后配置「直达应用市场」：`path` = `5min-harmony-app`。
+3. **客户端**：`module.json5` 独立 skill（`host: 5min.chat` + `path: 5min-harmony-app` + `domainVerify: true`）。须用**手动签名**安装验证。
+4. **下载页**：`5min-web` Harmony 入口指向上述直达链接。
+5. **设备校验**：安装后约等 20 秒，`hdc shell hidumper -s AppDomainVerifyManager` 见 `success`；备忘录打开直达链接测拉起。
 
 ## 说明
 

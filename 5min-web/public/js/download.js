@@ -13,8 +13,8 @@
       label: '下载',
     },
     harmony: {
-      url: 'https://appgallery.huawei.com/app/detail?id=chat.5min.app',
-      label: '应用市场',
+      url: 'https://5min.chat/5min-harmony-app',
+      label: '打开',
     },
   };
 
