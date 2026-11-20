@@ -9,7 +9,7 @@
       label: 'App Store',
     },
     android: {
-      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.12.apk',
+      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.13.apk',
       label: '下载',
     },
     harmony: {
