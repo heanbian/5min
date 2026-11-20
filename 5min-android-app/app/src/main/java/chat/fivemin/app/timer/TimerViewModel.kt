@@ -195,8 +195,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val known = catalog.scenes.map { it.id }.toMutableSet()
         customScenes.forEach { known.add(it.id) }
         val sessions = history.getHistory().map { SceneRanker.SessionRef(it.sceneId, it.at) }
+        // Pass customScenes explicitly: init calls this before _state is assigned.
         return SceneRanker.rank(sessions, known).filter { id ->
-            sceneForId(id, SceneRanker.GROUP_ID) != null
+            sceneForId(id, SceneRanker.GROUP_ID, customScenes) != null
         }
     }
 
@@ -241,8 +242,12 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         return catalog.scenes.filter { it.group == groupId }
     }
 
-    private fun sceneForId(id: String, group: String): Scene? {
-        _state.value.customScenes.firstOrNull { it.id == id }?.let { custom ->
+    private fun sceneForId(
+        id: String,
+        group: String,
+        customScenes: List<CustomScene> = _state.value.customScenes,
+    ): Scene? {
+        customScenes.firstOrNull { it.id == id }?.let { custom ->
             return Scene(
                 id = custom.id,
                 min = custom.min,
