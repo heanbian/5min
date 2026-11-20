@@ -28,6 +28,11 @@ function allowWrite(req) {
   const row = writeHits.get(ip);
   if (!row || now - row.start >= WRITE_WINDOW_MS) {
     writeHits.set(ip, { start: now, count: 1 });
+    if (writeHits.size > 5000) {
+      for (const [k, v] of writeHits) {
+        if (now - v.start >= WRITE_WINDOW_MS) writeHits.delete(k);
+      }
+    }
     return true;
   }
   if (row.count >= WRITE_LIMIT) return false;

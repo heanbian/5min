@@ -1,0 +1,92 @@
+'use strict';
+
+const browserGlobals = {
+  AbortController: 'readonly',
+  Audio: 'readonly',
+  Element: 'readonly',
+  HTMLButtonElement: 'readonly',
+  HTMLElement: 'readonly',
+  Node: 'readonly',
+  Notification: 'readonly',
+  Response: 'readonly',
+  URL: 'readonly',
+  URLSearchParams: 'readonly',
+  btoa: 'readonly',
+  caches: 'readonly',
+  clearInterval: 'readonly',
+  clearTimeout: 'readonly',
+  clients: 'readonly',
+  console: 'readonly',
+  document: 'readonly',
+  fetch: 'readonly',
+  localStorage: 'readonly',
+  location: 'readonly',
+  navigator: 'readonly',
+  self: 'readonly',
+  setInterval: 'readonly',
+  setTimeout: 'readonly',
+  window: 'readonly',
+};
+
+module.exports = [
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      '.tools-venv/**',
+      'shared-export/**',
+      'fivemin-*',
+      'public/js/i18n/packs/**',
+    ],
+  },
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'commonjs',
+      globals: {
+        AbortController: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        clearImmediate: 'readonly',
+        clearInterval: 'readonly',
+        clearTimeout: 'readonly',
+        console: 'readonly',
+        exports: 'writable',
+        global: 'readonly',
+        module: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+        setImmediate: 'readonly',
+        setInterval: 'readonly',
+        setTimeout: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        fetch: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-undef': 'error',
+      'no-redeclare': 'error',
+      'no-constant-condition': ['error', { checkLoops: false }],
+    },
+  },
+  {
+    files: ['public/**/*.{js,mjs}', 'scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'module',
+      globals: browserGlobals,
+    },
+  },
+  {
+    files: ['public/js/download.js', 'public/sw.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: browserGlobals,
+    },
+  },
+];

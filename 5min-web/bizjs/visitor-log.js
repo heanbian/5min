@@ -20,6 +20,11 @@ const recentHits = new Map();
 /** @type {Map<string, { start: number, count: number }>} */
 const writeRate = new Map();
 
+/** Circuit breaker when DB is down — avoid per-request error spam. */
+let dbFailStreak = 0;
+let dbSkipUntil = 0;
+let dbLastErrorLogAt = 0;
+
 function allowWrite(ip) {
   const key = String(ip || '') || 'unknown';
   const now = Date.now();
@@ -306,12 +311,13 @@ async function ensureVisitorLogTable() {
 
 async function recordVisitor(req) {
   if (!shouldRecord(req)) return;
+  const now = Date.now();
+  if (now < dbSkipUntil) return;
 
   const ip = clientIp(req) || '';
   if (!allowWrite(ip)) return;
   const hitPath = clamp(req.path || '/', 512) || '/';
   const dedupeKey = ip + '|' + hitPath;
-  const now = Date.now();
   const last = recentHits.get(dedupeKey) || 0;
   if (now - last < DEDUPE_MS) return;
   recentHits.set(dedupeKey, now);
@@ -334,31 +340,45 @@ async function recordVisitor(req) {
     req.url && req.url.includes('?') ? req.url.slice(req.url.indexOf('?') + 1) : ''
   );
 
-  await pool().query(
-    `INSERT INTO fivemin_visitor_log
-      (ip, path, query, referer, user_agent, country, region, city, isp, location)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-    [
-      clamp(ip, 64),
-      hitPath,
-      query,
-      sanitizeReferer(req.get('referer') || req.get('referrer') || ''),
-      clamp(req.get('user-agent') || '', 512),
-      geo.country || '',
-      geo.region || '',
-      geo.city || '',
-      geo.isp || '',
-      geo.location || ''
-    ]
-  );
+  try {
+    await pool().query(
+      `INSERT INTO fivemin_visitor_log
+        (ip, path, query, referer, user_agent, country, region, city, isp, location)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      [
+        clamp(ip, 64),
+        hitPath,
+        query,
+        sanitizeReferer(req.get('referer') || req.get('referrer') || ''),
+        clamp(req.get('user-agent') || '', 512),
+        geo.country || '',
+        geo.region || '',
+        geo.city || '',
+        geo.isp || '',
+        geo.location || ''
+      ]
+    );
+    dbFailStreak = 0;
+  } catch (err) {
+    dbFailStreak += 1;
+    const backoffMs = Math.min(60_000, 2_000 * Math.pow(2, Math.min(dbFailStreak, 5)));
+    dbSkipUntil = Date.now() + backoffMs;
+    if (Date.now() - dbLastErrorLogAt > 30_000) {
+      dbLastErrorLogAt = Date.now();
+      console.error(
+        '写入访客记录失败（已暂停 ' +
+          Math.round(backoffMs / 1000) +
+          's）: ' +
+          (err && err.message ? err.message : err)
+      );
+    }
+  }
 }
 
 function visitorLogMiddleware(req, res, next) {
   next();
   setImmediate(() => {
-    recordVisitor(req).catch((err) => {
-      console.error('写入访客记录失败: ' + (err && err.message ? err.message : err));
-    });
+    recordVisitor(req).catch(() => {});
   });
 }
 

@@ -31,9 +31,9 @@
 | 前端 | `public/` 内 HTML5 + 原生 ES modules，无框架、无前端打包 |
 | 数据 | Web 计时默认仍存浏览器本机；App 可选云端同步。PostgreSQL：访客日志 + 云存储表 |
 
-多语言（`public/js/i18n/locales.js`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。
+多语言（`public/js/i18n/locales.js` + `packs/`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག、日本語、Español、العربية。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。默认语言包预加载，其余按需动态加载。
 
-字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL OFL 1.1](https://scripts.sil.org/OFL)）。
+字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL OFL 1.1](https://scripts.sil.org/OFL)；站点文案子集）与 Plus Jakarta Sans。
 
 ## 目录结构
 
@@ -64,18 +64,22 @@
 │   │   ├── alert.js          # 到期声音 / 振动
 │   │   ├── ambient.js        # 环境音
 │   │   ├── stats.js          # 今日累计
-│   │   └── i18n/locales.js   # 多语言文案（各端共享源）
+│   │   └── i18n/             # locales.js 运行时 + packs/*.js 语言包
 │   ├── fonts/ · img/
+│   ├── app/android-latest.json
+│   ├── download.html
 │   ├── site.json             # 站点元数据、页面列表、faqs
 │   ├── site.webmanifest · sw.js
 │   ├── llms.txt · robots.txt · sitemap.xml
 │   └── favicon.ico
 ├── scripts/
 │   ├── export-shared.mjs     # 导出场景 / 文案到 Android · 鸿蒙 · iOS · 小程序
+│   ├── subset-fonts.py       # 按站点文案子集化 Noto Sans SC
 │   └── raster-logo.js        # SVG → PNG / ICO
 ├── shared-export/            # 导出中间产物（勿当长期编辑源）
 ├── test/
 │   ├── http-security-perf.test.js
+│   ├── cloud-storage.test.js
 │   └── visitor-log.test.js
 ├── run.sh                    # → npm run dev
 ├── start.sh / stop.sh        # 后台启停（fivemin.pid）
@@ -86,9 +90,9 @@
 ## 本地运行
 
 ```bash
-cp -n server.conf.example server.conf   # 填写 DB_*、PORT（默认 8080）
+cp -n server.conf.example server.conf   # 填写 DB_*、PORT（默认 3300）；生产须设 STORAGE_PEPPER
 npm install
-npm run dev                             # 或 ./run.sh → http://127.0.0.1:8080/
+npm run dev                             # 或 ./run.sh → http://127.0.0.1:3300/
 ```
 
 生产 / 后台：
@@ -99,10 +103,11 @@ node server.js -d         # 或 ./start.sh（写 fivemin.pid）
 ./stop.sh
 ```
 
-测试：
+测试 / 检查：
 
 ```bash
 npm test                  # node --test（安全头 / 路径穿越 / 延迟与并发）
+npm run lint              # ESLint flat config
 ```
 
 打包（`public/` **不**打进包，须与二进制同级部署）：
@@ -118,7 +123,7 @@ npm run build:pkg
 
 | 变量 | 含义 |
 |------|------|
-| `PORT` | 监听端口，默认 `8080` |
+| `PORT` | 监听端口，默认 `3300` |
 | `TRUST_PROXY` | 置于可信反代后设为 `1`；须由反代剥离/覆写伪造头 |
 | `DB_*` | PostgreSQL 连接；启动时确保访客表与云存储表 |
 | `STORAGE_PEPPER` | 设备 secret 哈希盐（生产务必更换） |
@@ -150,7 +155,7 @@ npm run export-shared
 # 等价：node scripts/export-shared.mjs
 ```
 
-文案源：`public/js/i18n/locales.js`。同步至 Android / HarmonyOS / iOS / 微信小程序 `shared/`。
+文案源：`public/js/i18n/packs/*.js`（由 `locales.js` 按需加载）。同步至 Android / HarmonyOS / iOS / 微信小程序 `shared/`。
 
 ## 术语与文案约定
 
@@ -160,11 +165,12 @@ npm run export-shared
 - 合规：仅供习惯提醒；不作疗效/诊断宣称；JSON-LD `applicationCategory` 使用 `UtilitiesApplication`。
 - 修改对外文案时同步 `public/site.json`、对应 HTML、`llms.txt`、`site.webmanifest`、`sitemap.xml` 与 JSON-LD；`origin` 保持 `https://5min.chat`。
 
-### GEO
+### GEO / SEO
 
-- `public/llms.txt`：站点摘要与链接。
-- `public/about.html` / `public/faq.html`：独立可读页（`lang="zh-CN"`）。
+- `public/llms.txt`：面向模型的站点摘要与链接；须含定名、官网与「仅供习惯提醒」。
+- `public/about.html` / `public/faq.html` 等：独立可读页（`lang="zh-CN"`）；品牌回链首页，页脚互链齐全。
 - FAQ 可见文案须与 `site.json` 中 `faqs` 及 JSON-LD `FAQPage` 一致。
+- 修改页面后同步 `sitemap.xml` 的 `lastmod` 与各页 JSON-LD `dateModified` / `inLanguage`。
 
 ## 关联项目
 

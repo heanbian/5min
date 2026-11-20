@@ -51,13 +51,17 @@
   font-display: swap;
 }
 
-/* CJK — Noto Sans SC */
+/*
+ * CJK — Noto Sans SC (subset via scripts/subset-fonts.py when available).
+ * unicode-range keeps Latin-only locales from downloading these faces.
+ */
 @font-face {
   font-family: "Noto Sans SC";
   src: url("../fonts/NotoSansSC-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+2E80-2FFF, U+3000-30FF, U+31F0-4DBF, U+4E00-9FFF, U+A960-A97F, U+AC00-D7AF, U+F900-FAFF, U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF;
 }
 
 @font-face {
@@ -66,4 +70,5 @@
   font-weight: 500 700;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+2E80-2FFF, U+3000-30FF, U+31F0-4DBF, U+4E00-9FFF, U+A960-A97F, U+AC00-D7AF, U+F900-FAFF, U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF;
 }

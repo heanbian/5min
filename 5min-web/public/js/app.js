@@ -21,8 +21,10 @@
 import {
   LOCALES,
   LOCALE_CODES,
+  LOCALE_NATIVE_NAMES,
   STORAGE_KEY,
   detectLocale,
+  ensureLocale,
   resolveLocale,
   t,
 } from './i18n/locales.js';
@@ -388,11 +390,11 @@ const syncBrandTitle = () => {
       return;
     }
   }
-  brandTitle.textContent = LOCALES[locale].brandTitle;
+  brandTitle.textContent = (LOCALES[locale] || LOCALES['zh-CN']).brandTitle;
 };
 
 const applyStaticI18n = () => {
-  const pack = LOCALES[locale];
+  const pack = LOCALES[locale] || LOCALES['zh-CN'];
   document.documentElement.lang = pack.htmlLang;
   document.documentElement.dir = pack.dir === 'rtl' ? 'rtl' : 'ltr';
   syncBrandTitle();
@@ -445,7 +447,7 @@ const setLangPanelOpen = (open) => {
 
 const syncLangSelect = () => {
   if (!langPanel || !langBtnLabel) return;
-  langBtnLabel.textContent = LOCALES[locale]?.nativeName ?? locale;
+  langBtnLabel.textContent = LOCALE_NATIVE_NAMES[locale] ?? locale;
   langPanel.replaceChildren();
   for (const code of LOCALE_CODES) {
     const btn = document.createElement('button');
@@ -454,13 +456,14 @@ const syncLangSelect = () => {
     btn.setAttribute('role', 'option');
     btn.setAttribute('aria-selected', code === locale ? 'true' : 'false');
     btn.classList.toggle('active', code === locale);
-    btn.textContent = LOCALES[code].nativeName;
+    btn.textContent = LOCALE_NATIVE_NAMES[code] ?? code;
     langPanel.append(btn);
   }
 };
 
-const setLocale = (next) => {
+const setLocale = async (next) => {
   const resolved = resolveLocale(next) ?? locale;
+  await ensureLocale(resolved);
   locale = resolved;
   try { localStorage.setItem(STORAGE_KEY, locale); } catch { /* ignore */ }
   applyStaticI18n();
@@ -717,15 +720,19 @@ const syncAmbientUi = () => {
   }
 };
 
-applyStaticI18n();
-// 默认场景：如厕 · 5 分钟（URL ?sec= 自定义秒数时不覆盖）
-if (bootSec <= 0) {
-  setPreset(5, 'toilet');
-} else {
-  syncSceneUi();
-}
-syncAmbientUi();
-renderDailyStats();
+void (async () => {
+  await ensureLocale(locale);
+  applyStaticI18n();
+  // 默认场景：如厕 · 5 分钟（URL ?sec= 自定义秒数时不覆盖）
+  if (bootSec <= 0) {
+    setPreset(5, 'toilet');
+  } else {
+    syncSceneUi();
+  }
+  syncAmbientUi();
+  renderDailyStats();
+  render();
+})();
 
 langBtn?.addEventListener('click', (event) => {
   event.stopPropagation();
@@ -738,7 +745,7 @@ langBtn?.addEventListener('click', (event) => {
 langPanel?.addEventListener('click', (event) => {
   const btn = event.target.closest('button[data-lang]');
   if (!(btn instanceof HTMLButtonElement)) return;
-  setLocale(btn.dataset.lang);
+  void setLocale(btn.dataset.lang);
   setLangPanelOpen(false);
 });
 

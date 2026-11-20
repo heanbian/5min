@@ -9,7 +9,7 @@
       label: 'App Store',
     },
     android: {
-      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.13.apk',
+      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-latest.apk',
       label: '下载',
     },
     harmony: {
@@ -19,9 +19,9 @@
   };
 
   const SUGGEST = {
-    ios: '当前设备更适合使用 iOS 客户端，可优先前往 App Store 安装。',
-    android: '当前设备更适合使用 Android 客户端，可优先下载官方安装包。',
-    harmony: '当前设备更适合使用 HarmonyOS 客户端，可优先前往华为应用市场安装。',
+    ios: '检测到 iOS 设备，建议优先前往 App Store 安装官方客户端。',
+    android: '检测到 Android 设备，建议优先下载官方安装包。',
+    harmony: '检测到 HarmonyOS 设备，建议优先通过应用链接打开或前往应用市场安装。',
     mp: '当前处于微信内，可展开小程序码后长按识别打开。',
   };
 
@@ -64,6 +64,23 @@
     syncStoreLink(btn, cfg.url, cfg.label);
   });
 
+  const applyAndroidLatest = async () => {
+    try {
+      const res = await fetch('app/android-latest.json', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const url = String(data && data.apkUrl ? data.apkUrl : '').trim();
+      if (!url) return;
+      STORES.android.url = url;
+      const row = list.querySelector('[data-platform="android"]');
+      const btn = row && row.querySelector('[data-role="store"]');
+      syncStoreLink(btn, url, STORES.android.label);
+    } catch {
+      /* keep HTML / STORES fallback */
+    }
+  };
+  void applyAndroidLatest();
+
   const mpRow = list.querySelector('[data-platform="mp"]');
   const mpToggle = mpRow && mpRow.querySelector('[data-role="mp-toggle"]');
   const mpDrawer = document.getElementById('mp-drawer');
@@ -78,17 +95,10 @@
   }
 
   const suggested = detectPlatform();
-  if (suggested === 'web') return;
-
-  const suggestedEl = root.querySelector(`[data-platform="${suggested}"]`);
-  if (!suggestedEl) return;
-
-  suggestedEl.classList.add('is-suggested');
-  if (hint && SUGGEST[suggested]) {
+  if (hint && suggested !== 'web' && SUGGEST[suggested]) {
     hint.hidden = false;
     hint.textContent = SUGGEST[suggested];
-  }
-  if (suggested === 'mp' && mpRow && mpToggle && mpDrawer) {
-    setMpOpen(mpRow, mpToggle, mpDrawer, true);
+    const row = list.querySelector(`[data-platform="${suggested}"]`);
+    if (row) row.classList.add('is-suggested');
   }
 })();

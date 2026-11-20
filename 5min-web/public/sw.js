@@ -17,8 +17,9 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v7';
+const CACHE = '5min-shell-v8';
 
+/* Minimal shell: CJK fonts + non-default locale packs load on demand */
 const PRECACHE = [
   './',
   './index.html',
@@ -30,12 +31,11 @@ const PRECACHE = [
   './js/ambient.js',
   './js/stats.js',
   './js/i18n/locales.js',
+  './js/i18n/packs/zh-CN.js',
   './fonts/PlusJakartaSans-Regular.woff2',
   './fonts/PlusJakartaSans-Medium.woff2',
   './fonts/PlusJakartaSans-SemiBold.woff2',
   './fonts/PlusJakartaSans-Bold.woff2',
-  './fonts/NotoSansSC-Regular.woff2',
-  './fonts/NotoSansSC-Bold.woff2',
   './img/logo.svg',
   './img/logo.png',
   './img/favicon-32.png',
@@ -91,10 +91,11 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
+    const isHome = url.pathname === '/' || url.pathname === '/index.html';
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (res.ok) {
+          if (res.ok && isHome) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
           }
@@ -109,9 +110,11 @@ self.addEventListener('fetch', (event) => {
 
   if (!isShellPath(url.pathname)) return;
 
-  /* CSS/JS: network-first so style/copy updates are not stuck behind SW cache */
-  const networkFirst =
+  /* Versioned CSS/JS: cache-first by URL. Unversioned: network-first for freshness. */
+  const isVersioned = url.searchParams.has('v');
+  const isCssOrJs =
     url.pathname.startsWith('/css/') || url.pathname.startsWith('/js/');
+  const networkFirst = isCssOrJs && !isVersioned;
 
   if (networkFirst) {
     event.respondWith(

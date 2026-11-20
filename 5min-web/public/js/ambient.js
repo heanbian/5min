@@ -123,7 +123,7 @@ const startWaves = (audioCtx) => {
   timerIds.push(window.setInterval(swell, 2800));
 };
 
-const startClock = (audioCtx) => {
+const startClock = (_audioCtx) => {
   const tick = () => {
     if (!ctx || mode !== 'clock' || !master) return;
     const t0 = ctx.currentTime;

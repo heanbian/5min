@@ -23,9 +23,9 @@
 <meta name="format-detection" content="telephone=no">
 <title>下载 App · 如厕计时器</title>
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/download.css?v=16">
-<meta name="description" content="获取如厕计时器 官方客户端与网页版：iOS、Android、HarmonyOS、微信小程序。官网 https://5min.chat。仅供习惯提醒。">
-<meta name="keywords" content="如厕计时器,下载,App,iOS,Android,HarmonyOS,微信小程序">
+<link rel="stylesheet" href="css/download.css">
+<meta name="description" content="下载如厕计时器官方客户端：iOS App Store、Android 安装包、HarmonyOS 应用市场、微信小程序与网页版。官网 https://5min.chat。仅供习惯提醒。">
+<meta name="keywords" content="如厕计时器,下载,App,iOS,Android,HarmonyOS,微信小程序,5min.chat">
 <meta name="author" content="如厕计时器">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://5min.chat/download.html">
@@ -33,13 +33,13 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:site_name" content="如厕计时器">
 <meta property="og:title" content="下载 App · 如厕计时器">
-<meta property="og:description" content="获取如厕计时器 官方客户端与网页版。官网 https://5min.chat。仅供习惯提醒。">
+<meta property="og:description" content="获取如厕计时器官方客户端与网页版：iOS、Android、HarmonyOS、微信小程序。官网 https://5min.chat。">
 <meta property="og:url" content="https://5min.chat/download.html">
 <meta property="og:image" content="https://5min.chat/img/logo.png">
 <meta property="og:image:alt" content="如厕计时器">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="下载 App · 如厕计时器">
-<meta name="twitter:description" content="获取如厕计时器 官方客户端与网页版。官网 https://5min.chat。">
+<meta name="twitter:description" content="获取如厕计时器官方客户端与网页版。官网 https://5min.chat。">
 <meta name="twitter:image" content="https://5min.chat/img/logo.png">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
@@ -72,10 +72,11 @@
  "@id": "https://5min.chat/download.html#webpage",
  "url": "https://5min.chat/download.html",
  "name": "下载 App · 如厕计时器",
- "description": "获取如厕计时器 官方客户端与网页版：iOS、Android、HarmonyOS、微信小程序。官网 https://5min.chat。",
+ "description": "下载如厕计时器官方客户端：iOS、Android、HarmonyOS、微信小程序与网页版。官网 https://5min.chat。",
  "isPartOf": { "@id": "https://5min.chat/#webapp" },
  "about": { "@id": "https://5min.chat/#webapp" },
- "inLanguage": "zh-CN"
+ "inLanguage": "zh-CN",
+ "dateModified": "2026-11-20"
  }
  ]
 }
@@ -88,16 +89,19 @@
       <img src="img/logo.svg" width="108" height="32" alt="如厕计时器">
     </a>
     <h1>下载 App</h1>
-    <p class="lede">官方客户端、微信小程序与网页版，请通过本站与正规渠道获取。</p>
+    <p class="lede">请通过本站与正规渠道获取<strong>如厕计时器</strong>官方客户端、微信小程序或网页版。各端能力以实际发布版本为准。</p>
   </header>
 
-  <section class="block" aria-label="获取方式">
+  <p class="hint-suggest" id="platform-hint" hidden></p>
+
+  <section class="block" aria-labelledby="channels-label">
+    <p class="block-label" id="channels-label">获取方式</p>
     <ul class="platform-list" id="platform-list">
       <li class="platform" data-platform="ios">
         <div class="platform-row">
           <div class="platform-meta">
-            <h3 class="platform-name">iOS</h3>
-            <p class="platform-desc">App Store</p>
+            <h2 class="platform-name">iOS</h2>
+            <p class="platform-desc">App Store 官方上架</p>
           </div>
           <a class="action action-primary" href="https://apps.apple.com/app/id6831430796" data-role="store" target="_blank" rel="noopener noreferrer">App Store</a>
         </div>
@@ -105,8 +109,8 @@
       <li class="platform" data-platform="android">
         <div class="platform-row">
           <div class="platform-meta">
-            <h3 class="platform-name">Android</h3>
-            <p class="platform-desc">官方安装包</p>
+            <h2 class="platform-name">Android</h2>
+            <p class="platform-desc">官方安装包（APK）</p>
           </div>
           <a class="action action-primary" href="https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-latest.apk" data-role="store" target="_blank" rel="noopener noreferrer">下载</a>
         </div>
@@ -114,8 +118,8 @@
       <li class="platform" data-platform="harmony">
         <div class="platform-row">
           <div class="platform-meta">
-            <h3 class="platform-name">HarmonyOS</h3>
-            <p class="platform-desc">应用链接 · 未安装将前往应用市场</p>
+            <h2 class="platform-name">HarmonyOS</h2>
+            <p class="platform-desc">应用链接；未安装时前往应用市场</p>
           </div>
           <a class="action action-primary" href="https://5min.chat/5min-harmony-app" data-role="store" target="_blank" rel="noopener noreferrer">打开</a>
         </div>
@@ -123,8 +127,8 @@
       <li class="platform platform-mp" data-platform="mp">
         <div class="platform-row">
           <div class="platform-meta">
-            <h3 class="platform-name">微信小程序</h3>
-            <p class="platform-desc">微信扫一扫打开</p>
+            <h2 class="platform-name">微信小程序</h2>
+            <p class="platform-desc">扫码打开，或搜索「五分钟如厕计时器」</p>
           </div>
           <button type="button" class="action action-primary" data-role="mp-toggle" aria-expanded="false" aria-controls="mp-drawer">扫码打开</button>
         </div>
@@ -132,7 +136,7 @@
           <div class="mp-drawer-inner">
             <figure class="mp-code">
               <img src="img/mp-code.png" width="610" height="610" alt="微信扫一扫打开「五分钟如厕计时器」小程序" decoding="async">
-              <figcaption>微信扫一扫 · 也可搜索「五分钟如厕计时器」</figcaption>
+              <figcaption>微信扫一扫 · 也可在微信内搜索「五分钟如厕计时器」</figcaption>
             </figure>
           </div>
         </div>
@@ -140,7 +144,7 @@
       <li class="platform" data-platform="web">
         <div class="platform-row">
           <div class="platform-meta">
-            <h3 class="platform-name">网页版</h3>
+            <h2 class="platform-name">网页版</h2>
             <p class="platform-desc">5min.chat · 可添加至主屏幕</p>
           </div>
           <a class="action action-primary" href="./">打开</a>
@@ -149,12 +153,10 @@
     </ul>
   </section>
 
-  <p class="hint-suggest" id="platform-hint" hidden></p>
-
   <footer class="page-foot">
-    <p class="note">意见反馈 <a href="mailto:5min-chat@heanbian.com">5min-chat@heanbian.com</a><br>仅供习惯提醒，不构成医疗或健康建议。</p>
+    <p class="note">意见反馈 <a href="mailto:5min-chat@heanbian.com">5min-chat@heanbian.com</a><br>仅供习惯提醒，不构成医疗或健康建议。请勿安装未知来源的修改版。</p>
     <nav class="foot-nav" aria-label="相关页面">
-      <a href="./">如厕计时器</a>
+      <a href="./">首页</a>
       <a href="about.html">关于</a>
       <a href="faq.html">常见问题</a>
       <a href="privacy.html">隐私政策</a>
@@ -163,6 +165,6 @@
   </footer>
 </main>
 
-<script src="js/download.js?v=16" defer></script>
+<script src="js/download.js" defer></script>
 </body>
 </html>

@@ -84,6 +84,17 @@ dotenv.config({
 
 const PORT = Number(process.env.PORT) || 3300;
 const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+
+if (isProd) {
+  const pepper = String(process.env.STORAGE_PEPPER || '').trim();
+  if (!pepper || pepper === '5min-dev-pepper-change-me' || pepper.length < 16) {
+    console.error(
+      '生产环境必须设置 STORAGE_PEPPER（≥16 字符的随机盐，勿使用示例值）'
+    );
+    process.exit(1);
+  }
+}
+
 const publicPath = resolvePublicPath();
 assertPublicReady(publicPath);
 const site = JSON.parse(fs.readFileSync(path.join(publicPath, 'site' + '.json'), 'utf8'));
@@ -191,6 +202,10 @@ function rewriteJsModules(js) {
     return `${kw} ${quote}${appendAssetVersion(url)}${quote}`;
   });
   out = out.replace(
+    /\bimport\s*\(\s*(['"])(\.\/[^'"]+\.js)\1\s*\)/g,
+    (full, quote, url) => `import(${quote}${appendAssetVersion(url)}${quote})`
+  );
+  out = out.replace(
     /navigator\.serviceWorker\.register\(\s*(['"])(\.\/sw\.js)\1\s*\)/g,
     (full, quote, url) => `navigator.serviceWorker.register(${quote}${appendAssetVersion(url)}${quote})`
   );
@@ -199,6 +214,17 @@ function rewriteJsModules(js) {
     (full, quote, url) => `${quote}${appendAssetVersion(url)}${quote}`
   );
   return out;
+}
+
+/** Rewritten text bodies keyed by absolute path (invalidated when ASSET_VERSION changes). */
+const rewrittenCache = new Map();
+
+function cachedRewrite(filePath, rewriter) {
+  const hit = rewrittenCache.get(filePath);
+  if (hit && hit.version === ASSET_VERSION) return hit.body;
+  const body = rewriter(fs.readFileSync(filePath, 'utf8'));
+  rewrittenCache.set(filePath, { version: ASSET_VERSION, body });
+  return body;
 }
 
 function rewriteServiceWorker(js) {
@@ -251,7 +277,7 @@ function sendHtmlFile(res, fileName) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     return res.send('页面不存在');
   }
-  const html = rewriteHtmlAssets(fs.readFileSync(filePath, 'utf8'));
+  const html = cachedRewrite(filePath, rewriteHtmlAssets);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
   return res.send(html);
@@ -362,28 +388,28 @@ function staticHeaders(res, filePath) {
 app.get('/sw.js', (req, res) => {
   const filePath = resolvePublicFile('sw.js');
   if (!filePath) return res.status(404).send('Not found');
-  const body = rewriteServiceWorker(fs.readFileSync(filePath, 'utf8'));
+  const body = cachedRewrite(filePath, rewriteServiceWorker);
   return sendRewrittenText(res, filePath, 'text/javascript; charset=utf-8', body);
 });
 
 app.get('/site.webmanifest', (req, res) => {
   const filePath = resolvePublicFile('site.webmanifest');
   if (!filePath) return res.status(404).send('Not found');
-  const body = rewriteManifest(fs.readFileSync(filePath, 'utf8'));
+  const body = cachedRewrite(filePath, rewriteManifest);
   return sendRewrittenText(res, filePath, 'application/manifest+json; charset=utf-8', body);
 });
 
 app.get(/^\/css\/.+\.css$/i, (req, res, next) => {
   const filePath = resolvePublicFile(req.path);
   if (!filePath) return next();
-  const body = rewriteCssUrls(fs.readFileSync(filePath, 'utf8'));
+  const body = cachedRewrite(filePath, rewriteCssUrls);
   return sendRewrittenText(res, filePath, 'text/css; charset=utf-8', body);
 });
 
 app.get(/^\/js\/.+\.js$/i, (req, res, next) => {
   const filePath = resolvePublicFile(req.path);
   if (!filePath) return next();
-  const body = rewriteJsModules(fs.readFileSync(filePath, 'utf8'));
+  const body = cachedRewrite(filePath, rewriteJsModules);
   return sendRewrittenText(res, filePath, 'text/javascript; charset=utf-8', body);
 });
 
@@ -406,16 +432,7 @@ app.get('/.well-known/applinking.json', (req, res) => {
   return res.send(fs.readFileSync(filePath));
 });
 
-app.use(
-  express.static(publicPath, {
-    etag: true,
-    lastModified: true,
-    index: false,
-    dotfiles: 'allow',
-    setHeaders: staticHeaders
-  })
-);
-
+/* HTML must go through sendHtmlFile (asset ?v=) — register before express.static */
 app.get('/', (req, res) => sendHtmlFile(res, 'index.html'));
 
 for (const pagePath of pages.keys()) {
@@ -430,6 +447,23 @@ for (const pagePath of pages.keys()) {
     return sendHtmlFile(res, fileName);
   });
 }
+
+app.get(/^\/[^/]+\.html$/i, (req, res, next) => {
+  const fileName = String(req.path || '').replace(/^\//, '');
+  if (!fileName || fileName.includes('..')) return next();
+  if (!resolvePublicFile(fileName)) return next();
+  return sendHtmlFile(res, fileName);
+});
+
+app.use(
+  express.static(publicPath, {
+    etag: true,
+    lastModified: true,
+    index: false,
+    dotfiles: 'allow',
+    setHeaders: staticHeaders
+  })
+);
 
 app.use((req, res) => {
   res.status(404);

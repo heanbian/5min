@@ -191,6 +191,19 @@ test('HTTP 安全响应头、敏感路径与路径穿越', async () => {
     const privacy = await request(port, '/privacy.html');
     assert.equal(privacy.status, 200);
     assert.match(privacy.headers['content-type'] || '', /text\/html/);
+
+    const about = await request(port, '/about.html');
+    assert.equal(about.status, 200);
+    const aboutHtml = about.body.toString('utf8');
+    assert.match(aboutHtml, /css\/about\.css\?v=[0-9a-f]+/i);
+    assert.match(aboutHtml, /css\/fonts\.css\?v=[0-9a-f]+/i);
+
+    const download = await request(port, '/download.html');
+    assert.equal(download.status, 200);
+    const downloadHtml = download.body.toString('utf8');
+    assert.match(downloadHtml, /css\/download\.css\?v=[0-9a-f]+/i);
+    assert.match(downloadHtml, /js\/download\.js\?v=[0-9a-f]+/i);
+    assert.equal(/\?v=16\b/.test(downloadHtml), false);
   });
 });
 

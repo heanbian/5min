@@ -17,12 +17,30 @@ function pool() {
   return require('./db');
 }
 
+const DEV_PEPPER = '5min-dev-pepper-change-me';
+
 function pepper() {
-  return String(process.env.STORAGE_PEPPER || '5min-dev-pepper-change-me');
+  const raw = String(process.env.STORAGE_PEPPER || '').trim();
+  const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+  if (isProd) {
+    if (!raw || raw === DEV_PEPPER || raw.length < 16) {
+      throw new Error('STORAGE_PEPPER must be set to a strong secret in production');
+    }
+    return raw;
+  }
+  return raw || DEV_PEPPER;
 }
 
 function hashSecret(secret) {
   return crypto.createHash('sha256').update(String(secret) + '|' + pepper(), 'utf8').digest('hex');
+}
+
+/** Constant-time compare for equal-length hex digests. */
+function hashesEqual(a, b) {
+  const left = Buffer.from(String(a || ''), 'utf8');
+  const right = Buffer.from(String(b || ''), 'utf8');
+  if (left.length !== right.length || left.length === 0) return false;
+  return crypto.timingSafeEqual(left, right);
 }
 
 function clampStr(value, max) {
@@ -91,7 +109,7 @@ async function registerDevice(deviceId, deviceSecret) {
     [deviceId]
   );
   if (existing.rowCount > 0) {
-    if (existing.rows[0].device_secret_hash !== hash) {
+    if (!hashesEqual(existing.rows[0].device_secret_hash, hash)) {
       return { ok: false, status: 403, message: '设备凭证不匹配' };
     }
     await db.query('UPDATE fivemin_devices SET updated_at = NOW() WHERE device_id = $1', [deviceId]);
@@ -119,7 +137,7 @@ async function authenticate(req) {
     [deviceId]
   );
   if (res.rowCount === 0) return { ok: false, status: 401, message: '设备未注册' };
-  if (res.rows[0].device_secret_hash !== hashSecret(deviceSecret)) {
+  if (!hashesEqual(res.rows[0].device_secret_hash, hashSecret(deviceSecret))) {
     return { ok: false, status: 403, message: '设备凭证不匹配' };
   }
   return { ok: true, deviceId };
@@ -166,14 +184,18 @@ function sanitizeSession(raw) {
   return { clientId, at, minutes: Math.max(1, minutes), elapsedMs, sceneId, deleted };
 }
 
-async function getSnapshot(deviceId) {
+async function pruneOldSessions(deviceId) {
   const db = pool();
-  const cut = cutoffMs();
   await db.query(
     `DELETE FROM fivemin_cloud_sessions
      WHERE device_id = $1 AND deleted = FALSE AND at_ms < $2`,
-    [deviceId, cut]
+    [deviceId, cutoffMs()]
   );
+}
+
+async function getSnapshot(deviceId) {
+  const db = pool();
+  const cut = cutoffMs();
   const prefsRes = await db.query(
     'SELECT payload FROM fivemin_cloud_prefs WHERE device_id = $1',
     [deviceId]
@@ -212,43 +234,53 @@ async function putPrefs(deviceId, rawPrefs) {
 
 async function upsertSessions(deviceId, list) {
   const db = pool();
+  const cut = cutoffMs();
   const rows = (Array.isArray(list) ? list : [])
     .map(sanitizeSession)
     .filter(Boolean)
+    .filter((row) => row.deleted || row.at >= cut)
     .slice(0, MAX_SESSIONS);
-  const cut = cutoffMs();
-  let written = 0;
-  for (const row of rows) {
-    if (!row.deleted && row.at < cut) continue;
-    await db.query(
-      `INSERT INTO fivemin_cloud_sessions
-        (device_id, client_id, at_ms, minutes, scene_id, elapsed_ms, deleted, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
-       ON CONFLICT (device_id, client_id) DO UPDATE SET
-         at_ms = EXCLUDED.at_ms,
-         minutes = EXCLUDED.minutes,
-         scene_id = EXCLUDED.scene_id,
-         elapsed_ms = EXCLUDED.elapsed_ms,
-         deleted = EXCLUDED.deleted,
-         updated_at = NOW()`,
-      [
-        deviceId,
-        row.clientId,
-        row.at,
-        row.minutes,
-        row.sceneId,
-        row.elapsedMs,
-        row.deleted
-      ]
-    );
-    written += 1;
+  if (rows.length === 0) {
+    await pruneOldSessions(deviceId);
+    return { written: 0 };
   }
+  const clientIds = rows.map((r) => r.clientId);
+  const ats = rows.map((r) => r.at);
+  const minutes = rows.map((r) => r.minutes);
+  const sceneIds = rows.map((r) => r.sceneId);
+  const elapsed = rows.map((r) => r.elapsedMs);
+  const deleted = rows.map((r) => r.deleted);
   await db.query(
-    `DELETE FROM fivemin_cloud_sessions
-     WHERE device_id = $1 AND deleted = FALSE AND at_ms < $2`,
-    [deviceId, cut]
+    `INSERT INTO fivemin_cloud_sessions
+      (device_id, client_id, at_ms, minutes, scene_id, elapsed_ms, deleted, updated_at)
+     SELECT
+       $1::text,
+       t.client_id,
+       t.at_ms,
+       t.minutes,
+       t.scene_id,
+       t.elapsed_ms,
+       t.deleted,
+       NOW()
+     FROM UNNEST(
+       $2::text[],
+       $3::bigint[],
+       $4::integer[],
+       $5::text[],
+       $6::bigint[],
+       $7::boolean[]
+     ) AS t(client_id, at_ms, minutes, scene_id, elapsed_ms, deleted)
+     ON CONFLICT (device_id, client_id) DO UPDATE SET
+       at_ms = EXCLUDED.at_ms,
+       minutes = EXCLUDED.minutes,
+       scene_id = EXCLUDED.scene_id,
+       elapsed_ms = EXCLUDED.elapsed_ms,
+       deleted = EXCLUDED.deleted,
+       updated_at = NOW()`,
+    [deviceId, clientIds, ats, minutes, sceneIds, elapsed, deleted]
   );
-  return { written };
+  await pruneOldSessions(deviceId);
+  return { written: rows.length };
 }
 
 async function deleteSession(deviceId, clientId) {

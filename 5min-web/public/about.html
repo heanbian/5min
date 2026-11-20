@@ -24,8 +24,8 @@
 <title>关于 · 如厕计时器</title>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/about.css">
-<meta name="description" content="关于如厕计时器：产品定位、功能概览、适用平台与联系方式。官网 https://5min.chat。仅供习惯提醒。">
-<meta name="keywords" content="如厕计时器,关于,端侧倒计时,习惯提醒">
+<meta name="description" content="关于如厕计时器：端侧倒计时工具，默认「如厕 · 5 分钟」，支持场景预设、结束提醒与多端使用。官网 https://5min.chat。仅供习惯提醒。">
+<meta name="keywords" content="如厕计时器,关于,端侧倒计时,习惯提醒,5min.chat">
 <meta name="author" content="如厕计时器">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://5min.chat/about.html">
@@ -33,13 +33,13 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:site_name" content="如厕计时器">
 <meta property="og:title" content="关于 · 如厕计时器">
-<meta property="og:description" content="关于如厕计时器：产品定位、功能概览与多端说明。官网 https://5min.chat。">
+<meta property="og:description" content="如厕计时器是端侧倒计时工具：默认「如厕 · 5 分钟」，结束后提醒起身。官网 https://5min.chat。">
 <meta property="og:url" content="https://5min.chat/about.html">
 <meta property="og:image" content="https://5min.chat/img/logo.png">
 <meta property="og:image:alt" content="如厕计时器">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="关于 · 如厕计时器">
-<meta name="twitter:description" content="关于如厕计时器：产品定位、功能概览与多端说明。官网 https://5min.chat。">
+<meta name="twitter:description" content="如厕计时器是端侧倒计时工具：默认「如厕 · 5 分钟」。官网 https://5min.chat。">
 <meta name="twitter:image" content="https://5min.chat/img/logo.png">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
@@ -69,21 +69,21 @@
  "publisher": { "@id": "https://5min.chat/#organization" },
  "applicationCategory": "UtilitiesApplication",
  "operatingSystem": "Web, Android, iOS, HarmonyOS",
- "inLanguage": ["zh-CN", "zh-TW", "en", "de", "ru", "fr", "bo"],
+ "inLanguage": ["zh-CN", "zh-TW", "en", "de", "ru", "fr", "bo", "ja", "es", "ar"],
  "isAccessibleForFree": true,
- "description": "如厕计时器 是端侧倒计时工具，官网 https://5min.chat。默认「如厕 · 5 分钟」，支持场景预设、结束提醒与多端使用。仅供习惯提醒。"
+ "description": "如厕计时器是端侧倒计时工具，官网 https://5min.chat。默认「如厕 · 5 分钟」，支持场景预设、结束提醒与多端使用。仅供习惯提醒。"
  },
  {
  "@type": "AboutPage",
  "@id": "https://5min.chat/about.html#webpage",
  "url": "https://5min.chat/about.html",
  "name": "关于 · 如厕计时器",
- "description": "关于如厕计时器：产品定位、功能概览、适用平台与运营信息。",
+ "description": "关于如厕计时器：产品定位、主要功能、适用平台与联系方式。官网 https://5min.chat。",
  "isPartOf": { "@id": "https://5min.chat/#webapp" },
  "about": { "@id": "https://5min.chat/#webapp" },
- "relatedLink": "https://5min.chat/faq.html",
+ "relatedLink": ["https://5min.chat/faq.html", "https://5min.chat/download.html"],
  "inLanguage": "zh-CN",
- "dateModified": "2026-11-17"
+ "dateModified": "2026-11-20"
  }
  ]
 }
@@ -91,45 +91,70 @@
 </head>
 <body>
 <main class="wrap legal">
- <div class="brand-row">
- <img src="img/logo.svg" width="108" height="32" alt="如厕计时器">
- </div>
- <h1>关于如厕计时器</h1>
- <p class="meta">产品：如厕计时器 · 官网：https://5min.chat · 更新日期：2026 年 11 月 17 日</p>
- <p class="lede"><strong>如厕计时器</strong>是端侧倒计时工具，官网为 https://5min.chat。产品面向日常习惯提醒：默认场景为「如厕 · 5 分钟」，亦可选择其他分组场景；计时结束后可通过振动、提示音或系统通知提醒您起身活动。</p>
+  <div class="brand-row">
+    <a href="./" aria-label="如厕计时器首页">
+      <img src="img/logo.svg" width="108" height="32" alt="如厕计时器">
+    </a>
+  </div>
+  <header class="page-head">
+    <h1>关于如厕计时器</h1>
+    <p class="meta">官网 https://5min.chat · 更新日期：2026 年 11 月 20 日</p>
+    <p class="lede"><strong>如厕计时器</strong>是端侧倒计时工具。默认场景为「如厕 · 5 分钟」，亦可切换其他分组场景；计时结束后，可在设备支持且您已授权时，以振动、提示音或系统通知提醒起身活动。仅供习惯提醒。</p>
+  </header>
 
- <h2>一、产品定位</h2>
- <p>本产品提供简洁可靠的倒计时体验，帮助用户在如厕、洗漱、烹饪等待等常见场景中更好地感知时间。使用手机时人容易低估耗时；本工具以明确的倒计时与结束提醒，辅助形成更有节奏的日常习惯。</p>
- <p>本产品<strong>仅供习惯提醒</strong>，不采集健康档案，亦不构成医疗、健康诊断或其他专业建议。具体时长因人而异，请结合自身情况使用。</p>
+  <section class="section" aria-labelledby="sec-position">
+    <h2 id="sec-position">产品定位</h2>
+    <p>本产品提供简洁可靠的倒计时体验，帮助您在如厕、洗漱、烹饪等待等常见场景中更好地感知时间。使用手机时人容易低估耗时；明确的倒计时与结束提醒，有助于形成更有节奏的日常习惯。</p>
+    <p>本产品<strong>仅供习惯提醒</strong>，不采集健康档案，亦不构成医疗、健康诊断或其他专业建议。具体时长因人而异，请结合自身情况使用。</p>
+  </section>
 
- <h2>二、主要功能</h2>
- <ul>
- <li><strong>场景预设</strong>：按日常、烹饪、护肤、休息、办公等分组提供场景；默认「如厕 · 5 分钟」。</li>
- <li><strong>计时控制</strong>：支持开始、暂停、继续与重置；以绝对时间结算，切换前后台时仍尽量准确。</li>
- <li><strong>结束提醒</strong>：在设备支持且您授权时，可振动、播放提示音或展示系统通知；亦可选择环境音（雨声 / 海浪 / 时钟）。</li>
- <li><strong>今日统计</strong>：主页展示当日完成次数与累计时长（保存在本机）。</li>
- <li><strong>近 14 日记录</strong>：官方客户端可查看近期完成明细（场景、时长、时间），超期自动清理。</li>
- <li><strong>多语言</strong>：界面支持简体中文、繁体中文、English、Deutsch、Русский、Français 与 བོད་ཡིག（中国藏文）。</li>
- </ul>
+  <section class="section" aria-labelledby="sec-features">
+    <h2 id="sec-features">主要功能</h2>
+    <ul>
+      <li><strong>场景预设</strong>：按日常、烹饪、护肤、休息、学习、办公、班次、农事、家务等分组提供场景；默认「如厕 · 5 分钟」。</li>
+      <li><strong>计时控制</strong>：开始、暂停、继续与重置；以绝对时间结算，切换前后台时仍尽量准确。</li>
+      <li><strong>结束提醒</strong>：在设备支持且您授权时，可振动、播放提示音或展示系统通知；亦可选择环境音（雨声 / 海浪 / 时钟）。</li>
+      <li><strong>今日统计</strong>：主页展示当日完成次数与累计时长（默认保存在本机）。</li>
+      <li><strong>近 14 日记录</strong>：官方客户端可查看近期完成明细（场景、时长、时间），超期自动清理。</li>
+      <li><strong>可选云端同步</strong>：官方客户端可在「我的 › 数据存储」开启，以设备凭证同步偏好与近 14 日会话；未开启时不上传计时明细。</li>
+      <li><strong>多语言</strong>：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག、日本語、Español、العربية。</li>
+    </ul>
+  </section>
 
- <h2>三、适用平台</h2>
- <p>您可通过以下官方渠道使用本产品：</p>
- <ul>
- <li>网页版：https://5min.chat（可添加至主屏幕；轻量 PWA 会缓存计时所需的核心静态资源）</li>
- <li>Android / HarmonyOS / iOS 官方客户端</li>
- <li>微信小程序「如厕计时器」</li>
- </ul>
- <p>下载与商店入口见 <a href="download.html">下载 App</a>。各端功能以实际发布版本为准；网页版与客户端在界面与能力上大体对齐，个别能力（如近 14 日列表、自定义默认时长）可能因平台特性略有差异。</p>
+  <section class="section" aria-labelledby="sec-platforms">
+    <h2 id="sec-platforms">适用平台</h2>
+    <p>您可通过以下官方渠道使用本产品：</p>
+    <ul>
+      <li>网页版：https://5min.chat（可添加至主屏幕；轻量 PWA 会缓存计时所需的核心静态资源）</li>
+      <li>Android / HarmonyOS / iOS 官方客户端</li>
+      <li>微信小程序「五分钟如厕计时器」</li>
+    </ul>
+    <p>下载与商店入口见 <a href="download.html">下载 App</a>。网页版与客户端在界面与能力上大体对齐；近 14 日列表、自定义默认时长、可选云端同步等能力可能因平台特性略有差异，以实际发布版本为准。</p>
+  </section>
 
- <h2>四、联系方式</h2>
- <p>产品：<strong>如厕计时器</strong></p>
- <p>产品官网：https://5min.chat</p>
- <p>意见反馈与隐私问询：5min-chat@heanbian.com</p>
- <p>信息处理规则见《隐私政策》；使用条件见《用户协议》；常见问题见 <a href="faq.html">常见问题</a>。</p>
+  <section class="section" aria-labelledby="sec-contact">
+    <h2 id="sec-contact">联系方式</h2>
+    <p>产品：<strong>如厕计时器</strong></p>
+    <p>官网：https://5min.chat</p>
+    <p>意见反馈与隐私问询：<a href="mailto:5min-chat@heanbian.com">5min-chat@heanbian.com</a></p>
+    <p>信息处理规则见《<a href="privacy.html">隐私政策</a>》；使用条件见《<a href="terms.html">用户协议</a>》；使用疑问见 <a href="faq.html">常见问题</a>。</p>
+  </section>
 
- <h2>五、声明</h2>
- <p>公开资料中常有「单次如厕宜控制在约 5 分钟内」等一般性表述，仅供参考，并非统一医学标准。本产品默认五分钟场景，意在提供可感知的时间锚点，不替代专业意见。</p>
- <p>请通过官方网站与正规应用商店、小程序入口获取本产品，以免使用到未经授权的修改版本。</p>
+  <section class="section" aria-labelledby="sec-notice">
+    <h2 id="sec-notice">声明</h2>
+    <p>公开资料中常有「单次如厕宜控制在约 5 分钟内」等一般性表述，仅供参考，并非统一医学标准。本产品默认五分钟场景，意在提供可感知的时间锚点，不替代专业意见。</p>
+    <p>请通过官方网站与正规应用商店、小程序入口获取本产品，以免使用到未经授权的修改版本。</p>
+  </section>
+
+  <footer class="page-foot">
+    <nav class="doc-nav" aria-label="相关页面">
+      <a href="./">首页</a>
+      <a href="download.html">下载 App</a>
+      <a href="faq.html">常见问题</a>
+      <a href="privacy.html">隐私政策</a>
+      <a href="terms.html">用户协议</a>
+    </nav>
+  </footer>
 </main>
 </body>
 </html>

@@ -103,14 +103,22 @@ a:hover{text-decoration:underline}
 }
 .lede{
   margin:0;
-  max-width:26rem;
+  max-width:28rem;
   font-size:var(--fs-sm);
-  line-height:1.6;
+  line-height:1.65;
   color:var(--muted);
 }
 
 .block{
-  margin:0 0 20px;
+  margin:0 0 8px;
+}
+.block-label{
+  margin:0 0 8px;
+  font-size:0.75rem;
+  font-weight:650;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:var(--muted);
 }
 
 .platform-list{
@@ -231,7 +239,7 @@ a:hover{text-decoration:underline}
 }
 
 .hint-suggest{
-  margin:0 0 16px;
+  margin:0 0 18px;
   padding:11px 13px;
   border-radius:var(--radius-sm);
   background:rgba(229, 245, 236, 0.55);
@@ -244,7 +252,7 @@ a:hover{text-decoration:underline}
 .hint-suggest[hidden]{display:none}
 
 .page-foot{
-  margin-top:4px;
+  margin-top:20px;
   padding-top:16px;
   border-top:1px solid rgba(215, 229, 220, 0.95);
 }
