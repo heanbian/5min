@@ -83,3 +83,37 @@ export function resolveFinishAlerts(
   }
   return flags;
 }
+
+export class RitualPack {
+  titleKey: string = 'standRitualTitle';
+  stepKeys: string[] = [
+    'standRitualStepUp',
+    'standRitualStepStretch',
+    'standRitualStepLeave',
+  ];
+}
+
+/** Scene ritual pack: kitchen / care / default (toilet & others). */
+export function resolveRitualPack(sceneId?: string, sceneGroup?: string): RitualPack {
+  const group = (sceneGroup || '').trim();
+  const pack = new RitualPack();
+  if (group === 'kitchen') {
+    pack.titleKey = 'standRitualTitleKitchen';
+    pack.stepKeys = [
+      'standRitualStepKitchenStove',
+      'standRitualStepKitchenFood',
+      'standRitualStepKitchenSafe',
+    ];
+    return pack;
+  }
+  if (group === 'care') {
+    pack.titleKey = 'standRitualTitleCare';
+    pack.stepKeys = [
+      'standRitualStepCareRemove',
+      'standRitualStepCareFinish',
+      'standRitualStepCareDone',
+    ];
+    return pack;
+  }
+  return pack;
+}

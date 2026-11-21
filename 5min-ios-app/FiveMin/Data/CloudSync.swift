@@ -160,6 +160,9 @@ final class CloudSync {
             "finishTone": prefs.finishTone,
             "finishVibrate": prefs.finishVibrate,
             "finishNotify": prefs.finishNotify,
+            "standRitual": P0Features.getStandRitual(),
+            "alertProfile": P0Features.getAlertProfile(),
+            "overtimeInsight": P0Features.getShowOvertimeInsight(),
             "customMin": prefs.customMin(),
             "customScenes": scenes,
         ]
@@ -198,6 +201,18 @@ final class CloudSync {
             prefs.finishNotify = notify
         } else if let notify = remote["finishNotify"] as? NSNumber {
             prefs.finishNotify = notify.boolValue
+        }
+        if let ritual = remote["standRitual"] as? String, ritual == "off" || ritual == "basic" {
+            P0Features.setStandRitual(ritual)
+        }
+        if let profile = remote["alertProfile"] as? String,
+           profile == "normal" || profile == "quiet" || profile == "silent" {
+            P0Features.setAlertProfile(profile)
+        }
+        if let insight = remote["overtimeInsight"] as? Bool {
+            P0Features.setShowOvertimeInsight(insight)
+        } else if let insight = remote["overtimeInsight"] as? NSNumber {
+            P0Features.setShowOvertimeInsight(insight.boolValue)
         }
         if let customMin = remote["customMin"] as? Int {
             prefs.setCustomMin(customMin)

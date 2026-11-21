@@ -193,6 +193,11 @@ fun RecordsScreen(vm: TimerViewModel) {
                         color = FiveMinColors.muted,
                         fontSize = 12.sp,
                     )
+                    Text(
+                        text = vm.t("overtimeInsightTip"),
+                        color = FiveMinColors.muted,
+                        fontSize = 12.sp,
+                    )
                 }
             }
             Text(

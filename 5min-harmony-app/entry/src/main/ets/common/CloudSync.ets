@@ -154,6 +154,9 @@ export class CloudSync {
     raw['finishTone'] = await this.prefs.getFinishTone();
     raw['finishVibrate'] = await this.prefs.getFinishVibrate();
     raw['finishNotify'] = await this.prefs.getFinishNotify();
+    raw['standRitual'] = await this.prefs.getStandRitual();
+    raw['alertProfile'] = await this.prefs.getAlertProfile();
+    raw['overtimeInsight'] = await this.prefs.getShowOvertimeInsight();
     raw['customMin'] = await this.prefs.getCustomMin(5);
     raw['customScenes'] = scenesArr;
     return JSON.parse(JSON.stringify(raw)) as Record<string, Object>;
@@ -194,6 +197,17 @@ export class CloudSync {
     }
     if (remote['finishNotify'] !== undefined && remote['finishNotify'] !== null) {
       await this.prefs.setFinishNotify(Boolean(remote['finishNotify']));
+    }
+    const ritual = String(remote['standRitual'] ?? '');
+    if (ritual === 'off' || ritual === 'basic') {
+      await this.prefs.setStandRitual(ritual);
+    }
+    const profile = String(remote['alertProfile'] ?? '');
+    if (profile === 'normal' || profile === 'quiet' || profile === 'silent') {
+      await this.prefs.setAlertProfile(profile);
+    }
+    if (remote['overtimeInsight'] !== undefined && remote['overtimeInsight'] !== null) {
+      await this.prefs.setShowOvertimeInsight(Boolean(remote['overtimeInsight']));
     }
     if (remote['customMin'] !== undefined && remote['customMin'] !== null) {
       await this.prefs.setCustomMin(Number(remote['customMin']));

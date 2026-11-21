@@ -198,6 +198,9 @@ struct RecordsView: View {
             Text(model.t("overtimeInsightHint"))
                 .font(FiveMinFont.ui(12))
                 .foregroundStyle(FiveMinColor.muted)
+            Text(model.t("overtimeInsightTip"))
+                .font(FiveMinFont.ui(12))
+                .foregroundStyle(FiveMinColor.muted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

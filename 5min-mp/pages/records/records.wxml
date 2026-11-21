@@ -29,6 +29,7 @@
       <text class="insight-title">{{overtimeInsightTitle}}</text>
       <text class="insight-line">{{overtimeInsightLine}}</text>
       <text class="insight-hint">{{overtimeInsightHint}}</text>
+      <text class="insight-hint">{{overtimeInsightTip}}</text>
     </view>
 
     <view class="history-head">

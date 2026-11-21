@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="start_toilet"
+        android:enabled="true"
+        android:icon="@drawable/ic_stat_timer"
+        android:shortcutShortLabel="@string/shortcut_toilet_short"
+        android:shortcutLongLabel="@string/shortcut_toilet_long">
+        <intent
+            android:action="chat.fivemin.app.action.START_TIMER"
+            android:targetPackage="chat.fivemin.app"
+            android:targetClass="chat.fivemin.app.MainActivity">
+            <extra android:name="scene_id" android:value="toilet" />
+            <extra android:name="auto_start" android:value="true" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

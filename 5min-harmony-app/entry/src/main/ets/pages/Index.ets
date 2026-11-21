@@ -11,6 +11,7 @@ import { openExternalUrl } from '../common/OpenUrl';
 import {
   RITUAL_BASIC,
   resolveFinishAlerts,
+  resolveRitualPack,
   FinishAlertFlags
 } from '../common/P0Features';
 import { TimerState, formatMs, phaseOf } from '../timer/TimerState';
@@ -133,6 +134,10 @@ struct Index {
   @State ritualUp: boolean = false;
   @State ritualStretch: boolean = false;
   @State ritualLeave: boolean = false;
+  @State ritualTitleKey: string = 'standRitualTitle';
+  @State ritualStep1Key: string = 'standRitualStepUp';
+  @State ritualStep2Key: string = 'standRitualStepStretch';
+  @State ritualStep3Key: string = 'standRitualStepLeave';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -501,6 +506,12 @@ struct Index {
     if (mode !== RITUAL_BASIC) {
       return;
     }
+    const scene = this.scenes.find((s) => s.id === this.state.activeSceneId);
+    const pack = resolveRitualPack(this.state.activeSceneId, scene ? scene.group : '');
+    this.ritualTitleKey = pack.titleKey;
+    this.ritualStep1Key = pack.stepKeys.length > 0 ? pack.stepKeys[0] : 'standRitualStepUp';
+    this.ritualStep2Key = pack.stepKeys.length > 1 ? pack.stepKeys[1] : 'standRitualStepStretch';
+    this.ritualStep3Key = pack.stepKeys.length > 2 ? pack.stepKeys[2] : 'standRitualStepLeave';
     this.ritualUp = false;
     this.ritualStretch = false;
     this.ritualLeave = false;
@@ -1235,7 +1246,7 @@ struct Index {
   RitualOverlay() {
     Column() {
       Column({ space: 16 }) {
-        Text(this.t('standRitualTitle'))
+        Text(this.t(this.ritualTitleKey))
           .fontSize(18)
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.ink'))
@@ -1263,7 +1274,7 @@ struct Index {
           .width(22)
           .height(22)
           .flexShrink(0)
-          Text(this.t('standRitualStepUp'))
+          Text(this.t(this.ritualStep1Key))
             .fontSize(15)
             .fontColor($r('app.color.ink'))
             .layoutWeight(1)
@@ -1295,7 +1306,7 @@ struct Index {
           .width(22)
           .height(22)
           .flexShrink(0)
-          Text(this.t('standRitualStepStretch'))
+          Text(this.t(this.ritualStep2Key))
             .fontSize(15)
             .fontColor($r('app.color.ink'))
             .layoutWeight(1)
@@ -1327,7 +1338,7 @@ struct Index {
           .width(22)
           .height(22)
           .flexShrink(0)
-          Text(this.t('standRitualStepLeave'))
+          Text(this.t(this.ritualStep3Key))
             .fontSize(15)
             .fontColor($r('app.color.ink'))
             .layoutWeight(1)

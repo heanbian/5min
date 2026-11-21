@@ -21,6 +21,21 @@ describe('cloud-storage sanitize', () => {
     assert.equal(p.customScenes.length, 1);
     assert.equal(p.customScenes[0].name, 'Focus');
     assert.equal(p.customScenes[0].min, 3);
+    assert.equal(p.standRitual, 'basic');
+    assert.equal(p.alertProfile, 'normal');
+    assert.equal(p.overtimeInsight, true);
+  });
+
+  it('sanitizes P0 preference fields', () => {
+    const p = sanitizePrefs({
+      standRitual: 'off',
+      alertProfile: 'silent',
+      overtimeInsight: false,
+    });
+    assert.equal(p.standRitual, 'off');
+    assert.equal(p.alertProfile, 'silent');
+    assert.equal(p.overtimeInsight, false);
+    assert.equal(sanitizePrefs({ alertProfile: 'loud' }).alertProfile, 'normal');
   });
 
   it('rejects invalid storageMode to local', () => {

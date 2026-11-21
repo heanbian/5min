@@ -21,6 +21,8 @@ enum SceneRanker {
         let now = nowMs ?? Int64(Date().timeIntervalSince1970 * 1000)
         var countById: [String: Int] = [:]
         var lastAtById: [String: Int64] = [:]
+        var sameHourById: [String: Int] = [:]
+        let nowHour = Calendar.current.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(now) / 1000))
         for session in sessions {
             let id = session.sceneId.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !id.isEmpty, knownIds.contains(id) else { continue }
@@ -29,6 +31,13 @@ enum SceneRanker {
                 if session.at > prev { lastAtById[id] = session.at }
             } else {
                 lastAtById[id] = session.at
+            }
+            if session.at > 0 {
+                let hour = Calendar.current.component(
+                    .hour,
+                    from: Date(timeIntervalSince1970: TimeInterval(session.at) / 1000)
+                )
+                if hour == nowHour { sameHourById[id, default: 0] += 1 }
             }
         }
         struct Ranked {
@@ -42,7 +51,8 @@ enum SceneRanker {
             let daysSince = max(0, Int((now - lastAt) / dayMs))
             let qualifies = count >= minCount || daysSince <= recentDays
             guard qualifies else { continue }
-            let score = count * 100 + max(0, historyWindowDays - daysSince)
+            let hourBoost = (sameHourById[id] ?? 0) * 12
+            let score = count * 100 + max(0, historyWindowDays - daysSince) + hourBoost
             ranked.append(Ranked(id: id, score: score, lastAt: lastAt))
         }
         ranked.sort {

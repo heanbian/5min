@@ -7,6 +7,7 @@
 
 const prefs = require('./prefs');
 const history = require('./history');
+const p0 = require('./p0Features');
 
 const API_BASE = 'https://5min.chat/api/v1/storage';
 
@@ -80,6 +81,9 @@ function prefsPayload() {
     finishTone: prefs.getFinishTone(),
     finishVibrate: prefs.getFinishVibrate(),
     finishNotify: prefs.getFinishNotify(),
+    standRitual: p0.getStandRitual(),
+    alertProfile: p0.getAlertProfile(),
+    overtimeInsight: p0.getShowOvertimeInsight(),
     customMin: prefs.getCustomMin(5),
     customScenes: prefs.getCustomScenes(),
   };
@@ -102,6 +106,19 @@ function applyRemotePrefs(remote) {
   if (typeof remote.finishTone === 'boolean') prefs.setFinishTone(remote.finishTone);
   if (typeof remote.finishVibrate === 'boolean') prefs.setFinishVibrate(remote.finishVibrate);
   if (typeof remote.finishNotify === 'boolean') prefs.setFinishNotify(remote.finishNotify);
+  if (remote.standRitual === 'off' || remote.standRitual === 'basic') {
+    p0.setStandRitual(remote.standRitual);
+  }
+  if (
+    remote.alertProfile === 'normal' ||
+    remote.alertProfile === 'quiet' ||
+    remote.alertProfile === 'silent'
+  ) {
+    p0.setAlertProfile(remote.alertProfile);
+  }
+  if (typeof remote.overtimeInsight === 'boolean') {
+    p0.setShowOvertimeInsight(remote.overtimeInsight);
+  }
   if (remote.customMin != null) prefs.setCustomMin(remote.customMin);
   if (Array.isArray(remote.customScenes)) prefs.setCustomScenes(remote.customScenes);
   // Keep local storageMode as source of truth for this device setting.

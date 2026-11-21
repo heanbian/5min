@@ -760,6 +760,11 @@ final class TimerViewModel: ObservableObject {
         catalog.statusDoneText(locale: locale, sceneId: activeSceneId)
     }
 
+    func ritualPackForActiveScene() -> P0Features.RitualPack {
+        let group = catalog.scenes.first(where: { $0.id == activeSceneId })?.group
+        return P0Features.resolveRitualPack(sceneId: activeSceneId, sceneGroup: group)
+    }
+
     func format(_ ms: Int64) -> String {
         let totalSec = max(0, ms / 1000)
         let m = totalSec / 60

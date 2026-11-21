@@ -50,6 +50,8 @@ export class SceneRanker {
     const now = nowMs !== undefined ? nowMs : Date.now();
     const known = new Set<string>(knownIds);
     const aggs: UsageAgg[] = [];
+    const sameHourById: Map<string, number> = new Map();
+    const nowHour = new Date(now).getHours();
 
     for (let i = 0; i < sessions.length; i++) {
       const session = sessions[i];
@@ -72,6 +74,10 @@ export class SceneRanker {
       } else {
         aggs.push(new UsageAgg(id, 1, session.at));
       }
+      if (session.at > 0 && new Date(session.at).getHours() === nowHour) {
+        const prev = sameHourById.get(id);
+        sameHourById.set(id, (prev !== undefined ? prev : 0) + 1);
+      }
     }
 
     const ranked: RankedItem[] = [];
@@ -82,7 +88,9 @@ export class SceneRanker {
       if (!qualifies) {
         continue;
       }
-      const score = agg.count * 100 + Math.max(0, SceneRanker.HISTORY_WINDOW_DAYS - daysSince);
+      const hourHit = sameHourById.get(agg.id);
+      const hourBoost = (hourHit !== undefined ? hourHit : 0) * 12;
+      const score = agg.count * 100 + Math.max(0, SceneRanker.HISTORY_WINDOW_DAYS - daysSince) + hourBoost;
       ranked.push(new RankedItem(agg.id, score, agg.lastAt));
     }
 

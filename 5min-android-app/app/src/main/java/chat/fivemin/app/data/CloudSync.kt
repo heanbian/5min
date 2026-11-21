@@ -133,6 +133,9 @@ class CloudSync(
             .put("finishTone", prefs.finishTone)
             .put("finishVibrate", prefs.finishVibrate)
             .put("finishNotify", prefs.finishNotify)
+            .put("standRitual", prefs.p0.standRitual)
+            .put("alertProfile", prefs.p0.alertProfile)
+            .put("overtimeInsight", prefs.p0.showOvertimeInsight)
             .put("customMin", prefs.customMin())
             .put("customScenes", scenes)
     }
@@ -159,6 +162,15 @@ class CloudSync(
         if (remote.has("finishTone")) prefs.finishTone = remote.optBoolean("finishTone", true)
         if (remote.has("finishVibrate")) prefs.finishVibrate = remote.optBoolean("finishVibrate", true)
         if (remote.has("finishNotify")) prefs.finishNotify = remote.optBoolean("finishNotify", true)
+        remote.optString("standRitual").takeIf { it == "off" || it == "basic" }?.let {
+            prefs.p0.standRitual = it
+        }
+        remote.optString("alertProfile").takeIf {
+            it == "normal" || it == "quiet" || it == "silent"
+        }?.let { prefs.p0.alertProfile = it }
+        if (remote.has("overtimeInsight")) {
+            prefs.p0.showOvertimeInsight = remote.optBoolean("overtimeInsight", true)
+        }
         if (remote.has("customMin")) prefs.setCustomMin(remote.optInt("customMin", 5))
         val scenesArr = remote.optJSONArray("customScenes") ?: return
         val scenes = mutableListOf<CustomScene>()

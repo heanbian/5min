@@ -663,6 +663,13 @@ fun TimerHome(
     }
 
     if (state.showStandRitual) {
+        val pack = vm.ritualPackForActiveScene()
+        val stepChecks = listOf(ritualUp, ritualStretch, ritualLeave)
+        val setChecks = listOf(
+            { v: Boolean -> ritualUp = v },
+            { v: Boolean -> ritualStretch = v },
+            { v: Boolean -> ritualLeave = v },
+        )
         AlertDialog(
             onDismissRequest = { vm.dismissStandRitual() },
             dismissButton = {
@@ -679,28 +686,22 @@ fun TimerHome(
             shape = RoundedCornerShape(FiveMinDimens.radiusDialog),
             title = {
                 Text(
-                    vm.t("standRitualTitle"),
+                    vm.t(pack.titleKey),
                     color = FiveMinColors.ink,
                     fontWeight = FontWeight.SemiBold,
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    RitualCheckRow(
-                        label = vm.t("standRitualStepUp"),
-                        checked = ritualUp,
-                        onCheckedChange = { ritualUp = it },
-                    )
-                    RitualCheckRow(
-                        label = vm.t("standRitualStepStretch"),
-                        checked = ritualStretch,
-                        onCheckedChange = { ritualStretch = it },
-                    )
-                    RitualCheckRow(
-                        label = vm.t("standRitualStepLeave"),
-                        checked = ritualLeave,
-                        onCheckedChange = { ritualLeave = it },
-                    )
+                    pack.stepKeys.forEachIndexed { index, key ->
+                        RitualCheckRow(
+                            label = vm.t(key),
+                            checked = stepChecks.getOrElse(index) { false },
+                            onCheckedChange = { checked ->
+                                setChecks.getOrNull(index)?.invoke(checked)
+                            },
+                        )
+                    }
                 }
             },
         )

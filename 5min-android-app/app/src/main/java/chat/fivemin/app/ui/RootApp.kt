@@ -62,9 +62,16 @@ fun RootApp(
         if (state.locale.startsWith("ar")) LayoutDirection.Rtl else LayoutDirection.Ltr
 
     LaunchedEffect(Unit) {
-        val scene = (context as? Activity)?.intent?.getStringExtra("FIVEMIN_SCREENSHOT")
+        val intent = (context as? Activity)?.intent
+        val scene = intent?.getStringExtra("FIVEMIN_SCREENSHOT")
         if (!scene.isNullOrBlank()) {
             vm.applyStoreScreenshot(scene)
+        }
+        val shortcutScene = intent?.getStringExtra("scene_id")
+        val autoStart = intent?.getBooleanExtra("auto_start", false) == true
+            || intent?.action == "chat.fivemin.app.action.START_TIMER"
+        if (!shortcutScene.isNullOrBlank() && autoStart) {
+            vm.startFromShortcut(shortcutScene, ensureStartPermissions)
         }
     }
 

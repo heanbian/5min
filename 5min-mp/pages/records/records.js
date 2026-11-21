@@ -51,6 +51,7 @@ Page({
     overtimeInsightTitle: '',
     overtimeInsightLine: '',
     overtimeInsightHint: '',
+    overtimeInsightTip: '',
     showOvertimeInsight: true,
     rows: [],
     privacyAccepted: true,
@@ -150,6 +151,7 @@ Page({
       overtimeInsightTitle: t('overtimeInsightTitle'),
       overtimeInsightLine,
       overtimeInsightHint: t('overtimeInsightHint'),
+      overtimeInsightTip: t('overtimeInsightTip'),
       showOvertimeInsight: showInsight,
       rows,
     });

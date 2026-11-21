@@ -214,6 +214,12 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     fun statusDoneText(): String =
         catalog.statusDoneText(_state.value.locale, _state.value.activeSceneId)
 
+    fun ritualPackForActiveScene(): chat.fivemin.app.data.P0Features.RitualPack {
+        val id = _state.value.activeSceneId
+        val group = catalog.scenes.firstOrNull { it.id == id }?.group
+        return prefs.p0.resolveRitualPack(id, group)
+    }
+
     fun appLocaleCodes(): List<String> = i18n.appLocaleCodes()
 
     fun pickerGroups(): List<SceneGroup> {
@@ -520,6 +526,14 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Launcher shortcut / deep link: select scene then start when idle. */
+    fun startFromShortcut(sceneId: String, ensurePermissions: (onReady: () -> Unit) -> Unit = { it() }) {
+        selectScene(sceneId)
+        val s = _state.value
+        if (s.running || s.finished) return
+        ensurePermissions { toggleStart() }
+    }
+
     fun selectScene(sceneId: String) {
         val custom = _state.value.customScenes.firstOrNull { it.id == sceneId }
         if (custom != null) {
@@ -613,7 +627,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 s.activeSceneId.orEmpty(),
             )
         }
-        runCatching { TimerForegroundService.start(getApplication(), endAt, format(s.remainMs)) }
+        runCatching {
+            TimerForegroundService.start(getApplication(), endAt, format(s.remainMs), s.totalMs)
+        }
         startTicker()
     }
 
@@ -667,7 +683,12 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                         phase = phaseFor(remain, true, false),
                     )
                 }
-                TimerForegroundService.update(getApplication(), format(remain))
+                TimerForegroundService.update(
+                    getApplication(),
+                    format(remain),
+                    endAt = endAt,
+                    totalMs = _state.value.totalMs,
+                )
                 delay(250)
             }
         }

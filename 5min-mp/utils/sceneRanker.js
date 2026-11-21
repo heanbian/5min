@@ -27,6 +27,8 @@ function rank(sessions, knownIds, nowMs) {
     knownIds instanceof Set ? knownIds : new Set(knownIds || []);
   const countById = new Map();
   const lastAtById = new Map();
+  const sameHourById = new Map();
+  const nowHour = new Date(now).getHours();
   (sessions || []).forEach((session) => {
     const id = String((session && session.sceneId) || '').trim();
     if (!id || !known.has(id)) return;
@@ -34,6 +36,9 @@ function rank(sessions, knownIds, nowMs) {
     const at = Number(session.at) || 0;
     const prev = lastAtById.get(id);
     if (prev === undefined || at > prev) lastAtById.set(id, at);
+    if (at > 0 && new Date(at).getHours() === nowHour) {
+      sameHourById.set(id, (sameHourById.get(id) || 0) + 1);
+    }
   });
   const ranked = [];
   countById.forEach((count, id) => {
@@ -41,7 +46,8 @@ function rank(sessions, knownIds, nowMs) {
     const daysSince = Math.max(0, Math.floor((now - lastAt) / DAY_MS));
     const qualifies = count >= MIN_COUNT || daysSince <= RECENT_DAYS;
     if (!qualifies) return;
-    const score = count * 100 + Math.max(0, HISTORY_WINDOW_DAYS - daysSince);
+    const hourBoost = (sameHourById.get(id) || 0) * 12;
+    const score = count * 100 + Math.max(0, HISTORY_WINDOW_DAYS - daysSince) + hourBoost;
     ranked.push({ id, score, lastAt });
   });
   ranked.sort((a, b) => {

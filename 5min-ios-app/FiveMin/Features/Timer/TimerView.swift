@@ -99,24 +99,26 @@ struct TimerView: View {
                 .allowsHitTesting(true)
 
             VStack(alignment: .leading, spacing: 16) {
-                Text(model.t("standRitualTitle"))
+                let pack = model.ritualPackForActiveScene()
+                let steps = pack.stepKeys
+                Text(model.t(pack.titleKey))
                     .font(FiveMinFont.ui(18, weight: .semibold))
                     .foregroundStyle(FiveMinColor.ink)
 
                 ritualStep(
-                    label: model.t("standRitualStepUp"),
+                    label: model.t(steps.count > 0 ? steps[0] : "standRitualStepUp"),
                     isOn: model.ritualUp
                 ) {
                     model.ritualUp.toggle()
                 }
                 ritualStep(
-                    label: model.t("standRitualStepStretch"),
+                    label: model.t(steps.count > 1 ? steps[1] : "standRitualStepStretch"),
                     isOn: model.ritualStretch
                 ) {
                     model.ritualStretch.toggle()
                 }
                 ritualStep(
-                    label: model.t("standRitualStepLeave"),
+                    label: model.t(steps.count > 2 ? steps[2] : "standRitualStepLeave"),
                     isOn: model.ritualLeave
                 ) {
                     model.ritualLeave.toggle()

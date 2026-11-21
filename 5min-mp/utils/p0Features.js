@@ -148,6 +148,53 @@ function insightMinutes(ms) {
   return Math.max(1, Math.ceil(Math.max(0, ms) / 60000));
 }
 
+/**
+ * Scene ritual pack: kitchen / care / default (toilet & others).
+ * @returns {{ titleKey: string, stepKeys: string[] }}
+ */
+function resolveRitualPack(sceneId, sceneGroup) {
+  const group = String(sceneGroup || '').trim();
+  const id = String(sceneId || '').trim();
+  if (group === 'kitchen') {
+    return {
+      titleKey: 'standRitualTitleKitchen',
+      stepKeys: [
+        'standRitualStepKitchenStove',
+        'standRitualStepKitchenFood',
+        'standRitualStepKitchenSafe',
+      ],
+    };
+  }
+  if (group === 'care') {
+    return {
+      titleKey: 'standRitualTitleCare',
+      stepKeys: [
+        'standRitualStepCareRemove',
+        'standRitualStepCareFinish',
+        'standRitualStepCareDone',
+      ],
+    };
+  }
+  if (id === 'toilet' || group === 'daily') {
+    return {
+      titleKey: 'standRitualTitle',
+      stepKeys: [
+        'standRitualStepUp',
+        'standRitualStepStretch',
+        'standRitualStepLeave',
+      ],
+    };
+  }
+  return {
+    titleKey: 'standRitualTitle',
+    stepKeys: [
+      'standRitualStepUp',
+      'standRitualStepStretch',
+      'standRitualStepLeave',
+    ],
+  };
+}
+
 module.exports = {
   RITUAL_OFF,
   RITUAL_BASIC,
@@ -165,4 +212,5 @@ module.exports = {
   setAlertProfile,
   resolveFinishAlerts,
   insightMinutes,
+  resolveRitualPack,
 };

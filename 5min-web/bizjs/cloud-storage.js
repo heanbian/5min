@@ -148,6 +148,8 @@ function sanitizePrefs(raw) {
   const ambient = clampStr(raw.ambient, 16);
   const storageMode = clampStr(raw.storageMode, 16);
   const locale = clampStr(raw.locale, 16);
+  const standRitual = clampStr(raw.standRitual, 16);
+  const alertProfile = clampStr(raw.alertProfile, 16);
   const out = {
     locale: locale || '',
     ambient: ['off', 'rain', 'waves', 'clock'].includes(ambient) ? ambient : 'off',
@@ -155,6 +157,10 @@ function sanitizePrefs(raw) {
     finishTone: raw.finishTone !== false,
     finishVibrate: raw.finishVibrate !== false,
     finishNotify: raw.finishNotify !== false,
+    standRitual: standRitual === 'off' ? 'off' : 'basic',
+    alertProfile:
+      alertProfile === 'quiet' || alertProfile === 'silent' ? alertProfile : 'normal',
+    overtimeInsight: raw.overtimeInsight !== false,
     customMin: Math.max(1, Math.min(90, Math.floor(Number(raw.customMin) || 5))),
     customScenes: []
   };

@@ -145,4 +145,42 @@ enum P0Features {
     static func insightMinutes(_ ms: Int64) -> Int {
         max(1, Int(ceil(Double(max(0, ms)) / 60_000.0)))
     }
+
+    struct RitualPack {
+        let titleKey: String
+        let stepKeys: [String]
+    }
+
+    /// Scene ritual pack: kitchen / care / default (toilet & others).
+    static func resolveRitualPack(sceneId: String?, sceneGroup: String?) -> RitualPack {
+        let group = (sceneGroup ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if group == "kitchen" {
+            return RitualPack(
+                titleKey: "standRitualTitleKitchen",
+                stepKeys: [
+                    "standRitualStepKitchenStove",
+                    "standRitualStepKitchenFood",
+                    "standRitualStepKitchenSafe",
+                ]
+            )
+        }
+        if group == "care" {
+            return RitualPack(
+                titleKey: "standRitualTitleCare",
+                stepKeys: [
+                    "standRitualStepCareRemove",
+                    "standRitualStepCareFinish",
+                    "standRitualStepCareDone",
+                ]
+            )
+        }
+        return RitualPack(
+            titleKey: "standRitualTitle",
+            stepKeys: [
+                "standRitualStepUp",
+                "standRitualStepStretch",
+                "standRitualStepLeave",
+            ]
+        )
+    }
 }

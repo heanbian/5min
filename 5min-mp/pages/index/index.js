@@ -20,7 +20,7 @@ const {
   statsMinutes,
 } = require('../../utils/stats');
 const history = require('../../utils/history');
-const { alertFinish, clearAlerts } = require('../../utils/alert');
+const { alertFinish, clearAlerts, unlockAlertAudio } = require('../../utils/alert');
 const { drawDigitalWatch } = require('../../utils/digitalWatch');
 const {
   initAmbient,
@@ -562,6 +562,7 @@ Page({
       durationMs: ALERT_DURATION_MS,
       withNotify: alerts.withNotify,
       withVibrate: alerts.withVibrate,
+      withTone: alerts.withTone,
     });
   },
 
@@ -630,6 +631,7 @@ Page({
       durationMs: ALERT_DURATION_MS,
       withNotify: alerts.withNotify,
       withVibrate: alerts.withVibrate,
+      withTone: alerts.withTone,
     });
     this.maybeShowRitual();
   },
@@ -639,12 +641,15 @@ Page({
     // 卸载 canvas，避免原生层盖住仪式遮罩
     this.canvas = null;
     this.ctx = null;
+    const scene = sceneById(this.activeSceneId);
+    const pack = p0.resolveRitualPack(this.activeSceneId, scene && scene.group);
+    const steps = pack.stepKeys || [];
     this.setData({
       showRitual: true,
-      ritualTitle: t('standRitualTitle'),
-      ritualStepUp: t('standRitualStepUp'),
-      ritualStepStretch: t('standRitualStepStretch'),
-      ritualStepLeave: t('standRitualStepLeave'),
+      ritualTitle: t(pack.titleKey || 'standRitualTitle'),
+      ritualStepUp: t(steps[0] || 'standRitualStepUp'),
+      ritualStepStretch: t(steps[1] || 'standRitualStepStretch'),
+      ritualStepLeave: t(steps[2] || 'standRitualStepLeave'),
       ritualDone: t('standRitualDone'),
       ritualSkip: t('standRitualSkip'),
       ritualUp: false,
@@ -753,6 +758,7 @@ Page({
   start() {
     if (this.remainMs <= 0) return;
     clearAlerts();
+    unlockAlertAudio();
     this.finishedHandled = false;
     this.finished = false;
     this.endAt = Date.now() + this.remainMs;

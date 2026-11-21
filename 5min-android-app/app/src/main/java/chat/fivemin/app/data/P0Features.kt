@@ -129,6 +129,39 @@ class P0Features(private val sp: SharedPreferences) {
     fun insightMinutes(ms: Long): Int =
         max(1, ceil(max(0.0, ms.toDouble()) / 60_000.0).toInt())
 
+    data class RitualPack(val titleKey: String, val stepKeys: List<String>)
+
+    /** Scene ritual pack: kitchen / care / default (toilet & others). */
+    fun resolveRitualPack(sceneId: String?, sceneGroup: String?): RitualPack {
+        val group = sceneGroup?.trim().orEmpty()
+        return when {
+            group == "kitchen" -> RitualPack(
+                titleKey = "standRitualTitleKitchen",
+                stepKeys = listOf(
+                    "standRitualStepKitchenStove",
+                    "standRitualStepKitchenFood",
+                    "standRitualStepKitchenSafe",
+                ),
+            )
+            group == "care" -> RitualPack(
+                titleKey = "standRitualTitleCare",
+                stepKeys = listOf(
+                    "standRitualStepCareRemove",
+                    "standRitualStepCareFinish",
+                    "standRitualStepCareDone",
+                ),
+            )
+            else -> RitualPack(
+                titleKey = "standRitualTitle",
+                stepKeys = listOf(
+                    "standRitualStepUp",
+                    "standRitualStepStretch",
+                    "standRitualStepLeave",
+                ),
+            )
+        }
+    }
+
     companion object {
         const val RITUAL_OFF = "off"
         const val RITUAL_BASIC = "basic"

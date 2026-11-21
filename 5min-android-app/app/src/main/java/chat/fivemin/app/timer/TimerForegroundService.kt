@@ -14,13 +14,18 @@ import androidx.core.app.NotificationCompat
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.MainActivity
 import chat.fivemin.app.R
+import kotlin.math.max
 
 class TimerForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val remainText = intent?.getStringExtra(EXTRA_REMAIN_TEXT) ?: "--:--"
-        val notification = buildNotification(this, remainText)
+        val endAt = intent?.getLongExtra(EXTRA_END_AT, 0L) ?: 0L
+        val totalMs = intent?.getLongExtra(EXTRA_TOTAL_MS, 0L) ?: 0L
+        if (endAt > 0L) lastEndAt = endAt
+        if (totalMs > 0L) lastTotalMs = totalMs
+        val notification = buildNotification(this, remainText, lastEndAt, lastTotalMs)
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
@@ -45,11 +50,18 @@ class TimerForegroundService : Service() {
         private const val TAG = "TimerFgs"
         const val NOTIF_ID = 1001
         const val EXTRA_END_AT = "end_at"
+        const val EXTRA_TOTAL_MS = "total_ms"
         const val EXTRA_REMAIN_TEXT = "remain_text"
 
-        fun start(context: Context, endAt: Long, remainText: String) {
+        @Volatile private var lastEndAt: Long = 0L
+        @Volatile private var lastTotalMs: Long = 0L
+
+        fun start(context: Context, endAt: Long, remainText: String, totalMs: Long = 0L) {
+            lastEndAt = endAt
+            if (totalMs > 0L) lastTotalMs = totalMs
             val intent = Intent(context, TimerForegroundService::class.java).apply {
                 putExtra(EXTRA_END_AT, endAt)
+                putExtra(EXTRA_TOTAL_MS, lastTotalMs)
                 putExtra(EXTRA_REMAIN_TEXT, remainText)
             }
             try {
@@ -64,10 +76,12 @@ class TimerForegroundService : Service() {
         }
 
         /** Update running notification without re-starting the FGS. */
-        fun update(context: Context, remainText: String) {
+        fun update(context: Context, remainText: String, endAt: Long = lastEndAt, totalMs: Long = lastTotalMs) {
             try {
+                if (endAt > 0L) lastEndAt = endAt
+                if (totalMs > 0L) lastTotalMs = totalMs
                 val nm = context.getSystemService(NotificationManager::class.java) ?: return
-                nm.notify(NOTIF_ID, buildNotification(context, remainText))
+                nm.notify(NOTIF_ID, buildNotification(context, remainText, lastEndAt, lastTotalMs))
             } catch (e: Exception) {
                 Log.e(TAG, "update notification failed", e)
             }
@@ -75,20 +89,27 @@ class TimerForegroundService : Service() {
 
         fun stop(context: Context) {
             try {
+                lastEndAt = 0L
+                lastTotalMs = 0L
                 context.stopService(Intent(context, TimerForegroundService::class.java))
             } catch (e: Exception) {
                 Log.e(TAG, "stopService failed", e)
             }
         }
 
-        private fun buildNotification(context: Context, remainText: String): Notification {
+        private fun buildNotification(
+            context: Context,
+            remainText: String,
+            endAt: Long,
+            totalMs: Long,
+        ): Notification {
             val launch = PendingIntent.getActivity(
                 context,
                 2002,
                 Intent(context, MainActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
-            return NotificationCompat.Builder(context, FiveMinApp.CHANNEL_TIMER)
+            val builder = NotificationCompat.Builder(context, FiveMinApp.CHANNEL_TIMER)
                 .setSmallIcon(R.drawable.ic_stat_timer)
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText("${context.getString(R.string.notif_running)} · $remainText")
@@ -98,7 +119,13 @@ class TimerForegroundService : Service() {
                 .setSilent(true)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-                .build()
+            if (totalMs > 0L && endAt > 0L) {
+                val remain = max(0L, endAt - System.currentTimeMillis())
+                val max = totalMs.toInt().coerceAtLeast(1)
+                val progress = (totalMs - remain).coerceIn(0L, totalMs).toInt()
+                builder.setProgress(max, progress, false)
+            }
+            return builder.build()
         }
     }
 }

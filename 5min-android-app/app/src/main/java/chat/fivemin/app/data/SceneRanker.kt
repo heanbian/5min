@@ -23,12 +23,20 @@ object SceneRanker {
     ): List<String> {
         val countById = linkedMapOf<String, Int>()
         val lastAtById = linkedMapOf<String, Long>()
+        val sameHourById = linkedMapOf<String, Int>()
+        val nowHour = java.util.Calendar.getInstance().apply { timeInMillis = nowMs }
+            .get(java.util.Calendar.HOUR_OF_DAY)
         for (session in sessions) {
             val id = session.sceneId.trim()
             if (id.isEmpty() || id !in knownIds) continue
             countById[id] = (countById[id] ?: 0) + 1
             val prev = lastAtById[id]
             if (prev == null || session.at > prev) lastAtById[id] = session.at
+            if (session.at > 0L) {
+                val hour = java.util.Calendar.getInstance().apply { timeInMillis = session.at }
+                    .get(java.util.Calendar.HOUR_OF_DAY)
+                if (hour == nowHour) sameHourById[id] = (sameHourById[id] ?: 0) + 1
+            }
         }
         data class Ranked(val id: String, val score: Int, val lastAt: Long)
         val ranked = mutableListOf<Ranked>()
@@ -37,7 +45,8 @@ object SceneRanker {
             val daysSince = ((nowMs - lastAt) / DAY_MS).toInt().coerceAtLeast(0)
             val qualifies = count >= MIN_COUNT || daysSince <= RECENT_DAYS
             if (!qualifies) continue
-            val score = count * 100 + (HISTORY_WINDOW_DAYS - daysSince).coerceAtLeast(0)
+            val hourBoost = (sameHourById[id] ?: 0) * 12
+            val score = count * 100 + (HISTORY_WINDOW_DAYS - daysSince).coerceAtLeast(0) + hourBoost
             ranked += Ranked(id, score, lastAt)
         }
         ranked.sortWith(compareByDescending<Ranked> { it.score }.thenByDescending { it.lastAt })
