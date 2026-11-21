@@ -121,7 +121,9 @@ export class SharedCatalog {
     if (!tipKey) {
       return this.t(locale, 'statusDone');
     }
-    return this.t(locale, 'statusDoneTip', { tip: this.t(locale, tipKey) });
+    const vars: Record<string, string> = {};
+    vars['tip'] = this.t(locale, tipKey);
+    return this.t(locale, 'statusDoneTip', vars);
   }
 
   notifyBodyText(locale: string, sceneId: string | undefined, vars: Record<string, string>): string {

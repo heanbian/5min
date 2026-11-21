@@ -20,7 +20,7 @@
 | 屏幕唤醒 | 计时过程中尝试申请 Screen Wake Lock |
 | 轻量 PWA | `public/site.webmanifest` + `public/sw.js` 预缓存计时壳；改壳资源后请 bump `CACHE` |
 | 访客记录 | 服务端写入 PostgreSQL 表 `fivemin_visitor_log`（无管理页） |
-| 云存储 API | 端侧可选：设备凭证绑定偏好与近 14 日会话（`/api/v1/storage`） |
+| 云存储 API | 端侧可选：设备凭证绑定偏好与近 14 日会话（`/api/v1/storage`；数据存放于中国境内） |
 | 健康检查 | `GET /api/status` → `{ success, data }` |
 
 ## 技术栈
@@ -29,7 +29,7 @@
 |----|------|
 | 服务端 | Node.js ≥ 24 · Express 5 · Helmet · `pg`；目录布局对齐学记宝 [`tools`](https://github.com/heanbian) 类项目：`server.js` / `bizjs/` / `routes/` / `public/` |
 | 前端 | `public/` 内 HTML5 + 原生 ES modules，无框架、无前端打包 |
-| 数据 | Web 计时默认仍存浏览器本机；App 可选云端同步。PostgreSQL：访客日志 + 云存储表 |
+| 数据 | Web 计时默认仍存浏览器本机；App 可选云端同步（中国境内）。PostgreSQL：访客日志 + 云存储表 |
 
 多语言（`public/js/i18n/locales.js` + `packs/`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག、日本語、Español、العربية。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。默认语言包预加载，其余按需动态加载。
 
@@ -134,7 +134,7 @@ npm run build:pkg
 
 ### 云存储 API（`/api/v1/storage`）
 
-端侧在「我的 › 数据存储」选择云端后，用本机生成的 `deviceId`（UUID）+ `deviceSecret`（≥32 位 hex）注册并同步。服务端只存 secret 的 SHA-256（加 pepper）。
+端侧在「我的 › 数据存储」选择云端后，用本机生成的 `deviceId`（UUID）+ `deviceSecret`（≥32 位 hex）注册并同步。服务端只存 secret 的 SHA-256（加 pepper）。云存储部署于中国境内。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|

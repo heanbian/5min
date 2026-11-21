@@ -418,8 +418,6 @@ const applyStaticI18n = () => {
         Object.assign(document.createElement('a'), {
           href: item.href,
           textContent: item.label,
-          target: '_blank',
-          rel: 'noopener noreferrer',
         }),
       );
     });

@@ -74,4 +74,4 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
 
 ## 隐私
 
-计时与统计原则上保存在本机；不要求注册账户；不以云同步个人计时档案为目的上传明细。本工具仅供习惯提醒。
+计时与统计默认保存在本机；不要求注册账户。可选云端同步需用户主动开启，数据存放于中国境内。本工具仅供习惯提醒。

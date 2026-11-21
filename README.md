@@ -10,7 +10,7 @@
 
 | 目录 | 说明 |
 |------|------|
-| [`5min-web`](./5min-web) | 网页端（Node · Express · PostgreSQL，静态资源在 `public/`），部署于 5min.chat；提供 App 云存储 API `/api/v1/storage` |
+| [`5min-web`](./5min-web) | 网页端（Node · Express · PostgreSQL，静态资源在 `public/`），部署于 5min.chat；提供 App 云存储 API `/api/v1/storage`（数据存放于中国境内） |
 | [`5min-android-app`](./5min-android-app) | Android 原生（Kotlin · Compose），`applicationId`：`chat.fivemin.app` |
 | [`5min-harmony-app`](./5min-harmony-app) | HarmonyOS NEXT 原生（ArkTS），`bundleName`：`chat.5min.app` |
 | [`5min-ios-app`](./5min-ios-app) | iOS 原生（SwiftUI），`PRODUCT_BUNDLE_IDENTIFIER`：`chat.5min.app` |

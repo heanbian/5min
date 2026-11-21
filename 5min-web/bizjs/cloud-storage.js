@@ -3,6 +3,7 @@
 /**
  * 端侧云存储：按设备凭证绑定偏好与近 14 日会话。
  * 鉴权：X-Device-Id + X-Device-Secret（服务端仅存 secret 哈希）。
+ * 数据部署于中国境内。
  */
 
 const crypto = require('crypto');
