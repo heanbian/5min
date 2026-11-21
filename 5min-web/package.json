@@ -1,7 +1,7 @@
 {
   "name": "5min-web",
   "author": "xuejibao",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "如厕计时器 · 5min.chat",
   "main": "server.js",
   "scripts": {
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@vercel/ncc": "0.45.0",
-    "@yao-pkg/pkg": "6.25.0",
+    "@yao-pkg/pkg": "6.26.0",
     "eslint": "10.15.0",
     "nodemon": "3.1.14"
   },

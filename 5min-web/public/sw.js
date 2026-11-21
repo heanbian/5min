@@ -17,7 +17,7 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v9';
+const CACHE = '5min-shell-v10';
 
 /* Minimal shell: CJK fonts + non-default locale packs load on demand */
 const PRECACHE = [

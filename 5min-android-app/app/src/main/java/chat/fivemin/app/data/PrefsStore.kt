@@ -3,7 +3,7 @@ package chat.fivemin.app.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import androidx.security.crypto.MasterKey
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -212,14 +212,15 @@ class PrefsStore(context: Context) {
         const val MODE_LOCAL = "local"
         const val MODE_CLOUD = "cloud"
 
-        @Suppress("DEPRECATION")
         private fun createSecurePrefs(context: Context): SharedPreferences {
             return runCatching {
-                val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+                val masterKey = MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
                 EncryptedSharedPreferences.create(
-                    SECURE_PREFS_NAME,
-                    masterKeyAlias,
                     context,
+                    SECURE_PREFS_NAME,
+                    masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
                 )

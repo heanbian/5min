@@ -12,7 +12,7 @@ App({
     /** Apply on next home show after Mine custom-scene Use / add. */
     pendingSceneId: null,
     privacyAccepted: false,
-    appVersion: '1.0.8',
+    appVersion: '1.0.9',
   },
 
   onLaunch() {

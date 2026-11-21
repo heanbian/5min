@@ -82,7 +82,10 @@ const floatTo16BitPCM = (view, offset, samples) => {
   }
 };
 
-/** Build a mono 16-bit WAV data URI from Float32 samples. */
+/**
+ * Build a mono 16-bit WAV blob: URL from Float32 samples.
+ * Uses blob: (allowed by CSP media-src) instead of data: URIs.
+ */
 const samplesToWavUri = (samples, sampleRate = SAMPLE_RATE) => {
   const dataSize = samples.length * 2;
   const buffer = new ArrayBuffer(44 + dataSize);
@@ -104,14 +107,7 @@ const samplesToWavUri = (samples, sampleRate = SAMPLE_RATE) => {
   writeStr(36, 'data');
   view.setUint32(40, dataSize, true);
   floatTo16BitPCM(view, 44, samples);
-
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return `data:audio/wav;base64,${btoa(binary)}`;
+  return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
 };
 
 const makeSilentUri = () => {
