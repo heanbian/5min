@@ -409,13 +409,16 @@
     "zh-CN",
     "zh-TW",
     "en",
-    "de",
-    "ru",
     "fr",
+    "ru",
+    "es",
+    "ar",
+    "de",
     "bo",
     "ja",
-    "es",
-    "ar"
+    "ko",
+    "pt",
+    "id"
   ],
   "defaultLocale": "zh-CN"
 }

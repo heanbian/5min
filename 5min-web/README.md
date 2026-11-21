@@ -31,7 +31,7 @@
 | 前端 | `public/` 内 HTML5 + 原生 ES modules，无框架、无前端打包 |
 | 数据 | Web 计时默认仍存浏览器本机；App 可选云端同步（中国境内）。PostgreSQL：访客日志 + 云存储表 |
 
-多语言（`public/js/i18n/locales.js` + `packs/`）：简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག、日本語、Español、العربية。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。默认语言包预加载，其余按需动态加载。
+多语言（`public/js/i18n/locales.js` + `packs/`）：联合国六种工作语文（简体/繁体中文、English、Français、Русский、Español、العربية），另含 Deutsch、བོད་ཡིག、日本語、한국어、Português、Bahasa Indonesia。右上角切换；优先 `?lang=`，其次 `localStorage`，再次浏览器语言。默认语言包预加载，其余按需动态加载。
 
 字体：自托管 [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)（[SIL OFL 1.1](https://scripts.sil.org/OFL)；站点文案子集）与 Plus Jakarta Sans。
 

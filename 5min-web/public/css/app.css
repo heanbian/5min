@@ -281,6 +281,13 @@
     font-family:"Noto Sans Tibetan","Kailasa","Microsoft Himalaya","Jomolhari","Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;
     line-height:1.7;
   }
+  /* 韩文：优先系统韩文字体 */
+  html[lang="ko"] body,
+  html[lang="ko"] button,
+  html[lang="ko"] select{
+    font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;
+    line-height:1.6;
+  }
   /*
    * 阿拉伯文：文档保持 dir=ltr（骨架与其它语言一致），文案岛用 RTL 对齐。
    * 阿语连字勿加 letter-spacing；优先系统阿语字体。

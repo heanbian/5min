@@ -1,7 +1,8 @@
 /**
  * 5min locale runtime — ES module.
  * SPDX-License-Identifier: Apache-2.0
- * App UI locales: zh-CN / zh-TW / en / de / ru / fr / bo / ja / es / ar (aligned with native apps).
+ * App UI locales (UN official languages first, then additional):
+ *   zh-CN / zh-TW / en / fr / ru / es / ar · de / bo / ja / ko / pt / id
  * Packs live under ./packs/; zh-CN is eager, others load via ensureLocale().
  */
 
@@ -11,13 +12,16 @@ export const LOCALE_CODES = Object.freeze([
   'zh-CN',
   'zh-TW',
   'en',
-  'de',
-  'ru',
   'fr',
-  'bo',
-  'ja',
+  'ru',
   'es',
   'ar',
+  'de',
+  'bo',
+  'ja',
+  'ko',
+  'pt',
+  'id',
 ]);
 
 export const STORAGE_KEY = '5min.locale';
@@ -28,26 +32,32 @@ export const LOCALE_NATIVE_NAMES = Object.freeze({
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文',
   en: 'English',
-  de: 'Deutsch',
-  ru: 'Русский',
   fr: 'Français',
-  bo: 'བོད་ཡིག',
-  ja: '日本語',
+  ru: 'Русский',
   es: 'Español',
   ar: 'العربية',
+  de: 'Deutsch',
+  bo: 'བོད་ཡིག',
+  ja: '日本語',
+  ko: '한국어',
+  pt: 'Português',
+  id: 'Bahasa Indonesia',
 });
 
 const packLoaders = Object.freeze({
   'zh-CN': () => Promise.resolve({ default: zhCN }),
   'zh-TW': () => import('./packs/zh-TW.js'),
   en: () => import('./packs/en.js'),
-  de: () => import('./packs/de.js'),
-  ru: () => import('./packs/ru.js'),
   fr: () => import('./packs/fr.js'),
-  bo: () => import('./packs/bo.js'),
-  ja: () => import('./packs/ja.js'),
+  ru: () => import('./packs/ru.js'),
   es: () => import('./packs/es.js'),
   ar: () => import('./packs/ar.js'),
+  de: () => import('./packs/de.js'),
+  bo: () => import('./packs/bo.js'),
+  ja: () => import('./packs/ja.js'),
+  ko: () => import('./packs/ko.js'),
+  pt: () => import('./packs/pt.js'),
+  id: () => import('./packs/id.js'),
 });
 
 /** @type {Record<string, Readonly<Record<string, string>>>} */
@@ -86,13 +96,16 @@ export function resolveLocale(tag) {
     return 'zh-CN';
   }
   if (base === 'en') return 'en';
-  if (base === 'de') return 'de';
-  if (base === 'ru') return 'ru';
   if (base === 'fr') return 'fr';
-  if (base === 'bo') return 'bo';
-  if (base === 'ja') return 'ja';
+  if (base === 'ru') return 'ru';
   if (base === 'es') return 'es';
   if (base === 'ar') return 'ar';
+  if (base === 'de') return 'de';
+  if (base === 'bo') return 'bo';
+  if (base === 'ja') return 'ja';
+  if (base === 'ko') return 'ko';
+  if (base === 'pt') return 'pt';
+  if (base === 'id') return 'id';
   return null;
 }
 

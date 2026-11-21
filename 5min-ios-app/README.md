@@ -18,7 +18,7 @@
 - 底部三栏：记录 / 首页 / 我的（与鸿蒙客户端对齐）
 - 时长预设 3 / 5 / 10 分钟与分组场景；「我的」支持自定义 1–90 分钟
 - 绝对时间戳倒计时；到期系统本地通知 + 提示音与触觉（提示音可关闭，仍保留振动）
-- 首次启动隐私政策同意；语言：简体 / 繁体 / English / Deutsch / Русский / Français / བོད་ཡིག
+- 首次启动隐私政策同意；语言：联合国六种工作语文（简体/繁体中文、English、Français、Русский、Español、العربية）及 Deutsch、བོད་ཡིག、日本語、한국어、Português、Bahasa Indonesia
 - 记录页：近 14 日统计与明细（SQLite：`Application Support/5min-chat/5min_chat_history.db`）
 - 今日累计；计时中常亮（`isIdleTimerDisabled`）；结束后轻触表盘可再次提醒
 - **iPhone Duo**：按窗口尺寸自适应；外屏竖排，内屏/横屏/分屏双栏
