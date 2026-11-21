@@ -136,9 +136,12 @@ const startClock = (_audioCtx) => {
     gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
     osc.connect(gain);
     gain.connect(master);
+    osc.onended = () => {
+      try { osc.disconnect(); } catch { /* ignore */ }
+      try { gain.disconnect(); } catch { /* ignore */ }
+    };
     osc.start(t0);
     osc.stop(t0 + 0.08);
-    nodes.push(osc, gain);
   };
   tick();
   timerIds.push(window.setInterval(tick, 1000));
@@ -149,6 +152,27 @@ export const getAmbientMode = () => mode;
 export const stopAmbient = () => {
   mode = 'off';
   clearGraph();
+};
+
+/** Suspend ambient AudioContext while the tab is hidden. */
+export const suspendAmbient = () => {
+  if (!ctx || mode === 'off') return;
+  try {
+    if (ctx.state === 'running') void ctx.suspend();
+  } catch {
+    /* ignore */
+  }
+};
+
+/** Resume ambient after the tab becomes visible again. */
+export const resumeAmbient = async () => {
+  if (!ctx || mode === 'off') return;
+  preferPlaybackSession();
+  try {
+    if (ctx.state === 'suspended') await ctx.resume();
+  } catch {
+    /* ignore */
+  }
 };
 
 /**

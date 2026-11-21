@@ -17,7 +17,7 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v8';
+const CACHE = '5min-shell-v9';
 
 /* Minimal shell: CJK fonts + non-default locale packs load on demand */
 const PRECACHE = [
@@ -101,9 +101,11 @@ self.addEventListener('fetch', (event) => {
           }
           return res;
         })
-        .catch(() =>
-          caches.match('./index.html').then((cached) => cached || caches.match('./'))
-        )
+        .catch(() => {
+          // Only the timer shell is precached — do not serve it for about/privacy/etc.
+          if (!isHome) return Response.error();
+          return caches.match('./index.html').then((cached) => cached || caches.match('./'));
+        })
     );
     return;
   }

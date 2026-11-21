@@ -47,6 +47,8 @@ import {
   getAmbientMode,
   setAmbientMode,
   stopAmbient,
+  suspendAmbient,
+  resumeAmbient,
 } from './ambient.js';
 
 const CIRC = 2 * Math.PI * 54;
@@ -147,6 +149,7 @@ const qs = new URLSearchParams(location.search);
 const secRaw = Number.parseInt(qs.get('sec') ?? '', 10);
 const bootSec = Number.isFinite(secRaw) ? Math.min(3600, Math.max(1, secRaw)) : 0;
 const defaultMin = bootSec > 0 ? bootSec / 60 : 5;
+const TIMER_SESSION_KEY = '5min.web.timer.v1';
 
 let locale = resolveLocale(qs.get('lang')) ?? detectLocale();
 let totalMs = defaultMin * 60 * 1000;
@@ -162,6 +165,72 @@ let activeScene = null;
 let wakeLock = null;
 let notifyAsked = false;
 let needAlertOnVisible = false;
+
+const persistTimerSession = () => {
+  try {
+    const liveRemain = running ? Math.max(0, endAt - Date.now()) : remainMs;
+    sessionStorage.setItem(TIMER_SESSION_KEY, JSON.stringify({
+      totalMs,
+      remainMs: liveRemain,
+      endAt: running ? endAt : 0,
+      running,
+      finished,
+      activeScene,
+      savedAt: Date.now(),
+    }));
+  } catch {
+    /* private mode / quota */
+  }
+};
+
+const clearTimerSession = () => {
+  try { sessionStorage.removeItem(TIMER_SESSION_KEY); } catch { /* ignore */ }
+};
+
+/** @returns {boolean} whether a session was restored */
+const restoreTimerSession = () => {
+  try {
+    const raw = sessionStorage.getItem(TIMER_SESSION_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return false;
+    const nextTotal = Number(data.totalMs);
+    if (!Number.isFinite(nextTotal) || nextTotal < 1000 || nextTotal > 3_600_000) return false;
+    const sceneId = data.activeScene == null ? null : String(data.activeScene);
+    if (sceneId && !SCENES.some((s) => s.id === sceneId)) return false;
+
+    totalMs = Math.floor(nextTotal);
+    activeScene = sceneId;
+    finished = !!data.finished;
+    const wasRunning = !!data.running;
+    const savedEnd = Number(data.endAt);
+    if (wasRunning && Number.isFinite(savedEnd) && savedEnd > 0) {
+      remainMs = savedEnd - Date.now();
+      if (remainMs <= 0) {
+        remainMs = 0;
+        endAt = 0;
+        running = false;
+        finished = true;
+      } else {
+        endAt = savedEnd;
+        running = true;
+        finished = false;
+      }
+    } else {
+      const savedRemain = Number(data.remainMs);
+      remainMs = Number.isFinite(savedRemain)
+        ? Math.min(totalMs, Math.max(0, Math.floor(savedRemain)))
+        : totalMs;
+      endAt = 0;
+      running = false;
+      if (remainMs <= 0) finished = true;
+      else if (remainMs >= totalMs) finished = false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 progress.style.strokeDasharray = String(CIRC);
 progress.style.strokeDashoffset = '0';
@@ -396,7 +465,9 @@ const syncBrandTitle = () => {
 const applyStaticI18n = () => {
   const pack = LOCALES[locale] || LOCALES['zh-CN'];
   document.documentElement.lang = pack.htmlLang;
-  document.documentElement.dir = pack.dir === 'rtl' ? 'rtl' : 'ltr';
+  // Keep document LTR so chrome matches other locales; Arabic text uses CSS islands.
+  document.documentElement.dir = 'ltr';
+  document.documentElement.dataset.script = pack.dir === 'rtl' ? 'rtl' : 'ltr';
   syncBrandTitle();
   if (langBtn) langBtn.setAttribute('aria-label', pack.langLabel);
   if (langPanel) langPanel.setAttribute('aria-label', pack.langLabel);
@@ -474,10 +545,10 @@ const stopTitleBlink = () => {
   titleBlinkId = 0;
 };
 
-/** Scene/group finish tip key; falls back to null for generic copy. */
+/** Scene/group finish tip key; null when no scene (generic copy). */
 const resolveDoneTipKey = (sceneId = activeScene) => {
-  const id = sceneId || 'toilet';
-  const scene = SCENES.find((s) => s.id === id);
+  if (!sceneId) return null;
+  const scene = SCENES.find((s) => s.id === sceneId);
   if (scene?.doneKey) return scene.doneKey;
   if (scene?.group) {
     const group = SCENE_GROUPS.find((g) => g.id === scene.group);
@@ -516,13 +587,13 @@ const startTitleBlink = () => {
 
 const sessionMinutes = () => Math.max(1, Math.round(totalMs / 60_000));
 
-/** Scene title for finish notify; default system scene is toilet (如厕). */
+/** Scene title for finish notify; generic brand when no scene selected. */
 const notifySceneName = () => {
   if (activeScene) {
     const scene = SCENES.find((s) => s.id === activeScene);
     if (scene) return tr(scene.titleKey);
   }
-  return tr('sceneToiletTitle');
+  return tr('brandTitle');
 };
 
 const maybeNotify = () => {
@@ -533,7 +604,7 @@ const maybeNotify = () => {
     const n = new Notification(tr('notifyTitle', vars), {
       body: notifyBodyText(vars),
       icon: 'img/logo.png',
-      tag: '5min-toilet-timer',
+      tag: '5min-timer',
       renotify: true,
       silent: false,
       vibrate: getVibratePattern(),
@@ -669,6 +740,7 @@ const finish = () => {
   stopAudioKeepAlive();
   releaseWakeLock();
   startTitleBlink();
+  persistTimerSession();
 };
 
 const start = () => {
@@ -682,6 +754,7 @@ const start = () => {
     releaseWakeLock();
     setSetupEnabled(true);
     render();
+    persistTimerSession();
     return;
   }
 
@@ -706,6 +779,7 @@ const start = () => {
   render();
   scheduleTick();
   acquireWakeLock();
+  persistTimerSession();
 };
 
 const reset = () => {
@@ -722,6 +796,7 @@ const reset = () => {
   resetBtn.disabled = true;
   setSetupEnabled(true);
   render();
+  clearTimerSession();
 };
 
 const setPreset = (min, sceneId = null) => {
@@ -730,6 +805,8 @@ const setPreset = (min, sceneId = null) => {
   activeScene = sceneId;
   syncSceneUi();
   reset();
+  // Idle preset after reset: keep a lightweight session so scene survives same-tab return.
+  persistTimerSession();
 };
 
 const setAmbientPanelOpen = (open) => {
@@ -750,8 +827,21 @@ const syncAmbientUi = () => {
 void (async () => {
   await ensureLocale(locale);
   applyStaticI18n();
-  // 默认场景：如厕 · 5 分钟（URL ?sec= 自定义秒数时不覆盖）
-  if (bootSec <= 0) {
+  // URL ?sec= wins over a previous same-tab session.
+  const restored = bootSec <= 0 && restoreTimerSession();
+  if (restored) {
+    syncSceneUi();
+    resetBtn.disabled = !(running || finished || remainMs < totalMs);
+    setSetupEnabled(!running);
+    if (running) {
+      scheduleTick();
+      acquireWakeLock();
+      startAudioKeepAlive();
+    } else if (finished) {
+      startTitleBlink();
+    }
+  } else if (bootSec <= 0) {
+    // 默认场景：如厕 · 5 分钟（URL ?sec= 自定义秒数时不覆盖）
     setPreset(5, 'toilet');
   } else {
     syncSceneUi();
@@ -858,7 +948,12 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') return;
+  if (document.visibilityState !== 'visible') {
+    persistTimerSession();
+    suspendAmbient();
+    return;
+  }
+  void resumeAmbient();
   if (running) {
     remainMs = endAt - Date.now();
     if (remainMs <= 0) {
@@ -871,6 +966,7 @@ document.addEventListener('visibilitychange', () => {
       // Re-arm audio while still timing (lock screen often suspends AudioContext).
       void unlockAlertAudio();
       startAudioKeepAlive();
+      persistTimerSession();
     }
     return;
   }
@@ -882,8 +978,14 @@ document.addEventListener('visibilitychange', () => {
   startTitleBlink();
 });
 
+window.addEventListener('pagehide', () => {
+  persistTimerSession();
+});
+
 window.addEventListener('beforeunload', (event) => {
-  if (!running) return;
+  persistTimerSession();
+  // Warn when leaving mid-session (running or paused progress), same-tab footer nav included.
+  if (!running && !(remainMs < totalMs && remainMs > 0 && !finished)) return;
   event.preventDefault();
   event.returnValue = '';
 });

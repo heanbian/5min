@@ -32,7 +32,7 @@ module.exports = {
   "titleDoneZero": "0:00 · {n} د",
   "notifyTitle": "{scene} · {n} د · اكتمل",
   "notifyBody": "انتهى مؤقّت {n} دقيقة لـ {scene}.",
-  "notifyBodyTip": "انتهى مؤقّت {n} دقيقة لـ {scene}. {tip}.",
+  "notifyBodyTip": "انتهى مؤقّت {n} دقيقة لـ {scene}. {tip}",
   "doneTipToilet": "يُرجى النهوض والتحرّك",
   "doneTipBrush": "حان وقت المضمضة",
   "doneTipBreak": "انتهت الاستراحة",

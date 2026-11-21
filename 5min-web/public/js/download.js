@@ -39,8 +39,19 @@
     el.href = url;
     el.textContent = label;
     el.classList.add('action-primary');
-    el.setAttribute('target', '_blank');
-    el.setAttribute('rel', 'noopener noreferrer');
+    let sameOrigin = false;
+    try {
+      sameOrigin = new URL(url, location.href).origin === location.origin;
+    } catch {
+      sameOrigin = false;
+    }
+    if (sameOrigin) {
+      el.removeAttribute('target');
+      el.removeAttribute('rel');
+    } else {
+      el.setAttribute('target', '_blank');
+      el.setAttribute('rel', 'noopener noreferrer');
+    }
   };
 
   const setMpOpen = (row, toggle, drawer, open) => {

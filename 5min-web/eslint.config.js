@@ -20,6 +20,7 @@ const browserGlobals = {
   document: 'readonly',
   fetch: 'readonly',
   localStorage: 'readonly',
+  sessionStorage: 'readonly',
   location: 'readonly',
   navigator: 'readonly',
   self: 'readonly',
