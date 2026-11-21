@@ -19,12 +19,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -220,7 +221,7 @@ fun RecordsScreen(vm: TimerViewModel) {
                 ) {
                     Row(
                         modifier = Modifier
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                             .height(FiveMinDimens.rowH)
                             .shadow(elevation = 2.dp, shape = filterRadius, clip = false)
@@ -262,9 +263,12 @@ fun RecordsScreen(vm: TimerViewModel) {
                             modifier = Modifier.size(18.dp),
                         )
                     }
-                    ExposedDropdownMenu(
+                    // Material3 1.5 hid ExposedDropdownMenuBoxScope.ExposedDropdownMenu;
+                    // DropdownMenu + exposedDropdownSize is the supported equivalent.
+                    DropdownMenu(
                         expanded = filterExpanded,
                         onDismissRequest = { filterExpanded = false },
+                        modifier = Modifier.exposedDropdownSize(matchAnchorWidth = true),
                         containerColor = FiveMinColors.surface,
                     ) {
                         DropdownMenuItem(

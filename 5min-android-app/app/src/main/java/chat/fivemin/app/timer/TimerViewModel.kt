@@ -9,6 +9,7 @@ import chat.fivemin.app.alert.FinishAlerter
 import chat.fivemin.app.data.AppLocales
 import chat.fivemin.app.data.CustomScene
 import chat.fivemin.app.data.P0Features
+import chat.fivemin.app.data.PrefsStore
 import chat.fivemin.app.data.Scene
 import chat.fivemin.app.data.SceneGroup
 import chat.fivemin.app.data.LocaleSceneProfiles
