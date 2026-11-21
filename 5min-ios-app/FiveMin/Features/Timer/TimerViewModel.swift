@@ -52,11 +52,11 @@ final class TimerViewModel: ObservableObject {
     private var lastRecordedSessionId: Int64?
 
     var suggestedGroup: SceneGroupDTO {
-        SceneGroupDTO(id: SceneRanker.groupId, labelKey: SceneRanker.labelKey)
+        SceneGroupDTO(id: SceneRanker.groupId, labelKey: SceneRanker.labelKey, doneKey: nil)
     }
 
     var customGroup: SceneGroupDTO {
-        SceneGroupDTO(id: CustomScene.groupId, labelKey: "sceneGroupCustom")
+        SceneGroupDTO(id: CustomScene.groupId, labelKey: "sceneGroupCustom", doneKey: nil)
     }
 
     var pickerGroups: [SceneGroupDTO] {
@@ -482,7 +482,8 @@ final class TimerViewModel: ObservableObject {
                     min: custom.min,
                     group: CustomScene.groupId,
                     labelKey: custom.id,
-                    titleKey: custom.id
+                    titleKey: custom.id,
+                    doneKey: nil
                 )
             }
         }
@@ -496,7 +497,8 @@ final class TimerViewModel: ObservableObject {
                 min: custom.min,
                 group: SceneRanker.groupId,
                 labelKey: custom.id,
-                titleKey: custom.id
+                titleKey: custom.id,
+                doneKey: nil
             )
         }
         guard let scene = catalog.scenes.first(where: { $0.id == id }) else { return nil }
@@ -505,7 +507,8 @@ final class TimerViewModel: ObservableObject {
             min: scene.min,
             group: SceneRanker.groupId,
             labelKey: scene.labelKey,
-            titleKey: scene.titleKey
+            titleKey: scene.titleKey,
+            doneKey: scene.doneKey
         )
     }
 
@@ -642,7 +645,7 @@ final class TimerViewModel: ObservableObject {
             NotificationService.scheduleFinish(
                 at: end,
                 title: t("notifyTitle", vars),
-                body: t("notifyBody", vars),
+                body: notifyBodyText(vars),
                 withSound: alerts.withTone
             )
         }
@@ -710,7 +713,7 @@ final class TimerViewModel: ObservableObject {
             if alerts.withNotify {
                 NotificationService.presentNow(
                     title: t("notifyTitle", vars),
-                    body: t("notifyBody", vars),
+                    body: notifyBodyText(vars),
                     withSound: alerts.withTone
                 )
             }
@@ -749,6 +752,14 @@ final class TimerViewModel: ObservableObject {
         ["n": "\(sessionMinutes())", "scene": notifySceneName()]
     }
 
+    private func notifyBodyText(_ vars: [String: String]) -> String {
+        catalog.notifyBodyText(locale: locale, sceneId: activeSceneId, vars: vars)
+    }
+
+    private func statusDoneText() -> String {
+        catalog.statusDoneText(locale: locale, sceneId: activeSceneId)
+    }
+
     func format(_ ms: Int64) -> String {
         let totalSec = max(0, ms / 1000)
         let m = totalSec / 60
@@ -771,7 +782,7 @@ final class TimerViewModel: ObservableObject {
             if inOvertime {
                 return t("statusOvertime", ["n": formatOvertime(overtimeMs)])
             }
-            return t("statusDone")
+            return statusDoneText()
         case .warn: return t("statusWarn")
         case .running: return t("statusRunning")
         case .paused: return t("statusPaused")

@@ -133,6 +133,27 @@ function resolveSceneTitle(id) {
   return null;
 }
 
+/** Scene tip, then group tip; null means generic done copy. */
+function resolveDoneTipKey(sceneId) {
+  const id = sceneId || 'toilet';
+  const scene = sceneById(id);
+  if (scene && scene.doneKey) return scene.doneKey;
+  if (!scene || !scene.group) return null;
+  const group = GROUPS.find((g) => g.id === scene.group);
+  return (group && group.doneKey) || null;
+}
+
+function statusDoneText(sceneId) {
+  const tipKey = resolveDoneTipKey(sceneId);
+  return tipKey ? t('statusDoneTip', { tip: t(tipKey) }) : t('statusDone');
+}
+
+function notifyBodyText(sceneId, vars) {
+  const tipKey = resolveDoneTipKey(sceneId);
+  if (!tipKey) return t('notifyBody', vars);
+  return t('notifyBodyTip', Object.assign({}, vars, { tip: t(tipKey) }));
+}
+
 module.exports = {
   PRESET_MINS,
   DEFAULT_MIN,
@@ -146,5 +167,8 @@ module.exports = {
   buildScenePicker,
   suggestedSceneIds,
   resolveSceneTitle,
+  resolveDoneTipKey,
+  statusDoneText,
+  notifyBodyText,
   CHIP_N: sceneRanker.CHIP_N,
 };

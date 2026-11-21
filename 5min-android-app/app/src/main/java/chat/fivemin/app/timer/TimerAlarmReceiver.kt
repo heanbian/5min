@@ -31,6 +31,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
                 sceneName.takeIf { it.isNotBlank() },
                 alerts.withTone,
                 alerts.withVibrate,
+                sceneId.takeIf { it.isNotBlank() },
             )
         }
         FinishAlerter.play(context, alerts.withTone, alerts.withVibrate)

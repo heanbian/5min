@@ -3,6 +3,7 @@ import Foundation
 struct SceneGroupDTO: Codable, Identifiable {
     let id: String
     let labelKey: String
+    let doneKey: String?
 }
 
 struct SceneDTO: Codable, Identifiable {
@@ -11,6 +12,7 @@ struct SceneDTO: Codable, Identifiable {
     let group: String
     let labelKey: String
     let titleKey: String
+    let doneKey: String?
 }
 
 struct ScenesFile: Codable {
@@ -84,5 +86,30 @@ final class SharedCatalog {
             text = text.replacingOccurrences(of: "{\(k)}", with: v)
         }
         return text
+    }
+
+    /// Scene tip, then group tip; nil means generic done copy.
+    func resolveDoneTipKey(sceneId: String?) -> String? {
+        let id = (sceneId?.isEmpty == false) ? sceneId! : "toilet"
+        let scene = scenes.first { $0.id == id }
+        if let tip = scene?.doneKey, !tip.isEmpty { return tip }
+        guard let groupId = scene?.group else { return nil }
+        return groups.first { $0.id == groupId }?.doneKey
+    }
+
+    func statusDoneText(locale: String, sceneId: String?) -> String {
+        guard let tipKey = resolveDoneTipKey(sceneId: sceneId) else {
+            return t(locale, "statusDone")
+        }
+        return t(locale, "statusDoneTip", ["tip": t(locale, tipKey)])
+    }
+
+    func notifyBodyText(locale: String, sceneId: String?, vars: [String: String]) -> String {
+        guard let tipKey = resolveDoneTipKey(sceneId: sceneId) else {
+            return t(locale, "notifyBody", vars)
+        }
+        var merged = vars
+        merged["tip"] = t(locale, tipKey)
+        return t(locale, "notifyBodyTip", merged)
     }
 }

@@ -5,6 +5,7 @@ import { filterAppLocales } from './AppLocales';
 export interface SceneGroup {
   id: string;
   labelKey: string;
+  doneKey?: string;
 }
 
 export interface SceneItem {
@@ -13,6 +14,7 @@ export interface SceneItem {
   group: string;
   labelKey: string;
   titleKey: string;
+  doneKey?: string;
 }
 
 export class SharedCatalog {
@@ -87,5 +89,52 @@ export class SharedCatalog {
       }
     }
     return text;
+  }
+
+  /** Scene tip, then group tip; empty means generic done copy. */
+  resolveDoneTipKey(sceneId?: string): string {
+    const id = sceneId && sceneId.length > 0 ? sceneId : 'toilet';
+    let scene: SceneItem | undefined = undefined;
+    for (let i = 0; i < this.scenes.length; i++) {
+      if (this.scenes[i].id === id) {
+        scene = this.scenes[i];
+        break;
+      }
+    }
+    if (scene && scene.doneKey && scene.doneKey.length > 0) {
+      return scene.doneKey;
+    }
+    if (!scene || !scene.group) {
+      return '';
+    }
+    for (let i = 0; i < this.groups.length; i++) {
+      const group = this.groups[i];
+      if (group.id === scene.group && group.doneKey && group.doneKey.length > 0) {
+        return group.doneKey;
+      }
+    }
+    return '';
+  }
+
+  statusDoneText(locale: string, sceneId?: string): string {
+    const tipKey = this.resolveDoneTipKey(sceneId);
+    if (!tipKey) {
+      return this.t(locale, 'statusDone');
+    }
+    return this.t(locale, 'statusDoneTip', { tip: this.t(locale, tipKey) });
+  }
+
+  notifyBodyText(locale: string, sceneId: string | undefined, vars: Record<string, string>): string {
+    const tipKey = this.resolveDoneTipKey(sceneId);
+    if (!tipKey) {
+      return this.t(locale, 'notifyBody', vars);
+    }
+    const merged: Record<string, string> = {};
+    const keys = Object.keys(vars);
+    for (let i = 0; i < keys.length; i++) {
+      merged[keys[i]] = vars[keys[i]];
+    }
+    merged['tip'] = this.t(locale, tipKey);
+    return this.t(locale, 'notifyBodyTip', merged);
   }
 }

@@ -3,13 +3,14 @@ package chat.fivemin.app.data
 import android.content.Context
 import org.json.JSONObject
 
-data class SceneGroup(val id: String, val labelKey: String)
+data class SceneGroup(val id: String, val labelKey: String, val doneKey: String? = null)
 data class Scene(
     val id: String,
     val min: Int,
     val group: String,
     val labelKey: String,
     val titleKey: String,
+    val doneKey: String? = null,
 )
 
 class SharedCatalog(
@@ -30,6 +31,29 @@ class SharedCatalog(
         return text
     }
 
+    /** Scene-specific tip key, then group tip; null → use generic done copy. */
+    fun resolveDoneTipKey(sceneId: String?): String? {
+        val id = sceneId?.takeIf { it.isNotBlank() } ?: "toilet"
+        val scene = scenes.firstOrNull { it.id == id }
+        scene?.doneKey?.let { return it }
+        val groupId = scene?.group ?: return null
+        return groups.firstOrNull { it.id == groupId }?.doneKey
+    }
+
+    fun statusDoneText(locale: String, sceneId: String?): String {
+        val tipKey = resolveDoneTipKey(sceneId) ?: return t(locale, "statusDone")
+        return t(locale, "statusDoneTip", mapOf("tip" to t(locale, tipKey)))
+    }
+
+    fun notifyBodyText(locale: String, sceneId: String?, vars: Map<String, String>): String {
+        val tipKey = resolveDoneTipKey(sceneId)
+        return if (tipKey != null) {
+            t(locale, "notifyBodyTip", vars + ("tip" to t(locale, tipKey)))
+        } else {
+            t(locale, "notifyBody", vars)
+        }
+    }
+
     companion object {
         fun load(context: Context): SharedCatalog {
             val scenesJson = context.assets.open("shared/scenes.json").bufferedReader().use { it.readText() }
@@ -40,7 +64,11 @@ class SharedCatalog(
             val groups = root.getJSONArray("groups").let { arr ->
                 List(arr.length()) {
                     val o = arr.getJSONObject(it)
-                    SceneGroup(o.getString("id"), o.getString("labelKey"))
+                    SceneGroup(
+                        id = o.getString("id"),
+                        labelKey = o.getString("labelKey"),
+                        doneKey = o.optString("doneKey").takeIf { key -> key.isNotBlank() },
+                    )
                 }
             }
             val scenes = root.getJSONArray("scenes").let { arr ->
@@ -52,6 +80,7 @@ class SharedCatalog(
                         group = o.getString("group"),
                         labelKey = o.getString("labelKey"),
                         titleKey = o.getString("titleKey"),
+                        doneKey = o.optString("doneKey").takeIf { key -> key.isNotBlank() },
                     )
                 }
             }

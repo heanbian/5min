@@ -614,7 +614,8 @@ struct Index {
       min: scene.min,
       group: group,
       labelKey: scene.labelKey,
-      titleKey: scene.titleKey
+      titleKey: scene.titleKey,
+      doneKey: scene.doneKey
     };
     return item;
   }
@@ -682,6 +683,14 @@ struct Index {
       }
     }
     return this.t('sceneToiletTitle');
+  }
+
+  private statusDoneText(): string {
+    return this.catalog.statusDoneText(this.locale, this.state.activeSceneId);
+  }
+
+  private notifyBodyText(vars: Record<string, string>): string {
+    return this.catalog.notifyBodyText(this.locale, this.state.activeSceneId, vars);
   }
 
   /** Full UI sync (locale / scene / start-pause / finish). */
@@ -805,7 +814,7 @@ struct Index {
       return this.t('statusOvertime', otVars);
     }
     if (phase === 'done') {
-      return this.t('statusDone');
+      return this.statusDoneText();
     }
     if (phase === 'warn') {
       return this.t('statusWarn');
@@ -904,7 +913,7 @@ struct Index {
       await scheduleFinishReminder(
         secs,
         this.t('notifyTitle', notifyVars),
-        this.t('notifyBody', notifyVars),
+        this.notifyBodyText(notifyVars),
         alerts.withTone
       );
     }
@@ -1017,7 +1026,7 @@ struct Index {
     }
     const notifyVars = this.varsNotify(String(this.sessionMinutes()), this.notifySceneName());
     const title = this.t('notifyTitle', notifyVars);
-    const body = this.t('notifyBody', notifyVars);
+    const body = this.notifyBodyText(notifyVars);
     const ack = this.t('notifyAck');
     const alerts = await this.effectiveFinishAlerts();
     if (alerts.withNotify) {

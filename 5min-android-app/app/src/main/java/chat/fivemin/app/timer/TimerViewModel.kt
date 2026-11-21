@@ -211,6 +211,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     fun t(key: String, vars: Map<String, String> = emptyMap()) =
         catalog.t(_state.value.locale, key, vars)
 
+    fun statusDoneText(): String =
+        catalog.statusDoneText(_state.value.locale, _state.value.activeSceneId)
+
     fun appLocaleCodes(): List<String> = i18n.appLocaleCodes()
 
     fun pickerGroups(): List<SceneGroup> {
@@ -718,6 +721,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                     notifySceneName(),
                     alerts.withTone,
                     alerts.withVibrate,
+                    sceneId,
                 )
             }
             FinishAlerter.play(getApplication(), alerts.withTone, alerts.withVibrate)

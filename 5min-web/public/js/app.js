@@ -52,22 +52,22 @@ import {
 const CIRC = 2 * Math.PI * 54;
 const SCENE_GROUPS = Object.freeze([
   { id: 'daily', labelKey: 'sceneGroupDaily' },
-  { id: 'kitchen', labelKey: 'sceneGroupKitchen' },
-  { id: 'care', labelKey: 'sceneGroupCare' },
-  { id: 'rest', labelKey: 'sceneGroupRest' },
-  { id: 'study', labelKey: 'sceneGroupStudy' },
-  { id: 'work', labelKey: 'sceneGroupWork' },
-  { id: 'labor', labelKey: 'sceneGroupLabor' },
-  { id: 'farm', labelKey: 'sceneGroupFarm' },
-  { id: 'chores', labelKey: 'sceneGroupChores' },
+  { id: 'kitchen', labelKey: 'sceneGroupKitchen', doneKey: 'doneTipKitchen' },
+  { id: 'care', labelKey: 'sceneGroupCare', doneKey: 'doneTipCare' },
+  { id: 'rest', labelKey: 'sceneGroupRest', doneKey: 'doneTipRest' },
+  { id: 'study', labelKey: 'sceneGroupStudy', doneKey: 'doneTipStudy' },
+  { id: 'work', labelKey: 'sceneGroupWork', doneKey: 'doneTipWork' },
+  { id: 'labor', labelKey: 'sceneGroupLabor', doneKey: 'doneTipLabor' },
+  { id: 'farm', labelKey: 'sceneGroupFarm', doneKey: 'doneTipFarm' },
+  { id: 'chores', labelKey: 'sceneGroupChores', doneKey: 'doneTipChores' },
 ]);
 
 const SCENES = Object.freeze([
-  { id: 'brush', min: 3, group: 'daily', labelKey: 'sceneBrush', titleKey: 'sceneBrushTitle' },
-  { id: 'toilet', min: 5, group: 'daily', labelKey: 'sceneToilet', titleKey: 'sceneToiletTitle' },
-  { id: 'lazy5', min: 5, group: 'daily', labelKey: 'sceneLazy5', titleKey: 'sceneLazy5Title' },
-  { id: 'lazy10', min: 10, group: 'daily', labelKey: 'sceneLazy10', titleKey: 'sceneLazy10Title' },
-  { id: 'smoke', min: 5, group: 'daily', labelKey: 'sceneSmoke', titleKey: 'sceneSmokeTitle' },
+  { id: 'brush', min: 3, group: 'daily', labelKey: 'sceneBrush', titleKey: 'sceneBrushTitle', doneKey: 'doneTipBrush' },
+  { id: 'toilet', min: 5, group: 'daily', labelKey: 'sceneToilet', titleKey: 'sceneToiletTitle', doneKey: 'doneTipToilet' },
+  { id: 'lazy5', min: 5, group: 'daily', labelKey: 'sceneLazy5', titleKey: 'sceneLazy5Title', doneKey: 'doneTipBreak' },
+  { id: 'lazy10', min: 10, group: 'daily', labelKey: 'sceneLazy10', titleKey: 'sceneLazy10Title', doneKey: 'doneTipBreak' },
+  { id: 'smoke', min: 5, group: 'daily', labelKey: 'sceneSmoke', titleKey: 'sceneSmokeTitle', doneKey: 'doneTipBreak' },
   { id: 'noodles', min: 3, group: 'kitchen', labelKey: 'sceneNoodles', titleKey: 'sceneNoodlesTitle' },
   { id: 'microwave', min: 3, group: 'kitchen', labelKey: 'sceneMicrowave', titleKey: 'sceneMicrowaveTitle' },
   { id: 'tea', min: 5, group: 'kitchen', labelKey: 'sceneTea', titleKey: 'sceneTeaTitle' },
@@ -476,12 +476,41 @@ const stopTitleBlink = () => {
   titleBlinkId = 0;
 };
 
+/** Scene/group finish tip key; falls back to null for generic copy. */
+const resolveDoneTipKey = (sceneId = activeScene) => {
+  const id = sceneId || 'toilet';
+  const scene = SCENES.find((s) => s.id === id);
+  if (scene?.doneKey) return scene.doneKey;
+  if (scene?.group) {
+    const group = SCENE_GROUPS.find((g) => g.id === scene.group);
+    if (group?.doneKey) return group.doneKey;
+  }
+  return null;
+};
+
+const statusDoneText = () => {
+  const tipKey = resolveDoneTipKey();
+  return tipKey ? tr('statusDoneTip', { tip: tr(tipKey) }) : tr('statusDone');
+};
+
+const titleDoneBlinkText = () => {
+  const tipKey = resolveDoneTipKey();
+  return tipKey ? tr('titleDoneBlinkTip', { tip: tr(tipKey) }) : tr('titleDoneBlink');
+};
+
+const notifyBodyText = (vars) => {
+  const tipKey = resolveDoneTipKey();
+  return tipKey
+    ? tr('notifyBodyTip', { ...vars, tip: tr(tipKey) })
+    : tr('notifyBody', vars);
+};
+
 const startTitleBlink = () => {
   stopTitleBlink();
   let flip = false;
   titleBlinkId = window.setInterval(() => {
     document.title = flip
-      ? tr('titleDoneBlink')
+      ? titleDoneBlinkText()
       : tr('titleDoneZero', { n: String(sessionMinutes()) });
     flip = !flip;
   }, 800);
@@ -504,7 +533,7 @@ const maybeNotify = () => {
   try {
     const vars = { n: String(sessionMinutes()), scene: notifySceneName() };
     const n = new Notification(tr('notifyTitle', vars), {
-      body: tr('notifyBody', vars),
+      body: notifyBodyText(vars),
       icon: 'img/logo.png',
       tag: '5min-toilet-timer',
       renotify: true,
@@ -587,7 +616,7 @@ const render = () => {
 
   if (finished) {
     setTone('danger');
-    statusEl.textContent = tr('statusDone');
+    statusEl.textContent = statusDoneText();
   } else if (remainMs <= 60_000 && (running || remainMs < totalMs)) {
     setTone('warn');
     statusEl.textContent = tr('statusWarn');

@@ -22,6 +22,7 @@ object FinishNotifier {
         sceneName: String? = null,
         withSound: Boolean = true,
         withVibrate: Boolean = true,
+        sceneId: String? = null,
     ) {
         val appCtx = context.applicationContext
         val launch = PendingIntent.getActivity(
@@ -41,7 +42,7 @@ object FinishNotifier {
             ?: cat.t(locale, "sceneToiletTitle")
         val vars = mapOf("n" to minutes.toString(), "scene" to scene)
         val title = cat.t(locale, "notifyTitle", vars)
-        val body = cat.t(locale, "notifyBody", vars)
+        val body = cat.notifyBodyText(locale, sceneId, vars)
         val pattern = cat.vibratePatternMs.map { it.toLong() }.toLongArray()
         val channel = if (withSound) FiveMinApp.CHANNEL_FINISH else FiveMinApp.CHANNEL_FINISH_SILENT
         val builder = NotificationCompat.Builder(appCtx, channel)

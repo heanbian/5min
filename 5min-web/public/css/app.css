@@ -192,7 +192,8 @@
     height:var(--topbar-h);
     min-height:var(--topbar-h);
     max-width:48vw;
-    padding:0 2px 0 6px;
+    padding-block:0;
+    padding-inline:6px 2px;
     display:inline-flex;
     align-items:center;
     justify-content:flex-start;
@@ -280,31 +281,30 @@
     font-family:"Noto Sans Tibetan","Kailasa","Microsoft Himalaya","Jomolhari","Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;
     line-height:1.7;
   }
-  /* 阿拉伯文：系统阿拉伯字体 + RTL 逻辑属性 */
+  /*
+   * 阿拉伯文：正文字形用阿语字体；页面骨架保持 LTR（与其它语言同一套排布），
+   * 避免 html[dir=rtl] 把顶栏/按钮整页镜像成「反转」。
+   * 阿语连字勿加 letter-spacing。
+   */
+  html[dir="rtl"] .app{
+    direction:ltr;
+    unicode-bidi:isolate;
+  }
   html[lang="ar"] body,
   html[lang="ar"] button,
   html[lang="ar"] select{
     font-family:"Noto Sans Arabic","Segoe UI","Tahoma","Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;
     line-height:1.65;
   }
-  html[dir="rtl"] .topbar{
-    grid-template-columns:auto 1fr;
-  }
-  html[dir="rtl"] .brand{
-    order:2;
-    justify-self:end;
-    justify-content:flex-end;
-  }
-  html[dir="rtl"] .top-tools{
-    order:1;
-    justify-self:start;
-  }
-  html[dir="rtl"] .lang-trigger{
-    padding:0 6px 0 2px;
-  }
-  html[dir="rtl"] .scene-list button,
-  html[dir="rtl"] .menu-panel button{
-    text-align:right;
+  html[lang="ar"] .brand h1,
+  html[lang="ar"] .scene-group-label,
+  html[lang="ar"] .cue-meta,
+  html[lang="ar"] .status,
+  html[lang="ar"] .lang-trigger,
+  html[lang="ar"] .scene-trigger,
+  html[lang="ar"] .menu-panel,
+  html[lang="ar"] .footnote{
+    letter-spacing:normal;
   }
 
   .stage{
@@ -628,7 +628,7 @@
     border:none;
     border-radius:var(--radius);
     box-shadow:none;
-    text-align:left;
+    text-align:start;
   }
   .scene-list button.active{
     color:var(--brand-strong);

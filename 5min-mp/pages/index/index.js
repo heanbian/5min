@@ -10,6 +10,8 @@ const {
   sceneById,
   buildScenePicker,
   resolveSceneTitle,
+  statusDoneText,
+  notifyBodyText,
   CHIP_N,
 } = require('../../utils/catalog');
 const {
@@ -512,7 +514,7 @@ Page({
     let statusText = t('statusIdle');
     if (this.inOvertime) {
       statusText = t('statusOvertime', { n: formatOvertime(this.overtimeMs) });
-    } else if (finished || remain <= 0) statusText = t('statusDone');
+    } else if (finished || remain <= 0) statusText = statusDoneText(this.activeSceneId);
     else if (running && remain <= WARN_MS) statusText = t('statusWarn');
     else if (running) statusText = t('statusRunning');
     else if (remain < this.totalMs) statusText = t('statusPaused');
@@ -556,7 +558,7 @@ Page({
     const alerts = p0.resolveFinishAlerts(prefs);
     alertFinish({
       title: t('notifyTitle', vars),
-      body: t('notifyBody', vars),
+      body: notifyBodyText(this.activeSceneId, vars),
       durationMs: ALERT_DURATION_MS,
       withNotify: alerts.withNotify,
       withVibrate: alerts.withVibrate,
@@ -624,7 +626,7 @@ Page({
     const alerts = p0.resolveFinishAlerts(prefs);
     alertFinish({
       title: t('notifyTitle', vars),
-      body: t('notifyBody', vars),
+      body: notifyBodyText(this.activeSceneId, vars),
       durationMs: ALERT_DURATION_MS,
       withNotify: alerts.withNotify,
       withVibrate: alerts.withVibrate,

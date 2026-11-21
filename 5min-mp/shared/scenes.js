@@ -30,35 +30,43 @@ module.exports = {
     },
     {
       "id": "kitchen",
-      "labelKey": "sceneGroupKitchen"
+      "labelKey": "sceneGroupKitchen",
+      "doneKey": "doneTipKitchen"
     },
     {
       "id": "care",
-      "labelKey": "sceneGroupCare"
+      "labelKey": "sceneGroupCare",
+      "doneKey": "doneTipCare"
     },
     {
       "id": "rest",
-      "labelKey": "sceneGroupRest"
+      "labelKey": "sceneGroupRest",
+      "doneKey": "doneTipRest"
     },
     {
       "id": "study",
-      "labelKey": "sceneGroupStudy"
+      "labelKey": "sceneGroupStudy",
+      "doneKey": "doneTipStudy"
     },
     {
       "id": "work",
-      "labelKey": "sceneGroupWork"
+      "labelKey": "sceneGroupWork",
+      "doneKey": "doneTipWork"
     },
     {
       "id": "labor",
-      "labelKey": "sceneGroupLabor"
+      "labelKey": "sceneGroupLabor",
+      "doneKey": "doneTipLabor"
     },
     {
       "id": "farm",
-      "labelKey": "sceneGroupFarm"
+      "labelKey": "sceneGroupFarm",
+      "doneKey": "doneTipFarm"
     },
     {
       "id": "chores",
-      "labelKey": "sceneGroupChores"
+      "labelKey": "sceneGroupChores",
+      "doneKey": "doneTipChores"
     }
   ],
   "scenes": [
@@ -67,35 +75,40 @@ module.exports = {
       "min": 3,
       "group": "daily",
       "labelKey": "sceneBrush",
-      "titleKey": "sceneBrushTitle"
+      "titleKey": "sceneBrushTitle",
+      "doneKey": "doneTipBrush"
     },
     {
       "id": "toilet",
       "min": 5,
       "group": "daily",
       "labelKey": "sceneToilet",
-      "titleKey": "sceneToiletTitle"
+      "titleKey": "sceneToiletTitle",
+      "doneKey": "doneTipToilet"
     },
     {
       "id": "lazy5",
       "min": 5,
       "group": "daily",
       "labelKey": "sceneLazy5",
-      "titleKey": "sceneLazy5Title"
+      "titleKey": "sceneLazy5Title",
+      "doneKey": "doneTipBreak"
     },
     {
       "id": "lazy10",
       "min": 10,
       "group": "daily",
       "labelKey": "sceneLazy10",
-      "titleKey": "sceneLazy10Title"
+      "titleKey": "sceneLazy10Title",
+      "doneKey": "doneTipBreak"
     },
     {
       "id": "smoke",
       "min": 5,
       "group": "daily",
       "labelKey": "sceneSmoke",
-      "titleKey": "sceneSmokeTitle"
+      "titleKey": "sceneSmokeTitle",
+      "doneKey": "doneTipBreak"
     },
     {
       "id": "noodles",

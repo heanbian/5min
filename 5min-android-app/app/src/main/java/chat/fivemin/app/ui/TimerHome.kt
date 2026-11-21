@@ -146,7 +146,7 @@ fun TimerHome(
         TimerPhase.Done -> if (state.finished) {
             vm.t("statusOvertime", mapOf("n" to vm.format(state.overtimeMs)))
         } else {
-            vm.t("statusDone")
+            vm.statusDoneText()
         }
         TimerPhase.Warn -> vm.t("statusWarn")
         TimerPhase.Running -> vm.t("statusRunning")
