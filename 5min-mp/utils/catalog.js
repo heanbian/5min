@@ -15,10 +15,16 @@
  */
 
 const scenesJson = require('../shared/scenes.js');
-const { t } = require('./i18n');
+const { t, getLocale } = require('./i18n');
 const prefs = require('./prefs');
 const history = require('./history');
 const sceneRanker = require('./sceneRanker');
+const {
+  resolveSceneProfile,
+  orderSceneGroups,
+  isSceneHidden,
+  mergePinnedSuggested,
+} = require('./sceneProfiles');
 
 const PRESET_MINS = Object.freeze(scenesJson.presetsMin || [3, 5, 10]);
 const DEFAULT_MIN = scenesJson.defaultMin || 5;
@@ -45,14 +51,21 @@ function knownSceneIds(customScenes) {
 function suggestedSceneIds() {
   const customScenes = prefs.getCustomScenes();
   const unit = t('customUnit');
+  const known = knownSceneIds(customScenes);
   const sessions = history.getHistory().map((item) => ({
     sceneId: item.sceneId || '',
     at: item.at || 0,
   }));
-  // Drop IDs that no longer resolve (deleted custom, etc.) — avoids empty picker rows.
-  return sceneRanker
-    .rank(sessions, knownSceneIds(customScenes))
-    .filter((id) => !!sceneRow(id, customScenes, unit));
+  const profile = resolveSceneProfile(getLocale());
+  const ranked = sceneRanker.rank(sessions, known);
+  // Pin first (locale cold-start), then usage rank — drop IDs that no longer resolve.
+  return mergePinnedSuggested(
+    ranked,
+    profile.pin,
+    known,
+    sceneRanker.TOP_N,
+    profile.hideScenes
+  ).filter((id) => !!sceneRow(id, customScenes, unit));
 }
 
 function sceneRow(id, customScenes, unit) {
@@ -82,9 +95,17 @@ function sceneRow(id, customScenes, unit) {
 function buildScenePicker() {
   const customScenes = prefs.getCustomScenes();
   const unit = t('customUnit');
+  const profile = resolveSceneProfile(getLocale());
+  // One profile resolve + one rank pass for this build (suggestedSceneIds also uses them).
   const suggested = suggestedSceneIds();
   const range = [];
   const scenesByGroup = {};
+  const byGroup = Object.create(null);
+  SCENES.forEach((s) => {
+    if (isSceneHidden(s.id, profile)) return;
+    if (!byGroup[s.group]) byGroup[s.group] = [];
+    byGroup[s.group].push(s);
+  });
 
   // multiSelector: never push a group whose second-column list is empty (shows blank rows).
   const suggestedRows = suggested
@@ -109,8 +130,8 @@ function buildScenePicker() {
     scenesByGroup[CUSTOM_GROUP_ID] = customRows;
   }
 
-  GROUPS.forEach((g) => {
-    const rows = SCENES.filter((s) => s.group === g.id)
+  orderSceneGroups(GROUPS, profile).forEach((g) => {
+    const rows = (byGroup[g.id] || [])
       .map((s) => sceneRow(s.id, customScenes, unit))
       .filter(Boolean);
     if (rows.length === 0) return;

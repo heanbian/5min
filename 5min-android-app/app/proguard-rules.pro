@@ -9,3 +9,8 @@
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
 # Shared JSON catalog keys are string-based; no model obfuscation needed beyond defaults
+
+# EncryptedSharedPreferences / Tink (device cloud credentials)
+-keep class androidx.security.crypto.** { *; }
+-keep class com.google.crypto.tink.** { *; }
+-dontwarn com.google.crypto.tink.**

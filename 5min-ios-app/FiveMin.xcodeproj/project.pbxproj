@@ -11,6 +11,8 @@
 		B10000000000000000000002 /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* HistoryStore.swift */; };
 		B10000000000000000000007 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* CloudSync.swift */; };
 		B10000000000000000000006 /* SceneRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* SceneRanker.swift */; };
+		B10000000000000000000009 /* LocaleSceneProfiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* LocaleSceneProfiles.swift */; };
+		B1000000000000000000000A /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* KeychainStore.swift */; };
 		B10000000000000000000003 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* RootTabView.swift */; };
 		B10000000000000000000004 /* RecordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* RecordsView.swift */; };
 		B10000000000000000000005 /* MineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* MineView.swift */; };
@@ -36,6 +38,8 @@
 		A10000000000000000000002 /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
 		A10000000000000000000007 /* CloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSync.swift; sourceTree = "<group>"; };
 		A10000000000000000000006 /* SceneRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneRanker.swift; sourceTree = "<group>"; };
+		A10000000000000000000009 /* LocaleSceneProfiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleSceneProfiles.swift; sourceTree = "<group>"; };
+		A1000000000000000000000A /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* RecordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordsView.swift; sourceTree = "<group>"; };
 		A10000000000000000000005 /* MineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MineView.swift; sourceTree = "<group>"; };
@@ -149,6 +153,8 @@
 				A10000000000000000000002 /* HistoryStore.swift */,
 				A10000000000000000000007 /* CloudSync.swift */,
 				A10000000000000000000006 /* SceneRanker.swift */,
+				A10000000000000000000009 /* LocaleSceneProfiles.swift */,
+				A1000000000000000000000A /* KeychainStore.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -262,6 +268,8 @@
 				B10000000000000000000002 /* HistoryStore.swift in Sources */,
 				B10000000000000000000007 /* CloudSync.swift in Sources */,
 				B10000000000000000000006 /* SceneRanker.swift in Sources */,
+				B10000000000000000000009 /* LocaleSceneProfiles.swift in Sources */,
+				B1000000000000000000000A /* KeychainStore.swift in Sources */,
 				B10000000000000000000003 /* RootTabView.swift in Sources */,
 				B10000000000000000000004 /* RecordsView.swift in Sources */,
 				B10000000000000000000005 /* MineView.swift in Sources */,

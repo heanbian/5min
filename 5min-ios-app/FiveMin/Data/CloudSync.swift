@@ -32,10 +32,26 @@ final class CloudSync {
         prefs.storageMode == Self.modeCloud
     }
 
-    func scheduleSync() {
-        guard isCloud() else { return }
+    func scheduleSync(onDone: ((Bool) -> Void)? = nil) {
+        guard isCloud() else {
+            onDone?(false)
+            return
+        }
         queue.async { [weak self] in
-            _ = try? self?.syncNow()
+            guard let self else {
+                if let onDone { DispatchQueue.main.async { onDone(false) } }
+                return
+            }
+            let ok: Bool
+            do {
+                try self.syncNow()
+                ok = true
+            } catch {
+                ok = false
+            }
+            if let onDone {
+                DispatchQueue.main.async { onDone(ok) }
+            }
         }
     }
 

@@ -11,6 +11,7 @@ import chat.fivemin.app.data.CustomScene
 import chat.fivemin.app.data.P0Features
 import chat.fivemin.app.data.Scene
 import chat.fivemin.app.data.SceneGroup
+import chat.fivemin.app.data.LocaleSceneProfiles
 import chat.fivemin.app.data.SceneRanker
 import chat.fivemin.app.notify.FinishNotifier
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +73,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         val (count, ms) = history.todayStats()
-        val suggested = computeSuggested(scenes)
+        val suggested = computeSuggested(scenes, locale)
         _state = MutableStateFlow(
             TimerUiState(
                 locale = locale,
@@ -103,6 +104,19 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         state = _state.asStateFlow()
         viewModelScope.launch {
             TimerBus.finished.collect { onExternalFinish(it.sessionId) }
+        }
+        if (prefs.storageMode == PrefsStore.MODE_CLOUD) {
+            cloud.scheduleSync { ok ->
+                if (!ok) return@scheduleSync
+                viewModelScope.launch {
+                    withContext(Dispatchers.Main) {
+                        reloadPrefsFromStore()
+                        bumpRecordsEpoch()
+                        refreshTodayStats()
+                        refreshSuggested()
+                    }
+                }
+            }
         }
     }
 
@@ -191,18 +205,30 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         startOvertimeTicker()
     }
 
-    private fun computeSuggested(customScenes: List<CustomScene> = _state.value.customScenes): List<String> {
+    private fun computeSuggested(
+        customScenes: List<CustomScene> = _state.value.customScenes,
+        locale: String = _state.value.locale,
+    ): List<String> {
         val known = catalog.scenes.map { it.id }.toMutableSet()
         customScenes.forEach { known.add(it.id) }
         val sessions = history.getHistory().map { SceneRanker.SessionRef(it.sceneId, it.at) }
-        // Pass customScenes explicitly: init calls this before _state is assigned.
-        return SceneRanker.rank(sessions, known).filter { id ->
-            sceneForId(id, SceneRanker.GROUP_ID, customScenes) != null
-        }
+        val profile = LocaleSceneProfiles.resolve(locale.ifBlank { prefs.locale })
+        val ranked = SceneRanker.rank(sessions, known)
+        // Pin first (locale cold-start), then usage rank; hideScenes skipped inside merge.
+        return LocaleSceneProfiles.mergePinnedSuggested(
+            ranked,
+            profile.pin,
+            known,
+            SceneRanker.TOP_N,
+            profile.hideScenes,
+        ).filter { id -> sceneForId(id, SceneRanker.GROUP_ID, customScenes) != null }
     }
 
     fun refreshSuggested() {
-        _state.update { it.copy(suggestedSceneIds = computeSuggested(it.customScenes)) }
+        _state.update {
+            it.copy(suggestedSceneIds = computeSuggested(it.customScenes, it.locale))
+        }
+        invalidatePickerCache()
     }
 
     fun chipSceneIds(): List<String> =
@@ -222,33 +248,63 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun appLocaleCodes(): List<String> = i18n.appLocaleCodes()
 
-    fun pickerGroups(): List<SceneGroup> {
-        // Only include groups with at least one resolvable scene (avoids blank sections).
-        val groups = mutableListOf<SceneGroup>()
-        if (scenesInGroup(SceneRanker.GROUP_ID).isNotEmpty()) groups += suggestedGroup
-        if (scenesInGroup(CustomScene.GROUP_ID).isNotEmpty()) groups += customGroup
-        catalog.groups.forEach { group ->
-            if (scenesInGroup(group.id).isNotEmpty()) groups += group
+    private var pickerCacheKey: String? = null
+    private var cachedPickerGroups: List<SceneGroup> = emptyList()
+    private var cachedScenesByGroup: Map<String, List<Scene>> = emptyMap()
+
+    private fun invalidatePickerCache() {
+        pickerCacheKey = null
+    }
+
+    private fun ensurePickerCache() {
+        val s = _state.value
+        val key = buildString {
+            append(s.locale)
+            append('|')
+            append(s.suggestedSceneIds.joinToString(","))
+            append('|')
+            s.customScenes.forEach { append(it.id).append(':').append(it.min).append(';') }
         }
-        return groups
+        if (key == pickerCacheKey) return
+        val profile = LocaleSceneProfiles.resolve(s.locale)
+        val byGroup = LinkedHashMap<String, List<Scene>>()
+        val suggested = s.suggestedSceneIds.mapNotNull { sceneForId(it, SceneRanker.GROUP_ID) }
+        if (suggested.isNotEmpty()) byGroup[SceneRanker.GROUP_ID] = suggested
+        val custom = s.customScenes.map { custom ->
+            Scene(
+                id = custom.id,
+                min = custom.min,
+                group = CustomScene.GROUP_ID,
+                labelKey = custom.id,
+                titleKey = custom.id,
+            )
+        }
+        if (custom.isNotEmpty()) byGroup[CustomScene.GROUP_ID] = custom
+        for (group in LocaleSceneProfiles.orderGroups(catalog.groups, profile)) {
+            val items = catalog.scenes.filter {
+                it.group == group.id && !LocaleSceneProfiles.isSceneHidden(it.id, profile)
+            }
+            if (items.isNotEmpty()) byGroup[group.id] = items
+        }
+        val groups = mutableListOf<SceneGroup>()
+        if (byGroup.containsKey(SceneRanker.GROUP_ID)) groups += suggestedGroup
+        if (byGroup.containsKey(CustomScene.GROUP_ID)) groups += customGroup
+        for (group in LocaleSceneProfiles.orderGroups(catalog.groups, profile)) {
+            if (byGroup.containsKey(group.id)) groups += group
+        }
+        cachedScenesByGroup = byGroup
+        cachedPickerGroups = groups
+        pickerCacheKey = key
+    }
+
+    fun pickerGroups(): List<SceneGroup> {
+        ensurePickerCache()
+        return cachedPickerGroups
     }
 
     fun scenesInGroup(groupId: String): List<Scene> {
-        if (groupId == SceneRanker.GROUP_ID) {
-            return _state.value.suggestedSceneIds.mapNotNull { sceneForId(it, SceneRanker.GROUP_ID) }
-        }
-        if (groupId == CustomScene.GROUP_ID) {
-            return _state.value.customScenes.map { custom ->
-                Scene(
-                    id = custom.id,
-                    min = custom.min,
-                    group = CustomScene.GROUP_ID,
-                    labelKey = custom.id,
-                    titleKey = custom.id,
-                )
-            }
-        }
-        return catalog.scenes.filter { it.group == groupId }
+        ensurePickerCache()
+        return cachedScenesByGroup[groupId].orEmpty()
     }
 
     private fun sceneForId(
@@ -306,6 +362,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val resolved = AppLocales.normalize(i18n.resolve(code) ?: code)
         prefs.locale = resolved
         _state.update { it.copy(locale = resolved) }
+        invalidatePickerCache()
+        refreshSuggested()
         cloud.schedulePushPrefs()
     }
 
@@ -407,6 +465,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 alertProfile = prefs.p0.alertProfile,
             )
         }
+        invalidatePickerCache()
     }
 
     fun consumePendingScene() {
@@ -666,8 +725,13 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         start()
     }
 
+    private var lastTickClock: String = ""
+    private var lastTickPhase: TimerPhase? = null
+
     private fun startTicker() {
         tickJob?.cancel()
+        lastTickClock = ""
+        lastTickPhase = null
         tickJob = viewModelScope.launch {
             while (isActive) {
                 val remain = max(0L, endAt - System.currentTimeMillis())
@@ -677,18 +741,23 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                     handleFinish(fromTicker = true)
                     break
                 }
-                _state.update {
-                    it.copy(
-                        remainMs = remain,
-                        phase = phaseFor(remain, true, false),
+                val clock = format(remain)
+                val phase = phaseFor(remain, true, false)
+                // Publish only when the dial second or phase changes — avoids recomposing
+                // the scene picker 4×/sec while the dialog is open.
+                if (clock != lastTickClock || phase != lastTickPhase) {
+                    lastTickClock = clock
+                    lastTickPhase = phase
+                    _state.update {
+                        it.copy(remainMs = remain, phase = phase)
+                    }
+                    TimerForegroundService.update(
+                        getApplication(),
+                        clock,
+                        endAt = endAt,
+                        totalMs = _state.value.totalMs,
                     )
                 }
-                TimerForegroundService.update(
-                    getApplication(),
-                    format(remain),
-                    endAt = endAt,
-                    totalMs = _state.value.totalMs,
-                )
                 delay(250)
             }
         }

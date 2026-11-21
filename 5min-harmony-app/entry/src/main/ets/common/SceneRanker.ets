@@ -49,7 +49,7 @@ export class SceneRanker {
   static rank(sessions: SessionRef[], knownIds: string[], nowMs?: number): string[] {
     const now = nowMs !== undefined ? nowMs : Date.now();
     const known = new Set<string>(knownIds);
-    const aggs: UsageAgg[] = [];
+    const aggsById: Map<string, UsageAgg> = new Map();
     const sameHourById: Map<string, number> = new Map();
     const nowHour = new Date(now).getHours();
 
@@ -59,20 +59,14 @@ export class SceneRanker {
       if (id.length === 0 || !known.has(id)) {
         continue;
       }
-      let found: UsageAgg | null = null;
-      for (let j = 0; j < aggs.length; j++) {
-        if (aggs[j].id === id) {
-          found = aggs[j];
-          break;
-        }
-      }
+      const found = aggsById.get(id);
       if (found) {
         found.count = found.count + 1;
         if (session.at > found.lastAt) {
           found.lastAt = session.at;
         }
       } else {
-        aggs.push(new UsageAgg(id, 1, session.at));
+        aggsById.set(id, new UsageAgg(id, 1, session.at));
       }
       if (session.at > 0 && new Date(session.at).getHours() === nowHour) {
         const prev = sameHourById.get(id);
@@ -81,18 +75,17 @@ export class SceneRanker {
     }
 
     const ranked: RankedItem[] = [];
-    for (let i = 0; i < aggs.length; i++) {
-      const agg = aggs[i];
+    aggsById.forEach((agg: UsageAgg) => {
       const daysSince = Math.max(0, Math.floor((now - agg.lastAt) / SceneRanker.DAY_MS));
       const qualifies = agg.count >= SceneRanker.MIN_COUNT || daysSince <= SceneRanker.RECENT_DAYS;
       if (!qualifies) {
-        continue;
+        return;
       }
       const hourHit = sameHourById.get(agg.id);
       const hourBoost = (hourHit !== undefined ? hourHit : 0) * 12;
       const score = agg.count * 100 + Math.max(0, SceneRanker.HISTORY_WINDOW_DAYS - daysSince) + hourBoost;
       ranked.push(new RankedItem(agg.id, score, agg.lastAt));
-    }
+    });
 
     ranked.sort((a: RankedItem, b: RankedItem): number => {
       if (a.score !== b.score) {

@@ -5,6 +5,7 @@ import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore } from '../common/HistoryStore';
 import { CloudSync } from '../common/CloudSync';
 import { SceneRanker, SessionRef } from '../common/SceneRanker';
+import { LocaleSceneProfiles } from '../common/LocaleSceneProfiles';
 import { resolveLocale } from '../common/I18n';
 import { normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
@@ -141,6 +142,8 @@ struct Index {
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
+  /** Memoized picker rows — rebuilt in refreshPickerGroups, not on every ForEach pass. */
+  private scenesByGroupCache: Map<string, SceneItem[]> = new Map();
   private history: HistoryStore = new HistoryStore();
   private cloud: CloudSync | null = null;
   private state: TimerState = new TimerState();
@@ -194,6 +197,7 @@ struct Index {
     await this.history.init(this.context);
     this.cloud = new CloudSync(this.prefs, this.history);
     this.catalog = await SharedCatalog.load(this.context);
+    await LocaleSceneProfiles.load(this.context);
     this.scenes = this.catalog.scenes;
 
     const saved = await this.prefs.getLocale();
@@ -367,32 +371,68 @@ struct Index {
     for (let i = 0; i < history.length; i++) {
       sessions.push(new SessionRef(history[i].sceneId, history[i].at));
     }
-    this.suggestedSceneIds = SceneRanker.rank(sessions, known).filter((id: string) =>
-      this.sceneItemForId(id, SceneRanker.GROUP_ID) !== null);
+    const profile = LocaleSceneProfiles.resolve(this.locale);
+    const ranked = SceneRanker.rank(sessions, known);
+    this.suggestedSceneIds = LocaleSceneProfiles.mergePinnedSuggested(
+      ranked, profile.pin, known, SceneRanker.TOP_N, profile.hideScenes
+    ).filter((id: string) => this.sceneItemForId(id, SceneRanker.GROUP_ID) !== null);
     this.chipSceneIds = this.suggestedSceneIds.slice(0, SceneRanker.CHIP_N);
     this.refreshPickerGroups();
   }
 
   private refreshPickerGroups(): void {
     // Only keep groups that resolve to ≥1 scene — avoids blank headers / ForEach ghosts.
+    const profile = LocaleSceneProfiles.resolve(this.locale);
+    const byGroup = new Map<string, SceneItem[]>();
+    const suggested: SceneItem[] = [];
+    for (let i = 0; i < this.suggestedSceneIds.length; i++) {
+      const item = this.sceneItemForId(this.suggestedSceneIds[i], SceneRanker.GROUP_ID);
+      if (item) {
+        suggested.push(item);
+      }
+    }
+    if (suggested.length > 0) {
+      byGroup.set(SceneRanker.GROUP_ID, suggested);
+    }
+    const custom: SceneItem[] = [];
+    for (let i = 0; i < this.customScenes.length; i++) {
+      const c = this.customScenes[i];
+      custom.push({
+        id: c.id,
+        min: c.min,
+        group: CustomScene.GROUP_ID,
+        labelKey: c.id,
+        titleKey: c.id
+      });
+    }
+    if (custom.length > 0) {
+      byGroup.set(CustomScene.GROUP_ID, custom);
+    }
+    const ordered = LocaleSceneProfiles.orderGroups(this.catalog.groups, profile);
+    for (let i = 0; i < ordered.length; i++) {
+      const group = ordered[i];
+      const items: SceneItem[] = [];
+      for (let j = 0; j < this.scenes.length; j++) {
+        const s = this.scenes[j];
+        if (s.group === group.id && !LocaleSceneProfiles.isSceneHidden(s.id, profile)) {
+          items.push(s);
+        }
+      }
+      if (items.length > 0) {
+        byGroup.set(group.id, items);
+      }
+    }
+    this.scenesByGroupCache = byGroup;
     const groups: SceneGroup[] = [];
-    if (this.scenesInGroup(SceneRanker.GROUP_ID).length > 0) {
-      const suggestedGroup: SceneGroup = {
-        id: SceneRanker.GROUP_ID,
-        labelKey: SceneRanker.LABEL_KEY
-      };
-      groups.push(suggestedGroup);
+    if (byGroup.has(SceneRanker.GROUP_ID)) {
+      groups.push({ id: SceneRanker.GROUP_ID, labelKey: SceneRanker.LABEL_KEY });
     }
-    if (this.scenesInGroup(CustomScene.GROUP_ID).length > 0) {
-      const customGroup: SceneGroup = {
-        id: CustomScene.GROUP_ID,
-        labelKey: 'sceneGroupCustom'
-      };
-      groups.push(customGroup);
+    if (byGroup.has(CustomScene.GROUP_ID)) {
+      groups.push({ id: CustomScene.GROUP_ID, labelKey: 'sceneGroupCustom' });
     }
-    for (let i = 0; i < this.catalog.groups.length; i++) {
-      const group = this.catalog.groups[i];
-      if (this.scenesInGroup(group.id).length > 0) {
+    for (let i = 0; i < ordered.length; i++) {
+      const group = ordered[i];
+      if (byGroup.has(group.id)) {
         groups.push(group);
       }
     }
@@ -432,6 +472,7 @@ struct Index {
       this.locale = next;
       this.linkedLocale = next;
       this.localeTick = this.localeTick + 1;
+      void this.refreshSuggested();
       this.refreshUi();
     }
   }
@@ -576,32 +617,8 @@ struct Index {
   }
 
   private scenesInGroup(groupId: string): SceneItem[] {
-    if (groupId === SceneRanker.GROUP_ID) {
-      const out: SceneItem[] = [];
-      for (let i = 0; i < this.suggestedSceneIds.length; i++) {
-        const item = this.sceneItemForId(this.suggestedSceneIds[i], SceneRanker.GROUP_ID);
-        if (item) {
-          out.push(item);
-        }
-      }
-      return out;
-    }
-    if (groupId === CustomScene.GROUP_ID) {
-      const out: SceneItem[] = [];
-      for (let i = 0; i < this.customScenes.length; i++) {
-        const custom = this.customScenes[i];
-        const item: SceneItem = {
-          id: custom.id,
-          min: custom.min,
-          group: CustomScene.GROUP_ID,
-          labelKey: custom.id,
-          titleKey: custom.id
-        };
-        out.push(item);
-      }
-      return out;
-    }
-    return this.scenes.filter((s) => s.group === groupId);
+    const cached = this.scenesByGroupCache.get(groupId);
+    return cached ? cached : [];
   }
 
   private sceneItemForId(id: string, group: string): SceneItem | null {

@@ -11,20 +11,49 @@ const p0 = require('./p0Features');
 
 const API_BASE = 'https://5min.chat/api/v1/storage';
 
+function randomBytes(len) {
+  const out = new Uint8Array(len);
+  // Prefer CSPRNG when the runtime exposes it (基础库 ≥ 2.23).
+  if (typeof wx !== 'undefined' && typeof wx.getRandomValues === 'function') {
+    try {
+      wx.getRandomValues(out);
+      return out;
+    } catch (_) {
+      /* fall through */
+    }
+  }
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(out);
+    return out;
+  }
+  // Last resort — still better than a pure Math.random loop for UUID shape.
+  for (let i = 0; i < len; i += 1) {
+    out[i] = (Math.random() * 256) | 0;
+  }
+  return out;
+}
+
 function makeUuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  const bytes = randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return (
+    hex.slice(0, 8) +
+    '-' +
+    hex.slice(8, 12) +
+    '-' +
+    hex.slice(12, 16) +
+    '-' +
+    hex.slice(16, 20) +
+    '-' +
+    hex.slice(20)
+  );
 }
 
 function makeSecret() {
-  let out = '';
-  for (let i = 0; i < 64; i += 1) {
-    out += ((Math.random() * 16) | 0).toString(16);
-  }
-  return out;
+  const bytes = randomBytes(32);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function ensureDeviceCredentials() {

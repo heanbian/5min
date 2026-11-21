@@ -1,6 +1,9 @@
 package chat.fivemin.app.data
 
 import android.content.Context
+import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -30,12 +33,15 @@ data class CustomScene(
 /** App settings only; session history lives in [HistoryStore]. */
 class PrefsStore(context: Context) {
     private val sp = context.getSharedPreferences("5min_prefs", Context.MODE_PRIVATE)
+    /** Device cloud credentials — encrypted at rest when the platform keystore is available. */
+    private val secureSp: SharedPreferences = createSecurePrefs(context)
 
     /** P0: overtime insight · stand-up ritual · alert profile. */
     val p0 = P0Features(sp)
 
     init {
         migrateFinishAlertPrefs()
+        migrateDeviceCredentialsToSecure()
     }
 
     var locale: String
@@ -75,22 +81,43 @@ class PrefsStore(context: Context) {
         }
 
     var deviceId: String
-        get() = sp.getString(KEY_DEVICE_ID, null).orEmpty()
+        get() = secureSp.getString(KEY_DEVICE_ID, null).orEmpty()
         set(value) {
-            sp.edit().putString(KEY_DEVICE_ID, value).apply()
+            secureSp.edit().putString(KEY_DEVICE_ID, value).apply()
         }
 
     var deviceSecret: String
-        get() = sp.getString(KEY_DEVICE_SECRET, null).orEmpty()
+        get() = secureSp.getString(KEY_DEVICE_SECRET, null).orEmpty()
         set(value) {
-            sp.edit().putString(KEY_DEVICE_SECRET, value).apply()
+            secureSp.edit().putString(KEY_DEVICE_SECRET, value).apply()
         }
 
     fun setDeviceCredentials(id: String, secret: String) {
-        sp.edit()
+        secureSp.edit()
             .putString(KEY_DEVICE_ID, id)
             .putString(KEY_DEVICE_SECRET, secret)
             .apply()
+        // Drop any leftover plaintext copies from older builds.
+        if (sp.contains(KEY_DEVICE_ID) || sp.contains(KEY_DEVICE_SECRET)) {
+            sp.edit().remove(KEY_DEVICE_ID).remove(KEY_DEVICE_SECRET).apply()
+        }
+    }
+
+    private fun migrateDeviceCredentialsToSecure() {
+        if (secureSp.contains(KEY_DEVICE_ID) || secureSp.contains(KEY_DEVICE_SECRET)) {
+            if (sp.contains(KEY_DEVICE_ID) || sp.contains(KEY_DEVICE_SECRET)) {
+                sp.edit().remove(KEY_DEVICE_ID).remove(KEY_DEVICE_SECRET).apply()
+            }
+            return
+        }
+        val id = sp.getString(KEY_DEVICE_ID, null).orEmpty()
+        val secret = sp.getString(KEY_DEVICE_SECRET, null).orEmpty()
+        if (id.isEmpty() && secret.isEmpty()) return
+        secureSp.edit()
+            .putString(KEY_DEVICE_ID, id)
+            .putString(KEY_DEVICE_SECRET, secret)
+            .apply()
+        sp.edit().remove(KEY_DEVICE_ID).remove(KEY_DEVICE_SECRET).apply()
     }
 
     var privacyAccepted: Boolean
@@ -181,7 +208,25 @@ class PrefsStore(context: Context) {
         private const val KEY_STORAGE_MODE = "storage_mode"
         private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_DEVICE_SECRET = "device_secret"
+        private const val SECURE_PREFS_NAME = "5min_secure_prefs"
         const val MODE_LOCAL = "local"
         const val MODE_CLOUD = "cloud"
+
+        @Suppress("DEPRECATION")
+        private fun createSecurePrefs(context: Context): SharedPreferences {
+            return runCatching {
+                val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+                EncryptedSharedPreferences.create(
+                    SECURE_PREFS_NAME,
+                    masterKeyAlias,
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+                )
+            }.getOrElse {
+                // Emulator / keystore failures: fall back so cloud sync still works.
+                context.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE)
+            }
+        }
     }
 }

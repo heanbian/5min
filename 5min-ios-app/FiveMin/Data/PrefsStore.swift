@@ -45,6 +45,10 @@ final class PrefsStore {
     static let modeLocal = "local"
     static let modeCloud = "cloud"
 
+    init() {
+        migrateDeviceCredentialsToKeychainIfNeeded()
+    }
+
     var locale: String {
         get { defaults.string(forKey: localeKey) ?? "" }
         set { defaults.set(newValue, forKey: localeKey) }
@@ -70,18 +74,58 @@ final class PrefsStore {
     }
 
     var deviceId: String {
-        get { defaults.string(forKey: deviceIdKey) ?? "" }
-        set { defaults.set(newValue, forKey: deviceIdKey) }
+        get {
+            if let secure = KeychainStore.string(forKey: deviceIdKey), !secure.isEmpty {
+                return secure
+            }
+            return defaults.string(forKey: deviceIdKey) ?? ""
+        }
+        set {
+            KeychainStore.setString(newValue, forKey: deviceIdKey)
+            defaults.removeObject(forKey: deviceIdKey)
+        }
     }
 
     var deviceSecret: String {
-        get { defaults.string(forKey: deviceSecretKey) ?? "" }
-        set { defaults.set(newValue, forKey: deviceSecretKey) }
+        get {
+            if let secure = KeychainStore.string(forKey: deviceSecretKey), !secure.isEmpty {
+                return secure
+            }
+            return defaults.string(forKey: deviceSecretKey) ?? ""
+        }
+        set {
+            KeychainStore.setString(newValue, forKey: deviceSecretKey)
+            defaults.removeObject(forKey: deviceSecretKey)
+        }
     }
 
     func setDeviceCredentials(id: String, secret: String) {
-        defaults.set(id, forKey: deviceIdKey)
-        defaults.set(secret, forKey: deviceSecretKey)
+        KeychainStore.setString(id, forKey: deviceIdKey)
+        KeychainStore.setString(secret, forKey: deviceSecretKey)
+        // Drop plaintext UserDefaults copies from older builds.
+        defaults.removeObject(forKey: deviceIdKey)
+        defaults.removeObject(forKey: deviceSecretKey)
+    }
+
+    /// One-shot: move legacy UserDefaults credentials into Keychain.
+    func migrateDeviceCredentialsToKeychainIfNeeded() {
+        let legacyId = defaults.string(forKey: deviceIdKey) ?? ""
+        let legacySecret = defaults.string(forKey: deviceSecretKey) ?? ""
+        let hasSecure =
+            !(KeychainStore.string(forKey: deviceIdKey) ?? "").isEmpty ||
+            !(KeychainStore.string(forKey: deviceSecretKey) ?? "").isEmpty
+        if hasSecure {
+            if !legacyId.isEmpty || !legacySecret.isEmpty {
+                defaults.removeObject(forKey: deviceIdKey)
+                defaults.removeObject(forKey: deviceSecretKey)
+            }
+            return
+        }
+        guard !legacyId.isEmpty || !legacySecret.isEmpty else { return }
+        if !legacyId.isEmpty { KeychainStore.setString(legacyId, forKey: deviceIdKey) }
+        if !legacySecret.isEmpty { KeychainStore.setString(legacySecret, forKey: deviceSecretKey) }
+        defaults.removeObject(forKey: deviceIdKey)
+        defaults.removeObject(forKey: deviceSecretKey)
     }
 
     func customMin(fallback: Int = 5) -> Int {

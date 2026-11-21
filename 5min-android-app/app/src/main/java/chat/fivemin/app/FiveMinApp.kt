@@ -7,6 +7,7 @@ import android.os.Build
 import chat.fivemin.app.data.CloudSync
 import chat.fivemin.app.data.HistoryStore
 import chat.fivemin.app.data.PrefsStore
+import chat.fivemin.app.data.LocaleSceneProfiles
 import chat.fivemin.app.data.SharedCatalog
 import chat.fivemin.app.i18n.I18n
 
@@ -29,11 +30,10 @@ class FiveMinApp : Application() {
         history = HistoryStore(this)
         cloudSync = CloudSync(prefs, history)
         catalog = SharedCatalog.load(this)
+        LocaleSceneProfiles.load(this)
         i18n = I18n(this, catalog)
         ensureChannels()
-        if (prefs.storageMode == PrefsStore.MODE_CLOUD) {
-            cloudSync.scheduleSync()
-        }
+        // Cloud pull is owned by TimerViewModel so UI can reload prefs after sync.
     }
 
     private fun ensureChannels() {

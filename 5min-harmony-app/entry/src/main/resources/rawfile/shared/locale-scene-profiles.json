@@ -1,0 +1,74 @@
+{
+  "default": {
+    "pin": ["toilet", "brush", "noodles", "shower", "lazy5"],
+    "groupOrder": ["daily", "kitchen", "care", "rest", "work", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"],
+    "hideGroups": [],
+    "hideScenes": []
+  },
+  "zh-CN": {
+    "pin": ["toilet", "brush", "noodles", "shower", "deliveryWait"],
+    "groupOrder": ["daily", "kitchen", "chores", "transit", "care", "rest", "work", "study", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "zh-TW": {
+    "pin": ["toilet", "brush", "noodles", "shower", "deliveryWait"],
+    "groupOrder": ["daily", "kitchen", "chores", "transit", "care", "rest", "work", "study", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "en": {
+    "pin": ["toilet", "coffee", "shower", "focus", "walk"],
+    "groupOrder": ["daily", "kitchen", "work", "rest", "care", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "fr": {
+    "pin": ["toilet", "coffee", "shower", "tea", "walk"],
+    "groupOrder": ["daily", "kitchen", "work", "rest", "care", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "ru": {
+    "pin": ["toilet", "tea", "shower", "focus", "walk"],
+    "groupOrder": ["daily", "kitchen", "work", "rest", "care", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm"]
+  },
+  "es": {
+    "pin": ["toilet", "coffee", "shower", "noodles", "walk"],
+    "groupOrder": ["daily", "kitchen", "work", "rest", "care", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "ar": {
+    "pin": ["toilet", "tea", "coffee", "shower", "deliveryWait"],
+    "groupOrder": ["daily", "kitchen", "care", "rest", "work", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "de": {
+    "pin": ["toilet", "coffee", "shower", "focus", "walk"],
+    "groupOrder": ["daily", "kitchen", "work", "rest", "care", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "ja": {
+    "pin": ["toilet", "bathSoak", "noodles", "tea", "shower"],
+    "groupOrder": ["daily", "kitchen", "care", "rest", "work", "study", "chores", "transit", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "ko": {
+    "pin": ["toilet", "noodles", "shower", "coffee", "deliveryWait"],
+    "groupOrder": ["daily", "kitchen", "chores", "transit", "care", "rest", "work", "study", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "pt": {
+    "pin": ["toilet", "coffee", "shower", "noodles", "deliveryWait"],
+    "groupOrder": ["daily", "kitchen", "chores", "transit", "care", "rest", "work", "study", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "id": {
+    "pin": ["toilet", "noodles", "shower", "coffee", "deliveryWait"],
+    "groupOrder": ["daily", "kitchen", "chores", "transit", "care", "rest", "work", "study", "labor", "farm"],
+    "demoteGroups": ["farm", "labor"]
+  },
+  "bo": {
+    "pin": ["toilet", "tea", "brush", "shower", "lazy5"],
+    "groupOrder": ["daily", "kitchen", "rest", "care", "chores", "work", "study", "farm", "labor", "transit"],
+    "demoteGroups": ["transit"]
+  }
+}

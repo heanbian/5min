@@ -40,6 +40,7 @@ import {
 } from './alert.js';
 import {
   getTodayStats,
+  getSceneSessions,
   recordCompletedSession,
   statsMinutes,
 } from './stats.js';
@@ -50,69 +51,17 @@ import {
   suspendAmbient,
   resumeAmbient,
 } from './ambient.js';
+import {
+  resolveSceneProfile,
+  orderSceneGroups,
+  isSceneHidden,
+  mergePinnedSuggested,
+} from './scene-profiles.js';
+import { SCENE_GROUPS, SCENES } from './scenes-data.js';
+import { rank as rankScenes, TOP_N as SUGGESTED_TOP_N, LABEL_KEY as SUGGESTED_LABEL_KEY } from './scene-ranker.js';
 
 const CIRC = 2 * Math.PI * 54;
-const SCENE_GROUPS = Object.freeze([
-  { id: 'daily', labelKey: 'sceneGroupDaily' },
-  { id: 'kitchen', labelKey: 'sceneGroupKitchen', doneKey: 'doneTipKitchen' },
-  { id: 'care', labelKey: 'sceneGroupCare', doneKey: 'doneTipCare' },
-  { id: 'rest', labelKey: 'sceneGroupRest', doneKey: 'doneTipRest' },
-  { id: 'study', labelKey: 'sceneGroupStudy', doneKey: 'doneTipStudy' },
-  { id: 'work', labelKey: 'sceneGroupWork', doneKey: 'doneTipWork' },
-  { id: 'labor', labelKey: 'sceneGroupLabor', doneKey: 'doneTipLabor' },
-  { id: 'farm', labelKey: 'sceneGroupFarm', doneKey: 'doneTipFarm' },
-  { id: 'chores', labelKey: 'sceneGroupChores', doneKey: 'doneTipChores' },
-]);
 
-const SCENES = Object.freeze([
-  { id: 'brush', min: 3, group: 'daily', labelKey: 'sceneBrush', titleKey: 'sceneBrushTitle', doneKey: 'doneTipBrush' },
-  { id: 'toilet', min: 5, group: 'daily', labelKey: 'sceneToilet', titleKey: 'sceneToiletTitle', doneKey: 'doneTipToilet' },
-  { id: 'lazy5', min: 5, group: 'daily', labelKey: 'sceneLazy5', titleKey: 'sceneLazy5Title', doneKey: 'doneTipBreak' },
-  { id: 'lazy10', min: 10, group: 'daily', labelKey: 'sceneLazy10', titleKey: 'sceneLazy10Title', doneKey: 'doneTipBreak' },
-  { id: 'smoke', min: 5, group: 'daily', labelKey: 'sceneSmoke', titleKey: 'sceneSmokeTitle', doneKey: 'doneTipBreak' },
-  { id: 'noodles', min: 3, group: 'kitchen', labelKey: 'sceneNoodles', titleKey: 'sceneNoodlesTitle' },
-  { id: 'microwave', min: 3, group: 'kitchen', labelKey: 'sceneMicrowave', titleKey: 'sceneMicrowaveTitle' },
-  { id: 'tea', min: 5, group: 'kitchen', labelKey: 'sceneTea', titleKey: 'sceneTeaTitle' },
-  { id: 'coffee', min: 5, group: 'kitchen', labelKey: 'sceneCoffee', titleKey: 'sceneCoffeeTitle' },
-  { id: 'water', min: 5, group: 'kitchen', labelKey: 'sceneWater', titleKey: 'sceneWaterTitle' },
-  { id: 'egg', min: 8, group: 'kitchen', labelKey: 'sceneEgg', titleKey: 'sceneEggTitle' },
-  { id: 'pasta', min: 10, group: 'kitchen', labelKey: 'scenePasta', titleKey: 'scenePastaTitle' },
-  { id: 'oven', min: 15, group: 'kitchen', labelKey: 'sceneOven', titleKey: 'sceneOvenTitle' },
-  { id: 'rice', min: 30, group: 'kitchen', labelKey: 'sceneRice', titleKey: 'sceneRiceTitle' },
-  { id: 'stew', min: 40, group: 'kitchen', labelKey: 'sceneStew', titleKey: 'sceneStewTitle' },
-  { id: 'skincare', min: 10, group: 'care', labelKey: 'sceneSkincare', titleKey: 'sceneSkincareTitle' },
-  { id: 'eye', min: 10, group: 'care', labelKey: 'sceneEye', titleKey: 'sceneEyeTitle' },
-  { id: 'mask', min: 15, group: 'care', labelKey: 'sceneMask', titleKey: 'sceneMaskTitle' },
-  { id: 'hair', min: 20, group: 'care', labelKey: 'sceneHair', titleKey: 'sceneHairTitle' },
-  { id: 'stretch', min: 5, group: 'rest', labelKey: 'sceneStretch', titleKey: 'sceneStretchTitle' },
-  { id: 'walk', min: 10, group: 'rest', labelKey: 'sceneWalk', titleKey: 'sceneWalkTitle' },
-  { id: 'meditation', min: 10, group: 'rest', labelKey: 'sceneMeditation', titleKey: 'sceneMeditationTitle' },
-  { id: 'nap', min: 15, group: 'rest', labelKey: 'sceneNap', titleKey: 'sceneNapTitle' },
-  { id: 'reading', min: 20, group: 'rest', labelKey: 'sceneReading', titleKey: 'sceneReadingTitle' },
-  { id: 'yoga', min: 20, group: 'rest', labelKey: 'sceneYoga', titleKey: 'sceneYogaTitle' },
-  { id: 'eyeCare', min: 5, group: 'study', labelKey: 'sceneEyeCare', titleKey: 'sceneEyeCareTitle' },
-  { id: 'classBreak', min: 10, group: 'study', labelKey: 'sceneClassBreak', titleKey: 'sceneClassBreakTitle' },
-  { id: 'vocab', min: 15, group: 'study', labelKey: 'sceneVocab', titleKey: 'sceneVocabTitle' },
-  { id: 'homework', min: 25, group: 'study', labelKey: 'sceneHomework', titleKey: 'sceneHomeworkTitle' },
-  { id: 'call', min: 10, group: 'work', labelKey: 'sceneCall', titleKey: 'sceneCallTitle' },
-  { id: 'meetingPrep', min: 10, group: 'work', labelKey: 'sceneMeetingPrep', titleKey: 'sceneMeetingPrepTitle' },
-  { id: 'wrapUp', min: 10, group: 'work', labelKey: 'sceneWrapUp', titleKey: 'sceneWrapUpTitle' },
-  { id: 'meeting', min: 15, group: 'work', labelKey: 'sceneMeeting', titleKey: 'sceneMeetingTitle' },
-  { id: 'standDesk', min: 15, group: 'work', labelKey: 'sceneStandDesk', titleKey: 'sceneStandDeskTitle' },
-  { id: 'email', min: 20, group: 'work', labelKey: 'sceneEmail', titleKey: 'sceneEmailTitle' },
-  { id: 'focus', min: 25, group: 'work', labelKey: 'sceneFocus', titleKey: 'sceneFocusTitle' },
-  { id: 'hydrate', min: 5, group: 'labor', labelKey: 'sceneHydrate', titleKey: 'sceneHydrateTitle' },
-  { id: 'workBreak', min: 10, group: 'labor', labelKey: 'sceneWorkBreak', titleKey: 'sceneWorkBreakTitle' },
-  { id: 'shiftHandover', min: 10, group: 'labor', labelKey: 'sceneShiftHandover', titleKey: 'sceneShiftHandoverTitle' },
-  { id: 'toolCheck', min: 15, group: 'labor', labelKey: 'sceneToolCheck', titleKey: 'sceneToolCheckTitle' },
-  { id: 'safetyWait', min: 15, group: 'labor', labelKey: 'sceneSafetyWait', titleKey: 'sceneSafetyWaitTitle' },
-  { id: 'feed', min: 15, group: 'farm', labelKey: 'sceneFeed', titleKey: 'sceneFeedTitle' },
-  { id: 'farmTools', min: 15, group: 'farm', labelKey: 'sceneFarmTools', titleKey: 'sceneFarmToolsTitle' },
-  { id: 'grainTurn', min: 20, group: 'farm', labelKey: 'sceneGrainTurn', titleKey: 'sceneGrainTurnTitle' },
-  { id: 'irrigation', min: 30, group: 'farm', labelKey: 'sceneIrrigation', titleKey: 'sceneIrrigationTitle' },
-  { id: 'dishes', min: 15, group: 'chores', labelKey: 'sceneDishes', titleKey: 'sceneDishesTitle' },
-  { id: 'laundry', min: 30, group: 'chores', labelKey: 'sceneLaundry', titleKey: 'sceneLaundryTitle' },
-]);
 const AMBIENT_LABEL_KEYS = Object.freeze({
   off: 'ambientOff',
   rain: 'ambientRain',
@@ -158,6 +107,8 @@ let endAt = 0;
 let running = false;
 let finished = false;
 let tickId = 0;
+/** Last dial clock string written to the SVG — skip identical rebuilds each tick. */
+let lastDialClock = '';
 let titleBlinkId = 0;
 /** @type {string | null} */
 let activeScene = null;
@@ -397,11 +348,52 @@ const setSceneListOpen = (open) => {
   sceneTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
 };
 
+const appendSceneGroup = (groupId, labelKey, items) => {
+  if (!items.length || !sceneList) return;
+  const groupLi = document.createElement('li');
+  groupLi.className = 'scene-group';
+  groupLi.setAttribute('role', 'presentation');
+
+  const label = document.createElement('div');
+  label.className = 'scene-group-label';
+  label.setAttribute('aria-hidden', 'true');
+  label.textContent = tr(labelKey);
+  groupLi.append(label);
+
+  const sub = document.createElement('ul');
+  sub.className = 'scene-group-list';
+  sub.setAttribute('role', 'group');
+  sub.setAttribute('aria-label', tr(labelKey));
+
+  for (const scene of items) {
+    const li = document.createElement('li');
+    li.setAttribute('role', 'presentation');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.scene = scene.id;
+    btn.setAttribute('role', 'option');
+    btn.setAttribute('aria-selected', scene.id === activeScene ? 'true' : 'false');
+    btn.classList.toggle('active', scene.id === activeScene);
+    btn.textContent = tr(scene.labelKey);
+    li.append(btn);
+    sub.append(li);
+  }
+
+  groupLi.append(sub);
+  sceneList.append(groupLi);
+};
+
 const syncSceneSelect = () => {
   if (!sceneSelect || !sceneTrigger || !sceneList || !sceneTriggerLabel) return;
   sceneSelect.setAttribute('aria-label', tr('scenesLabel'));
   sceneTrigger.setAttribute('aria-label', tr('scenesLabel'));
   sceneList.setAttribute('aria-label', tr('scenesLabel'));
+
+  const profile = resolveSceneProfile(locale);
+  if (activeScene && isSceneHidden(activeScene, profile)) {
+    activeScene = null;
+    persistTimerSession();
+  }
 
   const selected = activeScene ? SCENES.find((s) => s.id === activeScene) : null;
   if (selected) {
@@ -413,41 +405,24 @@ const syncSceneSelect = () => {
   }
 
   sceneList.replaceChildren();
-  for (const group of SCENE_GROUPS) {
-    const items = SCENES.filter((s) => s.group === group.id);
-    if (!items.length) continue;
+  const known = new Set(SCENES.map((s) => s.id));
+  const ranked = rankScenes(getSceneSessions(), known);
+  const suggested = mergePinnedSuggested(
+    ranked,
+    profile.pin,
+    known,
+    SUGGESTED_TOP_N,
+    profile.hideScenes
+  )
+    .map((id) => SCENES.find((s) => s.id === id))
+    .filter(Boolean);
+  appendSceneGroup('suggested', SUGGESTED_LABEL_KEY, suggested);
 
-    const groupLi = document.createElement('li');
-    groupLi.className = 'scene-group';
-    groupLi.setAttribute('role', 'presentation');
-
-    const label = document.createElement('div');
-    label.className = 'scene-group-label';
-    label.setAttribute('aria-hidden', 'true');
-    label.textContent = tr(group.labelKey);
-    groupLi.append(label);
-
-    const sub = document.createElement('ul');
-    sub.className = 'scene-group-list';
-    sub.setAttribute('role', 'group');
-    sub.setAttribute('aria-label', tr(group.labelKey));
-
-    for (const scene of items) {
-      const li = document.createElement('li');
-      li.setAttribute('role', 'presentation');
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.dataset.scene = scene.id;
-      btn.setAttribute('role', 'option');
-      btn.setAttribute('aria-selected', scene.id === activeScene ? 'true' : 'false');
-      btn.classList.toggle('active', scene.id === activeScene);
-      btn.textContent = tr(scene.labelKey);
-      li.append(btn);
-      sub.append(li);
-    }
-
-    groupLi.append(sub);
-    sceneList.append(groupLi);
+  for (const group of orderSceneGroups(SCENE_GROUPS, profile)) {
+    const items = SCENES.filter(
+      (s) => s.group === group.id && !isSceneHidden(s.id, profile)
+    );
+    appendSceneGroup(group.id, group.labelKey, items);
   }
 };
 
@@ -670,8 +645,11 @@ const setTone = (tone) => {
 
 const render = () => {
   const clock = fmt(remainMs);
-  timeLabel.textContent = clock;
-  timeText.innerHTML = digitalWatchSvg(clock);
+  if (clock !== lastDialClock) {
+    lastDialClock = clock;
+    timeLabel.textContent = clock;
+    timeText.innerHTML = digitalWatchSvg(clock);
+  }
   timeText.classList.toggle('is-running', !!running);
   const ratio = totalMs > 0 ? Math.min(1, Math.max(0, remainMs / totalMs)) : 0;
   progress.style.strokeDashoffset = String(CIRC * (1 - ratio));
@@ -728,7 +706,7 @@ const finish = () => {
   running = false;
   finished = true;
   clearTick();
-  recordCompletedSession(totalMs);
+  recordCompletedSession(totalMs, activeScene || '');
   renderDailyStats();
   // Keep media channel warm through the alert; clear keepalive after fire.
   render();

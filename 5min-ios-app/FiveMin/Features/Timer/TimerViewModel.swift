@@ -59,16 +59,55 @@ final class TimerViewModel: ObservableObject {
         SceneGroupDTO(id: CustomScene.groupId, labelKey: "sceneGroupCustom", doneKey: nil)
     }
 
-    var pickerGroups: [SceneGroupDTO] {
-        // Only include groups with at least one resolvable scene (avoids blank sections /
-        // LazyVStack identity clashes from empty headers).
+    private var pickerCacheKey: String = ""
+    private var cachedPickerGroups: [SceneGroupDTO] = []
+    private var cachedScenesByGroup: [String: [SceneDTO]] = [:]
+
+    private func invalidatePickerCache() {
+        pickerCacheKey = ""
+    }
+
+    private func ensurePickerCache() {
+        let key =
+            "\(locale)|\(suggestedSceneIds.joined(separator: ","))|" +
+            customScenes.map { "\($0.id):\($0.min)" }.joined(separator: ";")
+        if key == pickerCacheKey { return }
+        let profile = LocaleSceneProfiles.resolve(locale: locale)
+        var byGroup: [String: [SceneDTO]] = [:]
+        let suggested = suggestedSceneIds.compactMap { sceneDTO(for: $0) }
+        if !suggested.isEmpty { byGroup[SceneRanker.groupId] = suggested }
+        let custom = customScenes.map { custom in
+            SceneDTO(
+                id: custom.id,
+                min: custom.min,
+                group: CustomScene.groupId,
+                labelKey: custom.id,
+                titleKey: custom.id,
+                doneKey: nil
+            )
+        }
+        if !custom.isEmpty { byGroup[CustomScene.groupId] = custom }
+        for group in LocaleSceneProfiles.orderGroups(catalog.groups, profile: profile) {
+            let items = catalog.scenes.filter {
+                $0.group == group.id && !LocaleSceneProfiles.isSceneHidden($0.id, profile: profile)
+            }
+            if !items.isEmpty { byGroup[group.id] = items }
+        }
         var groups: [SceneGroupDTO] = []
-        if !scenes(inGroup: SceneRanker.groupId).isEmpty { groups.append(suggestedGroup) }
-        if !scenes(inGroup: CustomScene.groupId).isEmpty { groups.append(customGroup) }
-        for group in catalog.groups where !scenes(inGroup: group.id).isEmpty {
+        if byGroup[SceneRanker.groupId] != nil { groups.append(suggestedGroup) }
+        if byGroup[CustomScene.groupId] != nil { groups.append(customGroup) }
+        for group in LocaleSceneProfiles.orderGroups(catalog.groups, profile: profile)
+        where byGroup[group.id] != nil {
             groups.append(group)
         }
-        return groups
+        cachedScenesByGroup = byGroup
+        cachedPickerGroups = groups
+        pickerCacheKey = key
+    }
+
+    var pickerGroups: [SceneGroupDTO] {
+        ensurePickerCache()
+        return cachedPickerGroups
     }
 
     var chipSceneIds: [String] {
@@ -134,7 +173,13 @@ final class TimerViewModel: ObservableObject {
     }
 
     func scheduleCloudSyncIfNeeded() {
-        cloud.scheduleSync()
+        cloud.scheduleSync { [weak self] ok in
+            guard let self, ok else { return }
+            self.reloadPrefsFromStore()
+            self.recordsEpoch += 1
+            self.refreshTodayStats()
+            self.refreshSuggested()
+        }
     }
 
     func refreshSuggested() {
@@ -142,8 +187,16 @@ final class TimerViewModel: ObservableObject {
         let sessions = history.getHistory().map {
             SceneRanker.SessionRef(sceneId: $0.sceneId, at: $0.at)
         }
-        suggestedSceneIds = SceneRanker.rank(sessions: sessions, knownIds: known)
-            .filter { sceneDTO(for: $0) != nil }
+        let profile = LocaleSceneProfiles.resolve(locale: locale)
+        let ranked = SceneRanker.rank(sessions: sessions, knownIds: known)
+        suggestedSceneIds = LocaleSceneProfiles.mergePinnedSuggested(
+            ranked: ranked,
+            pin: profile.pin,
+            knownIds: known,
+            hideScenes: Set(profile.hideScenes)
+        )
+        .filter { sceneDTO(for: $0) != nil }
+        invalidatePickerCache()
     }
 
     private static var isStoreScreenshotLaunch: Bool {
@@ -251,6 +304,8 @@ final class TimerViewModel: ObservableObject {
         )
         locale = value
         prefs.locale = value
+        invalidatePickerCache()
+        refreshSuggested()
         cloud.schedulePushPrefs()
     }
 
@@ -342,6 +397,7 @@ final class TimerViewModel: ObservableObject {
         customMin = prefs.customMin(fallback: catalog.defaultMin)
         customScenes = prefs.customScenes()
         storageMode = prefs.storageMode
+        invalidatePickerCache()
     }
 
     var dialTimeText: String {
@@ -472,22 +528,8 @@ final class TimerViewModel: ObservableObject {
     }
 
     func scenes(inGroup groupId: String) -> [SceneDTO] {
-        if groupId == SceneRanker.groupId {
-            return suggestedSceneIds.compactMap { id in sceneDTO(for: id) }
-        }
-        if groupId == CustomScene.groupId {
-            return customScenes.map { custom in
-                SceneDTO(
-                    id: custom.id,
-                    min: custom.min,
-                    group: CustomScene.groupId,
-                    labelKey: custom.id,
-                    titleKey: custom.id,
-                    doneKey: nil
-                )
-            }
-        }
-        return catalog.scenes.filter { $0.group == groupId }
+        ensurePickerCache()
+        return cachedScenesByGroup[groupId] ?? []
     }
 
     private func sceneDTO(for id: String) -> SceneDTO? {
@@ -663,8 +705,11 @@ final class TimerViewModel: ObservableObject {
         refreshPhase()
     }
 
+    private var lastPublishedDial: String = ""
+
     private func startTicker() {
         stopTicker()
+        lastPublishedDial = ""
         tick = Timer.publish(every: 0.25, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
@@ -679,17 +724,26 @@ final class TimerViewModel: ObservableObject {
 
     private func onTick() {
         if inOvertime, let overtimeStart {
-            overtimeMs = max(0, Int64(-overtimeStart.timeIntervalSinceNow * 1000))
+            let next = max(0, Int64(-overtimeStart.timeIntervalSinceNow * 1000))
+            let dial = "+" + formatOvertime(next)
+            // Publish only when the displayed clock string changes (~1Hz).
+            guard dial != lastPublishedDial else { return }
+            lastPublishedDial = dial
+            overtimeMs = next
             refreshPhase()
             return
         }
         guard running, let endAt else { return }
         let remain = max(0, Int64(endAt.timeIntervalSinceNow * 1000))
-        remainMs = remain
         if remain <= 0 {
+            remainMs = 0
             handleFinish(fromTicker: true)
             return
         }
+        let dial = format(remain)
+        guard dial != lastPublishedDial else { return }
+        lastPublishedDial = dial
+        remainMs = remain
         refreshPhase()
     }
 

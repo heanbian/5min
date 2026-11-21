@@ -583,13 +583,18 @@ Page({
 
   startTicker() {
     this.stopTicker();
+    this.lastTickDial = '';
     this.tickTimer = setInterval(() => this.tick(), 200);
   },
 
   tick() {
     if (this.inOvertime) {
       this.overtimeMs = Math.max(0, Date.now() - this.overtimeAt);
-      this.refreshUi();
+      const dial = `+${formatOvertime(this.overtimeMs)}`;
+      if (dial !== this.lastTickDial) {
+        this.lastTickDial = dial;
+        this.refreshUi();
+      }
       return;
     }
     if (!this.running || !this.endAt) return;
@@ -599,7 +604,12 @@ Page({
       this.onFinished();
       return;
     }
-    this.refreshUi();
+    const dial = formatTime(remain);
+    // Throttle setData to ~1Hz when only the dial second changes.
+    if (dial !== this.lastTickDial) {
+      this.lastTickDial = dial;
+      this.refreshUi();
+    }
   },
 
   onFinished() {

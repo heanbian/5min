@@ -64,6 +64,11 @@ module.exports = {
       "doneKey": "doneTipFarm"
     },
     {
+      "id": "transit",
+      "labelKey": "sceneGroupTransit",
+      "doneKey": "doneTipTransit"
+    },
+    {
       "id": "chores",
       "labelKey": "sceneGroupChores",
       "doneKey": "doneTipChores"
@@ -85,6 +90,38 @@ module.exports = {
       "labelKey": "sceneToilet",
       "titleKey": "sceneToiletTitle",
       "doneKey": "doneTipToilet"
+    },
+    {
+      "id": "washHands",
+      "min": 3,
+      "group": "daily",
+      "labelKey": "sceneWashHands",
+      "titleKey": "sceneWashHandsTitle",
+      "doneKey": "doneTipWash"
+    },
+    {
+      "id": "shower",
+      "min": 10,
+      "group": "daily",
+      "labelKey": "sceneShower",
+      "titleKey": "sceneShowerTitle",
+      "doneKey": "doneTipShower"
+    },
+    {
+      "id": "queueWait",
+      "min": 10,
+      "group": "daily",
+      "labelKey": "sceneQueueWait",
+      "titleKey": "sceneQueueWaitTitle",
+      "doneKey": "doneTipWait"
+    },
+    {
+      "id": "medicine",
+      "min": 5,
+      "group": "daily",
+      "labelKey": "sceneMedicine",
+      "titleKey": "sceneMedicineTitle",
+      "doneKey": "doneTipMedicine"
     },
     {
       "id": "lazy5",
@@ -160,6 +197,13 @@ module.exports = {
       "titleKey": "scenePastaTitle"
     },
     {
+      "id": "airFryer",
+      "min": 15,
+      "group": "kitchen",
+      "labelKey": "sceneAirFryer",
+      "titleKey": "sceneAirFryerTitle"
+    },
+    {
       "id": "oven",
       "min": 15,
       "group": "kitchen",
@@ -202,6 +246,13 @@ module.exports = {
       "titleKey": "sceneMaskTitle"
     },
     {
+      "id": "footSoak",
+      "min": 15,
+      "group": "care",
+      "labelKey": "sceneFootSoak",
+      "titleKey": "sceneFootSoakTitle"
+    },
+    {
       "id": "hair",
       "min": 20,
       "group": "care",
@@ -209,11 +260,32 @@ module.exports = {
       "titleKey": "sceneHairTitle"
     },
     {
+      "id": "bathSoak",
+      "min": 20,
+      "group": "care",
+      "labelKey": "sceneBathSoak",
+      "titleKey": "sceneBathSoakTitle"
+    },
+    {
       "id": "stretch",
       "min": 5,
       "group": "rest",
       "labelKey": "sceneStretch",
       "titleKey": "sceneStretchTitle"
+    },
+    {
+      "id": "jumpRope",
+      "min": 5,
+      "group": "rest",
+      "labelKey": "sceneJumpRope",
+      "titleKey": "sceneJumpRopeTitle"
+    },
+    {
+      "id": "plank",
+      "min": 3,
+      "group": "rest",
+      "labelKey": "scenePlank",
+      "titleKey": "scenePlankTitle"
     },
     {
       "id": "walk",
@@ -298,6 +370,13 @@ module.exports = {
       "group": "work",
       "labelKey": "sceneWrapUp",
       "titleKey": "sceneWrapUpTitle"
+    },
+    {
+      "id": "deskTidy",
+      "min": 10,
+      "group": "work",
+      "labelKey": "sceneDeskTidy",
+      "titleKey": "sceneDeskTidyTitle"
     },
     {
       "id": "meeting",
@@ -391,11 +470,53 @@ module.exports = {
       "titleKey": "sceneIrrigationTitle"
     },
     {
+      "id": "parking",
+      "min": 15,
+      "group": "transit",
+      "labelKey": "sceneParking",
+      "titleKey": "sceneParkingTitle"
+    },
+    {
+      "id": "charging",
+      "min": 30,
+      "group": "transit",
+      "labelKey": "sceneCharging",
+      "titleKey": "sceneChargingTitle"
+    },
+    {
+      "id": "deliveryWait",
+      "min": 30,
+      "group": "transit",
+      "labelKey": "sceneDeliveryWait",
+      "titleKey": "sceneDeliveryWaitTitle"
+    },
+    {
       "id": "dishes",
       "min": 15,
       "group": "chores",
       "labelKey": "sceneDishes",
       "titleKey": "sceneDishesTitle"
+    },
+    {
+      "id": "mopFloor",
+      "min": 15,
+      "group": "chores",
+      "labelKey": "sceneMopFloor",
+      "titleKey": "sceneMopFloorTitle"
+    },
+    {
+      "id": "takeTrash",
+      "min": 5,
+      "group": "chores",
+      "labelKey": "sceneTakeTrash",
+      "titleKey": "sceneTakeTrashTitle"
+    },
+    {
+      "id": "tidyUp",
+      "min": 10,
+      "group": "chores",
+      "labelKey": "sceneTidyUp",
+      "titleKey": "sceneTidyUpTitle"
     },
     {
       "id": "laundry",

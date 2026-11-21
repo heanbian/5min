@@ -16,6 +16,10 @@
 
 /** Daily usage stats — localStorage only, never uploaded. */
 export const STATS_STORAGE_KEY = '5min.dailyStats';
+/** Lightweight scene sessions for picker ranking (14-day window, local only). */
+export const SCENE_SESSIONS_KEY = '5min.sceneSessions';
+const SCENE_HISTORY_DAYS = 14;
+const SCENE_HISTORY_MAX = 200;
 
 const todayKey = () => {
   const d = new Date();
@@ -64,8 +68,9 @@ export const getTodayStats = () => readRaw();
 /**
  * Record one completed countdown (called on finish).
  * @param {number} elapsedMs duration completed for this session
+ * @param {string} [sceneId]
  */
-export const recordCompletedSession = (elapsedMs) => {
+export const recordCompletedSession = (elapsedMs, sceneId = '') => {
   const ms = Math.max(0, Math.floor(Number(elapsedMs) || 0));
   if (ms <= 0) return getTodayStats();
   const cur = readRaw();
@@ -75,8 +80,48 @@ export const recordCompletedSession = (elapsedMs) => {
     totalMs: cur.totalMs + ms,
   };
   writeRaw(next);
+  recordSceneSession(sceneId);
   return next;
 };
+
+const readSceneSessions = () => {
+  try {
+    const raw = localStorage.getItem(SCENE_SESSIONS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const cut = Date.now() - SCENE_HISTORY_DAYS * 24 * 60 * 60 * 1000;
+    return parsed
+      .map((row) => ({
+        sceneId: String((row && row.sceneId) || '').trim(),
+        at: Math.floor(Number(row && row.at) || 0),
+      }))
+      .filter((row) => row.sceneId && row.at >= cut)
+      .slice(0, SCENE_HISTORY_MAX);
+  } catch {
+    return [];
+  }
+};
+
+const writeSceneSessions = (list) => {
+  try {
+    localStorage.setItem(SCENE_SESSIONS_KEY, JSON.stringify(list.slice(0, SCENE_HISTORY_MAX)));
+  } catch {
+    /* private mode / quota */
+  }
+};
+
+/** @param {string} sceneId */
+export const recordSceneSession = (sceneId) => {
+  const id = String(sceneId || '').trim();
+  if (!id) return getSceneSessions();
+  const next = [{ sceneId: id, at: Date.now() }, ...readSceneSessions()].slice(0, SCENE_HISTORY_MAX);
+  writeSceneSessions(next);
+  return next;
+};
+
+/** @returns {{sceneId:string,at:number}[]} */
+export const getSceneSessions = () => readSceneSessions();
 
 /** Whole minutes for display (minimum 1 when there is any recorded time under 60s). */
 export const statsMinutes = (totalMs) => {

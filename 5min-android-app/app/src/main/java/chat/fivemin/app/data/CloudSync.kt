@@ -33,10 +33,14 @@ class CloudSync(
 
     fun isCloud(): Boolean = prefs.storageMode == MODE_CLOUD
 
-    fun scheduleSync() {
-        if (!isCloud()) return
+    fun scheduleSync(onDone: ((Boolean) -> Unit)? = null) {
+        if (!isCloud()) {
+            onDone?.invoke(false)
+            return
+        }
         executor.execute {
-            runCatching { syncNow() }
+            val ok = runCatching { syncNow() }.isSuccess
+            onDone?.invoke(ok)
         }
     }
 

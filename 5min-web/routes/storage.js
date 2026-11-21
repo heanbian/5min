@@ -11,9 +11,11 @@ function sendErr(res, status, message) {
   res.status(status).json({ success: false, message: String(message || '错误') });
 }
 
-/** 简易全局限流：每 IP 每分钟最多 N 次写操作 */
+/** 简易全局限流：每 IP 每分钟最多 N 次写操作；注册单独更严，抑制刷库。 */
 const writeHits = new Map();
+const registerHits = new Map();
 const WRITE_LIMIT = 60;
+const REGISTER_LIMIT = 10;
 const WRITE_WINDOW_MS = 60 * 1000;
 
 function clientIp(req) {
@@ -22,22 +24,29 @@ function clientIp(req) {
     .slice(0, 64);
 }
 
-function allowWrite(req) {
-  const ip = clientIp(req) || 'unknown';
+function allowLimited(map, ip, limit) {
   const now = Date.now();
-  const row = writeHits.get(ip);
+  const row = map.get(ip);
   if (!row || now - row.start >= WRITE_WINDOW_MS) {
-    writeHits.set(ip, { start: now, count: 1 });
-    if (writeHits.size > 5000) {
-      for (const [k, v] of writeHits) {
-        if (now - v.start >= WRITE_WINDOW_MS) writeHits.delete(k);
+    map.set(ip, { start: now, count: 1 });
+    if (map.size > 5000) {
+      for (const [k, v] of map) {
+        if (now - v.start >= WRITE_WINDOW_MS) map.delete(k);
       }
     }
     return true;
   }
-  if (row.count >= WRITE_LIMIT) return false;
+  if (row.count >= limit) return false;
   row.count += 1;
   return true;
+}
+
+function allowWrite(req) {
+  return allowLimited(writeHits, clientIp(req) || 'unknown', WRITE_LIMIT);
+}
+
+function allowRegister(req) {
+  return allowLimited(registerHits, clientIp(req) || 'unknown', REGISTER_LIMIT);
 }
 
 function registerStorageRoutes(app) {
@@ -46,7 +55,7 @@ function registerStorageRoutes(app) {
 
   router.post('/register', async (req, res) => {
     try {
-      if (!allowWrite(req)) return sendErr(res, 429, '请求过于频繁');
+      if (!allowRegister(req) || !allowWrite(req)) return sendErr(res, 429, '请求过于频繁');
       const deviceId = String(req.body?.deviceId || '');
       const deviceSecret = String(req.body?.deviceSecret || '');
       const result = await cloud.registerDevice(deviceId, deviceSecret);
