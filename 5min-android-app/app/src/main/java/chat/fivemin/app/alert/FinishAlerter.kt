@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
+import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -58,22 +59,26 @@ object FinishAlerter {
     private fun vibrate(context: Context, patternMs: IntArray) {
         val timings = LongArray(patternMs.size) { patternMs[it].toLong() }
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vm = context.getSystemService(VibratorManager::class.java)
-            vm.defaultVibrator
+            context.getSystemService(VibratorManager::class.java)?.defaultVibrator
         } else {
-            @Suppress("DEPRECATION")
             context.getSystemService(Vibrator::class.java)
         }
         if (vibrator == null || !vibrator.hasVibrator()) return
-        val attrs = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(timings, -1), attrs)
+
+        val effect = VibrationEffect.createWaveform(timings, -1)
+        // minSdk 26: VibrationEffect path only. API 33+ prefers VibrationAttributes.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val attrs = VibrationAttributes.Builder()
+                .setUsage(VibrationAttributes.USAGE_ALARM)
+                .build()
+            vibrator.vibrate(effect, attrs)
         } else {
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
             @Suppress("DEPRECATION")
-            vibrator.vibrate(timings, -1)
+            vibrator.vibrate(effect, attrs)
         }
     }
 }

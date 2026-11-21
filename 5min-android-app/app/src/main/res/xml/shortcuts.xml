@@ -7,11 +7,10 @@
         android:shortcutShortLabel="@string/shortcut_toilet_short"
         android:shortcutLongLabel="@string/shortcut_toilet_long">
         <intent
-            android:action="chat.fivemin.app.action.START_TIMER"
+            android:action="android.intent.action.VIEW"
             android:targetPackage="chat.fivemin.app"
-            android:targetClass="chat.fivemin.app.MainActivity">
+            android:targetClass="chat.fivemin.app.ShortcutActivity">
             <extra android:name="scene_id" android:value="toilet" />
-            <extra android:name="auto_start" android:value="true" />
         </intent>
         <categories android:name="android.shortcut.conversation" />
     </shortcut>

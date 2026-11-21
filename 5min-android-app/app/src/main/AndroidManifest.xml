@@ -12,7 +12,9 @@
 
     <application
         android:name=".FiveMinApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -27,14 +29,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="chat.fivemin.app.action.START_TIMER" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- Launcher shortcuts only; not exported so other apps cannot trigger auto-start. -->
+        <activity
+            android:name=".ShortcutActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.NoDisplay" />
 
         <service
             android:name=".timer.TimerForegroundService"

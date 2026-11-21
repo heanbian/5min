@@ -52,8 +52,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         val locale = i18n.resolveInitial()
         if (prefs.locale != locale) prefs.locale = locale
         val custom = prefs.customMin(catalog.defaultMin)
-        var scenes = prefs.customScenes()
-        scenes = migrateLegacyCustomMinIfNeeded(locale, scenes)
+        val scenes = prefs.customScenes()
         val toilet = catalog.scenes.find { it.id == "toilet" }
         val activeSceneId: String?
         val total: Long
@@ -522,22 +521,6 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         prefs.setCustomScenes(scenes)
         _state.update { it.copy(customScenes = prefs.customScenes()) }
         cloud.schedulePushPrefs()
-    }
-
-    /** One-shot: turn the old single custom duration into a named scene. */
-    private fun migrateLegacyCustomMinIfNeeded(
-        locale: String,
-        scenes: List<CustomScene>,
-    ): List<CustomScene> {
-        if (prefs.customScenesMigrated) return scenes
-        prefs.markCustomScenesMigrated()
-        if (scenes.isNotEmpty()) return scenes
-        val legacy = prefs.customMin(fallback = catalog.defaultMin)
-        if (legacy == catalog.defaultMin) return scenes
-        val name = catalog.t(locale, "customSceneMigratedName")
-        val scene = CustomScene(id = CustomScene.makeId(), name = name, min = legacy)
-        prefs.setCustomScenes(listOf(scene))
-        return prefs.customScenes()
     }
 
     fun refreshTodayStats() {

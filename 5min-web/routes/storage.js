@@ -56,8 +56,13 @@ function registerStorageRoutes(app) {
   router.post('/register', async (req, res) => {
     try {
       if (!allowRegister(req) || !allowWrite(req)) return sendErr(res, 429, '请求过于频繁');
-      const deviceId = String(req.body?.deviceId || '');
-      const deviceSecret = String(req.body?.deviceSecret || '');
+      // Prefer headers (Android); body still accepted for older clients.
+      const deviceId = String(
+        req.get('X-Device-Id') || req.body?.deviceId || '',
+      );
+      const deviceSecret = String(
+        req.get('X-Device-Secret') || req.body?.deviceSecret || '',
+      );
       const result = await cloud.registerDevice(deviceId, deviceSecret);
       if (!result.ok) return sendErr(res, result.status, result.message);
       return sendOk(res, result.data);

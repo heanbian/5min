@@ -1,9 +1,7 @@
 package chat.fivemin.app.data
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import androidx.core.content.edit
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -33,97 +31,69 @@ data class CustomScene(
 /** App settings only; session history lives in [HistoryStore]. */
 class PrefsStore(context: Context) {
     private val sp = context.getSharedPreferences("5min_prefs", Context.MODE_PRIVATE)
-    /** Device cloud credentials — encrypted at rest when the platform keystore is available. */
-    private val secureSp: SharedPreferences = createSecurePrefs(context)
+    private val secure = SecureCredentialStore(context)
 
     /** P0: overtime insight · stand-up ritual · alert profile. */
     val p0 = P0Features(sp)
 
-    init {
-        migrateFinishAlertPrefs()
-        migrateDeviceCredentialsToSecure()
-    }
-
     var locale: String
         get() = sp.getString(KEY_LOCALE, null).orEmpty()
         set(value) {
-            sp.edit().putString(KEY_LOCALE, value).apply()
+            sp.edit { putString(KEY_LOCALE, value) }
         }
 
     var ambient: String
         get() = sp.getString(KEY_AMBIENT, "off") ?: "off"
         set(value) {
-            sp.edit().putString(KEY_AMBIENT, value).apply()
+            sp.edit { putString(KEY_AMBIENT, value) }
         }
 
     var finishTone: Boolean
         get() = sp.getBoolean(KEY_FINISH_TONE, true)
         set(value) {
-            sp.edit().putBoolean(KEY_FINISH_TONE, value).apply()
+            sp.edit { putBoolean(KEY_FINISH_TONE, value) }
         }
 
     var finishVibrate: Boolean
         get() = sp.getBoolean(KEY_FINISH_VIBRATE, true)
         set(value) {
-            sp.edit().putBoolean(KEY_FINISH_VIBRATE, value).apply()
+            sp.edit { putBoolean(KEY_FINISH_VIBRATE, value) }
         }
 
     var finishNotify: Boolean
         get() = sp.getBoolean(KEY_FINISH_NOTIFY, true)
         set(value) {
-            sp.edit().putBoolean(KEY_FINISH_NOTIFY, value).apply()
+            sp.edit { putBoolean(KEY_FINISH_NOTIFY, value) }
         }
 
     var storageMode: String
         get() = if (sp.getString(KEY_STORAGE_MODE, MODE_LOCAL) == MODE_CLOUD) MODE_CLOUD else MODE_LOCAL
         set(value) {
-            sp.edit().putString(KEY_STORAGE_MODE, if (value == MODE_CLOUD) MODE_CLOUD else MODE_LOCAL).apply()
+            sp.edit {
+                putString(KEY_STORAGE_MODE, if (value == MODE_CLOUD) MODE_CLOUD else MODE_LOCAL)
+            }
         }
 
     var deviceId: String
-        get() = secureSp.getString(KEY_DEVICE_ID, null).orEmpty()
+        get() = secure.deviceId
         set(value) {
-            secureSp.edit().putString(KEY_DEVICE_ID, value).apply()
+            secure.deviceId = value
         }
 
     var deviceSecret: String
-        get() = secureSp.getString(KEY_DEVICE_SECRET, null).orEmpty()
+        get() = secure.deviceSecret
         set(value) {
-            secureSp.edit().putString(KEY_DEVICE_SECRET, value).apply()
+            secure.deviceSecret = value
         }
 
     fun setDeviceCredentials(id: String, secret: String) {
-        secureSp.edit()
-            .putString(KEY_DEVICE_ID, id)
-            .putString(KEY_DEVICE_SECRET, secret)
-            .apply()
-        // Drop any leftover plaintext copies from older builds.
-        if (sp.contains(KEY_DEVICE_ID) || sp.contains(KEY_DEVICE_SECRET)) {
-            sp.edit().remove(KEY_DEVICE_ID).remove(KEY_DEVICE_SECRET).apply()
-        }
-    }
-
-    private fun migrateDeviceCredentialsToSecure() {
-        if (secureSp.contains(KEY_DEVICE_ID) || secureSp.contains(KEY_DEVICE_SECRET)) {
-            if (sp.contains(KEY_DEVICE_ID) || sp.contains(KEY_DEVICE_SECRET)) {
-                sp.edit().remove(KEY_DEVICE_ID).remove(KEY_DEVICE_SECRET).apply()
-            }
-            return
-        }
-        val id = sp.getString(KEY_DEVICE_ID, null).orEmpty()
-        val secret = sp.getString(KEY_DEVICE_SECRET, null).orEmpty()
-        if (id.isEmpty() && secret.isEmpty()) return
-        secureSp.edit()
-            .putString(KEY_DEVICE_ID, id)
-            .putString(KEY_DEVICE_SECRET, secret)
-            .apply()
-        sp.edit().remove(KEY_DEVICE_ID).remove(KEY_DEVICE_SECRET).apply()
+        secure.setCredentials(id, secret)
     }
 
     var privacyAccepted: Boolean
         get() = sp.getBoolean(KEY_PRIVACY, false)
         set(value) {
-            sp.edit().putBoolean(KEY_PRIVACY, value).apply()
+            sp.edit { putBoolean(KEY_PRIVACY, value) }
         }
 
     fun customMin(fallback: Int = 5): Int {
@@ -132,7 +102,7 @@ class PrefsStore(context: Context) {
     }
 
     fun setCustomMin(value: Int) {
-        sp.edit().putInt(KEY_CUSTOM_MIN, CustomScene.clampMinutes(value)).apply()
+        sp.edit { putInt(KEY_CUSTOM_MIN, CustomScene.clampMinutes(value)) }
     }
 
     fun customScenes(): List<CustomScene> {
@@ -174,25 +144,7 @@ class PrefsStore(context: Context) {
                 },
             )
         }
-        sp.edit().putString(KEY_CUSTOM_SCENES, arr.toString()).apply()
-        markCustomScenesMigrated()
-    }
-
-    val customScenesMigrated: Boolean
-        get() = sp.getBoolean(KEY_CUSTOM_SCENES_MIGRATED, false)
-
-    fun markCustomScenesMigrated() {
-        sp.edit().putBoolean(KEY_CUSTOM_SCENES_MIGRATED, true).apply()
-    }
-
-    private fun migrateFinishAlertPrefs() {
-        if (sp.contains(KEY_FINISH_TONE)) return
-        val legacyTone = (sp.getString(KEY_AMBIENT, "off") ?: "off") != "off"
-        sp.edit()
-            .putBoolean(KEY_FINISH_TONE, legacyTone)
-            .putBoolean(KEY_FINISH_VIBRATE, true)
-            .putBoolean(KEY_FINISH_NOTIFY, true)
-            .apply()
+        sp.edit { putString(KEY_CUSTOM_SCENES, arr.toString()) }
     }
 
     companion object {
@@ -204,30 +156,8 @@ class PrefsStore(context: Context) {
         private const val KEY_PRIVACY = "privacy_accepted"
         private const val KEY_CUSTOM_MIN = "custom_min"
         private const val KEY_CUSTOM_SCENES = "custom_scenes"
-        private const val KEY_CUSTOM_SCENES_MIGRATED = "custom_scenes_migrated"
         private const val KEY_STORAGE_MODE = "storage_mode"
-        private const val KEY_DEVICE_ID = "device_id"
-        private const val KEY_DEVICE_SECRET = "device_secret"
-        private const val SECURE_PREFS_NAME = "5min_secure_prefs"
         const val MODE_LOCAL = "local"
         const val MODE_CLOUD = "cloud"
-
-        private fun createSecurePrefs(context: Context): SharedPreferences {
-            return runCatching {
-                val masterKey = MasterKey.Builder(context)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build()
-                EncryptedSharedPreferences.create(
-                    context,
-                    SECURE_PREFS_NAME,
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-                )
-            }.getOrElse {
-                // Emulator / keystore failures: fall back so cloud sync still works.
-                context.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE)
-            }
-        }
     }
 }

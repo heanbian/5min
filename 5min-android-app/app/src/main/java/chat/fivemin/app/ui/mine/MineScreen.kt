@@ -768,7 +768,7 @@ fun MineScreen(vm: TimerViewModel) {
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            val url = latest?.apkUrl?.takeIf { it.startsWith("https://", true) }
+                            val url = latest?.apkUrl?.takeIf { it.isNotBlank() }
                                 ?: latest?.pageUrl
                                 ?: "https://5min.chat/download.html"
                             openUrl(url)

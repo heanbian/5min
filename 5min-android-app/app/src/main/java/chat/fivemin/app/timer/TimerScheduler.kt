@@ -32,16 +32,12 @@ object TimerScheduler {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
         val pi = pending(context, endAt, elapsedMs, sceneName, sceneId)
         try {
+            // minSdk 26: setExactAndAllowWhileIdle is always available.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endAt, pi)
                 return
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endAt, pi)
-            } else {
-                @Suppress("DEPRECATION")
-                am.setExact(AlarmManager.RTC_WAKEUP, endAt, pi)
-            }
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endAt, pi)
         } catch (e: SecurityException) {
             Log.w(TAG, "exact alarm denied, fallback", e)
             try {

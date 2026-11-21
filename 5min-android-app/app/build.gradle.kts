@@ -1,13 +1,8 @@
-@file:Suppress("DEPRECATION")
-
-import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import java.io.File
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -54,7 +49,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             if (keystorePropsFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
@@ -75,17 +70,15 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-    }
-}
-
-// 正式包文件名：5min-android-app-{versionName}.apk / .aab
-android.applicationVariants.configureEach {
-    val ver = versionName
-    outputs.configureEach {
-        (this as BaseVariantOutputImpl).outputFileName = "5min-android-app-$ver.apk"
+// APK name: 5min-android-app-{versionName}.apk (AGP 9 Variant API)
+androidComponents {
+    onVariants { variant ->
+        val ver = variant.outputs.first().versionName
+        variant.outputs.forEach { output ->
+            output.outputFileName.set(
+                ver.map { name -> "5min-android-app-${name ?: "unsigned"}.apk" },
+            )
+        }
     }
 }
 
@@ -116,7 +109,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.11.1")
     implementation("androidx.core:core-ktx:1.19.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
-    implementation("androidx.datastore:datastore-preferences:1.3.0")
-    implementation("androidx.security:security-crypto:1.1.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

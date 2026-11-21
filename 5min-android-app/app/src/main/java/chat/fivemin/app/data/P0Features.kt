@@ -1,6 +1,7 @@
 package chat.fivemin.app.data
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import org.json.JSONObject
 import java.util.Calendar
 import java.util.Locale
@@ -58,7 +59,7 @@ class P0Features(private val sp: SharedPreferences) {
             .put("weekKey", stats.weekKey)
             .put("count", stats.count)
             .put("ms", stats.ms)
-        sp.edit().putString(KEY_OVERTIME_STATS, o.toString()).apply()
+        sp.edit { putString(KEY_OVERTIME_STATS, o.toString()) }
     }
 
     /** Record one overtime burst (ms beyond planned). */
@@ -78,7 +79,7 @@ class P0Features(private val sp: SharedPreferences) {
     var showOvertimeInsight: Boolean
         get() = if (!sp.contains(KEY_OVERTIME_INSIGHT)) true else sp.getBoolean(KEY_OVERTIME_INSIGHT, true)
         set(value) {
-            sp.edit().putBoolean(KEY_OVERTIME_INSIGHT, value).apply()
+            sp.edit { putBoolean(KEY_OVERTIME_INSIGHT, value) }
         }
 
     var standRitual: String
@@ -87,9 +88,9 @@ class P0Features(private val sp: SharedPreferences) {
             return if (v == RITUAL_BASIC) RITUAL_BASIC else RITUAL_OFF
         }
         set(value) {
-            sp.edit()
-                .putString(KEY_STAND_RITUAL, if (value == RITUAL_BASIC) RITUAL_BASIC else RITUAL_OFF)
-                .apply()
+            sp.edit {
+                putString(KEY_STAND_RITUAL, if (value == RITUAL_BASIC) RITUAL_BASIC else RITUAL_OFF)
+            }
         }
 
     var alertProfile: String
@@ -105,7 +106,7 @@ class P0Features(private val sp: SharedPreferences) {
                 PROFILE_QUIET, PROFILE_SILENT -> value
                 else -> PROFILE_NORMAL
             }
-            sp.edit().putString(KEY_ALERT_PROFILE, next).apply()
+            sp.edit { putString(KEY_ALERT_PROFILE, next) }
         }
 
     fun resolveFinishAlerts(

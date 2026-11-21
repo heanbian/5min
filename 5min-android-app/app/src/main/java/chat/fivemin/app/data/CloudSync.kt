@@ -112,12 +112,9 @@ class CloudSync(
     }
 
     private fun register() {
-        val (id, secret) = ensureCredentials()
-        request(
-            "POST",
-            "/register",
-            JSONObject().put("deviceId", id).put("deviceSecret", secret),
-        )
+        ensureCredentials()
+        // Auth via X-Device-Id / X-Device-Secret headers only (no secret in JSON body).
+        request("POST", "/register", JSONObject())
     }
 
     private fun prefsJson(): JSONObject {

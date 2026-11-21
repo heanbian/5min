@@ -44,6 +44,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import chat.fivemin.app.ShortcutPending
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.mine.MineScreen
 import chat.fivemin.app.ui.records.RecordsScreen
@@ -57,6 +58,7 @@ fun RootApp(
 ) {
     val state by vm.state.collectAsState()
     var privacyChecked by remember { mutableStateOf(false) }
+    var pendingShortcutScene by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val layoutDirection =
         if (state.locale.startsWith("ar")) LayoutDirection.Rtl else LayoutDirection.Ltr
@@ -67,12 +69,22 @@ fun RootApp(
         if (!scene.isNullOrBlank()) {
             vm.applyStoreScreenshot(scene)
         }
-        val shortcutScene = intent?.getStringExtra("scene_id")
-        val autoStart = intent?.getBooleanExtra("auto_start", false) == true
-            || intent?.action == "chat.fivemin.app.action.START_TIMER"
-        if (!shortcutScene.isNullOrBlank() && autoStart) {
-            vm.startFromShortcut(shortcutScene, ensureStartPermissions)
+        // Only ShortcutActivity (non-exported) can offer a pending scene.
+        val shortcutScene = ShortcutPending.take()
+        if (!shortcutScene.isNullOrBlank()) {
+            if (state.privacyAccepted) {
+                vm.startFromShortcut(shortcutScene, ensureStartPermissions)
+            } else {
+                pendingShortcutScene = shortcutScene
+            }
         }
+    }
+
+    LaunchedEffect(state.privacyAccepted, pendingShortcutScene) {
+        val scene = pendingShortcutScene ?: return@LaunchedEffect
+        if (!state.privacyAccepted) return@LaunchedEffect
+        pendingShortcutScene = null
+        vm.startFromShortcut(scene, ensureStartPermissions)
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {

@@ -2,7 +2,9 @@ package chat.fivemin.app.data
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import androidx.core.content.pm.PackageInfoCompat
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -28,38 +30,19 @@ sealed class UpdateCheckResult {
 object AppUpdate {
     private const val LATEST_URL = "https://5min.chat/app/android-latest.json"
     private const val FALLBACK_PAGE = "https://5min.chat/download.html"
+    private val TRUSTED_HOSTS = setOf("5min.chat", "www.5min.chat")
 
     fun localVersionName(context: Context): String {
-        return runCatching {
-            val info = if (Build.VERSION.SDK_INT >= 33) {
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.PackageInfoFlags.of(0),
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(context.packageName, 0)
-            }
-            info.versionName.orEmpty()
-        }.getOrNull().orEmpty().ifBlank { "—" }
+        return runCatching { packageInfo(context).versionName.orEmpty() }
+            .getOrNull()
+            .orEmpty()
+            .ifBlank { "—" }
     }
 
     fun localVersionCode(context: Context): Long {
-        return runCatching {
-            val info = if (Build.VERSION.SDK_INT >= 33) {
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.PackageInfoFlags.of(0),
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(context.packageName, 0)
-            }
-            if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else {
-                @Suppress("DEPRECATION")
-                info.versionCode.toLong()
-            }
-        }.getOrNull() ?: 0L
+        return runCatching { PackageInfoCompat.getLongVersionCode(packageInfo(context)) }
+            .getOrNull()
+            ?: 0L
     }
 
     /** Blocking network call — run on a background dispatcher. */
@@ -95,8 +78,8 @@ object AppUpdate {
             val json = JSONObject(body)
             val versionCode = json.optInt("versionCode", 0)
             val versionName = json.optString("versionName").trim()
-            val apkUrl = json.optString("apkUrl").trim()
-            val pageUrl = json.optString("pageUrl").trim().ifBlank { FALLBACK_PAGE }
+            val apkUrl = trustedHttpsUrl(json.optString("apkUrl").trim()).orEmpty()
+            val pageUrl = trustedHttpsUrl(json.optString("pageUrl").trim()) ?: FALLBACK_PAGE
             if (versionCode <= 0 || versionName.isEmpty()) {
                 error("invalid update manifest")
             }
@@ -112,15 +95,34 @@ object AppUpdate {
     }
 
     fun openUrl(context: Context, url: String) {
-        val target = url.trim()
-        if (!target.startsWith("https://", ignoreCase = true)) return
+        val target = trustedHttpsUrl(url) ?: return
         runCatching {
             context.startActivity(
                 android.content.Intent(
                     android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(target),
+                    Uri.parse(target),
                 ),
             )
         }
     }
+
+    /** Only https URLs on 5min.chat (or www) are accepted for update / download links. */
+    fun trustedHttpsUrl(url: String): String? {
+        val target = url.trim()
+        if (!target.startsWith("https://", ignoreCase = true)) return null
+        val host = runCatching { Uri.parse(target).host?.lowercase() }.getOrNull() ?: return null
+        if (host !in TRUSTED_HOSTS) return null
+        return target
+    }
+
+    private fun packageInfo(context: Context) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(0),
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
 }
