@@ -126,6 +126,8 @@ struct MineView: View {
                         linkRow(model.t("beianEntry")) {
                             showBeianAlert = true
                         }
+                        Divider().padding(.leading, 16)
+                        versionRow
                     }
 
                 }
@@ -177,6 +179,36 @@ struct MineView: View {
         case P0Features.profileSilent: return model.t("alertProfileSilent")
         default: return model.t("alertProfileNormal")
         }
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+
+    /// Display-only version row (no update check).
+    private var versionRow: some View {
+        HStack {
+            Text(versionTitle)
+                .font(FiveMinFont.ui(15))
+                .foregroundStyle(FiveMinColor.ink)
+            Spacer(minLength: 8)
+            Text(appVersion)
+                .font(FiveMinFont.ui(14))
+                .foregroundStyle(FiveMinColor.muted)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 52)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(model.t("aboutVersion", ["n": appVersion]))
+    }
+
+    /// `aboutVersion` is "Version {n}" — strip the placeholder for the left label.
+    private var versionTitle: String {
+        model.t("aboutVersion", ["n": ""])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "·•-:："))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var header: some View {

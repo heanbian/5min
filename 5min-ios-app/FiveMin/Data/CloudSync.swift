@@ -1,7 +1,10 @@
 import Foundation
 
 /// Device-bound cloud sync against https://5min.chat/api/v1/storage
-final class CloudSync {
+///
+/// Marked `@unchecked Sendable` because network + merge work is serialized on
+/// `queue`; safe to hop into `DispatchQueue.async` / continuation closures.
+final class CloudSync: @unchecked Sendable {
     static let modeLocal = PrefsStore.modeLocal
     static let modeCloud = PrefsStore.modeCloud
     static let apiBase = "https://5min.chat/api/v1/storage"
