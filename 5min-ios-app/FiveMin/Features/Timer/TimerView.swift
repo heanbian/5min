@@ -105,30 +105,28 @@ struct TimerView: View {
                     .font(FiveMinFont.ui(18, weight: .semibold))
                     .foregroundStyle(FiveMinColor.ink)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        ritualStep(
-                            label: model.t(steps.count > 0 ? steps[0] : "standRitualStepUp"),
-                            isOn: model.ritualUp
-                        ) {
-                            model.ritualUp.toggle()
-                        }
-                        ritualStep(
-                            label: model.t(steps.count > 1 ? steps[1] : "standRitualStepStretch"),
-                            isOn: model.ritualStretch
-                        ) {
-                            model.ritualStretch.toggle()
-                        }
-                        ritualStep(
-                            label: model.t(steps.count > 2 ? steps[2] : "standRitualStepLeave"),
-                            isOn: model.ritualLeave
-                        ) {
-                            model.ritualLeave.toggle()
-                        }
+                VStack(alignment: .leading, spacing: 12) {
+                    ritualStep(
+                        label: model.t(steps.count > 0 ? steps[0] : "standRitualStepUp"),
+                        isOn: model.ritualUp
+                    ) {
+                        model.ritualUp.toggle()
+                    }
+                    ritualStep(
+                        label: model.t(steps.count > 1 ? steps[1] : "standRitualStepStretch"),
+                        isOn: model.ritualStretch
+                    ) {
+                        model.ritualStretch.toggle()
+                    }
+                    ritualStep(
+                        label: model.t(steps.count > 2 ? steps[2] : "standRitualStepLeave"),
+                        isOn: model.ritualLeave
+                    ) {
+                        model.ritualLeave.toggle()
                     }
                 }
-                .frame(maxHeight: 220)
 
                 HStack(spacing: 10) {
                     Button(model.t("standRitualSkip")) {
@@ -162,10 +160,13 @@ struct TimerView: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(isOn ? FiveMinColor.brandStrong : FiveMinColor.line, lineWidth: 1.5)
-                        .background(
+                        .fill(isOn ? FiveMinColor.brandSoft : FiveMinColor.surface)
+                        .overlay(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(isOn ? FiveMinColor.brandSoft : Color.clear)
+                                .stroke(
+                                    isOn ? FiveMinColor.brandStrong : FiveMinColor.muted.opacity(0.72),
+                                    lineWidth: 1.75
+                                )
                         )
                         .frame(width: 24, height: 24)
                     if isOn {
@@ -178,6 +179,7 @@ struct TimerView: View {
                     .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
                     .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .contentShape(Rectangle())
