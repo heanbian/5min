@@ -34,7 +34,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.data.AndroidLatest
 import chat.fivemin.app.data.AppUpdate
@@ -70,7 +70,7 @@ private enum class MineDialog {
 
 @Composable
 fun MineScreen(vm: TimerViewModel) {
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val catalog = FiveMinApp.instance.catalog
     val scope = rememberCoroutineScope()
@@ -705,7 +705,13 @@ fun MineScreen(vm: TimerViewModel) {
                 confirmButton = {
                     TextButton(onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("email", email))
+                        val clip = ClipData.newPlainText("email", email)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                            clip.description?.extras = android.os.PersistableBundle().apply {
+                                putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                            }
+                        }
+                        clipboard.setPrimaryClip(clip)
                         dialog = MineDialog.None
                         Toast.makeText(context, vm.t("emailCopied"), Toast.LENGTH_SHORT).show()
                     }) {

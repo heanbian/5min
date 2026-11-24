@@ -319,5 +319,15 @@
   "sceneTakeTrash": "倒垃圾 · 5 分鐘",
   "sceneTakeTrashTitle": "倒垃圾",
   "sceneTidyUp": "收納整理 · 10 分鐘",
-  "sceneTidyUpTitle": "收納整理"
+  "sceneTidyUpTitle": "收納整理",
+  "streakLabel": "連續打卡",
+  "streakDays": "已連續 {n} 天",
+  "streakNone": "今天完成一次即可開始連續",
+  "shareLabel": "分享小結",
+  "shareText": "我用如廁計時器近 14 日完成 {count} 次，累計約 {mins} 分鐘；連續 {streak} 天。僅供習慣提醒。https://5min.chat",
+  "shareCopied": "已複製小結",
+  "shareFailed": "分享失敗",
+  "shareCopyAction": "複製文案",
+  "invalidLink": "連結不可用",
+  "linkCopied": "連結已複製，請在瀏覽器開啟"
 }

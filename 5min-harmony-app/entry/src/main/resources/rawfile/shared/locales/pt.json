@@ -319,5 +319,15 @@
   "sceneTakeTrash": "Levar o lixo · 5 min",
   "sceneTakeTrashTitle": "Levar o lixo",
   "sceneTidyUp": "Organizar · 10 min",
-  "sceneTidyUpTitle": "Organizar"
+  "sceneTidyUpTitle": "Organizar",
+  "streakLabel": "Sequência",
+  "streakDays": "Sequência de {n} dias",
+  "streakNone": "Conclua uma sessão hoje para começar",
+  "shareLabel": "Partilhar resumo",
+  "shareText": "Com Timer do Banheiro: {count} sessões em 14 dias (~{mins} min), sequência de {streak} dias. Só hábito. https://5min.chat",
+  "shareCopied": "Resumo copiado",
+  "shareFailed": "Falha ao partilhar",
+  "shareCopyAction": "Copiar texto",
+  "invalidLink": "Ligação indisponível",
+  "linkCopied": "Ligação copiada — abra no navegador"
 }

@@ -216,14 +216,20 @@ function rewriteJsModules(js) {
   return out;
 }
 
-/** Rewritten text bodies keyed by absolute path (invalidated when ASSET_VERSION changes). */
+/** Rewritten text bodies keyed by absolute path + mtime (also keyed by ASSET_VERSION). */
 const rewrittenCache = new Map();
 
 function cachedRewrite(filePath, rewriter) {
+  let mtime = 0;
+  try {
+    mtime = fs.statSync(filePath).mtimeMs;
+  } catch (_) {
+    /* missing file → fall through to read error */
+  }
   const hit = rewrittenCache.get(filePath);
-  if (hit && hit.version === ASSET_VERSION) return hit.body;
+  if (hit && hit.version === ASSET_VERSION && hit.mtime === mtime) return hit.body;
   const body = rewriter(fs.readFileSync(filePath, 'utf8'));
-  rewrittenCache.set(filePath, { version: ASSET_VERSION, body });
+  rewrittenCache.set(filePath, { version: ASSET_VERSION, mtime, body });
   return body;
 }
 

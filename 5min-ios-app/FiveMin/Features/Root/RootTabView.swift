@@ -1,31 +1,24 @@
 import SwiftUI
-import UIKit
 
 struct RootTabView: View {
-    @EnvironmentObject private var model: TimerViewModel
+    @Environment(TimerViewModel.self) private var model
+    @Environment(\.openURL) private var openURL
     @State private var privacyChecked = false
 
     var body: some View {
+        @Bindable var model = model
         let isRTL = model.locale.hasPrefix("ar")
         ZStack {
             TabView(selection: $model.selectedTab) {
-                RecordsView()
-                    .tabItem {
-                        Label(model.t("tabRecords"), systemImage: "list.bullet")
-                    }
-                    .tag(0)
-
-                TimerView()
-                    .tabItem {
-                        Label(model.t("tabHome"), systemImage: "house.fill")
-                    }
-                    .tag(1)
-
-                MineView()
-                    .tabItem {
-                        Label(model.t("tabMine"), systemImage: "person.fill")
-                    }
-                    .tag(2)
+                Tab(model.t("tabRecords"), systemImage: "list.bullet", value: 0) {
+                    RecordsView()
+                }
+                Tab(model.t("tabHome"), systemImage: "house.fill", value: 1) {
+                    TimerView()
+                }
+                Tab(model.t("tabMine"), systemImage: "person.fill", value: 2) {
+                    MineView()
+                }
             }
             .tint(FiveMinColor.brand)
 
@@ -74,13 +67,13 @@ struct RootTabView: View {
 
                 HStack(spacing: 16) {
                     Button(model.t("privacyLink")) {
-                        openURL("https://5min.chat/privacy.html")
+                        openTrusted("https://5min.chat/privacy.html")
                     }
                     .font(FiveMinFont.ui(13, weight: .medium))
                     .foregroundStyle(FiveMinColor.brandStrong)
 
                     Button(model.t("termsLink")) {
-                        openURL("https://5min.chat/terms.html")
+                        openTrusted("https://5min.chat/terms.html")
                     }
                     .font(FiveMinFont.ui(13, weight: .medium))
                     .foregroundStyle(FiveMinColor.brandStrong)
@@ -108,8 +101,8 @@ struct RootTabView: View {
         }
     }
 
-    private func openURL(_ string: String) {
-        guard let url = URL(string: string), url.scheme?.lowercased() == "https" else { return }
-        UIApplication.shared.open(url)
+    private func openTrusted(_ string: String) {
+        guard let url = TrustedURL.parse(string) else { return }
+        openURL(url)
     }
 }

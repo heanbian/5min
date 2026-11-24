@@ -26,7 +26,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,10 +40,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import chat.fivemin.app.ShortcutPending
+import chat.fivemin.app.data.AppUpdate
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.mine.MineScreen
 import chat.fivemin.app.ui.records.RecordsScreen
@@ -56,7 +55,7 @@ fun RootApp(
     vm: TimerViewModel = viewModel(),
     ensureStartPermissions: (onReady: () -> Unit) -> Unit = { it() },
 ) {
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     var privacyChecked by remember { mutableStateOf(false) }
     var pendingShortcutScene by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -195,8 +194,5 @@ private fun navColors() = NavigationBarItemDefaults.colors(
 )
 
 private fun openHttps(context: android.content.Context, url: String) {
-    if (!url.startsWith("https://", ignoreCase = true)) return
-    runCatching {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }
+    AppUpdate.openUrl(context, url)
 }

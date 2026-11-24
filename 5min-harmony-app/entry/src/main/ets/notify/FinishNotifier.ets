@@ -1,7 +1,7 @@
 import { common, Want, wantAgent, WantAgent } from '@kit.AbilityKit';
 import { notificationManager } from '@kit.NotificationKit';
 import { reminderAgentManager } from '@kit.BackgroundTasksKit';
-import { promptAction } from '@kit.ArkUI';
+import { PromptAction, promptAction } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
@@ -138,8 +138,14 @@ export async function showFinishNotification(
 /**
  * In-app finish popup. System banner is off by default on HarmonyOS and cannot
  * be force-enabled by the app; this guarantees a visible dialog at finish.
+ * Caller must pass a UIContext-bound PromptAction (finish runs from Index).
  */
-export async function showFinishDialog(title: string, body: string, ack: string): Promise<void> {
+export async function showFinishDialog(
+  title: string,
+  body: string,
+  ack: string,
+  prompt: PromptAction
+): Promise<void> {
   try {
     const buttons: promptAction.Button[] = [
       {
@@ -147,7 +153,7 @@ export async function showFinishDialog(title: string, body: string, ack: string)
         color: '#2F9A68'
       }
     ];
-    await promptAction.showDialog({
+    await prompt.showDialog({
       title: title,
       message: body,
       buttons: buttons

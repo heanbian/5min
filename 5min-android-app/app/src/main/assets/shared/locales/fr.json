@@ -219,6 +219,7 @@
   "customSceneUse": "Utiliser",
   "customSceneNameLabel": "Nom",
   "customSceneNamePlaceholder": "p. ex. Étirements",
+  "customSceneMigratedName": "Personnalisé",
   "sceneGroupCustom": "Personnalisé",
   "sceneGroupSuggested": "Fréquemment utilisés",
   "privacyCheckLabel": "J’ai lu et j’accepte",
@@ -318,5 +319,15 @@
   "sceneTakeTrash": "Sortir les poubelles · 5 min",
   "sceneTakeTrashTitle": "Sortir les poubelles",
   "sceneTidyUp": "Ranger · 10 min",
-  "sceneTidyUpTitle": "Ranger"
+  "sceneTidyUpTitle": "Ranger",
+  "streakLabel": "Série",
+  "streakDays": "Série de {n} jours",
+  "streakNone": "Terminez une séance aujourd’hui pour commencer",
+  "shareLabel": "Partager le résumé",
+  "shareText": "Avec Minuteur WC : {count} séances en 14 jours (~{mins} min), série de {streak} jours. Rappel d’habitude. https://5min.chat",
+  "shareCopied": "Résumé copié",
+  "shareFailed": "Échec du partage",
+  "shareCopyAction": "Copier le texte",
+  "invalidLink": "Lien indisponible",
+  "linkCopied": "Lien copié — ouvrez-le dans un navigateur"
 }

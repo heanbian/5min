@@ -319,5 +319,15 @@ module.exports = {
   "sceneTakeTrash": "Вынести мусор · 5 мин",
   "sceneTakeTrashTitle": "Вынести мусор",
   "sceneTidyUp": "Уборка · 10 мин",
-  "sceneTidyUpTitle": "Уборка"
+  "sceneTidyUpTitle": "Уборка",
+  "streakLabel": "Серия",
+  "streakDays": "Серия {n} дн.",
+  "streakNone": "Завершите сессию сегодня, чтобы начать",
+  "shareLabel": "Поделиться итогами",
+  "shareText": "Таймер туалета: {count} сессий за 14 дней (~{mins} мин), серия {streak} дн. Только напоминание. https://5min.chat",
+  "shareCopied": "Итог скопирован",
+  "shareFailed": "Не удалось поделиться",
+  "shareCopyAction": "Копировать текст",
+  "invalidLink": "Ссылка недоступна",
+  "linkCopied": "Ссылка скопирована — откройте в браузере"
 };

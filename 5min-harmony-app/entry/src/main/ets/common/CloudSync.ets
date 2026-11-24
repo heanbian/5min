@@ -1,7 +1,7 @@
 /**
  * Device-bound cloud sync against https://5min.chat/api/v1/storage
  */
-import http from '@ohos.net.http';
+import { http } from '@kit.NetworkKit';
 import { util } from '@kit.ArkTS';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { PrefsStore, CustomScene, STORAGE_MODE_CLOUD, STORAGE_MODE_LOCAL } from './PrefsStore';
@@ -123,10 +123,9 @@ export class CloudSync {
   }
 
   private async register(): Promise<void> {
-    const creds = await this.ensureCredentials();
+    await this.ensureCredentials();
+    // Auth via X-Device-Id / X-Device-Secret headers only (no secret in JSON body).
     const body: Record<string, Object> = {};
-    body['deviceId'] = creds[0];
-    body['deviceSecret'] = creds[1];
     await this.request('POST', '/register', body);
   }
 

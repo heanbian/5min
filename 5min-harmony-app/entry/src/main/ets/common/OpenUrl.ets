@@ -1,24 +1,25 @@
 import { common, Want } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { AppUpdate } from './AppUpdate';
 
 const TAG = '5minOpenUrl';
 
-/** Open an https URL in the system browser. Non-https schemes are rejected. */
+/** Open an allowlisted https URL in the system browser. */
 export async function openExternalUrl(
   context: common.UIAbilityContext,
   url: string
 ): Promise<void> {
-  const trimmed = url ? url.trim() : '';
-  if (!trimmed.toLowerCase().startsWith('https://')) {
-    hilog.warn(0x0000, TAG, 'openExternalUrl blocked non-https url');
+  const target = AppUpdate.trustedHttpsUrl(url ? url.trim() : '');
+  if (!target) {
+    hilog.warn(0x0000, TAG, 'openExternalUrl blocked untrusted url');
     return;
   }
   try {
     const want: Want = {
       action: 'ohos.want.action.viewData',
       entities: ['entity.system.browsable'],
-      uri: trimmed
+      uri: target
     };
     await context.startAbility(want);
   } catch (e) {

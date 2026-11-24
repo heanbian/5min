@@ -6,13 +6,17 @@
 const { initLocale } = require('./utils/i18n');
 const { initAmbient } = require('./utils/ambient');
 const prefs = require('./utils/prefs');
+const { realertFinishIfPending } = require('./utils/alert');
 
 App({
   globalData: {
     /** Apply on next home show after Mine custom-scene Use / add. */
     pendingSceneId: null,
     privacyAccepted: false,
-    appVersion: '1.0.9',
+    appVersion: '1.0.10',
+    /** Local finish still pending dismiss / reset — used for re-alert onShow. */
+    finishAlertPending: null,
+    finishAlerting: false,
   },
 
   onLaunch() {
@@ -47,6 +51,8 @@ App({
   },
 
   onShow() {
+    // Re-cue local finish when returning from background (no OS push).
+    realertFinishIfPending();
     if (prefs.getStorageMode() !== 'cloud') return;
     try {
       require('./utils/cloudSync')

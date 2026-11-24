@@ -6,9 +6,9 @@
 |------|------|
 | Bundle ID | `chat.5min.app` |
 | 显示名 | 如厕计时器（`CFBundleDisplayName`） |
-| 版本 | `FiveMin/Info.plist` → `CFBundleShortVersionString` / `CFBundleVersion`（与工程 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 保持一致；当前 `1.0.9` / `10`） |
+| 版本 | `FiveMin/Info.plist` → `CFBundleShortVersionString` / `CFBundleVersion`（与工程 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 保持一致；当前 `1.0.10` / `11`） |
 | 技术 | SwiftUI · UserNotifications · AVAudioEngine · Core Haptics |
-| 最低系统 | iOS 17（建议用 **Xcode 27.1+ / iOS 27.1 SDK** 构建以优化 iPhone Duo） |
+| 最低系统 | iOS 18（建议用 **Xcode 27.1+ / iOS 27.1 SDK** 构建以优化 iPhone Duo） |
 | 设备 | iPhone / iPad；支持 **iPhone Duo**（外屏紧凑 + 内屏宽布局自适应） |
 | 工程 | `FiveMin.xcodeproj` |
 | 许可 | [LICENSE](./LICENSE)（Apache-2.0） |
@@ -29,7 +29,7 @@
 
 - 布局依据 `GeometryReader` / size class，**不**用 `UIScreen.main` 或固定机型尺寸
 - 展开内屏或横屏时自动切到宽布局；折叠回外屏恢复紧凑布局
-- 正式优化建议使用 **Xcode 27.1** 构建；本工程最低仍兼容 iOS 17
+- 正式优化建议使用 **Xcode 27.1** 构建；本工程最低系统为 iOS 18
 
 ---
 
@@ -37,7 +37,7 @@
 
 | 工具 | 用途 |
 |------|------|
-| macOS + **Xcode 15+** | 编译、模拟器、真机、Archive |
+| macOS + **Xcode 16+**（iOS 18 SDK） | 编译、模拟器、真机、Archive |
 | Apple ID / Developer Program | 真机与上架 |
 | **Node.js 18+** | 导出共享文案 |
 | **Python3 + Pillow** | 重出图标（可复用 Android `.tools-venv`） |

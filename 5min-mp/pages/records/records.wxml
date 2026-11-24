@@ -25,6 +25,17 @@
       </view>
     </view>
 
+    <view class="streak-card">
+      <view class="streak-main">
+        <text class="streak-label">{{streakLabel}}</text>
+        <text class="streak-value">{{streakText}}</text>
+      </view>
+      <view class="share-actions">
+        <button class="share-btn" open-type="share">{{shareLabel}}</button>
+        <button class="share-btn share-btn-ghost" bindtap="onCopyShare">{{shareCopyLabel}}</button>
+      </view>
+    </view>
+
     <view class="insight-card" wx:if="{{showOvertimeInsight}}">
       <text class="insight-title">{{overtimeInsightTitle}}</text>
       <text class="insight-line">{{overtimeInsightLine}}</text>

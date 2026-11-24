@@ -1,6 +1,6 @@
-import { bundleManager, common } from '@kit.AbilityKit';
+import { common } from '@kit.AbilityKit';
 import { promptAction } from '@kit.ArkUI';
-import pasteboard from '@ohos.pasteboard';
+import { pasteboard } from '@kit.BasicServicesKit';
 import { SharedCatalog } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene, STORAGE_MODE_CLOUD, STORAGE_MODE_LOCAL } from '../common/PrefsStore';
 import { HistoryStore } from '../common/HistoryStore';
@@ -15,6 +15,7 @@ import {
 import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
+import { AppUpdate } from '../common/AppUpdate';
 import { FiveMinFont } from '../common/FiveMinDimens';
 import { AmbientPlayer } from '../alert/AmbientPlayer';
 import { i18n } from '@kit.LocalizationKit';
@@ -37,7 +38,7 @@ export struct MineTab {
   @State customMin: number = 5;
   @State customScenes: CustomScene[] = [];
   @State scenesSummary: string = '';
-  /** '' | lang | sound | customScenes | sceneEditor | feedback | storage | ritual | alertProfile */
+  /** '' | lang | sound | customScenes | sceneEditor | feedback | storage | ritual | alertProfile | update */
   @State dialog: string = '';
   /** Empty string = add; otherwise edit id */
   @State editorId: string = '';
@@ -58,6 +59,9 @@ export struct MineTab {
   @State storageModeName: string = '';
   @State storageSyncStatus: string = '';
   @State appVersion: string = '—';
+  @State checkingUpdate: boolean = false;
+  @State pendingUpdateName: string = '';
+  @State pendingUpdateUrl: string = '';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -66,7 +70,8 @@ export struct MineTab {
   private context: common.UIAbilityContext | null = null;
 
   aboutToAppear(): void {
-    this.context = getContext(this) as common.UIAbilityContext;
+    const host = this.getUIContext().getHostContext();
+    this.context = host instanceof common.UIAbilityContext ? host : null;
     this.bootstrap();
   }
 
@@ -109,27 +114,9 @@ export struct MineTab {
     this.customMin = await this.prefs.getCustomMin(this.catalog.defaultMin);
     await this.migrateLegacyCustomMinIfNeeded();
     await this.reloadCustomScenes();
-    this.appVersion = this.readAppVersion();
+    this.appVersion = AppUpdate.localVersionName();
     this.refreshLabels();
     this.ready = true;
-  }
-
-  private readAppVersion(): string {
-    try {
-      const info = bundleManager.getBundleInfoForSelfSync(
-        bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT
-      );
-      const name = String(info.versionName ?? '');
-      return name.length > 0 ? name : '—';
-    } catch (_) {
-      return '—';
-    }
-  }
-
-  private versionLabel(): string {
-    const vars: Record<string, string> = {};
-    vars['n'] = this.appVersion;
-    return this.t('aboutVersion', vars);
   }
 
   /** Same one-shot migration as Index; safe if already migrated. */
@@ -346,7 +333,7 @@ export struct MineTab {
           { text: this.t('cancelLabel'), color: '#5F6F66' },
           { text: this.t('confirmLabel'), color: '#2F9A68' }
         ];
-        const res = await promptAction.showDialog({
+        const res = await this.getUIContext().getPromptAction().showDialog({
           title: this.t('storageModeCloud'),
           message: this.t('storageCloudConfirm'),
           buttons: buttons
@@ -471,7 +458,7 @@ export struct MineTab {
     AppStorage.setOrCreate<string>('pendingSceneId', id);
     this.closeDialog();
     try {
-      promptAction.showToast({ message: this.t('customApplied'), duration: 2000 });
+      this.getUIContext().getPromptAction().showToast({ message: this.t('customApplied'), duration: 2000 });
     } catch (_) {
     }
   }
@@ -484,11 +471,15 @@ export struct MineTab {
     const email = this.t('feedbackEmail');
     try {
       const systemPasteboard = pasteboard.getSystemPasteboard();
-      const pasteData = pasteboard.createPlainTextData(email);
-      await systemPasteboard.setPasteData(pasteData);
+      const pasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, email);
+      await systemPasteboard.setData(pasteData);
       this.closeDialog();
-      promptAction.showToast({ message: this.t('emailCopied'), duration: 2000 });
+      this.getUIContext().getPromptAction().showToast({ message: this.t('emailCopied'), duration: 2000 });
     } catch (_) {
+      this.getUIContext().getPromptAction().showToast({
+        message: this.t('shareFailed'),
+        duration: 2000
+      });
     }
   }
 
@@ -518,13 +509,64 @@ export struct MineTab {
           color: '#2F9A68'
         }
       ];
-      await promptAction.showDialog({
+      await this.getUIContext().getPromptAction().showDialog({
         title: this.t('beianTitle'),
         message: this.t('beianIcp'),
         buttons: buttons
       });
     } catch (_) {
     }
+  }
+
+  async checkSoftwareUpdate(): Promise<void> {
+    if (this.checkingUpdate) {
+      return;
+    }
+    this.checkingUpdate = true;
+    this.uiTick = this.uiTick + 1;
+    const prompt = this.getUIContext().getPromptAction();
+    try {
+      prompt.showToast({ message: this.t('softwareUpdateChecking'), duration: 1500 });
+    } catch (_) {
+    }
+    const result = await AppUpdate.check();
+    this.checkingUpdate = false;
+    this.uiTick = this.uiTick + 1;
+    if (result.kind === 'latest') {
+      try {
+        prompt.showToast({ message: this.t('softwareUpdateLatest'), duration: 2000 });
+      } catch (_) {
+      }
+      return;
+    }
+    if (result.kind === 'available' && result.latest) {
+      this.pendingUpdateName = result.latest.versionName;
+      this.pendingUpdateUrl = result.latest.pageUrl;
+      this.dialog = 'update';
+      return;
+    }
+    try {
+      prompt.showToast({ message: this.t('softwareUpdateFailed'), duration: 2000 });
+    } catch (_) {
+    }
+  }
+
+  async confirmSoftwareUpdate(): Promise<void> {
+    const url = this.pendingUpdateUrl.length > 0
+      ? this.pendingUpdateUrl
+      : 'https://5min.chat/download.html';
+    this.closeDialog();
+    this.pendingUpdateName = '';
+    this.pendingUpdateUrl = '';
+    if (this.context) {
+      await AppUpdate.openUrl(this.context, url);
+    }
+  }
+
+  private closeUpdateDialog(): void {
+    this.pendingUpdateName = '';
+    this.pendingUpdateUrl = '';
+    this.closeDialog();
   }
 
   private canSaveEditor(): boolean {
@@ -922,6 +964,28 @@ export struct MineTab {
                   .height(52)
                   .padding({ left: 16, right: 16 })
                   .onClick(() => this.openBeian())
+
+                  Divider().color($r('app.color.line')).margin({ left: 16 })
+
+                  Row() {
+                    Text(this.t('softwareUpdateLabel'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text(this.checkingUpdate ? '…' : this.appVersion)
+                      .fontSize(14)
+                      .fontColor($r('app.color.muted'))
+                      .margin({ right: 6 })
+                      .maxLines(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                  }
+                  .width('100%')
+                  .height(52)
+                  .padding({ left: 16, right: 16 })
+                  .opacity(this.checkingUpdate ? 0.6 : 1)
+                  .onClick(() => this.checkSoftwareUpdate())
                 }
                 .width('100%')
                 .backgroundColor('rgba(255, 255, 255, 0.88)')
@@ -936,13 +1000,6 @@ export struct MineTab {
                 })
               }
               .width('100%')
-
-              Text(this.versionLabel())
-                .fontSize(12)
-                .fontColor($r('app.color.muted'))
-                .width('100%')
-                .textAlign(TextAlign.Center)
-                .margin({ top: 8, bottom: 4 })
             }
             .width('100%')
             .padding({ left: 16, right: 16, top: 16, bottom: 28 })
@@ -1220,6 +1277,41 @@ export struct MineTab {
           }
           .width('100%')
           .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+        } else if (this.dialog === 'update') {
+          Column({ space: 16 }) {
+            Text(this.updateAvailableMessage())
+              .fontSize(15)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.ink'))
+              .width('100%')
+              .textAlign(TextAlign.Center)
+              .lineHeight(22)
+            Row({ space: 10 }) {
+              Text(this.t('cancelLabel'))
+                .layoutWeight(1)
+                .height(48)
+                .fontSize(15)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.muted'))
+                .textAlign(TextAlign.Center)
+                .backgroundColor($r('app.color.ghost_bg'))
+                .borderRadius(14)
+                .onClick(() => this.closeUpdateDialog())
+              Text(this.t('softwareUpdateAction'))
+                .layoutWeight(1)
+                .height(48)
+                .fontSize(15)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(Color.White)
+                .textAlign(TextAlign.Center)
+                .backgroundColor($r('app.color.brand'))
+                .borderRadius(14)
+                .onClick(() => this.confirmSoftwareUpdate())
+            }
+            .width('100%')
+          }
+          .width('100%')
+          .padding({ left: 20, right: 20, bottom: 28, top: 8 })
         }
       }
       .width('100%')
@@ -1450,6 +1542,15 @@ export struct MineTab {
     if (this.dialog === 'feedback') {
       return this.t('feedbackLabel');
     }
+    if (this.dialog === 'update') {
+      return this.t('softwareUpdateLabel');
+    }
     return '';
+  }
+
+  private updateAvailableMessage(): string {
+    const vars: Record<string, string> = {};
+    vars['n'] = this.pendingUpdateName;
+    return this.t('softwareUpdateAvailable', vars);
   }
 }

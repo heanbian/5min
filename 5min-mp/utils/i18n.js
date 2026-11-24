@@ -43,15 +43,9 @@ function packOf(code) {
 
 function resolveSystemLocale() {
   try {
-    const info = wx.getAppBaseInfo
-      ? wx.getAppBaseInfo()
-      : wx.getSystemInfoSync();
-    const tag =
-      (info && (info.language || info.locale)) ||
-      (typeof wx.getSystemInfoSync === 'function'
-        ? wx.getSystemInfoSync().language
-        : '') ||
-      '';
+    const info =
+      typeof wx.getAppBaseInfo === 'function' ? wx.getAppBaseInfo() : null;
+    const tag = (info && (info.language || info.locale)) || '';
     return normalize(tag, 'zh-CN');
   } catch (e) {
     return 'zh-CN';

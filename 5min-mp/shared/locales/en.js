@@ -319,5 +319,15 @@ module.exports = {
   "sceneTakeTrash": "Taking out trash · 5 min",
   "sceneTakeTrashTitle": "Taking out trash",
   "sceneTidyUp": "Tidying up · 10 min",
-  "sceneTidyUpTitle": "Tidying up"
+  "sceneTidyUpTitle": "Tidying up",
+  "streakLabel": "Streak",
+  "streakDays": "{n}-day streak",
+  "streakNone": "Complete one session today to start a streak",
+  "shareLabel": "Share summary",
+  "shareText": "With Toilet Timer I finished {count} sessions in 14 days (~{mins} min) and a {streak}-day streak. Habit reminder only. https://5min.chat",
+  "shareCopied": "Summary copied",
+  "shareFailed": "Share failed",
+  "shareCopyAction": "Copy text",
+  "invalidLink": "Link unavailable",
+  "linkCopied": "Link copied — open it in a browser"
 };

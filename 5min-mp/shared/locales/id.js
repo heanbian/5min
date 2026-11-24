@@ -319,5 +319,15 @@ module.exports = {
   "sceneTakeTrash": "Buang sampah · 5 mnt",
   "sceneTakeTrashTitle": "Buang sampah",
   "sceneTidyUp": "Merapikan · 10 mnt",
-  "sceneTidyUpTitle": "Merapikan"
+  "sceneTidyUpTitle": "Merapikan",
+  "streakLabel": "Beruntun",
+  "streakDays": "{n} hari beruntun",
+  "streakNone": "Selesaikan satu sesi hari ini untuk mulai",
+  "shareLabel": "Bagikan ringkasan",
+  "shareText": "Dengan Timer Toilet: {count} sesi dalam 14 hari (~{mins} mnt), {streak} hari beruntun. Hanya pengingat kebiasaan. https://5min.chat",
+  "shareCopied": "Ringkasan disalin",
+  "shareFailed": "Gagal membagikan",
+  "shareCopyAction": "Salin teks",
+  "invalidLink": "Tautan tidak tersedia",
+  "linkCopied": "Tautan disalin — buka di peramban"
 };

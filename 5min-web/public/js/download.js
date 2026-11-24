@@ -9,7 +9,7 @@
       label: 'App Store',
     },
     android: {
-      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.14.apk',
+      url: 'https://fs-chengdu.oss-cn-chengdu.aliyuncs.com/app/5min-android-app-1.0.15.apk',
       label: '下载',
     },
     harmony: {
@@ -75,12 +75,30 @@
     syncStoreLink(btn, cfg.url, cfg.label);
   });
 
+  /** Only https URLs on 5min.chat or the known APK CDN host. */
+  const trustedApkUrl = (raw) => {
+    const url = String(raw || '').trim();
+    if (!url.toLowerCase().startsWith('https://')) return null;
+    let host = '';
+    try {
+      host = new URL(url).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+    const allowed = new Set([
+      '5min.chat',
+      'www.5min.chat',
+      'fs-chengdu.oss-cn-chengdu.aliyuncs.com',
+    ]);
+    return allowed.has(host) ? url : null;
+  };
+
   const applyAndroidLatest = async () => {
     try {
       const res = await fetch('app/android-latest.json', { cache: 'no-cache' });
       if (!res.ok) return;
       const data = await res.json();
-      const url = String(data && data.apkUrl ? data.apkUrl : '').trim();
+      const url = trustedApkUrl(data && data.apkUrl);
       if (!url) return;
       STORES.android.url = url;
       const row = list.querySelector('[data-platform="android"]');

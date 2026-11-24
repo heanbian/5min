@@ -1,5 +1,8 @@
 package chat.fivemin.app.data
 
+import java.time.Instant
+import java.time.ZoneId
+
 /**
  * On-device scene ranking from local session history (shared rules across clients).
  */
@@ -24,8 +27,8 @@ object SceneRanker {
         val countById = linkedMapOf<String, Int>()
         val lastAtById = linkedMapOf<String, Long>()
         val sameHourById = linkedMapOf<String, Int>()
-        val nowHour = java.util.Calendar.getInstance().apply { timeInMillis = nowMs }
-            .get(java.util.Calendar.HOUR_OF_DAY)
+        val zone = ZoneId.systemDefault()
+        val nowHour = Instant.ofEpochMilli(nowMs).atZone(zone).hour
         for (session in sessions) {
             val id = session.sceneId.trim()
             if (id.isEmpty() || id !in knownIds) continue
@@ -33,8 +36,7 @@ object SceneRanker {
             val prev = lastAtById[id]
             if (prev == null || session.at > prev) lastAtById[id] = session.at
             if (session.at > 0L) {
-                val hour = java.util.Calendar.getInstance().apply { timeInMillis = session.at }
-                    .get(java.util.Calendar.HOUR_OF_DAY)
+                val hour = Instant.ofEpochMilli(session.at).atZone(zone).hour
                 if (hour == nowHour) sameHourById[id] = (sameHourById[id] ?: 0) + 1
             }
         }

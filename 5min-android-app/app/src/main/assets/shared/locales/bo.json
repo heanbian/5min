@@ -219,6 +219,7 @@
   "customSceneUse": "སྤྱོད་པ།",
   "customSceneNameLabel": "མིང་།",
   "customSceneNamePlaceholder": "དཔེར་ན། ལུས་འགུལ",
+  "customSceneMigratedName": "རང་བཟོ།",
   "sceneGroupCustom": "རང་བཟོ།",
   "sceneGroupSuggested": "རྒྱུན་སྤྱོད།",
   "privacyCheckLabel": "ངས་ཀློག་ནས་མོས་མཐུན་བྱས་ཡོད།",
@@ -318,5 +319,15 @@
   "sceneTakeTrash": "སྙིགས་འཁྱེར · སྐར་མ་ ༥",
   "sceneTakeTrashTitle": "སྙིགས་འཁྱེར",
   "sceneTidyUp": "གཙང་སྦྲག · སྐར་མ་ ༡༠",
-  "sceneTidyUpTitle": "གཙང་སྦྲག"
+  "sceneTidyUpTitle": "གཙང་སྦྲག",
+  "streakLabel": "མཐུད་འབྲེལ་ཉིན།",
+  "streakDays": "ཉིན་{n} མཐུད་འབྲེལ།",
+  "streakNone": "དེ་རིང་ཐེངས་གཅིག་ལེགས་འགྲུབ་ན་མཐུད་འབྲེལ་འགོ་ཚུགས།",
+  "shareLabel": "མདོར་བསྡུས་བགོ་འགྲེམ།",
+  "shareText": "གསང་སྤྱོད་དུས་ཚོད་འཁོར་ལོས་ཉིན་༡༤ ནང་ཐེངས་{count} · སྐར་མ་{mins} · ཉིན་{streak} མཐུད། གོམས་གཤིས་དྲན་སྐུལ་ཙམ། https://5min.chat",
+  "shareCopied": "བཤུས་ཟིན།",
+  "shareFailed": "བགོ་འགྲེམ་མ་ཐུབ།",
+  "shareCopyAction": "ཡི་གེ་བཤུ།",
+  "invalidLink": "སྦྲེལ་མཐུད་བཀོལ་མི་ཐུབ།",
+  "linkCopied": "སྦྲེལ་མཐུད་བཤུས་ཟིན། བཤར་ཆས་ནང་ཁ་ཕྱེ།"
 }

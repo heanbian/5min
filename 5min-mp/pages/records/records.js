@@ -5,6 +5,7 @@
 
 const { t } = require('../../utils/i18n');
 const history = require('../../utils/history');
+const { getStreak } = require('../../utils/streak');
 const { resolveSceneTitle } = require('../../utils/catalog');
 const prefs = require('../../utils/prefs');
 const p0 = require('../../utils/p0Features');
@@ -53,6 +54,10 @@ Page({
     overtimeInsightHint: '',
     overtimeInsightTip: '',
     showOvertimeInsight: true,
+    streakLabel: '',
+    streakText: '',
+    shareLabel: '',
+    shareCopyLabel: '',
     rows: [],
     privacyAccepted: true,
     privacyChecked: false,
@@ -131,6 +136,9 @@ Page({
         mins: p0.insightMinutes(ot.ms),
       });
     }
+    const streak = getStreak();
+    const streakText =
+      streak > 0 ? t('streakDays', { n: streak }) : t('streakNone');
     this.setData({
       tabTitle: t('tabRecords'),
       weekStatsLabel: t('weekStatsLabel'),
@@ -153,7 +161,52 @@ Page({
       overtimeInsightHint: t('overtimeInsightHint'),
       overtimeInsightTip: t('overtimeInsightTip'),
       showOvertimeInsight: showInsight,
+      streakLabel: t('streakLabel'),
+      streakText,
+      shareLabel: t('shareLabel'),
+      shareCopyLabel: t('shareCopyAction'),
       rows,
+    });
+  },
+
+  buildShareText() {
+    const period = history.periodStats();
+    const streak = getStreak();
+    return t('shareText', {
+      count: period.count,
+      mins: period.minutes,
+      streak,
+    });
+  },
+
+  onShareAppMessage() {
+    const streak = getStreak();
+    const title =
+      streak > 0
+        ? `${t('brandTitle')} · ${t('streakDays', { n: streak })}`
+        : t('brandTitle');
+    return {
+      title,
+      path: '/pages/index/index',
+    };
+  },
+
+  onCopyShare() {
+    const text = this.buildShareText();
+    wx.setClipboardData({
+      data: text,
+      success: () => {
+        wx.showToast({
+          title: t('shareCopied'),
+          icon: 'none',
+        });
+      },
+      fail: () => {
+        wx.showToast({
+          title: t('shareFailed'),
+          icon: 'none',
+        });
+      },
     });
   },
 

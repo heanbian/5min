@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import android.content.pm.ApplicationInfo
 import chat.fivemin.app.FiveMinApp
+import chat.fivemin.app.alert.AmbientPlayer
 import chat.fivemin.app.alert.FinishAlerter
 import chat.fivemin.app.data.AppLocales
 import chat.fivemin.app.data.CustomScene
@@ -102,6 +103,10 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
             ),
         )
         state = _state.asStateFlow()
+        // Match Harmony: play ambient as soon as a non-off mode is stored (Mine / cold start).
+        if (prefs.ambient != "off") {
+            AmbientPlayer.setMode(prefs.ambient)
+        }
         viewModelScope.launch {
             TimerBus.finished.collect { onExternalFinish(it.sessionId) }
         }
@@ -368,9 +373,11 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setAmbient(mode: String) {
-        prefs.ambient = mode
-        _state.update { it.copy(ambient = mode) }
-        if (mode == "off") FinishAlerter.stop()
+        val next = if (mode == "rain" || mode == "waves" || mode == "clock") mode else "off"
+        prefs.ambient = next
+        _state.update { it.copy(ambient = next) }
+        AmbientPlayer.setMode(next)
+        if (next == "off") FinishAlerter.stop()
         cloud.schedulePushPrefs()
     }
 
@@ -465,6 +472,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 alertProfile = prefs.p0.alertProfile,
             )
         }
+        AmbientPlayer.setMode(prefs.ambient)
         invalidatePickerCache()
     }
 
@@ -526,6 +534,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     fun refreshTodayStats() {
         val (count, ms) = history.todayStats()
         _state.update { it.copy(statsCount = count, statsMs = ms) }
+        TimerAppWidgetProvider.requestUpdate(getApplication())
     }
 
     fun bumpRecordsEpoch() {
@@ -755,12 +764,18 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     private fun startOvertimeTicker() {
         overtimeAt = System.currentTimeMillis()
         overtimeJob?.cancel()
+        var lastOvertimeClock = ""
         overtimeJob = viewModelScope.launch {
             while (isActive) {
                 val s = _state.value
                 if (!s.finished || s.running) break
                 val overtime = max(0L, System.currentTimeMillis() - overtimeAt)
-                _state.update { it.copy(overtimeMs = overtime, phase = TimerPhase.Done) }
+                val clock = format(overtime)
+                // Match countdown ticker: publish ~1 Hz when the dial second changes.
+                if (clock != lastOvertimeClock) {
+                    lastOvertimeClock = clock
+                    _state.update { it.copy(overtimeMs = overtime, phase = TimerPhase.Done) }
+                }
                 delay(250)
             }
         }
@@ -820,6 +835,7 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 showStandRitual = showRitual,
             )
         }
+        TimerAppWidgetProvider.requestUpdate(getApplication())
         startOvertimeTicker()
     }
 

@@ -319,5 +319,15 @@
   "sceneTakeTrash": "Sacar la basura · 5 min",
   "sceneTakeTrashTitle": "Sacar la basura",
   "sceneTidyUp": "Ordenar · 10 min",
-  "sceneTidyUpTitle": "Ordenar"
+  "sceneTidyUpTitle": "Ordenar",
+  "streakLabel": "Racha",
+  "streakDays": "Racha de {n} días",
+  "streakNone": "Complete una sesión hoy para empezar",
+  "shareLabel": "Compartir resumen",
+  "shareText": "Con Temporizador de baño: {count} sesiones en 14 días (~{mins} min), racha de {streak} días. Solo hábito. https://5min.chat",
+  "shareCopied": "Resumen copiado",
+  "shareFailed": "Error al compartir",
+  "shareCopyAction": "Copiar texto",
+  "invalidLink": "Enlace no disponible",
+  "linkCopied": "Enlace copiado: ábralo en el navegador"
 }

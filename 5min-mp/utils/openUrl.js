@@ -10,6 +10,16 @@ const { t } = require('./i18n');
 const ALLOWED_HTTPS =
   /^https:\/\/(?:[a-z0-9-]+\.)*5min\.chat(?::\d+)?(?:[/?#]|$)/i;
 
+/** In-app web-view may only open known public pages (path allowlist). */
+const ALLOWED_PATHS = new Set([
+  '/privacy.html',
+  '/terms.html',
+  '/about.html',
+  '/download.html',
+  '/faq.html',
+  '/',
+]);
+
 function hostOf(url) {
   try {
     return new URL(url).hostname.toLowerCase();
@@ -19,11 +29,23 @@ function hostOf(url) {
   }
 }
 
+function pathOf(url) {
+  try {
+    let p = new URL(url).pathname || '/';
+    if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+    return p || '/';
+  } catch (e) {
+    return '';
+  }
+}
+
 function isAllowedHttps(url) {
   const u = String(url || '').trim();
   if (!ALLOWED_HTTPS.test(u)) return false;
   const host = hostOf(u);
-  return host === '5min.chat' || host.endsWith('.5min.chat');
+  if (!(host === '5min.chat' || host.endsWith('.5min.chat'))) return false;
+  const path = pathOf(u);
+  return ALLOWED_PATHS.has(path);
 }
 
 function openHttps(url) {

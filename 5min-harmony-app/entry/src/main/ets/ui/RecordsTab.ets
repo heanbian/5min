@@ -1,5 +1,6 @@
 import { common } from '@kit.AbilityKit';
 import { promptAction } from '@kit.ArkUI';
+import { pasteboard } from '@kit.BasicServicesKit';
 import { SharedCatalog, SceneItem } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
 import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore';
@@ -36,6 +37,7 @@ export struct RecordsTab {
   @State historyRows: HistoryRowView[] = [];
   @State periodCount: number = 0;
   @State periodMins: number = 0;
+  @State streakDays: number = 0;
   @State uiTick: number = 0;
   @State filterSceneId: string = '';
   @State filterLabel: string = '';
@@ -50,8 +52,11 @@ export struct RecordsTab {
   private cloud: CloudSync | null = null;
   private scenes: SceneItem[] = [];
   private customScenes: CustomScene[] = [];
+  private context: common.UIAbilityContext | null = null;
 
   aboutToAppear(): void {
+    const host = this.getUIContext().getHostContext();
+    this.context = host instanceof common.UIAbilityContext ? host : null;
     this.bootstrap();
   }
 
@@ -69,11 +74,13 @@ export struct RecordsTab {
   }
 
   async bootstrap(): Promise<void> {
-    const context = getContext(this) as common.UIAbilityContext;
-    await this.prefs.init(context);
-    await this.history.init(context);
+    if (!this.context) {
+      return;
+    }
+    await this.prefs.init(this.context);
+    await this.history.init(this.context);
     this.cloud = new CloudSync(this.prefs, this.history);
-    this.catalog = await SharedCatalog.load(context);
+    this.catalog = await SharedCatalog.load(this.context);
     this.scenes = this.catalog.scenes;
     if (!this.locale) {
       const saved = await this.prefs.getLocale();
@@ -97,6 +104,7 @@ export struct RecordsTab {
     const period = await this.history.periodStats();
     this.periodCount = period[0];
     this.periodMins = period[1];
+    this.streakDays = await this.history.streakDays();
     this.filterLabel = this.currentFilterLabel();
     this.showOvertimeInsight = await this.prefs.getShowOvertimeInsight();
     const ot = await this.prefs.readOvertimeStats();
@@ -107,6 +115,36 @@ export struct RecordsTab {
       this.overtimeInsightLine = this.t('overtimeInsightLine', vars);
     } else {
       this.overtimeInsightLine = this.t('overtimeInsightEmpty');
+    }
+  }
+
+  private streakLine(): string {
+    if (this.streakDays > 0) {
+      const vars: Record<string, string> = {};
+      vars['n'] = `${this.streakDays}`;
+      return this.t('streakDays', vars);
+    }
+    return this.t('streakNone');
+  }
+
+  async shareSummary(): Promise<void> {
+    const prompt = this.getUIContext().getPromptAction();
+    try {
+      const values = await this.history.shareSummaryValues();
+      const vars: Record<string, string> = {};
+      vars['count'] = `${values[0]}`;
+      vars['mins'] = `${values[1]}`;
+      vars['streak'] = `${values[2]}`;
+      const text = this.t('shareText', vars);
+      const systemPasteboard = pasteboard.getSystemPasteboard();
+      const pasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+      await systemPasteboard.setData(pasteData);
+      prompt.showToast({ message: this.t('shareCopied'), duration: 2000 });
+    } catch (_) {
+      try {
+        prompt.showToast({ message: this.t('shareFailed'), duration: 2000 });
+      } catch (__) {
+      }
     }
   }
 
@@ -189,7 +227,7 @@ export struct RecordsTab {
         { text: this.t('cancelLabel'), color: '#5F6F66' },
         { text: this.t('historyDelete'), color: '#D2554A' }
       ];
-      const res = await promptAction.showDialog({
+      const res = await this.getUIContext().getPromptAction().showDialog({
         title: this.t('historyDelete'),
         message: this.t('historyDeleteConfirm'),
         buttons: buttons
@@ -214,7 +252,7 @@ export struct RecordsTab {
         { text: this.t('cancelLabel'), color: '#5F6F66' },
         { text: this.t('historyClear'), color: '#D2554A' }
       ];
-      const res = await promptAction.showDialog({
+      const res = await this.getUIContext().getPromptAction().showDialog({
         title: this.t('historyClear'),
         message: this.t('historyClearConfirm'),
         buttons: buttons
@@ -254,7 +292,16 @@ export struct RecordsTab {
             .fontFamily(FiveMinFont.semiBold)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
+            .layoutWeight(1)
             .key(`records-title-${this.uiTick}`)
+          if (this.ready) {
+            Text(this.t('shareLabel'))
+              .fontSize(14)
+              .fontFamily(FiveMinFont.semiBold)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.brand_strong'))
+              .onClick(() => this.shareSummary())
+          }
         }
         .width('100%')
         .height(52)
@@ -325,6 +372,15 @@ export struct RecordsTab {
               }
               .width('100%')
 
+              Text(this.streakLine())
+                .fontSize(13)
+                .fontFamily(FiveMinFont.medium)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.muted'))
+                .width('100%')
+                .padding({ left: 4 })
+                .key(`rec-streak-${this.uiTick}-${this.streakDays}`)
+
               if (this.showOvertimeInsight) {
                 Column({ space: 8 }) {
                   Text(this.t('overtimeInsightTitle'))
@@ -340,12 +396,14 @@ export struct RecordsTab {
                     .fontColor($r('app.color.ink'))
                     .width('100%')
                   Text(this.t('overtimeInsightHint'))
+                    .fontSize(13)
+                    .fontColor($r('app.color.muted'))
+                    .width('100%')
+                    .lineHeight(19)
                   Text(this.t('overtimeInsightTip'))
                     .fontSize(12)
                     .fontColor($r('app.color.muted'))
                     .margin({ top: 4 })
-                    .fontSize(12)
-                    .fontColor($r('app.color.muted'))
                     .width('100%')
                     .lineHeight(18)
                 }

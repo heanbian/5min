@@ -4,7 +4,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import java.io.File
-import java.util.Calendar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -242,6 +244,54 @@ class HistoryStore(context: Context) {
         return list.size to list.sumOf { it.minutes }
     }
 
+    /**
+     * Consecutive calendar days (ending today or yesterday) with ≥1 completed session.
+     * Returns 0 when today and yesterday are both empty.
+     */
+    fun streakDays(): Int {
+        val daySet = sortedDayStarts()
+        if (daySet.isEmpty()) return 0
+        val today = startOfDayMs(System.currentTimeMillis())
+        val dayMs = 24L * 60L * 60L * 1000L
+        var cursor = today
+        if (!daySet.contains(cursor)) {
+            cursor -= dayMs
+            if (!daySet.contains(cursor)) return 0
+        }
+        var streak = 0
+        while (daySet.contains(cursor)) {
+            streak += 1
+            cursor -= dayMs
+        }
+        return streak
+    }
+
+    fun shareSummaryValues(): Triple<Int, Int, Int> {
+        val period = periodStats()
+        return Triple(period.first, period.second, streakDays())
+    }
+
+    private fun sortedDayStarts(): Set<Long> {
+        val out = LinkedHashSet<Long>()
+        db.query(TABLE, arrayOf("at"), null, null, null, null, null).use { c ->
+            val iAt = c.getColumnIndexOrThrow("at")
+            while (c.moveToNext()) {
+                out.add(startOfDayMs(c.getLong(iAt)))
+            }
+        }
+        return out
+    }
+
+    private fun startOfDayMs(at: Long): Long {
+        val zone = ZoneId.systemDefault()
+        return Instant.ofEpochMilli(at)
+            .atZone(zone)
+            .toLocalDate()
+            .atStartOfDay(zone)
+            .toInstant()
+            .toEpochMilli()
+    }
+
     fun todayStats(): Pair<Int, Long> {
         val start = todayStartMs()
         var count = 0
@@ -275,12 +325,11 @@ class HistoryStore(context: Context) {
         System.currentTimeMillis() - HISTORY_DAYS * 24L * 60L * 60L * 1000L
 
     private fun todayStartMs(): Long {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
+        val zone = ZoneId.systemDefault()
+        return LocalDate.now(zone)
+            .atStartOfDay(zone)
+            .toInstant()
+            .toEpochMilli()
     }
 
     companion object {

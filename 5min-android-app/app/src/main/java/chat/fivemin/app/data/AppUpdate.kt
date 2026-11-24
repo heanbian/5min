@@ -30,7 +30,11 @@ sealed class UpdateCheckResult {
 object AppUpdate {
     private const val LATEST_URL = "https://5min.chat/app/android-latest.json"
     private const val FALLBACK_PAGE = "https://5min.chat/download.html"
-    private val TRUSTED_HOSTS = setOf("5min.chat", "www.5min.chat")
+    private val TRUSTED_HOSTS = setOf(
+        "5min.chat",
+        "www.5min.chat",
+        "fs-chengdu.oss-cn-chengdu.aliyuncs.com",
+    )
 
     fun localVersionName(context: Context): String {
         return runCatching { packageInfo(context).versionName.orEmpty() }
@@ -106,12 +110,22 @@ object AppUpdate {
         }
     }
 
-    /** Only https URLs on 5min.chat (or www) are accepted for update / download links. */
+    /** Only https URLs on 5min.chat / www / the known APK CDN host are accepted. */
     fun trustedHttpsUrl(url: String): String? {
         val target = url.trim()
         if (!target.startsWith("https://", ignoreCase = true)) return null
-        val host = runCatching { Uri.parse(target).host?.lowercase() }.getOrNull() ?: return null
+        val uri = runCatching { Uri.parse(target) }.getOrNull() ?: return null
+        if (!uri.userInfo.isNullOrEmpty()) return null
+        val port = uri.port
+        if (port != -1 && port != 443) return null
+        val host = uri.host?.lowercase() ?: return null
         if (host !in TRUSTED_HOSTS) return null
+        // OSS host may only serve APK installers — block arbitrary objects.
+        if (host == "fs-chengdu.oss-cn-chengdu.aliyuncs.com" &&
+            !target.substringBefore('?').endsWith(".apk", ignoreCase = true)
+        ) {
+            return null
+        }
         return target
     }
 

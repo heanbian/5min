@@ -3,7 +3,11 @@ package chat.fivemin.app.data
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import org.json.JSONObject
-import java.util.Calendar
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.max
@@ -23,20 +27,12 @@ class P0Features(private val sp: SharedPreferences) {
     )
 
     fun weekKey(nowMs: Long = System.currentTimeMillis()): String {
-        val cal = Calendar.getInstance().apply {
-            timeInMillis = nowMs
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val day = cal.get(Calendar.DAY_OF_WEEK) // Sun=1 … Sat=7
-        val diff = if (day == Calendar.SUNDAY) -6 else Calendar.MONDAY - day
-        cal.add(Calendar.DAY_OF_MONTH, diff)
-        val y = cal.get(Calendar.YEAR)
-        val m = cal.get(Calendar.MONTH) + 1
-        val d = cal.get(Calendar.DAY_OF_MONTH)
-        return String.format(Locale.US, "%04d-%02d-%02d", y, m, d)
+        val zone = ZoneId.systemDefault()
+        val monday = Instant.ofEpochMilli(nowMs)
+            .atZone(zone)
+            .toLocalDate()
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        return monday.format(WEEK_KEY_FMT)
     }
 
     fun readOvertimeStats(): OvertimeStats {
@@ -174,5 +170,8 @@ class P0Features(private val sp: SharedPreferences) {
         private const val KEY_OVERTIME_INSIGHT = "5min.overtime_insight"
         private const val KEY_STAND_RITUAL = "5min.stand_ritual"
         private const val KEY_ALERT_PROFILE = "5min.alert_profile"
+
+        private val WEEK_KEY_FMT: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.US)
     }
 }

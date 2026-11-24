@@ -24,11 +24,24 @@
 		<string>Fonts/PlusJakartaSans-Bold.ttf</string>
 	</array>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.9</string>
+	<string>1.0.10</string>
 	<key>CFBundleVersion</key>
-	<string>10</string>
+	<string>11</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>chat.5min.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fiveMin</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>用于倒计时结束后发送本机通知，提醒起身活动。仅供习惯提醒。</string>
 	<key>UIApplicationSceneManifest</key>

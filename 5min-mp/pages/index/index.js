@@ -6,7 +6,6 @@
 const { t, getLocale } = require('../../utils/i18n');
 const {
   DEFAULT_MIN,
-  ALERT_DURATION_MS,
   sceneById,
   buildScenePicker,
   resolveSceneTitle,
@@ -20,7 +19,15 @@ const {
   statsMinutes,
 } = require('../../utils/stats');
 const history = require('../../utils/history');
-const { alertFinish, clearAlerts, unlockAlertAudio } = require('../../utils/alert');
+const {
+  alertFinishStrong,
+  clearAlerts,
+  unlockAlertAudio,
+  setFinishAlertPending,
+  clearFinishAlertPending,
+  realertFinishIfPending,
+} = require('../../utils/alert');
+const { requestFinishSubscribe } = require('../../utils/subscribeNotify');
 const { drawDigitalWatch } = require('../../utils/digitalWatch');
 const {
   initAmbient,
@@ -203,6 +210,8 @@ Page({
     this.refreshStats();
     if (this.running && this.endAt) {
       this.tick();
+    } else if (this.finished && !this.running) {
+      realertFinishIfPending();
     }
   },
 
@@ -366,9 +375,9 @@ Page({
         if (!info || !info.node) return;
         const canvas = info.node;
         const ctx = canvas.getContext('2d');
-        const dpr = wx.getWindowInfo
-          ? wx.getWindowInfo().pixelRatio
-          : wx.getSystemInfoSync().pixelRatio || 1;
+        const win =
+          typeof wx.getWindowInfo === 'function' ? wx.getWindowInfo() : null;
+        const dpr = (win && win.pixelRatio) || 1;
         const css = Math.round(info.width || 260);
         canvas.width = css * dpr;
         canvas.height = css * dpr;
@@ -471,6 +480,7 @@ Page({
   resetToIdleAfterFinish() {
     this.stopTicker();
     clearAlerts();
+    clearFinishAlertPending();
     this.finishedHandled = false;
     this.clearOvertimeState();
     this.lastRecordedSessionId = '';
@@ -494,12 +504,53 @@ Page({
     this.resetToIdleAfterFinish();
   },
 
+  /** Lightweight tick path — dial / status / phase only (avoids full setData churn). */
+  refreshTickUi() {
+    const remain = this.remainMs;
+    const running = this.running;
+    const finished = this.finished;
+    let phase = visualPhase(remain, running, finished);
+    let timeText = formatTime(remain);
+
+    if (this.inOvertime) {
+      timeText = `+${formatOvertime(this.overtimeMs)}`;
+      phase = 'done';
+    }
+
+    let primaryLabel = t('start');
+    if (finished && !running) primaryLabel = t('again');
+    else if (running) primaryLabel = t('pause');
+    else if (remain < this.totalMs && remain > 0) primaryLabel = t('resume');
+
+    let statusText = t('statusIdle');
+    if (this.inOvertime) {
+      statusText = t('statusOvertime', { n: formatOvertime(this.overtimeMs) });
+    } else if (finished || remain <= 0) statusText = statusDoneText(this.activeSceneId);
+    else if (running && remain <= WARN_MS) statusText = t('statusWarn');
+    else if (running) statusText = t('statusRunning');
+    else if (remain < this.totalMs) statusText = t('statusPaused');
+
+    const dialProgress = this.inOvertime ? 0 : (this.totalMs > 0 ? remain / this.totalMs : 0);
+
+    this.setData({
+      timeText,
+      statusText,
+      primaryLabel,
+      canReset: running || remain < this.totalMs || finished,
+      running,
+      phase,
+      showIgnore: finished && !!this.lastRecordedSessionId,
+    });
+
+    this.drawDial(dialProgress, timeText, phase);
+  },
+
   refreshUi() {
     const remain = this.remainMs;
     const running = this.running;
     const finished = this.finished;
     let phase = visualPhase(remain, running, finished);
-  let timeText = formatTime(remain);
+    let timeText = formatTime(remain);
 
     if (this.inOvertime) {
       timeText = `+${formatOvertime(this.overtimeMs)}`;
@@ -556,10 +607,9 @@ Page({
       scene: this.notifySceneName(),
     };
     const alerts = p0.resolveFinishAlerts(prefs);
-    alertFinish({
+    alertFinishStrong({
       title: t('notifyTitle', vars),
       body: notifyBodyText(this.activeSceneId, vars),
-      durationMs: ALERT_DURATION_MS,
       withNotify: alerts.withNotify,
       withVibrate: alerts.withVibrate,
       withTone: alerts.withTone,
@@ -593,7 +643,7 @@ Page({
       const dial = `+${formatOvertime(this.overtimeMs)}`;
       if (dial !== this.lastTickDial) {
         this.lastTickDial = dial;
-        this.refreshUi();
+        this.refreshTickUi();
       }
       return;
     }
@@ -608,7 +658,7 @@ Page({
     // Throttle setData to ~1Hz when only the dial second changes.
     if (dial !== this.lastTickDial) {
       this.lastTickDial = dial;
-      this.refreshUi();
+      this.refreshTickUi();
     }
   },
 
@@ -635,14 +685,16 @@ Page({
       scene: this.notifySceneName(),
     };
     const alerts = p0.resolveFinishAlerts(prefs);
-    alertFinish({
+    const finishOpts = {
       title: t('notifyTitle', vars),
       body: notifyBodyText(this.activeSceneId, vars),
-      durationMs: ALERT_DURATION_MS,
       withNotify: alerts.withNotify,
       withVibrate: alerts.withVibrate,
       withTone: alerts.withTone,
-    });
+    };
+    // Keep for App/page onShow re-alert (local only — no server push).
+    setFinishAlertPending(finishOpts);
+    alertFinishStrong(finishOpts);
     this.maybeShowRitual();
   },
 
@@ -703,6 +755,7 @@ Page({
     this.clearOvertimeState();
     this.lastRecordedSessionId = '';
     clearAlerts();
+    clearFinishAlertPending();
     this.finishedHandled = false;
     this.finished = false;
     this.totalMs = Math.max(1, minutes) * 60 * 1000;
@@ -752,6 +805,7 @@ Page({
       this.clearOvertimeState();
       this.lastRecordedSessionId = '';
       clearAlerts();
+      clearFinishAlertPending();
       this.remainMs = this.totalMs;
       this.finished = false;
       this.finishedHandled = false;
@@ -765,9 +819,19 @@ Page({
     }
   },
 
-  start() {
+  async start() {
     if (this.remainMs <= 0) return;
+    // Subscribe-message grant is one-shot for future server push only; still
+    // prompt when finishNotify is on so product can wire templates later.
+    if (prefs.getFinishNotify()) {
+      try {
+        await requestFinishSubscribe();
+      } catch (e) {
+        /* ignore */
+      }
+    }
     clearAlerts();
+    clearFinishAlertPending();
     unlockAlertAudio();
     this.finishedHandled = false;
     this.finished = false;
@@ -796,6 +860,7 @@ Page({
     this.commitOvertimeToHistoryIfNeeded();
     this.stopTicker();
     clearAlerts();
+    clearFinishAlertPending();
     this.finishedHandled = false;
     this.clearOvertimeState();
     this.lastRecordedSessionId = '';

@@ -8,4 +8,8 @@
     <string name="notif_finish_body">%1$d 分钟已结束，请起身活动。</string>
     <string name="shortcut_toilet_short">开始如厕</string>
     <string name="shortcut_toilet_long">开始如厕 · 5 分钟</string>
+    <string name="widget_description">今日次数与快速开始如厕</string>
+    <string name="widget_today_count">今日 %1$d 次</string>
+    <string name="widget_start_toilet">开始 5 分钟</string>
 </resources>
+

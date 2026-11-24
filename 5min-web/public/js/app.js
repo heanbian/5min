@@ -45,6 +45,26 @@ import {
   statsMinutes,
 } from './stats.js';
 import {
+  getHistory,
+  periodStats,
+  getStreak,
+  deleteSession,
+  clearHistory,
+} from './history.js';
+import {
+  listCustomScenes,
+  getCustomScene,
+  addCustomScene,
+  updateCustomScene,
+  deleteCustomScene,
+  GROUP_ID as CUSTOM_GROUP_ID,
+  MAX_COUNT as CUSTOM_MAX_COUNT,
+  MAX_NAME as CUSTOM_MAX_NAME,
+  sanitizeName,
+  clampMinutes,
+} from './custom-scenes.js';
+import { shareSummary } from './share.js';
+import {
   getAmbientMode,
   setAmbientMode,
   stopAmbient,
@@ -93,6 +113,40 @@ const ambientBtn = document.querySelector('#ambientBtn');
 const ambientPanel = document.querySelector('#ambientPanel');
 const ambientWrap = document.querySelector('#ambientWrap');
 const metaDescription = document.querySelector('meta[name="description"]');
+const recordsBtn = document.querySelector('#recordsBtn');
+const recordsSheet = document.querySelector('#recordsSheet');
+const recordsBackdrop = document.querySelector('#recordsBackdrop');
+const recordsClose = document.querySelector('#recordsClose');
+const recordsTitle = document.querySelector('#recordsTitle');
+const recordsPeriod = document.querySelector('#recordsPeriod');
+const recordsStreak = document.querySelector('#recordsStreak');
+const historyFilter = document.querySelector('#historyFilter');
+const historyFilterLabel = document.querySelector('#historyFilterLabel');
+const historyList = document.querySelector('#historyList');
+const historyEmptyHint = document.querySelector('#historyEmptyHint');
+const historyClearBtn = document.querySelector('#historyClearBtn');
+const shareBtn = document.querySelector('#shareBtn');
+const shareToast = document.querySelector('#shareToast');
+const customScenesBtn = document.querySelector('#customScenesBtn');
+const customScenesSheet = document.querySelector('#customScenesSheet');
+const customScenesBackdrop = document.querySelector('#customScenesBackdrop');
+const customScenesClose = document.querySelector('#customScenesClose');
+const customScenesTitle = document.querySelector('#customScenesTitle');
+const customScenesHint = document.querySelector('#customScenesHint');
+const customSceneList = document.querySelector('#customSceneList');
+const customSceneForm = document.querySelector('#customSceneForm');
+const customSceneEditId = document.querySelector('#customSceneEditId');
+const customSceneName = document.querySelector('#customSceneName');
+const customSceneMin = document.querySelector('#customSceneMin');
+const customSceneNameLabel = document.querySelector('#customSceneNameLabel');
+const customSceneMinLabel = document.querySelector('#customSceneMinLabel');
+const customSceneSaveBtn = document.querySelector('#customSceneSaveBtn');
+const customSceneCancelBtn = document.querySelector('#customSceneCancelBtn');
+
+/** @type {string} */
+let historyFilterSceneId = '';
+/** @type {number} */
+let shareToastTimer = 0;
 
 const qs = new URLSearchParams(location.search);
 const secRaw = Number.parseInt(qs.get('sec') ?? '', 10);
@@ -148,7 +202,7 @@ const restoreTimerSession = () => {
     const nextTotal = Number(data.totalMs);
     if (!Number.isFinite(nextTotal) || nextTotal < 1000 || nextTotal > 3_600_000) return false;
     const sceneId = data.activeScene == null ? null : String(data.activeScene);
-    if (sceneId && !SCENES.some((s) => s.id === sceneId)) return false;
+    if (sceneId && !findBuiltInScene(sceneId) && !getCustomScene(sceneId)) return false;
 
     totalMs = Math.floor(nextTotal);
     activeScene = sceneId;
@@ -348,7 +402,41 @@ const setSceneListOpen = (open) => {
   sceneTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
 };
 
-const appendSceneGroup = (groupId, labelKey, items) => {
+const findBuiltInScene = (id) => SCENES.find((s) => s.id === id) || null;
+
+/** Display title for a scene id (built-in or custom). Plain text only. */
+const resolveSceneTitle = (sceneId) => {
+  if (!sceneId) return tr('historySceneDefault');
+  const builtIn = findBuiltInScene(sceneId);
+  if (builtIn) return tr(builtIn.titleKey || builtIn.labelKey);
+  const custom = getCustomScene(sceneId);
+  if (custom) return custom.name;
+  return tr('historySceneDefault');
+};
+
+const scenePickerLabel = (sceneId) => {
+  if (!sceneId) return tr('scenePlaceholder');
+  const builtIn = findBuiltInScene(sceneId);
+  if (builtIn) return tr(builtIn.labelKey);
+  const custom = getCustomScene(sceneId);
+  if (custom) {
+    const unit = tr('customUnit');
+    return `${custom.name} · ${custom.min} ${unit}`;
+  }
+  return tr('scenePlaceholder');
+};
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+const formatDateTime = (at) => {
+  const d = new Date(at);
+  return (
+    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ` +
+    `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+  );
+};
+
+const appendSceneGroup = (groupId, labelText, items, { custom = false } = {}) => {
   if (!items.length || !sceneList) return;
   const groupLi = document.createElement('li');
   groupLi.className = 'scene-group';
@@ -357,13 +445,13 @@ const appendSceneGroup = (groupId, labelKey, items) => {
   const label = document.createElement('div');
   label.className = 'scene-group-label';
   label.setAttribute('aria-hidden', 'true');
-  label.textContent = tr(labelKey);
+  label.textContent = labelText;
   groupLi.append(label);
 
   const sub = document.createElement('ul');
   sub.className = 'scene-group-list';
   sub.setAttribute('role', 'group');
-  sub.setAttribute('aria-label', tr(labelKey));
+  sub.setAttribute('aria-label', labelText);
 
   for (const scene of items) {
     const li = document.createElement('li');
@@ -371,10 +459,13 @@ const appendSceneGroup = (groupId, labelKey, items) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.scene = scene.id;
+    if (custom) btn.dataset.custom = '1';
     btn.setAttribute('role', 'option');
     btn.setAttribute('aria-selected', scene.id === activeScene ? 'true' : 'false');
     btn.classList.toggle('active', scene.id === activeScene);
-    btn.textContent = tr(scene.labelKey);
+    btn.textContent = custom
+      ? `${scene.name} · ${scene.min} ${tr('customUnit')}`
+      : tr(scene.labelKey);
     li.append(btn);
     sub.append(li);
   }
@@ -390,14 +481,14 @@ const syncSceneSelect = () => {
   sceneList.setAttribute('aria-label', tr('scenesLabel'));
 
   const profile = resolveSceneProfile(locale);
-  if (activeScene && isSceneHidden(activeScene, profile)) {
+  const customs = listCustomScenes();
+  if (activeScene && isSceneHidden(activeScene, profile) && !getCustomScene(activeScene)) {
     activeScene = null;
     persistTimerSession();
   }
 
-  const selected = activeScene ? SCENES.find((s) => s.id === activeScene) : null;
-  if (selected) {
-    sceneTriggerLabel.textContent = tr(selected.labelKey);
+  if (activeScene && (findBuiltInScene(activeScene) || getCustomScene(activeScene))) {
+    sceneTriggerLabel.textContent = scenePickerLabel(activeScene);
     sceneTrigger.classList.remove('is-placeholder');
   } else {
     sceneTriggerLabel.textContent = tr('scenePlaceholder');
@@ -405,7 +496,10 @@ const syncSceneSelect = () => {
   }
 
   sceneList.replaceChildren();
-  const known = new Set(SCENES.map((s) => s.id));
+  const known = new Set([
+    ...SCENES.map((s) => s.id),
+    ...customs.map((s) => s.id),
+  ]);
   const ranked = rankScenes(getSceneSessions(), known);
   const suggested = mergePinnedSuggested(
     ranked,
@@ -414,23 +508,68 @@ const syncSceneSelect = () => {
     SUGGESTED_TOP_N,
     profile.hideScenes
   )
-    .map((id) => SCENES.find((s) => s.id === id))
+    .map((id) => {
+      const builtIn = findBuiltInScene(id);
+      if (builtIn) return { ...builtIn, _custom: false };
+      const custom = getCustomScene(id);
+      if (custom) return { id: custom.id, name: custom.name, min: custom.min, _custom: true };
+      return null;
+    })
     .filter(Boolean);
-  appendSceneGroup('suggested', SUGGESTED_LABEL_KEY, suggested);
+
+  if (suggested.length) {
+    const groupLi = document.createElement('li');
+    groupLi.className = 'scene-group';
+    groupLi.setAttribute('role', 'presentation');
+    const label = document.createElement('div');
+    label.className = 'scene-group-label';
+    label.setAttribute('aria-hidden', 'true');
+    label.textContent = tr(SUGGESTED_LABEL_KEY);
+    groupLi.append(label);
+    const sub = document.createElement('ul');
+    sub.className = 'scene-group-list';
+    sub.setAttribute('role', 'group');
+    sub.setAttribute('aria-label', tr(SUGGESTED_LABEL_KEY));
+    for (const scene of suggested) {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'presentation');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.scene = scene.id;
+      if (scene._custom) btn.dataset.custom = '1';
+      btn.setAttribute('role', 'option');
+      btn.setAttribute('aria-selected', scene.id === activeScene ? 'true' : 'false');
+      btn.classList.toggle('active', scene.id === activeScene);
+      btn.textContent = scene._custom
+        ? `${scene.name} · ${scene.min} ${tr('customUnit')}`
+        : tr(scene.labelKey);
+      li.append(btn);
+      sub.append(li);
+    }
+    groupLi.append(sub);
+    sceneList.append(groupLi);
+  }
+
+  appendSceneGroup(CUSTOM_GROUP_ID, tr('sceneGroupCustom'), customs, { custom: true });
 
   for (const group of orderSceneGroups(SCENE_GROUPS, profile)) {
     const items = SCENES.filter(
       (s) => s.group === group.id && !isSceneHidden(s.id, profile)
     );
-    appendSceneGroup(group.id, group.labelKey, items);
+    appendSceneGroup(group.id, tr(group.labelKey), items);
   }
 };
 
 const syncBrandTitle = () => {
   if (activeScene) {
-    const scene = SCENES.find((s) => s.id === activeScene);
-    if (scene) {
-      brandTitle.textContent = tr(scene.titleKey);
+    const builtIn = findBuiltInScene(activeScene);
+    if (builtIn) {
+      brandTitle.textContent = tr(builtIn.titleKey);
+      return;
+    }
+    const custom = getCustomScene(activeScene);
+    if (custom) {
+      brandTitle.textContent = custom.name;
       return;
     }
   }
@@ -473,13 +612,215 @@ const applyStaticI18n = () => {
 
   syncSceneSelect();
   syncAmbientI18n();
+  syncPanelI18n();
   renderDailyStats();
+  if (!recordsSheet?.hidden) renderRecordsPanel();
+  if (!customScenesSheet?.hidden) renderCustomScenesPanel();
   syncStartLabel();
   if (!titleBlinkId) {
     const suffix = pack.titleSuffix || '';
     document.title = (running || remainMs < totalMs)
       ? (suffix ? `${fmt(remainMs)} · ${suffix}` : fmt(remainMs))
       : pack.titleIdle;
+  }
+};
+
+const syncPanelI18n = () => {
+  if (recordsBtn) recordsBtn.setAttribute('aria-label', tr('tabRecords'));
+  if (customScenesBtn) customScenesBtn.setAttribute('aria-label', tr('customScenesLabel'));
+  if (recordsTitle) recordsTitle.textContent = tr('tabRecords');
+  if (customScenesTitle) customScenesTitle.textContent = tr('customScenesLabel');
+  if (historyFilterLabel) historyFilterLabel.textContent = tr('historyFilterLabel');
+  if (historyClearBtn) historyClearBtn.textContent = tr('historyClear');
+  if (shareBtn) shareBtn.textContent = tr('shareLabel');
+  if (customScenesHint) customScenesHint.textContent = tr('customScenesEmptyHint');
+  if (customSceneNameLabel) customSceneNameLabel.textContent = tr('customSceneNameLabel');
+  if (customSceneMinLabel) customSceneMinLabel.textContent = tr('customSceneMinLabel');
+  if (customSceneName) customSceneName.placeholder = tr('customSceneNamePlaceholder');
+  if (customSceneSaveBtn) {
+    const editing = !!(customSceneEditId && customSceneEditId.value);
+    customSceneSaveBtn.textContent = editing ? tr('customSceneEdit') : tr('customSceneAdd');
+  }
+  if (customSceneCancelBtn) customSceneCancelBtn.textContent = tr('cancelLabel');
+  if (recordsClose) recordsClose.setAttribute('aria-label', tr('closeLabel'));
+  if (customScenesClose) customScenesClose.setAttribute('aria-label', tr('closeLabel'));
+  if (recordsBackdrop) recordsBackdrop.setAttribute('aria-label', tr('closeLabel'));
+  if (customScenesBackdrop) customScenesBackdrop.setAttribute('aria-label', tr('closeLabel'));
+};
+
+const setRecordsOpen = (open) => {
+  if (!recordsSheet || !recordsBtn) return;
+  recordsSheet.hidden = !open;
+  recordsBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  document.body.classList.toggle('sheet-open', open || !(customScenesSheet?.hidden ?? true));
+  if (open) {
+    setCustomScenesOpen(false);
+    setSceneListOpen(false);
+    setAmbientPanelOpen(false);
+    setLangPanelOpen(false);
+    renderRecordsPanel();
+  }
+};
+
+const setCustomScenesOpen = (open) => {
+  if (!customScenesSheet || !customScenesBtn) return;
+  customScenesSheet.hidden = !open;
+  customScenesBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  document.body.classList.toggle('sheet-open', open || !(recordsSheet?.hidden ?? true));
+  if (open) {
+    setRecordsOpen(false);
+    setSceneListOpen(false);
+    setAmbientPanelOpen(false);
+    setLangPanelOpen(false);
+    resetCustomSceneForm();
+    renderCustomScenesPanel();
+  }
+};
+
+const showShareToast = (msg) => {
+  if (!shareToast) return;
+  shareToast.hidden = false;
+  shareToast.textContent = msg;
+  if (shareToastTimer) clearTimeout(shareToastTimer);
+  shareToastTimer = window.setTimeout(() => {
+    shareToast.hidden = true;
+    shareToast.textContent = '';
+  }, 2200);
+};
+
+const renderRecordsPanel = () => {
+  if (!recordsPeriod || !recordsStreak || !historyList) return;
+  const period = periodStats();
+  const streak = getStreak();
+
+  recordsPeriod.replaceChildren();
+  const periodLabel = document.createElement('span');
+  periodLabel.textContent = tr('weekStatsLabel');
+  const periodVals = document.createElement('strong');
+  if (period.count <= 0) {
+    periodVals.textContent = tr('weekStatsEmpty');
+  } else {
+    periodVals.textContent = tr('weekStatsText', {
+      count: String(period.count),
+      mins: String(period.minutes),
+    });
+  }
+  recordsPeriod.append(periodLabel, periodVals);
+
+  recordsStreak.replaceChildren();
+  const streakLabel = document.createElement('span');
+  streakLabel.textContent = tr('streakLabel');
+  const streakVals = document.createElement('strong');
+  streakVals.textContent = streak > 0
+    ? tr('streakDays', { n: String(streak) })
+    : tr('streakNone');
+  recordsStreak.append(streakLabel, streakVals);
+
+  if (historyFilter) {
+    const all = getHistory();
+    const seen = new Set();
+    historyFilter.replaceChildren();
+    const optAll = document.createElement('option');
+    optAll.value = '';
+    optAll.textContent = tr('historyFilterAll');
+    historyFilter.append(optAll);
+    for (const row of all) {
+      const sid = row.sceneId;
+      if (!sid || seen.has(sid)) continue;
+      seen.add(sid);
+      const opt = document.createElement('option');
+      opt.value = sid;
+      opt.textContent = resolveSceneTitle(sid);
+      historyFilter.append(opt);
+    }
+    historyFilter.value = historyFilterSceneId;
+    if (historyFilter.value !== historyFilterSceneId) {
+      historyFilterSceneId = '';
+      historyFilter.value = '';
+    }
+  }
+
+  const rows = getHistory(historyFilterSceneId || undefined);
+  historyList.replaceChildren();
+  if (historyEmptyHint) {
+    historyEmptyHint.hidden = rows.length > 0;
+    historyEmptyHint.textContent = tr('historyEmpty');
+  }
+  for (const row of rows) {
+    const li = document.createElement('li');
+    li.className = 'history-item';
+    const body = document.createElement('div');
+    body.className = 'history-item-body';
+    const sceneEl = document.createElement('div');
+    sceneEl.className = 'history-item-scene';
+    sceneEl.textContent = resolveSceneTitle(row.sceneId);
+    const meta = document.createElement('div');
+    meta.className = 'history-item-meta';
+    meta.textContent = `${tr('historyDurationLine', { n: String(row.minutes) })} · ${tr('historyTimeLine', { time: formatDateTime(row.at) })}`;
+    body.append(sceneEl, meta);
+    const actions = document.createElement('div');
+    actions.className = 'history-item-actions';
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.dataset.historyDelete = row.id;
+    del.textContent = tr('historyDelete');
+    actions.append(del);
+    li.append(body, actions);
+    historyList.append(li);
+  }
+};
+
+const resetCustomSceneForm = () => {
+  if (customSceneEditId) customSceneEditId.value = '';
+  if (customSceneName) customSceneName.value = '';
+  if (customSceneMin) customSceneMin.value = '5';
+  if (customSceneCancelBtn) customSceneCancelBtn.hidden = true;
+  if (customSceneSaveBtn) customSceneSaveBtn.textContent = tr('customSceneAdd');
+};
+
+const renderCustomScenesPanel = () => {
+  if (!customSceneList) return;
+  const scenes = listCustomScenes();
+  customSceneList.replaceChildren();
+  if (customScenesHint) {
+    customScenesHint.textContent = scenes.length
+      ? tr('customScenesCount', { n: String(scenes.length) })
+      : tr('customScenesEmptyHint');
+  }
+  for (const scene of scenes) {
+    const li = document.createElement('li');
+    li.className = 'custom-scene-item';
+    const body = document.createElement('div');
+    body.className = 'custom-scene-item-body';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'custom-scene-item-name';
+    nameEl.textContent = scene.name;
+    const meta = document.createElement('div');
+    meta.className = 'custom-scene-item-meta';
+    meta.textContent = `${scene.min} ${tr('customUnit')}`;
+    body.append(nameEl, meta);
+    const actions = document.createElement('div');
+    actions.className = 'custom-scene-item-actions';
+    const useBtn = document.createElement('button');
+    useBtn.type = 'button';
+    useBtn.dataset.customUse = scene.id;
+    useBtn.textContent = tr('customSceneUse');
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.dataset.customEdit = scene.id;
+    editBtn.textContent = tr('customSceneEdit');
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.dataset.customDelete = scene.id;
+    delBtn.textContent = tr('historyDelete');
+    actions.append(useBtn, editBtn, delBtn);
+    li.append(body, actions);
+    customSceneList.append(li);
+  }
+  if (customSceneSaveBtn && listCustomScenes().length >= CUSTOM_MAX_COUNT && !(customSceneEditId?.value)) {
+    customSceneSaveBtn.disabled = true;
+  } else if (customSceneSaveBtn) {
+    customSceneSaveBtn.disabled = false;
   }
 };
 
@@ -565,8 +906,10 @@ const sessionMinutes = () => Math.max(1, Math.round(totalMs / 60_000));
 /** Scene title for finish notify; generic brand when no scene selected. */
 const notifySceneName = () => {
   if (activeScene) {
-    const scene = SCENES.find((s) => s.id === activeScene);
-    if (scene) return tr(scene.titleKey);
+    const builtIn = findBuiltInScene(activeScene);
+    if (builtIn) return tr(builtIn.titleKey);
+    const custom = getCustomScene(activeScene);
+    if (custom) return custom.name;
   }
   return tr('brandTitle');
 };
@@ -863,10 +1206,141 @@ sceneTrigger?.addEventListener('click', (event) => {
 sceneList?.addEventListener('click', (event) => {
   const btn = event.target.closest('button[data-scene]');
   if (!(btn instanceof HTMLButtonElement) || btn.disabled) return;
-  const scene = SCENES.find((s) => s.id === btn.dataset.scene);
-  if (!scene) return;
-  setPreset(scene.min, scene.id);
+  const id = btn.dataset.scene || '';
+  const builtIn = findBuiltInScene(id);
+  if (builtIn) {
+    setPreset(builtIn.min, builtIn.id);
+    setSceneListOpen(false);
+    return;
+  }
+  const custom = getCustomScene(id);
+  if (!custom) return;
+  setPreset(custom.min, custom.id);
   setSceneListOpen(false);
+});
+
+recordsBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  setRecordsOpen(!!recordsSheet?.hidden);
+});
+
+recordsClose?.addEventListener('click', () => setRecordsOpen(false));
+recordsBackdrop?.addEventListener('click', () => setRecordsOpen(false));
+
+customScenesBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  setCustomScenesOpen(!!customScenesSheet?.hidden);
+});
+
+customScenesClose?.addEventListener('click', () => setCustomScenesOpen(false));
+customScenesBackdrop?.addEventListener('click', () => setCustomScenesOpen(false));
+
+historyFilter?.addEventListener('change', () => {
+  historyFilterSceneId = historyFilter.value || '';
+  renderRecordsPanel();
+});
+
+historyClearBtn?.addEventListener('click', () => {
+  if (!globalThis.confirm(tr('historyClearConfirm'))) return;
+  clearHistory();
+  renderRecordsPanel();
+  renderDailyStats();
+});
+
+historyList?.addEventListener('click', (event) => {
+  const btn = event.target.closest('button[data-history-delete]');
+  if (!(btn instanceof HTMLButtonElement)) return;
+  if (!globalThis.confirm(tr('historyDeleteConfirm'))) return;
+  deleteSession(btn.dataset.historyDelete || '');
+  renderRecordsPanel();
+  renderDailyStats();
+});
+
+shareBtn?.addEventListener('click', () => {
+  void (async () => {
+    const period = periodStats();
+    const streak = getStreak();
+    const title = tr('shareLabel');
+    const text = tr('shareText', {
+      count: String(period.count),
+      mins: String(period.minutes),
+      streak: String(streak),
+    });
+    const result = await shareSummary({ title, text, brand: '5min.chat' });
+    if (result === 'copied') showShareToast(tr('shareCopied'));
+    else if (result === 'failed') showShareToast(tr('shareFailed'));
+  })();
+});
+
+customSceneList?.addEventListener('click', (event) => {
+  const useBtn = event.target.closest('button[data-custom-use]');
+  if (useBtn instanceof HTMLButtonElement) {
+    const scene = getCustomScene(useBtn.dataset.customUse || '');
+    if (!scene || running) return;
+    setPreset(scene.min, scene.id);
+    setCustomScenesOpen(false);
+    return;
+  }
+  const editBtn = event.target.closest('button[data-custom-edit]');
+  if (editBtn instanceof HTMLButtonElement) {
+    const scene = getCustomScene(editBtn.dataset.customEdit || '');
+    if (!scene) return;
+    if (customSceneEditId) customSceneEditId.value = scene.id;
+    if (customSceneName) customSceneName.value = scene.name;
+    if (customSceneMin) customSceneMin.value = String(scene.min);
+    if (customSceneCancelBtn) customSceneCancelBtn.hidden = false;
+    if (customSceneSaveBtn) {
+      customSceneSaveBtn.textContent = tr('customSceneEdit');
+      customSceneSaveBtn.disabled = false;
+    }
+    customSceneName?.focus();
+    return;
+  }
+  const delBtn = event.target.closest('button[data-custom-delete]');
+  if (!(delBtn instanceof HTMLButtonElement)) return;
+  if (!globalThis.confirm(tr('customSceneDeleteConfirm'))) return;
+  const id = delBtn.dataset.customDelete || '';
+  deleteCustomScene(id);
+  if (activeScene === id) {
+    activeScene = null;
+    persistTimerSession();
+    syncSceneUi();
+  }
+  if (customSceneEditId?.value === id) resetCustomSceneForm();
+  renderCustomScenesPanel();
+  syncSceneSelect();
+});
+
+customSceneForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = sanitizeName(customSceneName?.value || '');
+  const min = clampMinutes(customSceneMin?.value || 5);
+  if (!name) {
+    customSceneName?.focus();
+    return;
+  }
+  const editId = customSceneEditId?.value || '';
+  if (editId) {
+    updateCustomScene(editId, name, min);
+  } else {
+    if (listCustomScenes().length >= CUSTOM_MAX_COUNT) return;
+    addCustomScene(name, min);
+  }
+  resetCustomSceneForm();
+  renderCustomScenesPanel();
+  syncSceneSelect();
+});
+
+customSceneCancelBtn?.addEventListener('click', () => {
+  resetCustomSceneForm();
+});
+
+customSceneName?.addEventListener('input', () => {
+  if (!(customSceneName instanceof HTMLInputElement)) return;
+  const cleaned = sanitizeName(customSceneName.value);
+  if (cleaned !== customSceneName.value && customSceneName.value.length > CUSTOM_MAX_NAME) {
+    customSceneName.value = cleaned;
+  }
 });
 
 ambientBtn?.addEventListener('click', (event) => {
@@ -915,6 +1389,8 @@ document.addEventListener('keydown', (event) => {
     setSceneListOpen(false);
     setAmbientPanelOpen(false);
     setLangPanelOpen(false);
+    setRecordsOpen(false);
+    setCustomScenesOpen(false);
     return;
   }
   if (event.code !== 'Space' && event.key !== ' ') return;

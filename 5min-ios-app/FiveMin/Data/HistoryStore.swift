@@ -336,4 +336,78 @@ final class HistoryStore {
             return (0, 0)
         }
     }
+
+    /// Consecutive calendar days (ending today or yesterday) with ≥1 completed session.
+    func streakDays() -> Int {
+        let daySet = Set(getHistory().map { Self.startOfDayMs($0.at) })
+        if daySet.isEmpty { return 0 }
+        let dayMs: Int64 = 24 * 60 * 60 * 1000
+        var cursor = Self.startOfDayMs(Int64(Date().timeIntervalSince1970 * 1000))
+        if !daySet.contains(cursor) {
+            cursor -= dayMs
+            if !daySet.contains(cursor) { return 0 }
+        }
+        var streak = 0
+        while daySet.contains(cursor) {
+            streak += 1
+            cursor -= dayMs
+        }
+        return streak
+    }
+
+    func shareSummaryValues() -> (count: Int, minutes: Int, streak: Int) {
+        let period = periodStats()
+        return (period.count, period.minutes, streakDays())
+    }
+
+    // MARK: - Async wrappers (keep sync SQLite internals)
+
+    private func offMain<T>(_ work: @escaping () -> T) async -> T {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                continuation.resume(returning: work())
+            }
+        }
+    }
+
+    func getHistoryAsync(sceneId: String? = nil) async -> [HistoryItem] {
+        await offMain { self.getHistory(sceneId: sceneId) }
+    }
+
+    func todayStatsAsync() async -> (count: Int, ms: Int64) {
+        await offMain { self.todayStats() }
+    }
+
+    func periodStatsAsync() async -> (count: Int, minutes: Int) {
+        await offMain { self.periodStats() }
+    }
+
+    func streakDaysAsync() async -> Int {
+        await offMain { self.streakDays() }
+    }
+
+    func shareSummaryValuesAsync() async -> (count: Int, minutes: Int, streak: Int) {
+        await offMain { self.shareSummaryValues() }
+    }
+
+    @discardableResult
+    func recordSessionAsync(elapsedMs: Int64, sceneId: String = "") async -> Int64 {
+        await offMain { self.recordSession(elapsedMs: elapsedMs, sceneId: sceneId) }
+    }
+
+    @discardableResult
+    func deleteSessionAsync(id: Int64) async -> String {
+        await offMain { self.deleteSession(id: id) }
+    }
+
+    func clearHistoryAsync() async {
+        await offMain { self.clearHistory() }
+    }
+
+    private static func startOfDayMs(_ at: Int64) -> Int64 {
+        let cal = Calendar.current
+        let date = Date(timeIntervalSince1970: TimeInterval(at) / 1000)
+        let start = cal.startOfDay(for: date)
+        return Int64(start.timeIntervalSince1970 * 1000)
+    }
 }

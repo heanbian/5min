@@ -2,13 +2,14 @@ import AVFoundation
 import UIKit
 
 /// Finish cue: optional tone pulses + haptic pulses.
+@MainActor
 final class AlertService {
     static let shared = AlertService()
 
     private var audioEngine: AVAudioEngine?
     private var player: AVAudioPlayerNode?
-    private var workItem: DispatchWorkItem?
-    private var hapticDeadline: Date?
+    private var toneTask: Task<Void, Never>?
+    private var hapticTask: Task<Void, Never>?
 
     func play(durationMs: Int = 5000, withSound: Bool = true, withVibrate: Bool = true) {
         stop()
@@ -22,9 +23,10 @@ final class AlertService {
     }
 
     func stop() {
-        workItem?.cancel()
-        workItem = nil
-        hapticDeadline = nil
+        toneTask?.cancel()
+        toneTask = nil
+        hapticTask?.cancel()
+        hapticTask = nil
         stopEngine()
     }
 
@@ -47,22 +49,15 @@ final class AlertService {
         node.play()
 
         let end = Date().addingTimeInterval(Double(durationMs) / 1000.0)
-        scheduleBeep(at: Date(), until: end, high: true)
-    }
-
-    private func scheduleBeep(at date: Date, until end: Date, high: Bool) {
-        guard date < end else {
-            stopEngine()
-            return
+        toneTask = Task { [weak self] in
+            var high = true
+            while !Task.isCancelled, Date() < end {
+                self?.enqueueBeep(high: high)
+                high.toggle()
+                try? await Task.sleep(for: .milliseconds(620))
+            }
+            self?.stopEngine()
         }
-        let item = DispatchWorkItem { [weak self] in
-            self?.enqueueBeep(high: high)
-            let next = Date().addingTimeInterval(0.62)
-            self?.scheduleBeep(at: next, until: end, high: !high)
-        }
-        workItem = item
-        let delay = max(0, date.timeIntervalSinceNow)
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
     }
 
     private func enqueueBeep(high: Bool) {
@@ -89,16 +84,13 @@ final class AlertService {
     }
 
     private func startHaptics(durationMs: Int) {
-        hapticDeadline = Date().addingTimeInterval(Double(durationMs) / 1000.0)
-        pulseHaptic()
-    }
-
-    private func pulseHaptic() {
-        guard let end = hapticDeadline, Date() < end else { return }
-        let gen = UINotificationFeedbackGenerator()
-        gen.notificationOccurred(.warning)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { [weak self] in
-            self?.pulseHaptic()
+        let end = Date().addingTimeInterval(Double(durationMs) / 1000.0)
+        hapticTask = Task {
+            while !Task.isCancelled, Date() < end {
+                let gen = UINotificationFeedbackGenerator()
+                gen.notificationOccurred(.warning)
+                try? await Task.sleep(for: .milliseconds(650))
+            }
         }
     }
 

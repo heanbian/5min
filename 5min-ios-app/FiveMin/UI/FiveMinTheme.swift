@@ -80,3 +80,20 @@ enum FiveMinDimens {
     static let dialSize: CGFloat = 260
     static let topbarH: CGFloat = 36
 }
+
+/// Official-site HTTPS only — aligned with Android / Harmony / mini-program allowlists.
+enum TrustedURL {
+    static func parse(_ string: String) -> URL? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed),
+              url.scheme?.lowercased() == "https",
+              let host = url.host?.lowercased(),
+              isTrustedHost(host)
+        else { return nil }
+        return url
+    }
+
+    static func isTrustedHost(_ host: String) -> Bool {
+        host == "5min.chat" || host == "www.5min.chat" || host.hasSuffix(".5min.chat")
+    }
+}

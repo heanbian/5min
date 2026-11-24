@@ -4,10 +4,12 @@ const express = require('express');
 const cloud = require('../bizjs/cloud-storage');
 
 function sendOk(res, data) {
+  res.setHeader('Cache-Control', 'no-store');
   res.json({ success: true, data });
 }
 
 function sendErr(res, status, message) {
+  res.setHeader('Cache-Control', 'no-store');
   res.status(status).json({ success: false, message: String(message || '错误') });
 }
 
@@ -56,13 +58,12 @@ function registerStorageRoutes(app) {
   router.post('/register', async (req, res) => {
     try {
       if (!allowRegister(req) || !allowWrite(req)) return sendErr(res, 429, '请求过于频繁');
-      // Prefer headers (Android); body still accepted for older clients.
-      const deviceId = String(
-        req.get('X-Device-Id') || req.body?.deviceId || '',
-      );
-      const deviceSecret = String(
-        req.get('X-Device-Secret') || req.body?.deviceSecret || '',
-      );
+      // Auth material only via headers — never accept deviceSecret in JSON body (logs/APM).
+      if (req.body && Object.prototype.hasOwnProperty.call(req.body, 'deviceSecret')) {
+        return sendErr(res, 400, '请使用请求头传递凭证');
+      }
+      const deviceId = String(req.get('X-Device-Id') || req.body?.deviceId || '');
+      const deviceSecret = String(req.get('X-Device-Secret') || '');
       const result = await cloud.registerDevice(deviceId, deviceSecret);
       if (!result.ok) return sendErr(res, result.status, result.message);
       return sendOk(res, result.data);

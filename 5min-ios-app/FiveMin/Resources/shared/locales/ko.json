@@ -319,5 +319,15 @@
   "sceneTakeTrash": "쓰레기 버리기 · 5분",
   "sceneTakeTrashTitle": "쓰레기 버리기",
   "sceneTidyUp": "정리 정돈 · 10분",
-  "sceneTidyUpTitle": "정리 정돈"
+  "sceneTidyUpTitle": "정리 정돈",
+  "streakLabel": "연속 기록",
+  "streakDays": "{n}일 연속",
+  "streakNone": "오늘 한 번 완료하면 연속 시작",
+  "shareLabel": "요약 공유",
+  "shareText": "화장실 타이머로 최근 14일 {count}회·약 {mins}분, {streak}일 연속. 습관 알림용. https://5min.chat",
+  "shareCopied": "요약 복사됨",
+  "shareFailed": "공유 실패",
+  "shareCopyAction": "텍스트 복사",
+  "invalidLink": "링크를 열 수 없음",
+  "linkCopied": "링크가 복사되었습니다. 브라우저에서 여세요"
 }

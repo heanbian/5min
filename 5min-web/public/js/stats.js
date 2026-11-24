@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-/** Daily usage stats — localStorage only, never uploaded. */
+import { todayStats as historyTodayStats, recordSession } from './history.js';
+
+/** @deprecated Legacy daily counters; today stats now come from history. */
 export const STATS_STORAGE_KEY = '5min.dailyStats';
 /** Lightweight scene sessions for picker ranking (14-day window, local only). */
 export const SCENE_SESSIONS_KEY = '5min.sceneSessions';
@@ -35,7 +37,7 @@ const empty = (date = todayKey()) => ({
   totalMs: 0,
 });
 
-const readRaw = () => {
+const readLegacyToday = () => {
   try {
     const raw = localStorage.getItem(STATS_STORAGE_KEY);
     if (!raw) return empty();
@@ -54,34 +56,39 @@ const readRaw = () => {
   }
 };
 
-const writeRaw = (data) => {
-  try {
-    localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    /* private mode / quota */
-  }
-};
-
 /** @returns {{ date: string, count: number, totalMs: number }} */
-export const getTodayStats = () => readRaw();
+export const getTodayStats = () => {
+  const fromHistory = historyTodayStats();
+  if (fromHistory.count > 0 || fromHistory.totalMs > 0) {
+    return {
+      date: todayKey(),
+      count: fromHistory.count,
+      totalMs: fromHistory.totalMs,
+    };
+  }
+  // One-session migration window: legacy counter until history has rows.
+  return readLegacyToday();
+};
 
 /**
  * Record one completed countdown (called on finish).
+ * Writes 14-day history + scene-rank sessions.
  * @param {number} elapsedMs duration completed for this session
  * @param {string} [sceneId]
+ * @returns {{ date: string, count: number, totalMs: number, sessionId: string }}
  */
 export const recordCompletedSession = (elapsedMs, sceneId = '') => {
   const ms = Math.max(0, Math.floor(Number(elapsedMs) || 0));
-  if (ms <= 0) return getTodayStats();
-  const cur = readRaw();
-  const next = {
-    date: todayKey(),
-    count: cur.count + 1,
-    totalMs: cur.totalMs + ms,
-  };
-  writeRaw(next);
+  if (ms <= 0) return { ...getTodayStats(), sessionId: '' };
+  const sessionId = recordSession(ms, sceneId);
   recordSceneSession(sceneId);
-  return next;
+  // Clear legacy counter so history is sole source after first history write.
+  try {
+    localStorage.removeItem(STATS_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+  return { ...getTodayStats(), sessionId };
 };
 
 const readSceneSessions = () => {

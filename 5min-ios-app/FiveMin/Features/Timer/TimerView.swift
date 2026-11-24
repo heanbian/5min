@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TimerView: View {
-    @EnvironmentObject private var model: TimerViewModel
+    @Environment(TimerViewModel.self) private var model
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showScenes = false
 
@@ -87,7 +87,7 @@ struct TimerView: View {
         .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
         .sheet(isPresented: $showScenes) {
             ScenePickerView()
-                .environmentObject(model)
+                .environment(model)
                 .presentationDetents([.medium, .large])
         }
     }
@@ -481,7 +481,7 @@ private struct ScenePickerRow: Identifiable {
 }
 
 struct ScenePickerView: View {
-    @EnvironmentObject private var model: TimerViewModel
+    @Environment(TimerViewModel.self) private var model
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -516,7 +516,7 @@ struct ScenePickerView: View {
                     }
                 }
                 .padding(FiveMinDimens.padX)
-                .onAppear { model.refreshSuggested() }
+                .task { model.refreshSuggested() }
             }
             .background(FiveMinColor.surface)
             .navigationTitle(model.t("scenesLabel"))

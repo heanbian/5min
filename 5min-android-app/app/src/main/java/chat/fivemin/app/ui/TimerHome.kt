@@ -47,7 +47,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import chat.fivemin.app.R
 import chat.fivemin.app.timer.TimerPhase
 import chat.fivemin.app.timer.TimerViewModel
@@ -83,7 +83,7 @@ fun TimerHome(
     ensureStartPermissions: (onReady: () -> Unit) -> Unit = { it() },
     onOpenMine: () -> Unit = {},
 ) {
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     var sceneOpen by remember { mutableStateOf(false) }
     var ritualUp by remember { mutableStateOf(false) }
     var ritualStretch by remember { mutableStateOf(false) }

@@ -1,8 +1,8 @@
 import SwiftUI
-import UIKit
 
 struct MineView: View {
-    @EnvironmentObject private var model: TimerViewModel
+    @Environment(TimerViewModel.self) private var model
+    @Environment(\.openURL) private var openURL
     @State private var sheet: MineSheet?
     @State private var sceneEditor: SceneEditor?
     @State private var editorName = ""
@@ -108,15 +108,15 @@ struct MineView: View {
                     sectionTitle(model.t("mineSectionSupport"))
                     card {
                         linkRow(model.t("privacyLink")) {
-                            openURL("https://5min.chat/privacy.html")
+                            openTrusted("https://5min.chat/privacy.html")
                         }
                         Divider().padding(.leading, 16)
                         linkRow(model.t("termsLink")) {
-                            openURL("https://5min.chat/terms.html")
+                            openTrusted("https://5min.chat/terms.html")
                         }
                         Divider().padding(.leading, 16)
                         linkRow(model.t("aboutLabel")) {
-                            openURL("https://5min.chat/about.html")
+                            openTrusted("https://5min.chat/about.html")
                         }
                         Divider().padding(.leading, 16)
                         linkRow(model.t("feedbackLabel")) {
@@ -128,12 +128,6 @@ struct MineView: View {
                         }
                     }
 
-                    Text(model.t("aboutVersion", ["n": appVersion]))
-                        .font(FiveMinFont.ui(12))
-                        .foregroundStyle(FiveMinColor.muted)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 8)
-                        .padding(.bottom, 12)
                 }
                 .padding(.horizontal, FiveMinDimens.padBody)
                 .padding(.vertical, FiveMinDimens.padBody)
@@ -183,10 +177,6 @@ struct MineView: View {
         case P0Features.profileSilent: return model.t("alertProfileSilent")
         default: return model.t("alertProfileNormal")
         }
-    }
-
-    private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
 
     private var header: some View {
@@ -688,8 +678,8 @@ struct MineView: View {
         sheet = nil
     }
 
-    private func openURL(_ string: String) {
-        guard let url = URL(string: string), url.scheme?.lowercased() == "https" else { return }
-        UIApplication.shared.open(url)
+    private func openTrusted(_ string: String) {
+        guard let url = TrustedURL.parse(string) else { return }
+        openURL(url)
     }
 }

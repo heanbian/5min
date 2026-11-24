@@ -85,7 +85,7 @@ check('required copy keys', () => {
     assert.equal(typeof zhCN[k], 'string', k);
     assert.ok(zhCN[k].length > 0, k);
   }
-  assert.equal(zhCN.beianIcp, '蜀ICP备14028739号-5X');
+  assert.equal(zhCN.beianIcp, '蜀ICP备14028739号-6A');
   assert.equal(zhCN.sceneToilet, '如厕 · 5 分钟');
 });
 
@@ -100,6 +100,9 @@ check('default toilet scene', () => {
 check('https allowlist', () => {
   assert.equal(isAllowedHttps('https://5min.chat/privacy.html'), true);
   assert.equal(isAllowedHttps('https://www.5min.chat/about.html'), true);
+  assert.equal(isAllowedHttps('https://5min.chat/download.html'), true);
+  assert.equal(isAllowedHttps('https://5min.chat/unknown.html'), false);
+  assert.equal(isAllowedHttps('https://5min.chat/privacy.html?x=1'), true);
   assert.equal(isAllowedHttps('http://5min.chat/privacy.html'), false);
   assert.equal(isAllowedHttps('https://evil.com/?u=https://5min.chat'), false);
   assert.equal(isAllowedHttps('https://5min.chat.evil.com/'), false);
@@ -132,7 +135,7 @@ check('dead beian page removed', () => {
   assert.equal(fs.existsSync(path.join(root, 'pages/beian')), false);
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
   assert.ok(!app.pages.some((p) => p.includes('beian')));
-  assert.equal(app.tabBar.list[1].text, '首页');
+  assert.equal(app.tabBar.list[1].text, '主页');
 });
 
 check('project name', () => {

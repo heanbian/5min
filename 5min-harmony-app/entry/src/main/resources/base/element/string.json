@@ -3,6 +3,10 @@
     { "name": "module_desc", "value": "如厕计时器" },
     { "name": "EntryAbility_desc", "value": "倒计时主界面" },
     { "name": "EntryAbility_label", "value": "如厕计时器" },
+    { "name": "EntryFormAbility_desc", "value": "今日统计服务卡片" },
+    { "name": "EntryFormAbility_label", "value": "如厕计时器卡片" },
+    { "name": "form_glance_display_name", "value": "今日统计" },
+    { "name": "form_glance_desc", "value": "显示今日次数与倒计时剩余" },
     { "name": "perm_vibrate", "value": "用于倒计时结束后的振动提醒" },
     { "name": "perm_reminder", "value": "用于倒计时结束后由系统发送本机提醒通知" }
   ]

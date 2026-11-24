@@ -12,29 +12,32 @@ enum NotificationService {
         }
     }
 
-    static func requestPermission(completion: ((Bool) -> Void)? = nil) {
+    @MainActor
+    @discardableResult
+    static func requestPermission() async -> Bool {
         configure()
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-            DispatchQueue.main.async { completion?(granted) }
+        do {
+            return try await UNUserNotificationCenter.current()
+                .requestAuthorization(options: [.alert, .sound, .badge])
+        } catch {
+            return false
         }
     }
 
-    /// Request authorization if needed, then invoke `onReady` on the main queue.
-    static func ensureAuthorized(then onReady: @escaping () -> Void) {
+    /// Request authorization if needed, then return on the main actor.
+    @MainActor
+    static func ensureAuthorized() async {
         configure()
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                switch settings.authorizationStatus {
-                case .authorized, .provisional, .ephemeral:
-                    onReady()
-                case .notDetermined:
-                    requestPermission { _ in onReady() }
-                case .denied:
-                    onReady()
-                @unknown default:
-                    onReady()
-                }
-            }
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            return
+        case .notDetermined:
+            _ = await requestPermission()
+        case .denied:
+            return
+        @unknown default:
+            return
         }
     }
 
@@ -46,9 +49,7 @@ enum NotificationService {
         content.body = body
         content.sound = withSound ? .default : nil
         content.interruptionLevel = .timeSensitive
-        if #available(iOS 15.0, *) {
-            content.relevanceScore = 1.0
-        }
+        content.relevanceScore = 1.0
 
         let comps = Calendar.current.dateComponents(
             [.year, .month, .day, .hour, .minute, .second],
@@ -78,7 +79,7 @@ enum NotificationService {
         content.interruptionLevel = .timeSensitive
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.15, repeats: false)
         let req = UNNotificationRequest(
-            identifier: "\(finishId).now.\(UUID().uuidString)",
+            identifier: "\(finishId).now.\(Int(Date().timeIntervalSince1970 * 1000))",
             content: content,
             trigger: trigger
         )
@@ -92,26 +93,13 @@ enum NotificationService {
     }
 }
 
-final class NotificationCenterDelegate: NSObject, UNUserNotificationCenterDelegate {
+private final class NotificationCenterDelegate: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationCenterDelegate()
 
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        var opts: UNNotificationPresentationOptions = [.banner, .list, .badge]
-        if notification.request.content.sound != nil {
-            opts.insert(.sound)
-        }
-        completionHandler(opts)
-    }
-
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        completionHandler()
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .sound, .list]
     }
 }

@@ -3,14 +3,24 @@ import SwiftUI
 private let historyFilterAll = "__all__"
 
 struct RecordsView: View {
-    @EnvironmentObject private var model: TimerViewModel
+    @Environment(TimerViewModel.self) private var model
     @State private var rows: [HistoryItem] = []
     @State private var periodCount = 0
     @State private var periodMins = 0
+    @State private var streakDays = 0
     @State private var filterSceneId = historyFilterAll
     @State private var sceneFilterOptions: [(id: String, label: String)] = []
     @State private var pendingDeleteId: Int64?
     @State private var showClearConfirm = false
+
+    private var shareText: String {
+        let values = HistoryStore.shared.shareSummaryValues()
+        return model.t("shareText", [
+            "count": "\(values.count)",
+            "mins": "\(values.minutes)",
+            "streak": "\(values.streak)",
+        ])
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +36,15 @@ struct RecordsView: View {
                         statCard(title: model.t("weekStatsCountLabel"), value: "\(periodCount)", unit: nil)
                         statCard(title: model.t("weekStatsMinsLabel"), value: "\(periodMins)", unit: model.t("customUnit"))
                     }
+
+                    Text(
+                        streakDays > 0
+                            ? model.t("streakDays", ["n": "\(streakDays)"])
+                            : model.t("streakNone")
+                    )
+                    .font(FiveMinFont.ui(13, weight: .medium))
+                    .foregroundStyle(FiveMinColor.muted)
+                    .padding(.leading, 4)
 
                     if P0Features.getShowOvertimeInsight() {
                         overtimeInsightCard
@@ -85,8 +104,7 @@ struct RecordsView: View {
                 )
             )
         }
-        .onAppear(perform: reload)
-        .onChange(of: model.recordsEpoch) { _, _ in reload() }
+        .task(id: model.recordsEpoch) { reload() }
         .onChange(of: model.locale) { _, _ in reload() }
         .onChange(of: filterSceneId) { _, _ in reloadRows() }
         .alert(model.t("historyDeleteConfirm"), isPresented: deleteConfirmBinding) {
@@ -141,6 +159,11 @@ struct RecordsView: View {
                 .font(FiveMinFont.ui(20, weight: .semibold))
                 .foregroundStyle(FiveMinColor.ink)
             Spacer()
+            ShareLink(item: shareText) {
+                Text(model.t("shareLabel"))
+                    .font(FiveMinFont.ui(14, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.brandStrong)
+            }
         }
         .padding(.horizontal, 20)
         .frame(height: 52)
@@ -273,6 +296,7 @@ struct RecordsView: View {
         let period = HistoryStore.shared.periodStats()
         periodCount = period.count
         periodMins = period.minutes
+        streakDays = HistoryStore.shared.streakDays()
         reloadRows()
     }
 

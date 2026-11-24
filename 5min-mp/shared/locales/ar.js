@@ -320,5 +320,15 @@ module.exports = {
   "sceneTakeTrash": "إخراج القمامة · 5 د",
   "sceneTakeTrashTitle": "إخراج القمامة",
   "sceneTidyUp": "ترتيب · 10 د",
-  "sceneTidyUpTitle": "ترتيب"
+  "sceneTidyUpTitle": "ترتيب",
+  "streakLabel": "سلسلة",
+  "streakDays": "سلسلة {n} أيام",
+  "streakNone": "أكمل جلسة اليوم لبدء السلسلة",
+  "shareLabel": "مشاركة الملخص",
+  "shareText": "مؤقت الحمام: {count} جلسة خلال 14 يومًا (~{mins} د)، سلسلة {streak} أيام. تذكير عادة فقط. https://5min.chat",
+  "shareCopied": "تم نسخ الملخص",
+  "shareFailed": "فشلت المشاركة",
+  "shareCopyAction": "نسخ النص",
+  "invalidLink": "الرابط غير متاح",
+  "linkCopied": "تم نسخ الرابط — افتحه في المتصفح"
 };

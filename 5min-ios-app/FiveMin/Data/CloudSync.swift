@@ -32,25 +32,23 @@ final class CloudSync {
         prefs.storageMode == Self.modeCloud
     }
 
-    func scheduleSync(onDone: ((Bool) -> Void)? = nil) {
-        guard isCloud() else {
-            onDone?(false)
-            return
-        }
-        queue.async { [weak self] in
-            guard let self else {
-                if let onDone { DispatchQueue.main.async { onDone(false) } }
-                return
-            }
-            let ok: Bool
-            do {
-                try self.syncNow()
-                ok = true
-            } catch {
-                ok = false
-            }
-            if let onDone {
-                DispatchQueue.main.async { onDone(ok) }
+    @discardableResult
+    func scheduleSync() async -> Bool {
+        guard isCloud() else { return false }
+        return await withCheckedContinuation { continuation in
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+                let ok: Bool
+                do {
+                    try self.syncNow()
+                    ok = true
+                } catch {
+                    ok = false
+                }
+                continuation.resume(returning: ok)
             }
         }
     }
@@ -108,22 +106,24 @@ final class CloudSync {
         }
     }
 
-    func enableCloud(onResult: @escaping (Bool) -> Void) {
+    func enableCloud() async -> Bool {
         prefs.storageMode = Self.modeCloud
-        queue.async { [weak self] in
-            guard let self else {
-                DispatchQueue.main.async { onResult(false) }
-                return
+        return await withCheckedContinuation { continuation in
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(returning: false)
+                    return
+                }
+                let ok: Bool
+                do {
+                    try self.syncNow()
+                    ok = true
+                } catch {
+                    self.prefs.storageMode = Self.modeLocal
+                    ok = false
+                }
+                continuation.resume(returning: ok)
             }
-            let ok: Bool
-            do {
-                try self.syncNow()
-                ok = true
-            } catch {
-                self.prefs.storageMode = Self.modeLocal
-                ok = false
-            }
-            DispatchQueue.main.async { onResult(ok) }
         }
     }
 
@@ -154,15 +154,9 @@ final class CloudSync {
     }
 
     private func register() throws {
-        let creds = ensureCredentials()
-        _ = try request(
-            method: "POST",
-            path: "/register",
-            body: [
-                "deviceId": creds.deviceId,
-                "deviceSecret": creds.deviceSecret,
-            ]
-        )
+        _ = ensureCredentials()
+        // Auth via X-Device-Id / X-Device-Secret headers only (no secret in JSON body).
+        _ = try request(method: "POST", path: "/register", body: [:])
     }
 
     private func prefsPayload() -> [String: Any] {

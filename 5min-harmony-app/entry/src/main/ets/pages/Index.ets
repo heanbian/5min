@@ -29,6 +29,7 @@ import { DigitalWatchTime } from '../ui/DigitalWatch';
 import { RecordsTab } from '../ui/RecordsTab';
 import { MineTab } from '../ui/MineTab';
 import { FiveMinFont } from '../common/FiveMinDimens';
+import { WidgetGlance } from '../common/WidgetGlance';
 import { i18n } from '@kit.LocalizationKit';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
@@ -158,9 +159,12 @@ struct Index {
   private lastTickClock: string = '';
   private lastTickPhase: string = '';
   private lastTickProgressBucket: number = -1;
+  /** Throttle service-widget glance updates while the timer is running. */
+  private lastGlancePublishAt: number = 0;
 
   aboutToAppear(): void {
-    this.context = getContext(this) as common.UIAbilityContext;
+    const host = this.getUIContext().getHostContext();
+    this.context = host instanceof common.UIAbilityContext ? host : null;
     this.bootstrap();
   }
 
@@ -592,6 +596,7 @@ struct Index {
     this.state.finished = false;
     this.state.phase = 'idle';
     this.refreshUi();
+    this.publishGlance(true);
   }
 
   private async refreshTodayStats(): Promise<void> {
@@ -601,6 +606,27 @@ struct Index {
     if (this.ready) {
       this.refreshUi();
     }
+    this.publishGlance(true);
+  }
+
+  /** Push today count + remain into Preferences / FormProvider for the glance card. */
+  private publishGlance(force: boolean = false): void {
+    if (!this.context) {
+      return;
+    }
+    const now = Date.now();
+    if (!force && now - this.lastGlancePublishAt < 10000) {
+      return;
+    }
+    this.lastGlancePublishAt = now;
+    const remain = this.state.running ? formatMs(this.state.remainMs) : '';
+    WidgetGlance.publish(
+      this.context,
+      this.state.statsCount,
+      remain,
+      this.state.running
+    ).catch(() => {
+    });
   }
 
   /** Apply custom scene chosen in Me when returning to home. */
@@ -928,8 +954,9 @@ struct Index {
       return;
     }
     await FinishAlerter.stop();
-    const ctx = getContext(this) as common.UIAbilityContext;
-    await ensureNotificationPermission(ctx);
+    if (this.context) {
+      await ensureNotificationPermission(this.context);
+    }
     this.finishedHandled = false;
     this.state.endAt = Date.now() + this.state.remainMs;
     this.state.running = true;
@@ -948,6 +975,7 @@ struct Index {
     this.startTicker();
     this.setKeepScreenOn(true);
     this.refreshUi();
+    this.publishGlance(true);
   }
 
   async pause(): Promise<void> {
@@ -960,6 +988,7 @@ struct Index {
     this.setKeepScreenOn(false);
     await cancelFinishReminder();
     this.refreshUi();
+    this.publishGlance(true);
   }
 
   async reset(): Promise<void> {
@@ -977,6 +1006,7 @@ struct Index {
     this.state.finished = false;
     this.state.phase = 'idle';
     this.refreshUi();
+    this.publishGlance(true);
   }
 
   /** Re-fire finish cue from a tap (same gesture path as iOS / web). */
@@ -1004,7 +1034,10 @@ struct Index {
     this.tickId = setInterval(() => {
       if (this.inOvertime) {
         this.overtimeMs = Math.max(0, Date.now() - this.overtimeAt);
-        this.refreshTickUi();
+        const nextClock = `+${this.formatOvertime(this.overtimeMs)}`;
+        if (nextClock !== this.lastTickClock) {
+          this.refreshTickUi();
+        }
         return;
       }
       if (!this.state.running) {
@@ -1017,6 +1050,7 @@ struct Index {
         return;
       }
       this.refreshTickUi();
+      this.publishGlance(false);
     }, 250);
   }
 
@@ -1075,7 +1109,7 @@ struct Index {
   }
 
   private async ackFinishDialog(title: string, body: string, ack: string): Promise<void> {
-    await showFinishDialog(title, body, ack);
+    await showFinishDialog(title, body, ack, this.getUIContext().getPromptAction());
     await FinishAlerter.stop();
   }
 

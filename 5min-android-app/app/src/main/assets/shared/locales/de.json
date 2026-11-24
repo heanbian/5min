@@ -219,6 +219,7 @@
   "customSceneUse": "Verwenden",
   "customSceneNameLabel": "Name",
   "customSceneNamePlaceholder": "z. B. Dehnen",
+  "customSceneMigratedName": "Individuell",
   "sceneGroupCustom": "Individuell",
   "sceneGroupSuggested": "Häufig verwendet",
   "privacyCheckLabel": "Ich habe gelesen und stimme zu:",
@@ -318,5 +319,15 @@
   "sceneTakeTrash": "Müll rausbringen · 5 Min",
   "sceneTakeTrashTitle": "Müll rausbringen",
   "sceneTidyUp": "Aufräumen · 10 Min",
-  "sceneTidyUpTitle": "Aufräumen"
+  "sceneTidyUpTitle": "Aufräumen",
+  "streakLabel": "Serie",
+  "streakDays": "{n}-Tage-Serie",
+  "streakNone": "Schließen Sie heute eine Sitzung ab, um zu starten",
+  "shareLabel": "Zusammenfassung teilen",
+  "shareText": "Mit Toiletten-Timer: {count} Sitzungen in 14 Tagen (~{mins} Min.), {streak}-Tage-Serie. Nur Gewohnheitserinnerung. https://5min.chat",
+  "shareCopied": "Zusammenfassung kopiert",
+  "shareFailed": "Teilen fehlgeschlagen",
+  "shareCopyAction": "Text kopieren",
+  "invalidLink": "Link nicht verfügbar",
+  "linkCopied": "Link kopiert — im Browser öffnen"
 }

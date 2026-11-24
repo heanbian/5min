@@ -53,5 +53,17 @@
         <receiver
             android:name=".timer.TimerAlarmReceiver"
             android:exported="false" />
+
+        <receiver
+            android:name=".timer.TimerAppWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_description">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/timer_widget_info" />
+        </receiver>
     </application>
 </manifest>

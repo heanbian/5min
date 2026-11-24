@@ -1,53 +1,60 @@
 import Foundation
 import SwiftUI
-import Combine
+import Observation
+import WidgetKit
 
 enum TimerPhase {
     case idle, running, paused, warn, done
 }
 
 @MainActor
-final class TimerViewModel: ObservableObject {
+@Observable
+final class TimerViewModel {
     let catalog = SharedCatalog()
     private let prefs = PrefsStore()
     private let history = HistoryStore.shared
-    private lazy var cloud = CloudSync(prefs: prefs, history: history)
+    @ObservationIgnored
+    private let cloud: CloudSync
 
-    @Published var locale: String = "zh-CN"
-    @Published var totalMs: Int64 = 5 * 60 * 1000
-    @Published var remainMs: Int64 = 5 * 60 * 1000
-    @Published var running = false
-    @Published var finished = false
-    @Published var activeSceneId: String?
-    @Published var ambient: String = "off"
-    @Published var statsCount = 0
-    @Published var statsMs: Int64 = 0
-    @Published var phase: TimerPhase = .idle
-    @Published var privacyAccepted = false
-    @Published var customMin = 5
-    @Published var customScenes: [CustomScene] = []
-    @Published var suggestedSceneIds: [String] = []
-    @Published var recordsEpoch = 0
-    @Published var pendingSceneId: String?
+    init() {
+        cloud = CloudSync(prefs: prefs, history: history)
+    }
+
+    var locale: String = "zh-CN"
+    var totalMs: Int64 = 5 * 60 * 1000
+    var remainMs: Int64 = 5 * 60 * 1000
+    var running = false
+    var finished = false
+    var activeSceneId: String?
+    var ambient: String = "off"
+    var statsCount = 0
+    var statsMs: Int64 = 0
+    var phase: TimerPhase = .idle
+    var privacyAccepted = false
+    var customMin = 5
+    var customScenes: [CustomScene] = []
+    var suggestedSceneIds: [String] = []
+    var recordsEpoch = 0
+    var pendingSceneId: String?
     /// 0 records · 1 home · 2 mine
-    @Published var selectedTab = 1
-    @Published var finishTone = true
-    @Published var finishVibrate = true
-    @Published var finishNotify = true
-    @Published var inOvertime = false
-    @Published var overtimeMs: Int64 = 0
-    @Published var storageMode = PrefsStore.modeLocal
-    @Published var storageSyncStatus = ""
-    @Published var standRitual = P0Features.ritualBasic
-    @Published var alertProfile = P0Features.profileNormal
-    @Published var showRitual = false
-    @Published var ritualUp = false
-    @Published var ritualStretch = false
-    @Published var ritualLeave = false
+    var selectedTab = 1
+    var finishTone = true
+    var finishVibrate = true
+    var finishNotify = true
+    var inOvertime = false
+    var overtimeMs: Int64 = 0
+    var storageMode = PrefsStore.modeLocal
+    var storageSyncStatus = ""
+    var standRitual = P0Features.ritualBasic
+    var alertProfile = P0Features.profileNormal
+    var showRitual = false
+    var ritualUp = false
+    var ritualStretch = false
+    var ritualLeave = false
 
     private var endAt: Date?
     private var overtimeStart: Date?
-    private var tick: AnyCancellable?
+    private var tickTask: Task<Void, Never>?
     private var finishedHandled = false
     private var lastRecordedSessionId: Int64?
 
@@ -164,21 +171,39 @@ final class TimerViewModel: ObservableObject {
         refreshTodayStats()
         refreshSuggested()
         refreshPhase()
+        consumeShortcutPending()
         // Store-screenshot launches must stay free of the system notification prompt.
         if privacyAccepted, !Self.isStoreScreenshotLaunch {
-            NotificationService.requestPermission()
+            Task { await NotificationService.requestPermission() }
         }
         applyStoreScreenshotSceneIfNeeded()
         scheduleCloudSyncIfNeeded()
+        if ambient != "off" {
+            AmbientPlayer.shared.setMode(ambient)
+        }
+    }
+
+    /// Deep link / App Intent / widget pending scene (Android ShortcutPending).
+    func consumeShortcutPending() {
+        guard let scene = ShortcutPending.take() else { return }
+        pendingSceneId = scene
+        selectedTab = 1
+        consumePendingScene()
+    }
+
+    func handleDeepLink(_ url: URL) {
+        ShortcutPending.offer(url: url)
+        consumeShortcutPending()
     }
 
     func scheduleCloudSyncIfNeeded() {
-        cloud.scheduleSync { [weak self] ok in
-            guard let self, ok else { return }
-            self.reloadPrefsFromStore()
-            self.recordsEpoch += 1
-            self.refreshTodayStats()
-            self.refreshSuggested()
+        Task {
+            let ok = await cloud.scheduleSync()
+            guard ok else { return }
+            reloadPrefsFromStore()
+            recordsEpoch += 1
+            refreshTodayStats()
+            refreshSuggested()
         }
     }
 
@@ -217,7 +242,8 @@ final class TimerViewModel: ObservableObject {
             selectedTab = 1
             setPreset(minutes: 5, sceneId: "toilet")
             // Defer so the first frame paints before the countdown starts.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(400))
                 guard let self else { return }
                 self.remainMs = 3 * 60_000 + 42_000
                 self.start()
@@ -225,7 +251,8 @@ final class TimerViewModel: ObservableObject {
         case "warn":
             selectedTab = 1
             setPreset(minutes: 5, sceneId: "toilet")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(400))
                 guard let self else { return }
                 self.remainMs = 42_000
                 self.start()
@@ -234,7 +261,8 @@ final class TimerViewModel: ObservableObject {
             selectedTab = 1
             setPreset(minutes: 5, sceneId: "toilet")
             // Finished UI without sound / notification (store marketing shot).
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(350))
                 guard let self else { return }
                 self.finishedHandled = true
                 self.stopTicker()
@@ -295,7 +323,7 @@ final class TimerViewModel: ObservableObject {
     func acceptPrivacy() {
         privacyAccepted = true
         prefs.privacyAccepted = true
-        NotificationService.requestPermission()
+        Task { await NotificationService.requestPermission() }
     }
 
     func setLocale(_ code: String) {
@@ -310,11 +338,10 @@ final class TimerViewModel: ObservableObject {
     }
 
     func setAmbient(_ mode: String) {
-        ambient = mode
-        prefs.ambient = mode
-        if mode == "off" {
-            AlertService.shared.stop()
-        }
+        let next = AmbientPlayer.modes.contains(mode) ? mode : "off"
+        ambient = next
+        prefs.ambient = next
+        AmbientPlayer.shared.setMode(next)
         cloud.schedulePushPrefs()
     }
 
@@ -356,20 +383,18 @@ final class TimerViewModel: ObservableObject {
     func setStorageMode(_ mode: String) {
         if mode == PrefsStore.modeCloud {
             storageSyncStatus = t("storageSyncing")
-            cloud.enableCloud { [weak self] ok in
-                Task { @MainActor in
-                    guard let self else { return }
-                    if ok {
-                        self.reloadPrefsFromStore()
-                        self.recordsEpoch += 1
-                        self.refreshTodayStats()
-                        self.refreshSuggested()
-                        self.storageMode = self.prefs.storageMode
-                        self.storageSyncStatus = self.t("storageSyncOk")
-                    } else {
-                        self.storageMode = self.prefs.storageMode
-                        self.storageSyncStatus = self.t("storageSyncFail")
-                    }
+            Task {
+                let ok = await cloud.enableCloud()
+                if ok {
+                    reloadPrefsFromStore()
+                    recordsEpoch += 1
+                    refreshTodayStats()
+                    refreshSuggested()
+                    storageMode = prefs.storageMode
+                    storageSyncStatus = t("storageSyncOk")
+                } else {
+                    storageMode = prefs.storageMode
+                    storageSyncStatus = t("storageSyncFail")
                 }
             }
             return
@@ -389,6 +414,7 @@ final class TimerViewModel: ObservableObject {
             )
         }
         ambient = prefs.ambient
+        AmbientPlayer.shared.setMode(ambient)
         finishTone = prefs.finishTone
         finishVibrate = prefs.finishVibrate
         finishNotify = prefs.finishNotify
@@ -436,6 +462,7 @@ final class TimerViewModel: ObservableObject {
         stopTicker()
         NotificationService.cancelFinish()
         AlertService.shared.stop()
+        LiveActivityController.shared.end()
         finishedHandled = false
         inOvertime = false
         overtimeMs = 0
@@ -446,6 +473,7 @@ final class TimerViewModel: ObservableObject {
         dismissRitual()
         UIApplication.shared.isIdleTimerDisabled = false
         refreshPhase()
+        resumeAmbientAfterAlertIfNeeded()
     }
 
     private func commitOvertimeToHistoryIfNeeded() {
@@ -580,6 +608,8 @@ final class TimerViewModel: ObservableObject {
         let stats = history.todayStats()
         statsCount = stats.count
         statsMs = stats.ms
+        WidgetShared.setTodayCount(statsCount)
+        WidgetCenter.shared.reloadTimelines(ofKind: "TimerHomeWidget")
     }
 
     func deleteHistorySession(id: Int64) {
@@ -633,13 +663,19 @@ final class TimerViewModel: ObservableObject {
             remainMs = totalMs
             finished = false
             finishedHandled = false
-            NotificationService.ensureAuthorized { [weak self] in self?.start() }
+            Task {
+                await NotificationService.ensureAuthorized()
+                start()
+            }
             return
         }
         if running {
             pause()
         } else {
-            NotificationService.ensureAuthorized { [weak self] in self?.start() }
+            Task {
+                await NotificationService.ensureAuthorized()
+                start()
+            }
         }
     }
 
@@ -648,6 +684,7 @@ final class TimerViewModel: ObservableObject {
         stopTicker()
         NotificationService.cancelFinish()
         AlertService.shared.stop()
+        LiveActivityController.shared.end()
         finishedHandled = false
         clearOvertimeState()
         lastRecordedSessionId = nil
@@ -656,15 +693,31 @@ final class TimerViewModel: ObservableObject {
         finished = false
         UIApplication.shared.isIdleTimerDisabled = false
         refreshPhase()
+        resumeAmbientAfterAlertIfNeeded()
     }
 
     func realert() {
         let alerts = resolvedFinishAlerts()
+        playFinishAlert(alerts: alerts)
+    }
+
+    private func playFinishAlert(alerts: P0Features.FinishAlerts) {
+        AmbientPlayer.shared.suspend()
         AlertService.shared.play(
             durationMs: catalog.alertDurationMs,
             withSound: alerts.withTone,
             withVibrate: alerts.withVibrate
         )
+        let delayMs = catalog.alertDurationMs
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(delayMs))
+            self?.resumeAmbientAfterAlertIfNeeded()
+        }
+    }
+
+    private func resumeAmbientAfterAlertIfNeeded() {
+        guard ambient != "off" else { return }
+        AmbientPlayer.shared.resumeIfNeeded()
     }
 
     private func clearOvertimeState() {
@@ -693,6 +746,13 @@ final class TimerViewModel: ObservableObject {
         }
         startTicker()
         refreshPhase()
+        let title = notifySceneName()
+        LiveActivityController.shared.start(
+            sceneId: activeSceneId ?? "toilet",
+            sceneTitle: title,
+            endAt: end,
+            remainMs: remainMs
+        )
     }
 
     private func pause() {
@@ -703,6 +763,12 @@ final class TimerViewModel: ObservableObject {
         NotificationService.cancelFinish()
         UIApplication.shared.isIdleTimerDisabled = false
         refreshPhase()
+        LiveActivityController.shared.update(
+            endAt: Date().addingTimeInterval(Double(remainMs) / 1000.0),
+            remainMs: remainMs,
+            running: false,
+            sceneTitle: notifySceneName()
+        )
     }
 
     private var lastPublishedDial: String = ""
@@ -710,16 +776,17 @@ final class TimerViewModel: ObservableObject {
     private func startTicker() {
         stopTicker()
         lastPublishedDial = ""
-        tick = Timer.publish(every: 0.25, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                self?.onTick()
+        tickTask = Task { @MainActor [weak self] in
+            while let self, !Task.isCancelled {
+                self.onTick()
+                try? await Task.sleep(for: .milliseconds(250))
             }
+        }
     }
 
     private func stopTicker() {
-        tick?.cancel()
-        tick = nil
+        tickTask?.cancel()
+        tickTask = nil
     }
 
     private func onTick() {
@@ -771,12 +838,9 @@ final class TimerViewModel: ObservableObject {
                     withSound: alerts.withTone
                 )
             }
-            AlertService.shared.play(
-                durationMs: catalog.alertDurationMs,
-                withSound: alerts.withTone,
-                withVibrate: alerts.withVibrate
-            )
+            playFinishAlert(alerts: alerts)
         }
+        LiveActivityController.shared.end()
         inOvertime = true
         overtimeStart = Date()
         overtimeMs = 0

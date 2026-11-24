@@ -376,12 +376,57 @@ export class HistoryStore {
     return [count, ms];
   }
 
+  /**
+   * Consecutive calendar days (ending today or yesterday) with ≥1 completed session.
+   * Uses HISTORY_DAYS window (same as getHistory).
+   */
+  async streakDays(): Promise<number> {
+    const list = await this.getHistory();
+    if (list.length === 0) {
+      return 0;
+    }
+    const daySet: number[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const day = HistoryStore.startOfDayMs(list[i].at);
+      if (daySet.indexOf(day) < 0) {
+        daySet.push(day);
+      }
+    }
+    const dayMs = 24 * 60 * 60 * 1000;
+    let cursor = HistoryStore.todayStartMs();
+    if (daySet.indexOf(cursor) < 0) {
+      cursor -= dayMs;
+      if (daySet.indexOf(cursor) < 0) {
+        return 0;
+      }
+    }
+    let streak = 0;
+    while (daySet.indexOf(cursor) >= 0) {
+      streak += 1;
+      cursor -= dayMs;
+    }
+    return streak;
+  }
+
+  /** Period count/mins + streak for share summary. */
+  async shareSummaryValues(): Promise<[number, number, number]> {
+    const period = await this.periodStats();
+    const streak = await this.streakDays();
+    return [period[0], period[1], streak];
+  }
+
   private static cutoffMs(): number {
     return Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000;
   }
 
   private static todayStartMs(): number {
     const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+
+  private static startOfDayMs(at: number): number {
+    const d = new Date(at);
     d.setHours(0, 0, 0, 0);
     return d.getTime();
   }

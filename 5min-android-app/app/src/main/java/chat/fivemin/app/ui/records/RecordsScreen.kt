@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,13 +45,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.data.HistoryItem
 import chat.fivemin.app.timer.TimerViewModel
 import chat.fivemin.app.ui.theme.FiveMinColors
 import chat.fivemin.app.ui.theme.FiveMinDimens
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private enum class RecordsDialog { None, ClearAll, DeleteOne }
@@ -60,14 +63,16 @@ private enum class RecordsDialog { None, ClearAll, DeleteOne }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordsScreen(vm: TimerViewModel) {
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     var rows by remember { mutableStateOf<List<HistoryItem>>(emptyList()) }
     var periodCount by remember { mutableIntStateOf(0) }
     var periodMins by remember { mutableIntStateOf(0) }
+    var streakDays by remember { mutableIntStateOf(0) }
     var filterSceneId by remember { mutableStateOf<String?>(null) }
     var filterExpanded by remember { mutableStateOf(false) }
     var dialog by remember { mutableStateOf(RecordsDialog.None) }
     var pendingDeleteId by remember { mutableStateOf<Long?>(null) }
+    val context = LocalContext.current
 
     fun reload() {
         val history = FiveMinApp.instance.history
@@ -75,6 +80,25 @@ fun RecordsScreen(vm: TimerViewModel) {
         val period = history.periodStats()
         periodCount = period.first
         periodMins = period.second
+        streakDays = history.streakDays()
+    }
+
+    fun shareSummary() {
+        val history = FiveMinApp.instance.history
+        val (count, mins, streak) = history.shareSummaryValues()
+        val text = vm.t(
+            "shareText",
+            mapOf(
+                "count" to count.toString(),
+                "mins" to mins.toString(),
+                "streak" to streak.toString(),
+            ),
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        context.startActivity(Intent.createChooser(intent, vm.t("shareLabel")))
     }
 
     val filterOptions = remember(state.recordsEpoch, state.locale, state.customScenes) {
@@ -108,6 +132,15 @@ fun RecordsScreen(vm: TimerViewModel) {
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = vm.t("shareLabel"),
+                color = FiveMinColors.brandStrong,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .padding(end = 14.dp)
+                    .clickable { shareSummary() },
             )
             if (rows.isNotEmpty() || filterOptions.isNotEmpty()) {
                 Text(
@@ -149,6 +182,17 @@ fun RecordsScreen(vm: TimerViewModel) {
                     modifier = Modifier.weight(1f),
                 )
             }
+            Text(
+                text = if (streakDays > 0) {
+                    vm.t("streakDays", mapOf("n" to streakDays.toString()))
+                } else {
+                    vm.t("streakNone")
+                },
+                color = FiveMinColors.muted,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(start = 4.dp),
+            )
             val p0 = FiveMinApp.instance.prefs.p0
             val overtimeStats = remember(state.recordsEpoch) { p0.readOvertimeStats() }
             if (p0.showOvertimeInsight) {
@@ -491,6 +535,6 @@ private fun HistoryRow(vm: TimerViewModel, item: HistoryItem, onDelete: () -> Un
 }
 
 private fun formatDateTime(at: Long): String {
-    val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-    return fmt.format(Date(at))
+    val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.US)
+    return Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(fmt)
 }
