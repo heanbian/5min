@@ -7,7 +7,7 @@ import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore'
 import { CloudSync } from '../common/CloudSync';
 import { insightMinutes } from '../common/P0Features';
 import { resolveLocale } from '../common/I18n';
-import { FiveMinFont } from '../common/FiveMinDimens';
+import { FiveMinDimens, FiveMinFont } from '../common/FiveMinDimens';
 import { i18n } from '@kit.LocalizationKit';
 
 /** One list row: scene / duration / time on separate lines. */
@@ -32,6 +32,7 @@ class FilterOption {
 @Component
 export struct RecordsTab {
   @StorageLink('appLocale') @Watch('onLocaleChange') locale: string = 'zh-CN';
+  @StorageLink('appTabIndex') @Watch('onAppTab') appTab: number = 1;
   @Watch('onEpoch') @Prop epoch: number = 0;
   @State ready: boolean = false;
   @State historyRows: HistoryRowView[] = [];
@@ -55,14 +56,21 @@ export struct RecordsTab {
   private context: common.UIAbilityContext | null = null;
 
   aboutToAppear(): void {
+    // ArkTS forbids `instanceof` on namespace types; cast host Context instead.
     const host = this.getUIContext().getHostContext();
-    this.context = host instanceof common.UIAbilityContext ? host : null;
+    this.context = host ? host as common.UIAbilityContext : null;
     this.bootstrap();
   }
 
   onEpoch(): void {
     if (this.ready) {
       this.reload();
+    }
+  }
+
+  onAppTab(): void {
+    if (this.appTab !== 0) {
+      this.showFilter = false;
     }
   }
 
@@ -101,10 +109,11 @@ export struct RecordsTab {
     await this.buildFilterOptions();
     const hist = await this.history.getHistory(this.filterSceneId);
     this.historyRows = this.formatHistory(hist);
-    const period = await this.history.periodStats();
-    this.periodCount = period[0];
-    this.periodMins = period[1];
-    this.streakDays = await this.history.streakDays();
+    // One history pass for period + streak (avoid 2–3 full reloads).
+    const summary = await this.history.shareSummaryValues();
+    this.periodCount = summary[0];
+    this.periodMins = summary[1];
+    this.streakDays = summary[2];
     this.filterLabel = this.currentFilterLabel();
     this.showOvertimeInsight = await this.prefs.getShowOvertimeInsight();
     const ot = await this.prefs.readOvertimeStats();
@@ -300,15 +309,16 @@ export struct RecordsTab {
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.brand_strong'))
+              .padding({ left: 12, right: 4, top: 10, bottom: 10 })
               .onClick(() => this.shareSummary())
           }
         }
         .width('100%')
-        .height(52)
-        .padding({ left: 20, right: 20 })
+        .height(FiveMinDimens.headerH)
+        .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX })
         .alignItems(VerticalAlign.Center)
-        .backgroundColor('rgba(255, 255, 255, 0.72)')
-        .border({ width: { bottom: 1 }, color: 'rgba(215, 229, 220, 0.85)' })
+        .backgroundColor(FiveMinDimens.headerBg)
+        .border({ width: { bottom: 1 }, color: FiveMinDimens.headerLine })
 
         if (!this.ready) {
           Text('…')
@@ -318,7 +328,7 @@ export struct RecordsTab {
             .textAlign(TextAlign.Center)
         } else {
           Scroll() {
-            Column({ space: 16 }) {
+            Column({ space: FiveMinDimens.listSectionGap }) {
               Text(this.t('weekStatsLabel'))
                 .fontSize(13)
                 .fontWeight(FontWeight.Medium)
@@ -340,11 +350,11 @@ export struct RecordsTab {
                     .fontColor($r('app.color.brand_strong'))
                 }
                 .layoutWeight(1)
-                .padding(16)
+                .padding(FiveMinDimens.padBody)
                 .alignItems(HorizontalAlign.Start)
-                .backgroundColor('rgba(229, 245, 236, 0.55)')
-                .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.brandSoftStat)
+                .border({ width: 1, color: FiveMinDimens.brandBorderSoft })
+                .borderRadius(FiveMinDimens.radiusCard)
 
                 Column({ space: 6 }) {
                   Text(this.t('weekStatsMinsLabel'))
@@ -364,11 +374,11 @@ export struct RecordsTab {
                   }
                 }
                 .layoutWeight(1)
-                .padding(16)
+                .padding(FiveMinDimens.padBody)
                 .alignItems(HorizontalAlign.Start)
-                .backgroundColor('rgba(229, 245, 236, 0.55)')
-                .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.brandSoftStat)
+                .border({ width: 1, color: FiveMinDimens.brandBorderSoft })
+                .borderRadius(FiveMinDimens.radiusCard)
               }
               .width('100%')
 
@@ -408,11 +418,11 @@ export struct RecordsTab {
                     .lineHeight(18)
                 }
                 .width('100%')
-                .padding(16)
+                .padding(FiveMinDimens.padBody)
                 .alignItems(HorizontalAlign.Start)
-                .backgroundColor('rgba(255, 246, 232, 0.72)')
-                .border({ width: 1, color: 'rgba(201, 134, 45, 0.16)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.warnCardBg)
+                .border({ width: 1, color: FiveMinDimens.warnCardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
               }
 
               Row() {
@@ -425,6 +435,7 @@ export struct RecordsTab {
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.danger'))
+                  .padding({ left: 10, right: 4, top: 8, bottom: 8 })
                   .onClick(() => this.clearAll())
               }
               .width('100%')
@@ -443,14 +454,18 @@ export struct RecordsTab {
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                 Text('▾')
                   .fontSize(12)
-                  .fontColor($r('app.color.muted'))
+                  .fontColor(this.showFilter ? $r('app.color.brand_strong') : $r('app.color.muted'))
+                  .rotate({ angle: this.showFilter ? 180 : 0 })
               }
               .width('100%')
-              .height(40)
+              .height(FiveMinDimens.rowH)
               .padding({ left: 14, right: 14 })
               .backgroundColor($r('app.color.surface'))
-              .border({ width: 1, color: $r('app.color.line') })
-              .borderRadius(22)
+              .border({
+                width: 1,
+                color: this.showFilter ? FiveMinDimens.brandBorderOpen : $r('app.color.line')
+              })
+              .borderRadius(FiveMinDimens.radius)
               .onClick(() => {
                 this.showFilter = true;
               })
@@ -472,14 +487,20 @@ export struct RecordsTab {
                             .width('100%')
                             .fontSize(14)
                             .fontColor($r('app.color.ink'))
+                            .maxLines(2)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
                           Text(row.durationLine)
                             .width('100%')
                             .fontSize(14)
                             .fontColor($r('app.color.ink'))
+                            .maxLines(1)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
                           Text(row.timeLine)
                             .width('100%')
                             .fontSize(14)
                             .fontColor($r('app.color.ink'))
+                            .maxLines(1)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
                         }
                         .layoutWeight(1)
                         .alignItems(HorizontalAlign.Start)
@@ -488,21 +509,21 @@ export struct RecordsTab {
                           .fontSize(13)
                           .fontWeight(FontWeight.Medium)
                           .fontColor($r('app.color.danger'))
-                          .padding({ left: 8, right: 8, top: 4, bottom: 4 })
+                          .padding({ left: 12, right: 8, top: 12, bottom: 12 })
                           .onClick(() => this.deleteRow(row.id))
                       }
                       .width('100%')
-                      .padding({ left: 16, right: 16, top: 14, bottom: 14 })
-                      Divider().color($r('app.color.line')).margin({ left: 16 })
+                      .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, top: 14, bottom: 14 })
+                      Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
                     }
                     .width('100%')
                   }, (row: HistoryRowView) => row.key)
                 }
               }
               .width('100%')
-              .backgroundColor('rgba(255, 255, 255, 0.88)')
-              .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
-              .borderRadius(14)
+              .backgroundColor(FiveMinDimens.cardSurface)
+              .border({ width: 1, color: FiveMinDimens.cardBorder })
+              .borderRadius(FiveMinDimens.radiusCard)
               .clip(true)
               .shadow({
                 radius: 8,
@@ -512,7 +533,12 @@ export struct RecordsTab {
               })
             }
             .width('100%')
-            .padding({ left: 16, right: 16, top: 16, bottom: 24 })
+            .padding({
+              left: FiveMinDimens.padBody,
+              right: FiveMinDimens.padBody,
+              top: FiveMinDimens.padBody,
+              bottom: 24
+            })
           }
           .layoutWeight(1)
           .width('100%')
@@ -535,7 +561,7 @@ export struct RecordsTab {
           Column()
             .width('100%')
             .layoutWeight(1)
-            .backgroundColor('#00000066')
+            .backgroundColor(FiveMinDimens.overlayDim)
             .onClick(() => {
               this.showFilter = false;
             })
@@ -550,12 +576,15 @@ export struct RecordsTab {
               Text('✕')
                 .fontSize(18)
                 .fontColor($r('app.color.muted'))
+                .width(FiveMinDimens.rowH)
+                .height(FiveMinDimens.rowH)
+                .textAlign(TextAlign.Center)
                 .onClick(() => {
                   this.showFilter = false;
                 })
             }
             .width('100%')
-            .padding({ left: 20, right: 16, top: 16, bottom: 8 })
+            .padding({ left: FiveMinDimens.padX, right: 12, top: FiveMinDimens.padBody, bottom: 8 })
 
             Scroll() {
               Column({ space: 4 }) {
@@ -566,6 +595,8 @@ export struct RecordsTab {
                       .fontColor(opt.id === this.filterSceneId ?
                         $r('app.color.brand_strong') : $r('app.color.ink'))
                       .layoutWeight(1)
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
                     if (opt.id === this.filterSceneId) {
                       Text('✓')
                         .fontSize(16)
@@ -573,20 +604,22 @@ export struct RecordsTab {
                     }
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.setFilter(opt.id))
                 }, (opt: FilterOption) => `filt-${opt.id}`)
               }
               .width('100%')
-              .padding({ bottom: 24 })
+              .padding({ bottom: 28 })
             }
             .width('100%')
-            .constraintSize({ maxHeight: 360 })
+            .constraintSize({ maxHeight: FiveMinDimens.sheetMaxH })
+            .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.Spring)
           }
           .width('100%')
           .backgroundColor($r('app.color.surface'))
-          .borderRadius({ topLeft: 18, topRight: 18 })
+          .borderRadius({ topLeft: FiveMinDimens.radiusSheet, topRight: FiveMinDimens.radiusSheet })
         }
         .width('100%')
         .height('100%')

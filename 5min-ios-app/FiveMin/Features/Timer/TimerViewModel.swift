@@ -229,11 +229,12 @@ final class TimerViewModel {
     }
 
     /// DEBUG-only: drive UI for `scripts/capture_store_screenshots.sh` via `FIVEMIN_SCREENSHOT`.
+    /// In-memory only — no privacy persist / no durable history write for done.
     private func applyStoreScreenshotSceneIfNeeded() {
 #if DEBUG
         guard let scene = ProcessInfo.processInfo.environment["FIVEMIN_SCREENSHOT"] else { return }
+        // In-memory only — do not persist privacyAccepted from launch env.
         privacyAccepted = true
-        prefs.privacyAccepted = true
         switch scene {
         case "home", "idle":
             selectedTab = 1
@@ -260,7 +261,7 @@ final class TimerViewModel {
         case "done":
             selectedTab = 1
             setPreset(minutes: 5, sceneId: "toilet")
-            // Finished UI without sound / notification (store marketing shot).
+            // Finished UI without sound / notification / history write (store marketing shot).
             Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .milliseconds(350))
                 guard let self else { return }
@@ -273,13 +274,10 @@ final class TimerViewModel {
                 self.inOvertime = true
                 self.overtimeStart = Date().addingTimeInterval(-12)
                 self.overtimeMs = 12_000
-                self.lastRecordedSessionId = self.history.recordSession(
-                    elapsedMs: self.totalMs,
-                    sceneId: "toilet"
-                )
-                self.refreshTodayStats()
-                self.refreshSuggested()
-                self.recordsEpoch += 1
+                // Fake id only — never write marketing scenes into durable history.
+                self.lastRecordedSessionId = -1
+                self.statsCount = max(1, self.statsCount)
+                self.statsMs = max(self.totalMs, self.statsMs)
                 self.refreshPhase()
                 self.startTicker()
             }

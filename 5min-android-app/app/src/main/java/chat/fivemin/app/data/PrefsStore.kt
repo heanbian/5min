@@ -90,6 +90,11 @@ class PrefsStore(context: Context) {
         secure.setCredentials(id, secret)
     }
 
+    /** Drop cloud identity when leaving cloud mode. */
+    fun clearDeviceCredentials() {
+        secure.clear()
+    }
+
     var privacyAccepted: Boolean
         get() = sp.getBoolean(KEY_PRIVACY, false)
         set(value) {

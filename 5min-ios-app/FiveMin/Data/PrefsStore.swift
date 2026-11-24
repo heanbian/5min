@@ -107,6 +107,14 @@ final class PrefsStore {
         defaults.removeObject(forKey: deviceSecretKey)
     }
 
+    /// Drop cloud identity when leaving cloud mode.
+    func clearDeviceCredentials() {
+        KeychainStore.delete(forKey: deviceIdKey)
+        KeychainStore.delete(forKey: deviceSecretKey)
+        defaults.removeObject(forKey: deviceIdKey)
+        defaults.removeObject(forKey: deviceSecretKey)
+    }
+
     /// One-shot: move legacy UserDefaults credentials into Keychain.
     func migrateDeviceCredentialsToKeychainIfNeeded() {
         let legacyId = defaults.string(forKey: deviceIdKey) ?? ""

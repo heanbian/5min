@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -245,9 +246,9 @@ fun TimerHome(
                         },
                         contentDescription = vm.t("ambientLabel"),
                         tint = if (state.ambient == "off") {
-                            FiveMinColors.muted.copy(alpha = 0.85f)
+                            FiveMinColors.muted.copy(alpha = 0.45f)
                         } else {
-                            FiveMinColors.muted.copy(alpha = 0.55f)
+                            FiveMinColors.muted.copy(alpha = 1f)
                         },
                         modifier = Modifier.size(20.dp),
                     )
@@ -522,7 +523,7 @@ fun TimerHome(
                             .border(1.dp, FiveMinColors.brand.copy(alpha = 0.12f), railShape)
                             .padding(6.dp)
                             .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.chipGap),
                     ) {
                         chipIds.forEach { id ->
                             val active = id == state.activeSceneId
@@ -571,8 +572,11 @@ fun TimerHome(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
+                        // End spacer so the last chip isn't clipped by the rail.
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
             }
@@ -692,7 +696,12 @@ fun TimerHome(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 280.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     pack.stepKeys.forEachIndexed { index, key ->
                         RitualCheckRow(
                             label = vm.t(key),
@@ -735,6 +744,8 @@ private fun RitualCheckRow(
             color = FiveMinColors.ink,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
     }

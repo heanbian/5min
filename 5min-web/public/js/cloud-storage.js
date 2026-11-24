@@ -59,6 +59,16 @@ const writeCreds = (deviceId, deviceSecret) => {
   }
 };
 
+/** Drop cloud identity when leaving cloud mode / sync fails. */
+export const clearDeviceCredentials = () => {
+  try {
+    localStorage.removeItem(DEVICE_ID_KEY);
+    localStorage.removeItem(DEVICE_SECRET_KEY);
+  } catch {
+    /* ignore */
+  }
+};
+
 /** Ensure deviceId/deviceSecret exist in localStorage. */
 export const ensureDeviceCredentials = () => {
   let { deviceId, deviceSecret } = readCreds();

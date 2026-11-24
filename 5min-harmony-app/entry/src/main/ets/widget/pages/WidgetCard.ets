@@ -20,6 +20,8 @@ struct WidgetCard {
         .fontWeight(FontWeight.Medium)
         .fontColor('#5F6F66')
         .width('100%')
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
 
       Text(this.countLine.length > 0 ? this.countLine : `今日 ${this.todayCount} 次`)
         .fontSize(22)
@@ -27,6 +29,7 @@ struct WidgetCard {
         .fontColor('#1F2A24')
         .width('100%')
         .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
 
       if (this.running && (this.remainLine.length > 0 || this.remainText.length > 0)) {
         Text(this.remainLine.length > 0 ? this.remainLine : `剩余 ${this.remainText}`)
@@ -35,11 +38,14 @@ struct WidgetCard {
           .fontColor('#2F9A68')
           .width('100%')
           .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
       } else {
         Text('轻触打开')
           .fontSize(12)
           .fontColor('#8A9A90')
           .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
     }
     .width('100%')

@@ -80,12 +80,12 @@ Page({
     this.reload();
   },
 
-  buildFilterOptions() {
-    const all = history.getHistory();
+  buildFilterOptions(all) {
+    const list = all || history.getHistory();
     const seen = {};
     const opts = [{ id: '', label: t('historyFilterAll') }];
-    for (let i = 0; i < all.length; i += 1) {
-      const sid = all[i].sceneId;
+    for (let i = 0; i < list.length; i += 1) {
+      const sid = list[i].sceneId;
       if (!sid || seen[sid]) continue;
       seen[sid] = true;
       let label = t('historySceneDefault');
@@ -105,10 +105,17 @@ Page({
   },
 
   reload() {
-    const filterOptions = this.buildFilterOptions();
-    const filterSceneId = this.data.filterSceneId || '';
-    const list = history.getHistory(filterSceneId || undefined);
-    const period = history.periodStats();
+    const all = history.getHistory();
+    const filterOptions = this.buildFilterOptions(all);
+    let filterSceneId = this.data.filterSceneId || '';
+    if (filterSceneId && !filterOptions.some((o) => o.id === filterSceneId)) {
+      filterSceneId = '';
+    }
+    const list = filterSceneId
+      ? all.filter((row) => row.sceneId === filterSceneId)
+      : all;
+    let periodMins = 0;
+    for (let i = 0; i < all.length; i += 1) periodMins += all[i].minutes;
     const rows = list.map((item, i) => {
       let scene = t('historySceneDefault');
       if (item.sceneId) {
@@ -136,7 +143,7 @@ Page({
         mins: p0.insightMinutes(ot.ms),
       });
     }
-    const streak = getStreak();
+    const streak = getStreak(all);
     const streakText =
       streak > 0 ? t('streakDays', { n: streak }) : t('streakNone');
     this.setData({
@@ -153,9 +160,10 @@ Page({
       historyClear: t('historyClear'),
       filterOptions,
       filterIndex,
+      filterSceneId,
       filterLabel: this.filterLabelFor(filterSceneId, filterOptions),
-      periodCount: period.count,
-      periodMins: period.minutes,
+      periodCount: all.length,
+      periodMins,
       overtimeInsightTitle: t('overtimeInsightTitle'),
       overtimeInsightLine,
       overtimeInsightHint: t('overtimeInsightHint'),
@@ -170,20 +178,19 @@ Page({
   },
 
   buildShareText() {
-    const period = history.periodStats();
-    const streak = getStreak();
+    const summary = history.shareSummaryValues();
     return t('shareText', {
-      count: period.count,
-      mins: period.minutes,
-      streak,
+      count: summary.count,
+      mins: summary.minutes,
+      streak: summary.streak,
     });
   },
 
   onShareAppMessage() {
-    const streak = getStreak();
+    const summary = history.shareSummaryValues();
     const title =
-      streak > 0
-        ? `${t('brandTitle')} · ${t('streakDays', { n: streak })}`
+      summary.streak > 0
+        ? `${t('brandTitle')} · ${t('streakDays', { n: summary.streak })}`
         : t('brandTitle');
     return {
       title,

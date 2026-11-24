@@ -35,6 +35,13 @@ class SecureCredentialStore(context: Context) {
         }
     }
 
+    fun clear() {
+        prefs.edit {
+            remove(KEY_DEVICE_ID)
+            remove(KEY_DEVICE_SECRET)
+        }
+    }
+
     private fun read(key: String): String? {
         val packed = prefs.getString(key, null) ?: return null
         if (!packed.startsWith(ENC_PREFIX)) {

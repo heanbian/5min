@@ -12,7 +12,7 @@
 
     <view class="top-tools">
       <view
-        class="icon-btn"
+        class="icon-btn {{ambient === 'off' ? 'icon-btn-muted' : ''}}"
         bindtap="onOpenMine"
         aria-label="{{tabMine}}"
       >
@@ -99,24 +99,27 @@
         data-id="{{item.id}}"
         bindtap="onSuggestedChip"
       >{{item.title}}</view>
+      <view class="suggested-chip-tail"></view>
     </scroll-view>
   </view>
 
   <view class="ritual-mask" wx:if="{{showRitual}}">
     <view class="ritual-card">
       <text class="ritual-title">{{ritualTitle}}</text>
-      <view class="ritual-step" bindtap="onToggleRitualUp">
-        <view class="ritual-check {{ritualUp ? 'on' : ''}}">{{ritualUp ? '✓' : ''}}</view>
-        <text class="ritual-step-label">{{ritualStepUp}}</text>
-      </view>
-      <view class="ritual-step" bindtap="onToggleRitualStretch">
-        <view class="ritual-check {{ritualStretch ? 'on' : ''}}">{{ritualStretch ? '✓' : ''}}</view>
-        <text class="ritual-step-label">{{ritualStepStretch}}</text>
-      </view>
-      <view class="ritual-step" bindtap="onToggleRitualLeave">
-        <view class="ritual-check {{ritualLeave ? 'on' : ''}}">{{ritualLeave ? '✓' : ''}}</view>
-        <text class="ritual-step-label">{{ritualStepLeave}}</text>
-      </view>
+      <scroll-view scroll-y class="ritual-steps" enhanced show-scrollbar="{{false}}">
+        <view class="ritual-step" bindtap="onToggleRitualUp">
+          <view class="ritual-check {{ritualUp ? 'on' : ''}}">{{ritualUp ? '✓' : ''}}</view>
+          <text class="ritual-step-label">{{ritualStepUp}}</text>
+        </view>
+        <view class="ritual-step" bindtap="onToggleRitualStretch">
+          <view class="ritual-check {{ritualStretch ? 'on' : ''}}">{{ritualStretch ? '✓' : ''}}</view>
+          <text class="ritual-step-label">{{ritualStepStretch}}</text>
+        </view>
+        <view class="ritual-step" bindtap="onToggleRitualLeave">
+          <view class="ritual-check {{ritualLeave ? 'on' : ''}}">{{ritualLeave ? '✓' : ''}}</view>
+          <text class="ritual-step-label">{{ritualStepLeave}}</text>
+        </view>
+      </scroll-view>
       <view class="ritual-actions">
         <view class="ritual-btn ritual-btn-ghost" bindtap="onRitualSkip">{{ritualSkip}}</view>
         <view class="ritual-btn ritual-btn-primary" bindtap="onRitualDone">{{ritualDone}}</view>

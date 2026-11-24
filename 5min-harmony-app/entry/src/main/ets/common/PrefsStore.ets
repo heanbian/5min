@@ -90,6 +90,13 @@ export class PrefsStore {
     await this.pref?.flush();
   }
 
+  /** Drop cloud identity when leaving cloud mode (local-only must not keep secrets). */
+  async clearDeviceCredentials(): Promise<void> {
+    await this.pref?.put('device_id', '');
+    await this.pref?.put('device_secret', '');
+    await this.pref?.flush();
+  }
+
   private async migrateFinishAlertPrefsIfNeeded(): Promise<void> {
     const hasTone = await this.pref?.has('finish_tone');
     if (hasTone) {

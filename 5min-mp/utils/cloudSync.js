@@ -153,22 +153,32 @@ function applyRemotePrefs(remote) {
   // Keep local storageMode as source of truth for this device setting.
 }
 
+/** Cap remote session merge to avoid storage blow-up. */
+const MAX_REMOTE_SESSIONS = 500;
+const MAX_CLIENT_ID_LEN = 64;
+const MAX_SCENE_ID_LEN = 64;
+
 function mergeRemoteSessions(remoteSessions) {
   if (!Array.isArray(remoteSessions) || remoteSessions.length === 0) return;
   const local = history.getHistory();
   const byId = new Map(local.map((r) => [r.id, r]));
-  for (let i = 0; i < remoteSessions.length; i += 1) {
+  const limit = Math.min(remoteSessions.length, MAX_REMOTE_SESSIONS);
+  for (let i = 0; i < limit; i += 1) {
     const s = remoteSessions[i];
-    if (!s || !s.clientId) continue;
-    const id = String(s.clientId);
+    if (!s) continue;
+    let id = String(s.clientId || s.id || '');
+    if (!id) continue;
+    if (id.length > MAX_CLIENT_ID_LEN) id = id.slice(0, MAX_CLIENT_ID_LEN);
     const at = Math.floor(Number(s.at) || 0);
     const minutes = Math.floor(Number(s.minutes) || 0);
     if (at <= 0 || minutes <= 0) continue;
+    let sceneId = String(s.sceneId || '');
+    if (sceneId.length > MAX_SCENE_ID_LEN) sceneId = sceneId.slice(0, MAX_SCENE_ID_LEN);
     const next = {
       id,
       at,
       minutes,
-      sceneId: String(s.sceneId || ''),
+      sceneId,
       elapsedMs: Math.max(0, Math.floor(Number(s.elapsedMs) || 0)),
     };
     const prev = byId.get(id);
@@ -232,11 +242,18 @@ async function clearRemoteSessions() {
 
 async function enableCloud() {
   prefs.setStorageMode('cloud');
-  await syncNow();
+  try {
+    await syncNow();
+  } catch (e) {
+    prefs.setStorageMode('local');
+    prefs.clearDeviceCredentials();
+    throw e;
+  }
 }
 
 function disableCloud() {
   prefs.setStorageMode('local');
+  prefs.clearDeviceCredentials();
 }
 
 module.exports = {

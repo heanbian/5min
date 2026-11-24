@@ -38,8 +38,8 @@ class UsageAgg {
 export class SceneRanker {
   static readonly GROUP_ID: string = 'suggested';
   static readonly LABEL_KEY: string = 'sceneGroupSuggested';
-  static readonly TOP_N: number = 6;
-  static readonly CHIP_N: number = 5;
+  static readonly TOP_N: number = 10;
+  static readonly CHIP_N: number = 10;
   static readonly MIN_COUNT: number = 2;
   static readonly RECENT_DAYS: number = 3;
   static readonly HISTORY_WINDOW_DAYS: number = 14;

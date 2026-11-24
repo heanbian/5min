@@ -28,9 +28,10 @@ import {
 import { DigitalWatchTime } from '../ui/DigitalWatch';
 import { RecordsTab } from '../ui/RecordsTab';
 import { MineTab } from '../ui/MineTab';
-import { FiveMinFont } from '../common/FiveMinDimens';
+import { FiveMinDimens, FiveMinFont } from '../common/FiveMinDimens';
 import { WidgetGlance } from '../common/WidgetGlance';
 import { i18n } from '@kit.LocalizationKit';
+import BuildProfile from 'BuildProfile';
 
 const PRIVACY_URL = 'https://5min.chat/privacy.html';
 const TERMS_URL = 'https://5min.chat/terms.html';
@@ -103,6 +104,8 @@ struct Index {
   @State startLabel: string = '';
   @State sceneLabel: string = '';
   @State scenePlaceholder: boolean = true;
+  /** Mirrored from TimerState so chip / picker selection re-renders under ArkUI. */
+  @State activeSceneId: string = '';
   @State progress: number = 1;
   @State ringColor: string = '#2F9A68';
   @State timeColor: string = '#000000';
@@ -163,8 +166,10 @@ struct Index {
   private lastGlancePublishAt: number = 0;
 
   aboutToAppear(): void {
+    // ArkTS forbids `instanceof` on namespace types; cast host Context instead.
     const host = this.getUIContext().getHostContext();
-    this.context = host instanceof common.UIAbilityContext ? host : null;
+    this.context = host ? host as common.UIAbilityContext : null;
+    AppStorage.setOrCreate('appTabIndex', this.currentTab);
     this.bootstrap();
   }
 
@@ -262,17 +267,24 @@ struct Index {
     this.currentTab = 1;
   }
 
-  /** Store marketing scenes via Want param FIVEMIN_SCREENSHOT=home|running|done (also idle/warn). */
+  /**
+   * Debug-only store marketing scenes via Want FIVEMIN_SCREENSHOT=home|running|done.
+   * Release builds ignore the param (no privacy bypass / no history write).
+   */
   private async applyStoreScreenshotSceneIfNeeded(): Promise<void> {
     const scene = AppStorage.get('FIVEMIN_SCREENSHOT') as string;
     if (!scene) {
       return;
     }
     AppStorage.delete('FIVEMIN_SCREENSHOT');
+    if (!BuildProfile.DEBUG) {
+      return;
+    }
+    // In-memory only — do not persist privacyAccepted from IPC.
     this.privacyAccepted = true;
     this.privacyReady = true;
-    await this.prefs.setPrivacyAccepted(true);
     this.currentTab = 1;
+    AppStorage.setOrCreate('appTabIndex', 1);
     await this.setPreset(5, 'toilet');
     this.refreshUi();
     if (scene === 'home' || scene === 'idle') {
@@ -312,10 +324,10 @@ struct Index {
       this.inOvertime = true;
       this.overtimeAt = Date.now() - 12_000;
       this.overtimeMs = 12_000;
-      this.lastRecordedSessionId = await this.history.recordSession(this.state.totalMs, 'toilet');
-      await this.refreshTodayStats();
-      await this.refreshSuggested();
-      this.recordsEpoch = this.recordsEpoch + 1;
+      // Fake id only — never write marketing scenes into durable history.
+      this.lastRecordedSessionId = -1;
+      this.state.statsCount = Math.max(1, this.state.statsCount);
+      this.state.statsMs = Math.max(this.state.totalMs, this.state.statsMs);
       this.refreshUi();
     }
   }
@@ -487,6 +499,9 @@ struct Index {
 
   onTabChange(index: number): void {
     this.currentTab = index;
+    AppStorage.setOrCreate('appTabIndex', index);
+    // Close home overlays; Records/Mine watch appTabIndex to dismiss their sheets.
+    this.showScenes = false;
     if (index === 0) {
       this.recordsEpoch = this.recordsEpoch + 1;
     } else if (index === 1) {
@@ -767,6 +782,7 @@ struct Index {
 
     this.applyPhaseColors(this.state.phase);
 
+    this.activeSceneId = this.state.activeSceneId;
     if (this.state.activeSceneId) {
       const title = this.sceneTitle(this.state.activeSceneId);
       const label = this.sceneLabelText(this.state.activeSceneId);
@@ -1155,9 +1171,9 @@ struct Index {
             Row({ space: 8 }) {
               Stack({ alignContent: Alignment.Center }) {
                 Column()
-                  .width(18)
-                  .height(18)
-                  .borderRadius(4)
+                  .width(22)
+                  .height(22)
+                  .borderRadius(6)
                   .backgroundColor(this.privacyChecked ? $r('app.color.brand') : Color.Transparent)
                   .border({
                     width: 1.5,
@@ -1165,13 +1181,13 @@ struct Index {
                   })
                 if (this.privacyChecked) {
                   Text('✓')
-                    .fontSize(12)
+                    .fontSize(13)
                     .fontWeight(FontWeight.Bold)
                     .fontColor(Color.White)
                 }
               }
-              .width(18)
-              .height(18)
+              .width(44)
+              .height(44)
               .flexShrink(0)
               .onClick(() => {
                 this.privacyChecked = !this.privacyChecked;
@@ -1234,7 +1250,7 @@ struct Index {
                 offsetX: 0,
                 offsetY: 0
               })
-              .opacity(this.privacyChecked ? 1 : 0.85)
+              .opacity(this.privacyChecked ? 1 : 0.45)
               .onClick(() => {
                 if (this.privacyChecked) {
                   this.acceptPrivacy();
@@ -1274,8 +1290,10 @@ struct Index {
         }
         .width('100%')
         .height('100%')
-        .barHeight(58)
+        .barHeight(FiveMinDimens.tabBarH)
         .barBackgroundColor($r('app.color.surface'))
+        // Match Android: tab switch by tap only — swipe fights chip horizontal scroll.
+        .scrollable(false)
         .onChange((i: number) => this.onTabChange(i))
         .animationDuration(200)
       }
@@ -1288,117 +1306,238 @@ struct Index {
       if (this.showRitual) {
         this.RitualOverlay()
       }
+      if (this.showScenes) {
+        this.ScenePickerOverlay()
+      }
     }
     .width('100%')
     .height('100%')
   }
 
   @Builder
+  ScenePickerOverlay() {
+    Column() {
+      Column({ space: 12 }) {
+        Row() {
+          Text(this.t('scenesLabel'))
+            .fontSize(18)
+            .fontFamily(FiveMinFont.semiBold)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .layoutWeight(1)
+          Text(this.t('confirmLabel'))
+            .fontSize(15)
+            .fontFamily(FiveMinFont.semiBold)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.brand_strong'))
+            .padding({ left: 8, right: 4, top: 6, bottom: 6 })
+            .onClick(() => {
+              this.showScenes = false;
+            })
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
+
+        // Standalone scroll (not nested under HomePane Scroll) so every group is reachable.
+        Scroll() {
+          Column({ space: 10 }) {
+            ForEach(this.groups, (group: SceneGroup) => {
+              Column({ space: 2 }) {
+                Row({ space: 8 }) {
+                  Column()
+                    .width(3)
+                    .height(12)
+                    .borderRadius(2)
+                    .backgroundColor($r('app.color.brand'))
+                  Text(this.t(group.labelKey))
+                    .fontSize(11)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor($r('app.color.brand_strong'))
+                    .letterSpacing(0.8)
+                }
+                .width('100%')
+                .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+                .backgroundColor($r('app.color.brand_soft'))
+                .border({ width: 1, color: $r('app.color.brand') })
+                .borderRadius(8)
+                .opacity(0.85)
+
+                ForEach(this.scenesInGroup(group.id), (scene: SceneItem) => {
+                  Text(this.sceneLabelText(scene.id) || scene.id)
+                    .width('100%')
+                    .height(40)
+                    .fontSize(14)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor(scene.id === this.activeSceneId ?
+                      $r('app.color.brand_strong') : $r('app.color.muted'))
+                    .padding({ left: 12, right: 12 })
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .textAlign(TextAlign.Start)
+                    .borderRadius(12)
+                    .backgroundColor(scene.id === this.activeSceneId ?
+                      $r('app.color.brand_soft') : Color.Transparent)
+                    .onClick(() => this.selectScene(scene.id))
+                }, (scene: SceneItem) => `${group.id}:${scene.id}`)
+              }
+              .width('100%')
+            }, (group: SceneGroup) => group.id)
+          }
+          .width('100%')
+          .padding({ left: 4, right: 4, bottom: 8 })
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .scrollBar(BarState.Auto)
+        .edgeEffect(EdgeEffect.Spring)
+        .align(Alignment.TopStart)
+      }
+      .width(FiveMinDimens.overlayWPct)
+      .constraintSize({ maxHeight: FiveMinDimens.overlayMaxPct })
+      .height('72%')
+      .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, top: FiveMinDimens.padY, bottom: 14 })
+      .linearGradient({
+        angle: 180,
+        colors: [['rgba(229, 245, 236, 0.55)', 0], [$r('app.color.surface'), 0.42]]
+      })
+      .borderRadius(FiveMinDimens.radiusDialog)
+      .shadow({
+        radius: 20,
+        color: 'rgba(31, 42, 36, 0.16)',
+        offsetX: 0,
+        offsetY: 8
+      })
+    }
+    .width('100%')
+    .height('100%')
+    .justifyContent(FlexAlign.Center)
+    .alignItems(HorizontalAlign.Center)
+    .backgroundColor(FiveMinDimens.overlayDim)
+  }
+
+  @Builder
   RitualOverlay() {
     Column() {
-      Column({ space: 16 }) {
+      Column({ space: 12 }) {
         Text(this.t(this.ritualTitleKey))
           .fontSize(18)
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.ink'))
           .width('100%')
           .textAlign(TextAlign.Center)
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-        Row({ space: 12 }) {
-          Stack({ alignContent: Alignment.Center }) {
-            Column()
+        Scroll() {
+          Column({ space: 0 }) {
+            Row({ space: 12 }) {
+              Stack({ alignContent: Alignment.Center }) {
+                Column()
+                  .width(22)
+                  .height(22)
+                  .borderRadius(6)
+                  .backgroundColor(this.ritualUp ? $r('app.color.brand') : Color.Transparent)
+                  .border({
+                    width: 1.5,
+                    color: this.ritualUp ? $r('app.color.brand') : $r('app.color.muted')
+                  })
+                if (this.ritualUp) {
+                  Text('✓')
+                    .fontSize(13)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(Color.White)
+                }
+              }
               .width(22)
               .height(22)
-              .borderRadius(6)
-              .backgroundColor(this.ritualUp ? $r('app.color.brand') : Color.Transparent)
-              .border({
-                width: 1.5,
-                color: this.ritualUp ? $r('app.color.brand') : $r('app.color.muted')
-              })
-            if (this.ritualUp) {
-              Text('✓')
-                .fontSize(13)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(Color.White)
+              .flexShrink(0)
+              Text(this.t(this.ritualStep1Key))
+                .fontSize(15)
+                .fontColor($r('app.color.ink'))
+                .layoutWeight(1)
+                .maxLines(3)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
             }
-          }
-          .width(22)
-          .height(22)
-          .flexShrink(0)
-          Text(this.t(this.ritualStep1Key))
-            .fontSize(15)
-            .fontColor($r('app.color.ink'))
-            .layoutWeight(1)
-        }
-        .width('100%')
-        .padding({ top: 10, bottom: 10 })
-        .onClick(() => {
-          this.ritualUp = !this.ritualUp;
-        })
+            .width('100%')
+            .padding({ top: 10, bottom: 10 })
+            .onClick(() => {
+              this.ritualUp = !this.ritualUp;
+            })
 
-        Row({ space: 12 }) {
-          Stack({ alignContent: Alignment.Center }) {
-            Column()
+            Row({ space: 12 }) {
+              Stack({ alignContent: Alignment.Center }) {
+                Column()
+                  .width(22)
+                  .height(22)
+                  .borderRadius(6)
+                  .backgroundColor(this.ritualStretch ? $r('app.color.brand') : Color.Transparent)
+                  .border({
+                    width: 1.5,
+                    color: this.ritualStretch ? $r('app.color.brand') : $r('app.color.muted')
+                  })
+                if (this.ritualStretch) {
+                  Text('✓')
+                    .fontSize(13)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(Color.White)
+                }
+              }
               .width(22)
               .height(22)
-              .borderRadius(6)
-              .backgroundColor(this.ritualStretch ? $r('app.color.brand') : Color.Transparent)
-              .border({
-                width: 1.5,
-                color: this.ritualStretch ? $r('app.color.brand') : $r('app.color.muted')
-              })
-            if (this.ritualStretch) {
-              Text('✓')
-                .fontSize(13)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(Color.White)
+              .flexShrink(0)
+              Text(this.t(this.ritualStep2Key))
+                .fontSize(15)
+                .fontColor($r('app.color.ink'))
+                .layoutWeight(1)
+                .maxLines(3)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
             }
-          }
-          .width(22)
-          .height(22)
-          .flexShrink(0)
-          Text(this.t(this.ritualStep2Key))
-            .fontSize(15)
-            .fontColor($r('app.color.ink'))
-            .layoutWeight(1)
-        }
-        .width('100%')
-        .padding({ top: 10, bottom: 10 })
-        .onClick(() => {
-          this.ritualStretch = !this.ritualStretch;
-        })
+            .width('100%')
+            .padding({ top: 10, bottom: 10 })
+            .onClick(() => {
+              this.ritualStretch = !this.ritualStretch;
+            })
 
-        Row({ space: 12 }) {
-          Stack({ alignContent: Alignment.Center }) {
-            Column()
+            Row({ space: 12 }) {
+              Stack({ alignContent: Alignment.Center }) {
+                Column()
+                  .width(22)
+                  .height(22)
+                  .borderRadius(6)
+                  .backgroundColor(this.ritualLeave ? $r('app.color.brand') : Color.Transparent)
+                  .border({
+                    width: 1.5,
+                    color: this.ritualLeave ? $r('app.color.brand') : $r('app.color.muted')
+                  })
+                if (this.ritualLeave) {
+                  Text('✓')
+                    .fontSize(13)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(Color.White)
+                }
+              }
               .width(22)
               .height(22)
-              .borderRadius(6)
-              .backgroundColor(this.ritualLeave ? $r('app.color.brand') : Color.Transparent)
-              .border({
-                width: 1.5,
-                color: this.ritualLeave ? $r('app.color.brand') : $r('app.color.muted')
-              })
-            if (this.ritualLeave) {
-              Text('✓')
-                .fontSize(13)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(Color.White)
+              .flexShrink(0)
+              Text(this.t(this.ritualStep3Key))
+                .fontSize(15)
+                .fontColor($r('app.color.ink'))
+                .layoutWeight(1)
+                .maxLines(3)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
             }
+            .width('100%')
+            .padding({ top: 10, bottom: 10 })
+            .onClick(() => {
+              this.ritualLeave = !this.ritualLeave;
+            })
           }
-          .width(22)
-          .height(22)
-          .flexShrink(0)
-          Text(this.t(this.ritualStep3Key))
-            .fontSize(15)
-            .fontColor($r('app.color.ink'))
-            .layoutWeight(1)
+          .width('100%')
         }
+        .constraintSize({ maxHeight: 280 })
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
         .width('100%')
-        .padding({ top: 10, bottom: 10 })
-        .onClick(() => {
-          this.ritualLeave = !this.ritualLeave;
-        })
 
         Row({ space: 10 }) {
           Text(this.t('standRitualSkip'))
@@ -1424,15 +1563,16 @@ struct Index {
             .onClick(() => this.dismissRitual())
         }
         .width('100%')
-        .margin({ top: 8 })
+        .margin({ top: 4 })
       }
-      .width('86%')
-      .padding({ left: 20, right: 20, top: 22, bottom: 20 })
+      .width(FiveMinDimens.ritualWPct)
+      .constraintSize({ maxHeight: FiveMinDimens.overlayMaxPct })
+      .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, top: 22, bottom: FiveMinDimens.padX })
       .linearGradient({
         angle: 180,
         colors: [['rgba(229, 245, 236, 0.55)', 0], [$r('app.color.surface'), 0.42]]
       })
-      .borderRadius(16)
+      .borderRadius(FiveMinDimens.radiusDialog)
       .shadow({
         radius: 20,
         color: 'rgba(31, 42, 36, 0.16)',
@@ -1444,15 +1584,15 @@ struct Index {
     .height('100%')
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
-    .backgroundColor('#00000066')
+    .backgroundColor(FiveMinDimens.overlayDim)
   }
 
   @Builder
   TabBarItem(index: number, icon: Resource, labelKey: string) {
     Column({ space: 2 }) {
       Image(icon)
-        .width(22)
-        .height(22)
+        .width(FiveMinDimens.iconSm)
+        .height(FiveMinDimens.iconSm)
         .objectFit(ImageFit.Contain)
         .fillColor(this.currentTab === index ? '#248556' : '#5F6F66')
       Text(this.t(labelKey))
@@ -1462,14 +1602,14 @@ struct Index {
         .key(`tab-label-${labelKey}-${this.localeTick}`)
     }
     .width('100%')
-    .height(58)
+    .height(FiveMinDimens.tabBarH)
     .justifyContent(FlexAlign.Center)
   }
 
   @Builder
   HomePane() {
     Scroll() {
-      Column({ space: 20 }) {
+      Column({ space: FiveMinDimens.sectionGap }) {
         Row() {
           Row({ space: 10 }) {
             Image($r('app.media.logo'))
@@ -1488,39 +1628,45 @@ struct Index {
           .height(36)
           .alignItems(VerticalAlign.Center)
 
-          Image(this.ambient === 'off' ? $r('app.media.ic_volume_mute') : $r('app.media.ic_volume'))
-            .width(22)
-            .height(22)
-            .objectFit(ImageFit.Contain)
-            .fillColor(this.ambient === 'off' ? '#9AA89F' : '#5F6F66')
-            .opacity(this.ambient === 'off' ? 0.85 : 0.55)
-            .onClick(() => {
-              this.currentTab = 2;
-            })
+          Row() {
+            Image(this.ambient === 'off' ? $r('app.media.ic_volume_mute') : $r('app.media.ic_volume'))
+              .width(FiveMinDimens.iconSm)
+              .height(FiveMinDimens.iconSm)
+              .objectFit(ImageFit.Contain)
+              .fillColor(this.ambient === 'off' ? '#9AA89F' : '#5F6F66')
+              .opacity(this.ambient === 'off' ? 0.45 : 1)
+          }
+          .width(FiveMinDimens.iconTap)
+          .height(FiveMinDimens.iconTap)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(VerticalAlign.Center)
+          .onClick(() => {
+            this.onTabChange(2);
+          })
         }
         .width('100%')
-        .height(36)
+        .height(FiveMinDimens.iconTap)
         .alignItems(VerticalAlign.Center)
 
-        Column({ space: 18 }) {
+        Column({ space: FiveMinDimens.stageGap }) {
           Stack({ alignContent: Alignment.Center }) {
             DialRing({
               progress: this.progress,
               ringColor: this.ringColor,
               syncKey: this.dialKey
             })
-              .width(260)
-              .height(260)
+              .width(FiveMinDimens.dialSize)
+              .height(FiveMinDimens.dialSize)
             DigitalWatchTime({
               text: this.clock,
               color: this.timeColor,
               blinking: this.running
             })
-              .width(166)
-              .height(55)
+              .width(FiveMinDimens.dialTimeW)
+              .height(FiveMinDimens.dialTimeH)
           }
-          .width(260)
-          .height(260)
+          .width(FiveMinDimens.dialSize)
+          .height(FiveMinDimens.dialSize)
           .alignSelf(ItemAlign.Center)
           .onClick(() => {
             if (this.state.finished) {
@@ -1581,11 +1727,11 @@ struct Index {
         .width('100%')
         .alignItems(HorizontalAlign.Center)
 
-        Column({ space: 10 }) {
-          Row({ space: 10 }) {
+        Column({ space: FiveMinDimens.controlGap }) {
+          Row({ space: FiveMinDimens.controlGap }) {
             Text(this.startLabel)
               .layoutWeight(1)
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .fontSize(16)
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
@@ -1595,7 +1741,7 @@ struct Index {
                 angle: 180,
                 colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55], [$r('app.color.brand_strong'), 1]]
               })
-              .borderRadius(22)
+              .borderRadius(FiveMinDimens.radius)
               .shadow({
                 radius: 12,
                 color: 'rgba(47, 154, 104, 0.32)',
@@ -1605,7 +1751,7 @@ struct Index {
               .onClick(() => this.toggleStart())
             Text(this.t('reset'))
               .layoutWeight(1)
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .fontSize(16)
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
@@ -1613,7 +1759,7 @@ struct Index {
               .textAlign(TextAlign.Center)
               .backgroundColor($r('app.color.surface'))
               .border({ width: 1.5, color: $r('app.color.line') })
-              .borderRadius(22)
+              .borderRadius(FiveMinDimens.radius)
               .shadow({
                 radius: 4,
                 color: 'rgba(31, 42, 36, 0.06)',
@@ -1632,7 +1778,7 @@ struct Index {
           if (this.showIgnore) {
             Text(this.t('finishIgnore'))
               .width('100%')
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .fontSize(15)
               .fontFamily(FiveMinFont.medium)
               .fontWeight(FontWeight.Medium)
@@ -1644,7 +1790,7 @@ struct Index {
                 color: 'rgba(210, 85, 74, 0.35)',
                 style: BorderStyle.Solid
               })
-              .borderRadius(22)
+              .borderRadius(FiveMinDimens.radius)
               .onClick(() => this.ignoreLastSession())
           }
 
@@ -1664,12 +1810,12 @@ struct Index {
               .rotate({ angle: this.showScenes ? 180 : 0 })
           }
           .width('100%')
-          .height(40)
+          .height(FiveMinDimens.rowH)
           .padding({ left: 14, right: 14 })
           .backgroundColor($r('app.color.surface'))
           .border({
             width: 1,
-            color: this.showScenes ? 'rgba(47, 154, 104, 0.45)' : $r('app.color.line')
+            color: this.showScenes ? FiveMinDimens.brandBorderOpen : $r('app.color.line')
           })
           .shadow({
             radius: 6,
@@ -1677,7 +1823,7 @@ struct Index {
             offsetX: 0,
             offsetY: 2
           })
-          .borderRadius(22)
+          .borderRadius(FiveMinDimens.radius)
           .opacity(this.setupEnabled ? 1 : 0.4)
           .onClick(() => {
             if (this.setupEnabled) {
@@ -1688,129 +1834,77 @@ struct Index {
             }
           })
 
-          if (this.showScenes) {
-            Scroll() {
-              Column({ space: 10 }) {
-                ForEach(this.groups, (group: SceneGroup) => {
-                  Column({ space: 2 }) {
-                    Row({ space: 8 }) {
-                      Column()
-                        .width(3)
-                        .height(12)
-                        .borderRadius(2)
-                        .backgroundColor($r('app.color.brand'))
-                      Text(this.t(group.labelKey))
-                        .fontSize(11)
-                        .fontWeight(FontWeight.Bold)
-                        .fontColor($r('app.color.brand_strong'))
-                        .letterSpacing(0.8)
-                    }
-                    .width('100%')
-                    .padding({ left: 10, right: 10, top: 7, bottom: 7 })
-                    .backgroundColor($r('app.color.brand_soft'))
-                    .border({ width: 1, color: $r('app.color.brand') })
-                    .borderRadius(8)
-                    .opacity(0.85)
-
-                    // Key must include groupId: suggested + catalog reuse the same scene.id
-                    ForEach(this.scenesInGroup(group.id), (scene: SceneItem) => {
-                      Text(this.sceneLabelText(scene.id) || scene.id)
-                        .width('100%')
-                        .height(40)
-                        .fontSize(14)
-                        .fontWeight(FontWeight.Medium)
-                        .fontColor(scene.id === this.state.activeSceneId ?
-                          $r('app.color.brand_strong') : $r('app.color.muted'))
-                        .padding({ left: 12, right: 12 })
-                        .borderRadius(12)
-                        .backgroundColor(scene.id === this.state.activeSceneId ?
-                          $r('app.color.brand_soft') : Color.Transparent)
-                        .onClick(() => this.selectScene(scene.id))
-                    }, (scene: SceneItem) => `${group.id}:${scene.id}`)
-                  }
-                  .width('100%')
-                }, (group: SceneGroup) => group.id)
-              }
-              .width('100%')
-              .padding(10)
-            }
-            .height(280)
-            .backgroundColor($r('app.color.surface'))
-            .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(22)
-          }
-
           if (this.chipSceneIds.length > 0) {
+            // Row must size to content (no width 100%), otherwise trailing chips like 外卖等候 clip.
             Scroll() {
-              Row({ space: 8 }) {
+              Row({ space: FiveMinDimens.chipGap }) {
                 ForEach(this.chipSceneIds, (id: string) => {
-                  if (id === this.state.activeSceneId) {
-                    Text(this.sceneTitle(id) || id)
-                      .fontSize(13)
-                      .fontWeight(FontWeight.Medium)
-                      .fontColor(Color.White)
-                      .height(32)
-                      .padding({ left: 14, right: 14 })
-                      .textAlign(TextAlign.Center)
-                      .constraintSize({ minHeight: 32 })
-                      .flexShrink(0)
-                      .linearGradient({
-                        angle: 180,
-                        colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 1]]
-                      })
-                      .borderRadius(22)
-                      .shadow({
-                        radius: 8,
-                        color: 'rgba(47, 154, 104, 0.28)',
-                        offsetX: 0,
-                        offsetY: 3
-                      })
-                      .opacity(this.setupEnabled ? 1 : 0.4)
-                      .onClick(() => {
-                        if (this.setupEnabled) {
-                          this.selectScene(id);
-                        }
-                      })
-                  } else {
-                    Text(this.sceneTitle(id) || id)
-                      .fontSize(13)
-                      .fontWeight(FontWeight.Medium)
-                      .fontColor($r('app.color.brand_strong'))
-                      .height(32)
-                      .padding({ left: 14, right: 14 })
-                      .textAlign(TextAlign.Center)
-                      .constraintSize({ minHeight: 32 })
-                      .flexShrink(0)
-                      .backgroundColor('rgba(255, 255, 255, 0.55)')
-                      .border({ width: 1, color: 'rgba(47, 154, 104, 0.18)' })
-                      .borderRadius(22)
-                      .opacity(this.setupEnabled ? 1 : 0.4)
-                      .onClick(() => {
-                        if (this.setupEnabled) {
-                          this.selectScene(id);
-                        }
-                      })
-                  }
-                }, (id: string) => id)
+                  Text(this.sceneTitle(id) || id)
+                    .fontSize(13)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor(id === this.activeSceneId ? Color.White : $r('app.color.brand_strong'))
+                    .height(FiveMinDimens.suggestedChipH)
+                    .padding({ left: 14, right: 14 })
+                    .textAlign(TextAlign.Center)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .constraintSize({ minHeight: FiveMinDimens.suggestedChipH, maxWidth: 160 })
+                    .flexShrink(0)
+                    .clip(true)
+                    .linearGradient(id === this.activeSceneId ? {
+                      angle: 180,
+                      colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 1]]
+                    } : {
+                      angle: 180,
+                      colors: [[FiveMinDimens.chipIdleFill, 0], [FiveMinDimens.chipIdleFill, 1]]
+                    })
+                    .border(id === this.activeSceneId ? { width: 0, color: Color.Transparent } : {
+                      width: 1,
+                      color: FiveMinDimens.chipIdleBorder
+                    })
+                    .borderRadius(FiveMinDimens.radius)
+                    .shadow(id === this.activeSceneId ? {
+                      radius: 8,
+                      color: 'rgba(47, 154, 104, 0.28)',
+                      offsetX: 0,
+                      offsetY: 3
+                    } : {
+                      radius: 0,
+                      color: Color.Transparent,
+                      offsetX: 0,
+                      offsetY: 0
+                    })
+                    .opacity(this.setupEnabled ? 1 : 0.4)
+                    .onClick(() => {
+                      if (this.setupEnabled) {
+                        this.selectScene(id);
+                      }
+                    })
+                }, (id: string) => `${id}|${id === this.activeSceneId ? '1' : '0'}`)
               }
-              .width('100%')
               .justifyContent(FlexAlign.Start)
               .alignItems(VerticalAlign.Center)
               .padding(6)
             }
             .scrollable(ScrollDirection.Horizontal)
             .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.Spring)
+            .nestedScroll({
+              scrollForward: NestedScrollMode.SELF_FIRST,
+              scrollBackward: NestedScrollMode.SELF_FIRST
+            })
             .align(Alignment.Start)
             .width('100%')
-            .backgroundColor('rgba(229, 245, 236, 0.72)')
-            .border({ width: 1, color: 'rgba(47, 154, 104, 0.12)' })
-            .borderRadius(22)
+            .backgroundColor(FiveMinDimens.brandSoftRail)
+            .border({ width: 1, color: FiveMinDimens.brandBorderSoft })
+            .borderRadius(FiveMinDimens.radius)
+            .clip(true)
           }
         }
         .width('100%')
       }
       .width('100%')
-      .padding({ left: 20, right: 20, top: 18, bottom: 16 })
+      .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, top: FiveMinDimens.padY, bottom: FiveMinDimens.padBody })
     }
     .width('100%')
     .height('100%')

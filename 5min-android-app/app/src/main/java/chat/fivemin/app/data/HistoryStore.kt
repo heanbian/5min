@@ -248,8 +248,23 @@ class HistoryStore(context: Context) {
      * Consecutive calendar days (ending today or yesterday) with ≥1 completed session.
      * Returns 0 when today and yesterday are both empty.
      */
-    fun streakDays(): Int {
-        val daySet = sortedDayStarts()
+    fun streakDays(): Int = streakFromDaySet(sortedDayStarts())
+
+    /** Period count/mins + streak from a single history read. */
+    fun shareSummaryValues(): Triple<Int, Int, Int> {
+        val list = getHistory()
+        val daySet = LinkedHashSet<Long>()
+        list.forEach { daySet.add(startOfDayMs(it.at)) }
+        return Triple(list.size, list.sumOf { it.minutes }, streakFromDaySet(daySet))
+    }
+
+    private fun sortedDayStarts(): Set<Long> {
+        val out = LinkedHashSet<Long>()
+        getHistory().forEach { out.add(startOfDayMs(it.at)) }
+        return out
+    }
+
+    private fun streakFromDaySet(daySet: Set<Long>): Int {
         if (daySet.isEmpty()) return 0
         val today = startOfDayMs(System.currentTimeMillis())
         val dayMs = 24L * 60L * 60L * 1000L
@@ -264,22 +279,6 @@ class HistoryStore(context: Context) {
             cursor -= dayMs
         }
         return streak
-    }
-
-    fun shareSummaryValues(): Triple<Int, Int, Int> {
-        val period = periodStats()
-        return Triple(period.first, period.second, streakDays())
-    }
-
-    private fun sortedDayStarts(): Set<Long> {
-        val out = LinkedHashSet<Long>()
-        db.query(TABLE, arrayOf("at"), null, null, null, null, null).use { c ->
-            val iAt = c.getColumnIndexOrThrow("at")
-            while (c.moveToNext()) {
-                out.add(startOfDayMs(c.getLong(iAt)))
-            }
-        }
-        return out
     }
 
     private fun startOfDayMs(at: Long): Long {

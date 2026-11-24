@@ -285,6 +285,16 @@ function setDeviceCredentials(deviceId, deviceSecret) {
   }
 }
 
+/** Drop cloud identity when leaving cloud mode. */
+function clearDeviceCredentials() {
+  try {
+    wx.removeStorageSync(DEVICE_ID_KEY);
+    wx.removeStorageSync(DEVICE_SECRET_KEY);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 module.exports = {
   MAX_COUNT,
   MAX_NAME,
@@ -314,4 +324,5 @@ module.exports = {
   getDeviceId,
   getDeviceSecret,
   setDeviceCredentials,
+  clearDeviceCredentials,
 };

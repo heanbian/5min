@@ -339,7 +339,11 @@ final class HistoryStore {
 
     /// Consecutive calendar days (ending today or yesterday) with ≥1 completed session.
     func streakDays() -> Int {
-        let daySet = Set(getHistory().map { Self.startOfDayMs($0.at) })
+        streakDays(from: getHistory())
+    }
+
+    func streakDays(from list: [HistoryItem]) -> Int {
+        let daySet = Set(list.map { Self.startOfDayMs($0.at) })
         if daySet.isEmpty { return 0 }
         let dayMs: Int64 = 24 * 60 * 60 * 1000
         var cursor = Self.startOfDayMs(Int64(Date().timeIntervalSince1970 * 1000))
@@ -355,9 +359,10 @@ final class HistoryStore {
         return streak
     }
 
+    /// Single history read for share copy (avoids periodStats + streakDays double scan).
     func shareSummaryValues() -> (count: Int, minutes: Int, streak: Int) {
-        let period = periodStats()
-        return (period.count, period.minutes, streakDays())
+        let list = getHistory()
+        return (list.count, list.reduce(0) { $0 + $1.minutes }, streakDays(from: list))
     }
 
     // MARK: - Async wrappers (keep sync SQLite internals)

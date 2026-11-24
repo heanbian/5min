@@ -88,13 +88,17 @@ class CloudSync(
         prefs.storageMode = MODE_CLOUD
         executor.execute {
             val ok = runCatching { syncNow() }.isSuccess
-            if (!ok) prefs.storageMode = MODE_LOCAL
+            if (!ok) {
+                prefs.storageMode = MODE_LOCAL
+                prefs.clearDeviceCredentials()
+            }
             onResult(ok)
         }
     }
 
     fun disableCloud() {
         prefs.storageMode = MODE_LOCAL
+        prefs.clearDeviceCredentials()
     }
 
     fun syncNow() {
@@ -191,17 +195,25 @@ class CloudSync(
     private fun applyRemoteSessions(arr: JSONArray?) {
         if (arr == null) return
         val rows = mutableListOf<HistoryStore.SyncSession>()
-        for (i in 0 until arr.length()) {
+        val limit = minOf(arr.length(), MAX_REMOTE_SESSIONS)
+        for (i in 0 until limit) {
             val o = arr.optJSONObject(i) ?: continue
-            val clientId = o.optString("clientId").ifEmpty { o.optString("id") }
+            var clientId = o.optString("clientId").ifEmpty { o.optString("id") }
+            if (clientId.length > MAX_CLIENT_ID_LEN) {
+                clientId = clientId.take(MAX_CLIENT_ID_LEN)
+            }
             val at = o.optLong("at", 0L)
             val minutes = o.optInt("minutes", 0)
             if (clientId.isBlank() || at <= 0L || minutes <= 0) continue
+            var sceneId = o.optString("sceneId")
+            if (sceneId.length > MAX_SCENE_ID_LEN) {
+                sceneId = sceneId.take(MAX_SCENE_ID_LEN)
+            }
             rows += HistoryStore.SyncSession(
                 clientId = clientId,
                 at = at,
                 minutes = minutes,
-                sceneId = o.optString("sceneId"),
+                sceneId = sceneId,
                 elapsedMs = o.optLong("elapsedMs", 0L),
             )
         }
@@ -244,5 +256,9 @@ class CloudSync(
         const val MODE_LOCAL = "local"
         const val MODE_CLOUD = "cloud"
         const val API_BASE = "https://5min.chat/api/v1/storage"
+        /** Cap remote session merge to avoid DoS / DB blow-up. */
+        private const val MAX_REMOTE_SESSIONS = 500
+        private const val MAX_CLIENT_ID_LEN = 64
+        private const val MAX_SCENE_ID_LEN = 64
     }
 }

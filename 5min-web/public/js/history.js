@@ -186,12 +186,13 @@ export const getTodayStats = () => todayStats();
 
 /**
  * Consecutive local calendar days (ending today or yesterday) with ≥1 session.
+ * @param {Array<{at:number}>} [list] optional preloaded history (avoids extra read)
  * @returns {number}
  */
-export const getStreak = () => {
-  const list = getHistory();
-  if (!list.length) return 0;
-  const days = new Set(list.map((row) => dayKeyFromMs(row.at)));
+export const getStreak = (list) => {
+  const rows = list || getHistory();
+  if (!rows.length) return 0;
+  const days = new Set(rows.map((row) => dayKeyFromMs(row.at)));
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
   const today = dayKeyFromMs(cursor.getTime());
@@ -207,3 +208,16 @@ export const getStreak = () => {
   }
   return streak;
 };
+
+/** Period count/mins + streak from a single history read. */
+export const shareSummaryValues = () => {
+  const list = getHistory();
+  let mins = 0;
+  for (let i = 0; i < list.length; i += 1) mins += list[i].minutes;
+  return {
+    count: list.length,
+    minutes: mins,
+    streak: getStreak(list),
+  };
+};
+

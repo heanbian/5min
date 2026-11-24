@@ -99,8 +99,8 @@
   flex: 1;
   margin: 0;
   padding: 0 20rpx;
-  min-height: 72rpx;
-  line-height: 72rpx;
+  min-height: 88rpx;
+  line-height: 88rpx;
   font-size: 26rpx;
   font-weight: 500;
   color: #fff;
@@ -215,6 +215,13 @@
   font-size: 26rpx;
   font-weight: 500;
   color: var(--danger);
+  min-height: 88rpx;
+  min-width: 88rpx;
+  padding: 16rpx 8rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .filter-row {
@@ -268,7 +275,13 @@
   font-size: 26rpx;
   font-weight: 500;
   color: var(--danger);
-  padding: 8rpx 0;
+  min-width: 88rpx;
+  min-height: 88rpx;
+  padding: 16rpx 8rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hist-scene {

@@ -33,9 +33,13 @@ test('history record/list/streak stay fast for 500 sessions', async () => {
   const list = history.getHistory();
   const streak = history.getStreak();
   const period = history.periodStats();
+  const summary = history.shareSummaryValues();
   const elapsed = Date.now() - t0;
   assert.ok(list.length > 0);
   assert.equal(typeof streak, 'number');
   assert.equal(period.count, list.length);
+  assert.equal(summary.count, list.length);
+  assert.equal(summary.minutes, period.minutes);
+  assert.equal(summary.streak, streak);
   assert.ok(elapsed < 1500, `history ops too slow: ${elapsed}ms`);
 });

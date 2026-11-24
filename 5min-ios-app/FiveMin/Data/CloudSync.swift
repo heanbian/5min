@@ -123,6 +123,7 @@ final class CloudSync: @unchecked Sendable {
                     ok = true
                 } catch {
                     self.prefs.storageMode = Self.modeLocal
+                    self.prefs.clearDeviceCredentials()
                     ok = false
                 }
                 continuation.resume(returning: ok)
@@ -132,6 +133,7 @@ final class CloudSync: @unchecked Sendable {
 
     func disableCloud() {
         prefs.storageMode = Self.modeLocal
+        prefs.clearDeviceCredentials()
     }
 
     func syncNow() throws {
@@ -255,9 +257,14 @@ final class CloudSync: @unchecked Sendable {
         prefs.setCustomScenes(scenes)
     }
 
+    private static let maxMergeSessions = 500
+    private static let maxClientIdLen = 64
+
     private func applyRemoteSessions(_ arr: [[String: Any]]) {
         var rows: [HistoryStore.SyncSession] = []
+        rows.reserveCapacity(min(arr.count, Self.maxMergeSessions))
         for o in arr {
+            if rows.count >= Self.maxMergeSessions { break }
             let clientId: String
             if let c = o["clientId"] as? String, !c.isEmpty {
                 clientId = c
@@ -266,6 +273,7 @@ final class CloudSync: @unchecked Sendable {
             } else {
                 continue
             }
+            if clientId.count > Self.maxClientIdLen { continue }
             let at: Int64
             if let v = o["at"] as? Int64 {
                 at = v

@@ -17,12 +17,13 @@ function dayKeyFromMs(ms) {
 
 /**
  * Streak ending today (or yesterday if today has no session yet).
+ * @param {Array<{at:number}>} [list] optional preloaded history (avoids extra read)
  * @returns {number}
  */
-function getStreak() {
-  const list = history.getHistory();
-  if (!list.length) return 0;
-  const days = new Set(list.map((row) => dayKeyFromMs(row.at)));
+function getStreak(list) {
+  const rows = list || history.getHistory();
+  if (!rows.length) return 0;
+  const days = new Set(rows.map((row) => dayKeyFromMs(row.at)));
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
   const today = dayKeyFromMs(cursor.getTime());

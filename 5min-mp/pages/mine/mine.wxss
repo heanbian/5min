@@ -80,23 +80,33 @@
 
 .row-title {
   flex: 1;
+  min-width: 0;
   font-size: var(--row-title-size);
   color: var(--ink);
-}
-
-.row-value {
-  font-size: var(--body-size);
-  color: var(--muted);
-  margin-right: 12rpx;
-  max-width: 280rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.row-value {
+  width: 320rpx;
+  max-width: 320rpx;
+  flex-shrink: 0;
+  font-size: var(--body-size);
+  color: var(--muted);
+  margin-right: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .chev {
+  width: 32rpx;
+  flex-shrink: 0;
   font-size: 36rpx;
   color: var(--muted);
+  text-align: right;
 }
 
 .row-line {

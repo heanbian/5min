@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -77,10 +78,11 @@ fun RecordsScreen(vm: TimerViewModel) {
     fun reload() {
         val history = FiveMinApp.instance.history
         rows = history.getHistory(filterSceneId)
-        val period = history.periodStats()
-        periodCount = period.first
-        periodMins = period.second
-        streakDays = history.streakDays()
+        // One history pass for period + streak (avoid 2–3 full reloads).
+        val (count, mins, streak) = history.shareSummaryValues()
+        periodCount = count
+        periodMins = mins
+        streakDays = streak
     }
 
     fun shareSummary() {
@@ -139,7 +141,7 @@ fun RecordsScreen(vm: TimerViewModel) {
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
-                    .padding(end = 14.dp)
+                    .padding(start = 8.dp, end = 14.dp, top = 8.dp, bottom = 8.dp)
                     .clickable { shareSummary() },
             )
             if (rows.isNotEmpty() || filterOptions.isNotEmpty()) {
@@ -148,7 +150,9 @@ fun RecordsScreen(vm: TimerViewModel) {
                     color = FiveMinColors.danger,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { dialog = RecordsDialog.ClearAll },
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable { dialog = RecordsDialog.ClearAll },
                 )
             }
         }
@@ -522,15 +526,19 @@ private fun HistoryRow(vm: TimerViewModel, item: HistoryItem, onDelete: () -> Un
             Text(vm.t("historyDurationLine", mapOf("n" to item.minutes.toString())), color = FiveMinColors.ink, fontSize = 14.sp)
             Text(vm.t("historyTimeLine", mapOf("time" to time)), color = FiveMinColors.ink, fontSize = 14.sp)
         }
-        Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = vm.t("historyDelete"),
-            tint = FiveMinColors.danger,
+        Box(
             modifier = Modifier
-                .size(22.dp)
-                .clickable(onClick = onDelete)
-                .padding(4.dp),
-        )
+                .size(44.dp)
+                .clickable(onClick = onDelete),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = vm.t("historyDelete"),
+                tint = FiveMinColors.danger,
+                modifier = Modifier.size(22.dp),
+            )
+        }
     }
 }
 

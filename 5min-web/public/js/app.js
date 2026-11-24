@@ -46,8 +46,8 @@ import {
 } from './stats.js';
 import {
   getHistory,
-  periodStats,
   getStreak,
+  shareSummaryValues,
   deleteSession,
   clearHistory,
 } from './history.js';
@@ -690,19 +690,21 @@ const showShareToast = (msg) => {
 
 const renderRecordsPanel = () => {
   if (!recordsPeriod || !recordsStreak || !historyList) return;
-  const period = periodStats();
-  const streak = getStreak();
+  const all = getHistory();
+  let periodMins = 0;
+  for (let i = 0; i < all.length; i += 1) periodMins += all[i].minutes;
+  const streak = getStreak(all);
 
   recordsPeriod.replaceChildren();
   const periodLabel = document.createElement('span');
   periodLabel.textContent = tr('weekStatsLabel');
   const periodVals = document.createElement('strong');
-  if (period.count <= 0) {
+  if (all.length <= 0) {
     periodVals.textContent = tr('weekStatsEmpty');
   } else {
     periodVals.textContent = tr('weekStatsText', {
-      count: String(period.count),
-      mins: String(period.minutes),
+      count: String(all.length),
+      mins: String(periodMins),
     });
   }
   recordsPeriod.append(periodLabel, periodVals);
@@ -717,7 +719,6 @@ const renderRecordsPanel = () => {
   recordsStreak.append(streakLabel, streakVals);
 
   if (historyFilter) {
-    const all = getHistory();
     const seen = new Set();
     historyFilter.replaceChildren();
     const optAll = document.createElement('option');
@@ -740,7 +741,9 @@ const renderRecordsPanel = () => {
     }
   }
 
-  const rows = getHistory(historyFilterSceneId || undefined);
+  const rows = historyFilterSceneId
+    ? all.filter((row) => row.sceneId === historyFilterSceneId)
+    : all;
   historyList.replaceChildren();
   if (historyEmptyHint) {
     historyEmptyHint.hidden = rows.length > 0;
@@ -1139,7 +1142,9 @@ const setAmbientPanelOpen = (open) => {
 const syncAmbientUi = () => {
   if (!ambientBtn || !ambientPanel) return;
   const current = getAmbientMode();
-  ambientBtn.classList.toggle('is-on', current !== 'off');
+  const on = current !== 'off';
+  ambientBtn.classList.toggle('is-on', on);
+  ambientBtn.classList.toggle('is-muted', !on);
   for (const btn of ambientPanel.querySelectorAll('button[data-ambient]')) {
     btn.classList.toggle('active', btn.dataset.ambient === current);
   }
@@ -1258,13 +1263,12 @@ historyList?.addEventListener('click', (event) => {
 
 shareBtn?.addEventListener('click', () => {
   void (async () => {
-    const period = periodStats();
-    const streak = getStreak();
+    const summary = shareSummaryValues();
     const title = tr('shareLabel');
     const text = tr('shareText', {
-      count: String(period.count),
-      mins: String(period.minutes),
-      streak: String(streak),
+      count: String(summary.count),
+      mins: String(summary.minutes),
+      streak: String(summary.streak),
     });
     const result = await shareSummary({ title, text, brand: '5min.chat' });
     if (result === 'copied') showShareToast(tr('shareCopied'));

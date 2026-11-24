@@ -128,6 +128,11 @@
 .icon-volume {
   width: 40rpx;
   height: 40rpx;
+  opacity: 1;
+}
+
+.icon-btn-muted .icon-volume {
+  opacity: 0.45;
 }
 
 .dial-placeholder {
@@ -361,8 +366,11 @@
   box-shadow: 0 2rpx 8rpx rgba(47, 154, 104, 0.06);
 }
 
-.suggested-chip:last-child {
-  margin-right: 0;
+.suggested-chip-tail {
+  display: inline-block;
+  width: 8rpx;
+  height: 1rpx;
+  vertical-align: middle;
 }
 
 .suggested-chip.is-active {
@@ -452,11 +460,19 @@
   font-weight: 600;
   color: var(--ink);
   margin-bottom: 28rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ritual-steps {
+  max-height: 440rpx;
+  width: 100%;
 }
 
 .ritual-step {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 20rpx;
   min-height: 72rpx;
   padding: 8rpx 0;
@@ -482,9 +498,16 @@
 }
 
 .ritual-step-label {
+  flex: 1;
   font-size: 28rpx;
   color: var(--ink);
   font-weight: 500;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .ritual-actions {

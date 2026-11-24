@@ -188,6 +188,17 @@
     border:none;
     box-shadow:none;
   }
+  /* Ambient: muted ≈0.45 when off, full when on (parity with native). */
+  #ambientBtn{
+    opacity:0.45;
+  }
+  #ambientBtn.is-on{
+    opacity:1;
+  }
+  #ambientBtn.is-muted{
+    opacity:0.45;
+    color:var(--muted);
+  }
   .lang-trigger{
     height:var(--topbar-h);
     min-height:var(--topbar-h);
@@ -944,8 +955,8 @@
     gap:8px;
   }
   .sheet-btn{
-    height:40px;
-    min-height:40px;
+    height:44px;
+    min-height:44px;
     padding:0 14px;
     font-size:var(--fs-sm);
     border-radius:var(--radius-sm);
@@ -1013,9 +1024,10 @@
   }
   .history-item-actions button,
   .custom-scene-item-actions button{
-    height:32px;
-    min-height:32px;
-    padding:0 8px;
+    height:44px;
+    min-height:44px;
+    min-width:44px;
+    padding:0 10px;
     border:none;
     border-radius:8px;
     background:transparent;

@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
@@ -147,13 +149,20 @@ fun RootApp(
                     Text(vm.t("privacyMessage"), color = FiveMinColors.muted, fontSize = 14.sp)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { privacyChecked = !privacyChecked },
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .clickable { privacyChecked = !privacyChecked },
                     ) {
-                        Checkbox(
-                            checked = privacyChecked,
-                            onCheckedChange = { privacyChecked = it },
-                            colors = CheckboxDefaults.colors(checkedColor = FiveMinColors.brand),
-                        )
+                        Box(
+                            modifier = Modifier.size(44.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Checkbox(
+                                checked = privacyChecked,
+                                onCheckedChange = { privacyChecked = it },
+                                colors = CheckboxDefaults.colors(checkedColor = FiveMinColors.brand),
+                            )
+                        }
                         Text(vm.t("privacyCheckLabel"), color = FiveMinColors.ink, fontSize = 14.sp)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {

@@ -95,10 +95,10 @@ export function isSceneHidden(sceneId, profile) {
  * @param {string[]} ranked
  * @param {string[]} pin
  * @param {Set<string>|string[]} knownIds
- * @param {number} [topN=6]
+ * @param {number} [topN=10]
  * @param {Set<string>|string[]} [hideScenes]
  */
-export function mergePinnedSuggested(ranked, pin, knownIds, topN = 6, hideScenes = []) {
+export function mergePinnedSuggested(ranked, pin, knownIds, topN = 10, hideScenes = []) {
   const known = knownIds instanceof Set ? knownIds : new Set(knownIds);
   const hidden =
     hideScenes instanceof Set ? hideScenes : new Set(hideScenes || []);

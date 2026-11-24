@@ -5,8 +5,8 @@
 
 export const GROUP_ID = 'suggested';
 export const LABEL_KEY = 'sceneGroupSuggested';
-export const TOP_N = 6;
-export const CHIP_N = 5;
+export const TOP_N = 10;
+export const CHIP_N = 10;
 const MIN_COUNT = 2;
 const RECENT_DAYS = 3;
 const HISTORY_WINDOW_DAYS = 14;

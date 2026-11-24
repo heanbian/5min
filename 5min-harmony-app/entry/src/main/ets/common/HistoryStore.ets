@@ -382,37 +382,43 @@ export class HistoryStore {
    */
   async streakDays(): Promise<number> {
     const list = await this.getHistory();
+    return HistoryStore.streakFromList(list);
+  }
+
+  private static streakFromList(list: HistoryItem[]): number {
     if (list.length === 0) {
       return 0;
     }
-    const daySet: number[] = [];
+    const dayMap: Record<string, boolean> = {};
     for (let i = 0; i < list.length; i++) {
-      const day = HistoryStore.startOfDayMs(list[i].at);
-      if (daySet.indexOf(day) < 0) {
-        daySet.push(day);
-      }
+      dayMap[`${HistoryStore.startOfDayMs(list[i].at)}`] = true;
     }
     const dayMs = 24 * 60 * 60 * 1000;
     let cursor = HistoryStore.todayStartMs();
-    if (daySet.indexOf(cursor) < 0) {
+    if (!dayMap[`${cursor}`]) {
       cursor -= dayMs;
-      if (daySet.indexOf(cursor) < 0) {
+      if (!dayMap[`${cursor}`]) {
         return 0;
       }
     }
     let streak = 0;
-    while (daySet.indexOf(cursor) >= 0) {
+    while (dayMap[`${cursor}`]) {
       streak += 1;
       cursor -= dayMs;
     }
     return streak;
   }
 
-  /** Period count/mins + streak for share summary. */
+  /** Period count/mins + streak from a single history read. */
   async shareSummaryValues(): Promise<[number, number, number]> {
-    const period = await this.periodStats();
-    const streak = await this.streakDays();
-    return [period[0], period[1], streak];
+    const list = await this.getHistory();
+    let count = 0;
+    let minutes = 0;
+    for (let i = 0; i < list.length; i++) {
+      count += 1;
+      minutes += list[i].minutes;
+    }
+    return [count, minutes, HistoryStore.streakFromList(list)];
   }
 
   private static cutoffMs(): number {

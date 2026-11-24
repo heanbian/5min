@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -853,14 +855,39 @@ private fun PrefRow(title: String, value: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(FiveMinDimens.controlH)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = FiveMinDimens.padBody),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, color = FiveMinColors.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
-        Text(value, color = FiveMinColors.muted, fontSize = 14.sp, modifier = Modifier.padding(end = 6.dp))
-        Text("›", color = FiveMinColors.muted, fontSize = 18.sp)
+        Text(
+            text = title,
+            color = FiveMinColors.ink,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
+        Text(
+            text = value,
+            color = FiveMinColors.muted,
+            fontSize = 14.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .padding(start = 8.dp, end = 6.dp)
+                .widthIn(max = 160.dp)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
+        Text(
+            text = "›",
+            color = FiveMinColors.muted,
+            fontSize = 18.sp,
+            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically),
+        )
     }
 }
 
@@ -873,14 +900,24 @@ private fun PrefSwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .padding(horizontal = 16.dp),
+            .height(FiveMinDimens.controlH)
+            .padding(horizontal = FiveMinDimens.padBody),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, color = FiveMinColors.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        Text(
+            text = title,
+            color = FiveMinColors.ink,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically),
             colors = SwitchDefaults.colors(
                 checkedThumbColor = FiveMinColors.surface,
                 checkedTrackColor = FiveMinColors.brand,
@@ -896,12 +933,26 @@ private fun LinkRow(title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(FiveMinDimens.controlH)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = FiveMinDimens.padBody),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, color = FiveMinColors.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
-        Text("›", color = FiveMinColors.muted, fontSize = 18.sp)
+        Text(
+            text = title,
+            color = FiveMinColors.ink,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
+        Text(
+            text = "›",
+            color = FiveMinColors.muted,
+            fontSize = 18.sp,
+            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically),
+        )
     }
 }

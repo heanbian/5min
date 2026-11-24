@@ -170,6 +170,19 @@ function periodStats() {
   return { count: list.length, minutes: mins };
 }
 
+/** Period count/mins + streak from a single history read. */
+function shareSummaryValues() {
+  const { getStreak } = require('./streak');
+  const list = getHistory();
+  let mins = 0;
+  for (let i = 0; i < list.length; i += 1) mins += list[i].minutes;
+  return {
+    count: list.length,
+    minutes: mins,
+    streak: getStreak(list),
+  };
+}
+
 function todayStats() {
   const start = todayStartMs();
   const list = prune(readAll());
@@ -194,5 +207,6 @@ module.exports = {
   replaceAll,
   getHistory,
   periodStats,
+  shareSummaryValues,
   todayStats,
 };

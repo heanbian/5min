@@ -150,18 +150,21 @@ scroll-view {
   flex-direction: row;
   align-items: flex-start;
   gap: 16rpx;
+  min-height: 88rpx;
+  padding: 8rpx 0;
+  box-sizing: border-box;
 }
 
 .check-box {
-  width: 36rpx;
-  height: 36rpx;
+  width: 44rpx;
+  height: 44rpx;
   border-radius: 12rpx;
   border: 3rpx solid var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 4rpx;
+  margin-top: 2rpx;
 }
 
 .check-on {

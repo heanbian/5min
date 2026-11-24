@@ -56,12 +56,17 @@ struct RootTabView: View {
                 } label: {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: privacyChecked ? "checkmark.square.fill" : "square")
+                            .font(FiveMinFont.ui(18))
                             .foregroundStyle(privacyChecked ? FiveMinColor.brand : FiveMinColor.muted)
+                            .frame(width: 28, height: 28)
                         Text(model.t("privacyCheckLabel"))
                             .font(FiveMinFont.ui(14))
                             .foregroundStyle(FiveMinColor.ink)
                             .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 

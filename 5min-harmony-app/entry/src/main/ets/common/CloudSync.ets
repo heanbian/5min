@@ -68,6 +68,7 @@ export class CloudSync {
       return true;
     } catch (e) {
       await this.prefs.setStorageMode(STORAGE_MODE_LOCAL);
+      await this.prefs.clearDeviceCredentials();
       hilog.warn(LOG_DOMAIN, LOG_TAG, 'enableCloud failed %{public}s', JSON.stringify(e));
       return false;
     }
@@ -75,6 +76,7 @@ export class CloudSync {
 
   async disableCloud(): Promise<void> {
     await this.prefs.setStorageMode(STORAGE_MODE_LOCAL);
+    await this.prefs.clearDeviceCredentials();
   }
 
   async syncNow(): Promise<void> {
@@ -237,13 +239,19 @@ export class CloudSync {
     // Keep local storageMode as source of truth for this device setting.
   }
 
+  /** Cap remote session merge to avoid DoS / RDB blow-up (≈ HISTORY_DAYS × busy day). */
+  private static readonly MAX_REMOTE_SESSIONS: number = 500;
+  private static readonly MAX_CLIENT_ID_LEN: number = 64;
+  private static readonly MAX_SCENE_ID_LEN: number = 64;
+
   private async applyRemoteSessions(raw: Object | null | undefined): Promise<void> {
     if (!raw || !Array.isArray(raw)) {
       return;
     }
     const list = raw as Record<string, Object>[];
     const rows: SyncSession[] = [];
-    for (let i = 0; i < list.length; i++) {
+    const limit = Math.min(list.length, CloudSync.MAX_REMOTE_SESSIONS);
+    for (let i = 0; i < limit; i++) {
       const o = list[i];
       if (!o) {
         continue;
@@ -252,16 +260,23 @@ export class CloudSync {
       if (!clientId) {
         clientId = String(o['id'] ?? '');
       }
+      if (clientId.length > CloudSync.MAX_CLIENT_ID_LEN) {
+        clientId = clientId.substring(0, CloudSync.MAX_CLIENT_ID_LEN);
+      }
       const at = Math.floor(Number(o['at'] ?? 0));
       const minutes = Math.floor(Number(o['minutes'] ?? 0));
       if (!clientId || at <= 0 || minutes <= 0) {
         continue;
       }
+      let sceneId = String(o['sceneId'] ?? '');
+      if (sceneId.length > CloudSync.MAX_SCENE_ID_LEN) {
+        sceneId = sceneId.substring(0, CloudSync.MAX_SCENE_ID_LEN);
+      }
       rows.push(new SyncSession(
         clientId,
         at,
         minutes,
-        String(o['sceneId'] ?? ''),
+        sceneId,
         Math.max(0, Math.floor(Number(o['elapsedMs'] ?? 0)))
       ));
     }

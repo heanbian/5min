@@ -16,7 +16,7 @@ import { resolveLocale } from '../common/I18n';
 import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
 import { AppUpdate } from '../common/AppUpdate';
-import { FiveMinFont } from '../common/FiveMinDimens';
+import { FiveMinDimens, FiveMinFont } from '../common/FiveMinDimens';
 import { AmbientPlayer } from '../alert/AmbientPlayer';
 import { i18n } from '@kit.LocalizationKit';
 
@@ -33,6 +33,7 @@ const ALERT_PROFILE_IDS: string[] = [PROFILE_NORMAL, PROFILE_QUIET, PROFILE_SILE
 export struct MineTab {
   @StorageLink('appLocale') locale: string = 'zh-CN';
   @StorageLink('appAmbient') ambient: string = 'off';
+  @StorageLink('appTabIndex') @Watch('onAppTab') appTab: number = 1;
   @State ready: boolean = false;
   @State localeCodes: string[] = [];
   @State customMin: number = 5;
@@ -70,8 +71,9 @@ export struct MineTab {
   private context: common.UIAbilityContext | null = null;
 
   aboutToAppear(): void {
+    // ArkTS forbids `instanceof` on namespace types; cast host Context instead.
     const host = this.getUIContext().getHostContext();
-    this.context = host instanceof common.UIAbilityContext ? host : null;
+    this.context = host ? host as common.UIAbilityContext : null;
     this.bootstrap();
   }
 
@@ -222,6 +224,12 @@ export struct MineTab {
     this.dialog = '';
     this.editorId = '';
     this.editorName = '';
+  }
+
+  onAppTab(): void {
+    if (this.appTab !== 2 && this.dialog !== '') {
+      this.closeDialog();
+    }
   }
 
   openDialog(kind: string): void {
@@ -585,11 +593,11 @@ export struct MineTab {
             .key(`mine-title-${this.uiTick}`)
         }
         .width('100%')
-        .height(52)
-        .padding({ left: 20, right: 20 })
+        .height(FiveMinDimens.headerH)
+        .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX })
         .alignItems(VerticalAlign.Center)
-        .backgroundColor('rgba(255, 255, 255, 0.72)')
-        .border({ width: { bottom: 1 }, color: 'rgba(215, 229, 220, 0.85)' })
+        .backgroundColor(FiveMinDimens.headerBg)
+        .border({ width: { bottom: 1 }, color: FiveMinDimens.headerLine })
 
         if (!this.ready) {
           Text('…')
@@ -599,7 +607,7 @@ export struct MineTab {
             .textAlign(TextAlign.Center)
         } else {
           Scroll() {
-            Column({ space: 18 }) {
+            Column({ space: FiveMinDimens.sectionGap }) {
               Column({ space: 8 }) {
                 Text(this.t('mineSectionPrefs'))
                   .fontSize(13)
@@ -619,17 +627,21 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openDialog('lang'))
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('ambientLabel'))
@@ -640,17 +652,21 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openDialog('sound'))
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('customScenesLabel'))
@@ -661,20 +677,24 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openDialog('customScenes'))
                 }
                 .width('100%')
-                .backgroundColor('rgba(255, 255, 255, 0.88)')
-                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.cardSurface)
+                .border({ width: 1, color: FiveMinDimens.cardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
                 .shadow({
                   radius: 8,
@@ -704,10 +724,10 @@ export struct MineTab {
                       .onChange((on: boolean) => this.setFinishTone(on))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('prefFinishVibrate'))
@@ -719,10 +739,10 @@ export struct MineTab {
                       .onChange((on: boolean) => this.setFinishVibrate(on))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('prefFinishNotify'))
@@ -734,10 +754,10 @@ export struct MineTab {
                       .onChange((on: boolean) => this.setFinishNotify(on))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('alertProfileLabel'))
@@ -748,20 +768,24 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openDialog('alertProfile'))
                 }
                 .width('100%')
-                .backgroundColor('rgba(255, 255, 255, 0.88)')
-                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.cardSurface)
+                .border({ width: 1, color: FiveMinDimens.cardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
                 .shadow({
                   radius: 8,
@@ -797,20 +821,24 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openDialog('ritual'))
                 }
                 .width('100%')
-                .backgroundColor('rgba(255, 255, 255, 0.88)')
-                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.cardSurface)
+                .border({ width: 1, color: FiveMinDimens.cardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
                 .shadow({
                   radius: 8,
@@ -839,20 +867,24 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openDialog('storage'))
                 }
                 .width('100%')
-                .backgroundColor('rgba(255, 255, 255, 0.88)')
-                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.cardSurface)
+                .border({ width: 1, color: FiveMinDimens.cardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
                 .shadow({
                   radius: 8,
@@ -897,11 +929,11 @@ export struct MineTab {
                       .fontColor($r('app.color.muted'))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openPrivacy())
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('termsLink'))
@@ -913,11 +945,11 @@ export struct MineTab {
                       .fontColor($r('app.color.muted'))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openTerms())
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('aboutLabel'))
@@ -929,11 +961,11 @@ export struct MineTab {
                       .fontColor($r('app.color.muted'))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openAbout())
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('feedbackLabel'))
@@ -945,11 +977,11 @@ export struct MineTab {
                       .fontColor($r('app.color.muted'))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openFeedback())
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('beianEntry'))
@@ -961,11 +993,11 @@ export struct MineTab {
                       .fontColor($r('app.color.muted'))
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .onClick(() => this.openBeian())
 
-                  Divider().color($r('app.color.line')).margin({ left: 16 })
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
                     Text(this.t('softwareUpdateLabel'))
@@ -976,21 +1008,25 @@ export struct MineTab {
                       .fontSize(14)
                       .fontColor($r('app.color.muted'))
                       .margin({ right: 6 })
+                      .constraintSize({ maxWidth: '46%' })
                       .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                      .textAlign(TextAlign.End)
                     Text('›')
                       .fontSize(18)
                       .fontColor($r('app.color.muted'))
+                      .flexShrink(0)
                   }
                   .width('100%')
-                  .height(52)
-                  .padding({ left: 16, right: 16 })
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
                   .opacity(this.checkingUpdate ? 0.6 : 1)
                   .onClick(() => this.checkSoftwareUpdate())
                 }
                 .width('100%')
-                .backgroundColor('rgba(255, 255, 255, 0.88)')
-                .border({ width: 1, color: 'rgba(215, 229, 220, 0.9)' })
-                .borderRadius(14)
+                .backgroundColor(FiveMinDimens.cardSurface)
+                .border({ width: 1, color: FiveMinDimens.cardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
                 .shadow({
                   radius: 8,
@@ -1002,7 +1038,12 @@ export struct MineTab {
               .width('100%')
             }
             .width('100%')
-            .padding({ left: 16, right: 16, top: 16, bottom: 28 })
+            .padding({
+              left: FiveMinDimens.padBody,
+              right: FiveMinDimens.padBody,
+              top: FiveMinDimens.padBody,
+              bottom: 28
+            })
             .alignItems(HorizontalAlign.Start)
             .key(`mine-${this.uiTick}`)
           }
@@ -1037,7 +1078,7 @@ export struct MineTab {
       Column()
         .width('100%')
         .layoutWeight(1)
-        .backgroundColor('#00000066')
+        .backgroundColor(FiveMinDimens.overlayDim)
         .onClick(() => {
           if (this.dialog === 'sceneEditor') {
             this.backToScenesList();
@@ -1080,7 +1121,7 @@ export struct MineTab {
             })
         }
         .width('100%')
-        .padding({ left: 20, right: 12, top: 16, bottom: 8 })
+        .padding({ left: FiveMinDimens.padX, right: 12, top: FiveMinDimens.padBody, bottom: 8 })
 
         if (this.dialog === 'lang') {
           Scroll() {
@@ -1103,10 +1144,10 @@ export struct MineTab {
                   }
                 }
                 .width('100%')
-                .height(52)
+                .height(FiveMinDimens.controlH)
                 .padding({ left: 14, right: 14 })
                 .backgroundColor(code === this.locale ? $r('app.color.brand_soft') : Color.Transparent)
-                .borderRadius(12)
+                .borderRadius(FiveMinDimens.radiusSm)
                 .direction(Direction.Ltr)
                 .onClick(() => this.setLocale(code))
               }, (code: string) => `lang-${code}-${this.uiTick}`)
@@ -1117,8 +1158,9 @@ export struct MineTab {
             .direction(Direction.Ltr)
           }
           .width('100%')
-          .constraintSize({ maxHeight: 360 })
+          .constraintSize({ maxHeight: FiveMinDimens.sheetMaxH })
           .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
           .direction(Direction.Ltr)
         } else if (this.dialog === 'sound') {
           Column({ space: 4 }) {
@@ -1140,10 +1182,10 @@ export struct MineTab {
                 }
               }
               .width('100%')
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.ambient ? $r('app.color.brand_soft') : Color.Transparent)
-              .borderRadius(12)
+              .borderRadius(FiveMinDimens.radiusSm)
               .direction(Direction.Ltr)
               .onClick(() => this.setAmbient(id))
             }, (id: string) => `snd-${id}-${this.uiTick}`)
@@ -1172,10 +1214,10 @@ export struct MineTab {
                 }
               }
               .width('100%')
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.storageMode ? $r('app.color.brand_soft') : Color.Transparent)
-              .borderRadius(12)
+              .borderRadius(FiveMinDimens.radiusSm)
               .direction(Direction.Ltr)
               .onClick(() => this.pickStorageMode(id))
             }, (id: string) => `storage-${id}-${this.uiTick}`)
@@ -1204,10 +1246,10 @@ export struct MineTab {
                 }
               }
               .width('100%')
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.standRitual ? $r('app.color.brand_soft') : Color.Transparent)
-              .borderRadius(12)
+              .borderRadius(FiveMinDimens.radiusSm)
               .direction(Direction.Ltr)
               .onClick(() => this.setStandRitual(id))
             }, (id: string) => `ritual-${id}-${this.uiTick}`)
@@ -1236,10 +1278,10 @@ export struct MineTab {
                 }
               }
               .width('100%')
-              .height(52)
+              .height(FiveMinDimens.controlH)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.alertProfile ? $r('app.color.brand_soft') : Color.Transparent)
-              .borderRadius(12)
+              .borderRadius(FiveMinDimens.radiusSm)
               .direction(Direction.Ltr)
               .onClick(() => this.setAlertProfile(id))
             }, (id: string) => `alert-profile-${id}-${this.uiTick}`)
@@ -1272,11 +1314,11 @@ export struct MineTab {
               .fontColor(Color.White)
               .textAlign(TextAlign.Center)
               .backgroundColor($r('app.color.brand'))
-              .borderRadius(14)
+              .borderRadius(FiveMinDimens.radiusCard)
               .onClick(() => this.copyFeedbackEmail())
           }
           .width('100%')
-          .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+          .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, bottom: 28, top: 8 })
         } else if (this.dialog === 'update') {
           Column({ space: 16 }) {
             Text(this.updateAvailableMessage())
@@ -1295,7 +1337,7 @@ export struct MineTab {
                 .fontColor($r('app.color.muted'))
                 .textAlign(TextAlign.Center)
                 .backgroundColor($r('app.color.ghost_bg'))
-                .borderRadius(14)
+                .borderRadius(FiveMinDimens.radiusCard)
                 .onClick(() => this.closeUpdateDialog())
               Text(this.t('softwareUpdateAction'))
                 .layoutWeight(1)
@@ -1305,18 +1347,18 @@ export struct MineTab {
                 .fontColor(Color.White)
                 .textAlign(TextAlign.Center)
                 .backgroundColor($r('app.color.brand'))
-                .borderRadius(14)
+                .borderRadius(FiveMinDimens.radiusCard)
                 .onClick(() => this.confirmSoftwareUpdate())
             }
             .width('100%')
           }
           .width('100%')
-          .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+          .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, bottom: 28, top: 8 })
         }
       }
       .width('100%')
       .backgroundColor($r('app.color.surface'))
-      .borderRadius({ topLeft: 18, topRight: 18 })
+      .borderRadius({ topLeft: FiveMinDimens.radiusSheet, topRight: FiveMinDimens.radiusSheet })
     }
     .width('100%')
     .height('100%')
@@ -1340,11 +1382,11 @@ export struct MineTab {
           .fontColor(Color.White)
           .textAlign(TextAlign.Center)
           .backgroundColor($r('app.color.brand'))
-          .borderRadius(14)
+          .borderRadius(FiveMinDimens.radiusCard)
           .onClick(() => this.openSceneEditor(''))
       }
       .width('100%')
-      .padding({ left: 20, right: 20, bottom: 28, top: 16 })
+      .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, bottom: 28, top: FiveMinDimens.padBody })
     } else {
       Scroll() {
         Column({ space: 0 }) {
@@ -1379,23 +1421,24 @@ export struct MineTab {
               Text('✕')
                 .fontSize(14)
                 .fontColor($r('app.color.muted'))
-                .width(28)
-                .height(28)
+                .width(FiveMinDimens.rowH)
+                .height(FiveMinDimens.rowH)
                 .textAlign(TextAlign.Center)
                 .onClick(() => this.deleteCustomScene(scene.id))
             }
             .width('100%')
             .padding({ left: 16, right: 12, top: 12, bottom: 12 })
 
-            Divider().color($r('app.color.line')).margin({ left: 16 })
+            Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
           }, (scene: CustomScene) => `scene-${scene.id}-${this.uiTick}`)
         }
         .width('100%')
         .padding({ bottom: 20 })
       }
       .width('100%')
-      .constraintSize({ maxHeight: 420 })
+      .constraintSize({ maxHeight: FiveMinDimens.customScenesMaxH })
       .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
     }
   }
 
@@ -1413,13 +1456,13 @@ export struct MineTab {
           placeholder: this.t('customSceneNamePlaceholder')
         })
           .width('100%')
-          .height(52)
+          .height(FiveMinDimens.fieldH)
           .fontSize(15)
           .fontColor($r('app.color.ink'))
           .padding({ left: 14, right: 14 })
           .backgroundColor($r('app.color.ghost_bg'))
           .border({ width: 1, color: $r('app.color.line') })
-          .borderRadius(22)
+          .borderRadius(FiveMinDimens.radius)
           .maxLength(CustomScene.MAX_NAME_LENGTH)
           .onChange((v: string) => {
             this.editorName = v;
@@ -1436,20 +1479,20 @@ export struct MineTab {
 
         Row({ space: 10 }) {
           Text('−')
-            .width(52)
-            .height(52)
+            .width(FiveMinDimens.controlH)
+            .height(FiveMinDimens.controlH)
             .fontSize(22)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(22)
+            .borderRadius(FiveMinDimens.radius)
             .onClick(() => this.nudgeEditor(-1))
 
           TextInput({ text: this.editorMinutes })
             .layoutWeight(1)
-            .height(52)
+            .height(FiveMinDimens.fieldH)
             .fontSize(24)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
@@ -1457,21 +1500,21 @@ export struct MineTab {
             .type(InputType.Number)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(22)
+            .borderRadius(FiveMinDimens.radius)
             .onChange((v: string) => {
               this.editorMinutes = v;
             })
 
           Text('+')
-            .width(52)
-            .height(52)
+            .width(FiveMinDimens.controlH)
+            .height(FiveMinDimens.controlH)
             .fontSize(22)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(22)
+            .borderRadius(FiveMinDimens.radius)
             .onClick(() => this.nudgeEditor(1))
         }
         .width('100%')
@@ -1483,13 +1526,13 @@ export struct MineTab {
         ForEach(QUICK_MINS, (min: number) => {
           Text(`${min}`)
             .layoutWeight(1)
-            .height(40)
+            .height(FiveMinDimens.rowH)
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.brand_strong'))
             .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.brand_soft'))
-            .borderRadius(12)
+            .borderRadius(FiveMinDimens.radiusSm)
             .onClick(() => {
               this.editorMinutes = `${min}`;
             })
@@ -1499,13 +1542,13 @@ export struct MineTab {
 
       Text(this.t('confirmLabel'))
         .width('100%')
-        .height(52)
+        .height(FiveMinDimens.controlH)
         .fontSize(16)
         .fontWeight(FontWeight.Medium)
         .fontColor(Color.White)
         .textAlign(TextAlign.Center)
         .backgroundColor($r('app.color.brand'))
-        .borderRadius(22)
+        .borderRadius(FiveMinDimens.radius)
         .opacity(this.canSaveEditor() ? 1 : 0.55)
         .onClick(() => {
           if (this.canSaveEditor()) {
@@ -1514,7 +1557,7 @@ export struct MineTab {
         })
     }
     .width('100%')
-    .padding({ left: 20, right: 20, bottom: 28, top: 8 })
+    .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, bottom: 28, top: 8 })
   }
 
   private dialogTitle(): string {

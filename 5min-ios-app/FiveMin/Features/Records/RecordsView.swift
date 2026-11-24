@@ -61,6 +61,8 @@ struct RecordsView: View {
                             }
                             .font(FiveMinFont.ui(13, weight: .semibold))
                             .foregroundStyle(FiveMinColor.danger)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                         }
                     }
                     .padding(.leading, 4)
@@ -163,6 +165,8 @@ struct RecordsView: View {
                 Text(model.t("shareLabel"))
                     .font(FiveMinFont.ui(14, weight: .semibold))
                     .foregroundStyle(FiveMinColor.brandStrong)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
         }
         .padding(.horizontal, 20)
@@ -257,6 +261,8 @@ struct RecordsView: View {
                 Text(model.t("historyDelete"))
                     .font(FiveMinFont.ui(13, weight: .semibold))
                     .foregroundStyle(FiveMinColor.danger)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
@@ -293,11 +299,14 @@ struct RecordsView: View {
         if filterSceneId != historyFilterAll, !options.contains(where: { $0.id == filterSceneId }) {
             filterSceneId = historyFilterAll
         }
-        let period = HistoryStore.shared.periodStats()
-        periodCount = period.count
-        periodMins = period.minutes
-        streakDays = HistoryStore.shared.streakDays()
-        reloadRows()
+        periodCount = all.count
+        periodMins = all.reduce(0) { $0 + $1.minutes }
+        streakDays = HistoryStore.shared.streakDays(from: all)
+        if filterSceneId == historyFilterAll {
+            rows = all
+        } else {
+            rows = all.filter { $0.sceneId == filterSceneId }
+        }
     }
 
     private func reloadRows() {

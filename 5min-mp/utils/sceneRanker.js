@@ -7,8 +7,8 @@
 
 const GROUP_ID = 'suggested';
 const LABEL_KEY = 'sceneGroupSuggested';
-const TOP_N = 6;
-const CHIP_N = 5;
+const TOP_N = 10;
+const CHIP_N = 10;
 const MIN_COUNT = 2;
 const RECENT_DAYS = 3;
 const HISTORY_WINDOW_DAYS = 14;

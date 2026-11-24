@@ -13,7 +13,7 @@ App({
     /** Apply on next home show after Mine custom-scene Use / add. */
     pendingSceneId: null,
     privacyAccepted: false,
-    appVersion: '1.0.10',
+    appVersion: '1.0.11',
     /** Local finish still pending dismiss / reset — used for re-alert onShow. */
     finishAlertPending: null,
     finishAlerting: false,

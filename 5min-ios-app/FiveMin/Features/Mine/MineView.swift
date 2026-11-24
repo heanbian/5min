@@ -261,18 +261,22 @@ struct MineView: View {
 
     private func prefRow(_ title: String, value: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 8) {
                 Text(title)
                     .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
-                Spacer()
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text(value)
                     .font(FiveMinFont.ui(14))
                     .foregroundStyle(FiveMinColor.muted)
                     .lineLimit(1)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 160, alignment: .trailing)
                 Text("›")
                     .font(FiveMinFont.ui(18))
                     .foregroundStyle(FiveMinColor.muted)
+                    .frame(width: 16, alignment: .trailing)
             }
             .padding(.horizontal, 16)
             .frame(height: 52)

@@ -126,15 +126,16 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * DEBUG / store marketing: launch with
+     * DEBUG-only store marketing: launch with
      * `adb shell am start -n chat.fivemin.app/.MainActivity --es FIVEMIN_SCREENSHOT home|running|done`
-     * (also accepts idle / warn). Skips privacy sheet and finish alerts.
+     * (also accepts idle / warn). In-memory only — no privacy persist / no history write.
      */
     fun applyStoreScreenshot(scene: String) {
         val debuggable =
             (getApplication<Application>().applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (!debuggable) return
-        acceptPrivacy()
+        // In-memory only — do not persist privacyAccepted from IPC.
+        _state.update { it.copy(privacyAccepted = true) }
         // CN store listings: force Simplified Chinese copy on marketing shots.
         setLocale("zh-CN")
         when (scene) {
@@ -189,8 +190,8 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         TimerScheduler.cancel(getApplication())
         TimerForegroundService.stop(getApplication())
         FinishAlerter.stop()
-        lastRecordedId = history.recordSession(_state.value.totalMs, "toilet")
-        val (count, ms) = history.todayStats()
+        // Fake id only — never write marketing scenes into durable history.
+        lastRecordedId = -1L
         overtimeAt = System.currentTimeMillis() - 12_000L
         _state.update {
             it.copy(
@@ -199,11 +200,9 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
                 finished = true,
                 phase = TimerPhase.Done,
                 overtimeMs = 12_000L,
-                statsCount = count,
-                statsMs = ms,
-                suggestedSceneIds = computeSuggested(),
-                recordsEpoch = it.recordsEpoch + 1,
-                sessionLogged = lastRecordedId > 0L,
+                statsCount = maxOf(1, it.statsCount),
+                statsMs = maxOf(it.totalMs, it.statsMs),
+                sessionLogged = false,
                 showStandRitual = false,
             )
         }

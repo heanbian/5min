@@ -79,6 +79,7 @@ object FiveMinDimens {
     val sectionGap = 20.dp
     val listSectionGap = 16.dp
     val controlGap = 10.dp
+    val chipGap = 8.dp
     val dialSize = 260.dp
 }
 

@@ -257,7 +257,7 @@ Page({
           this.refresh();
         })
         .catch(() => {
-          prefs.setStorageMode('local');
+          // enableCloud already reverts mode + clears credentials
           this.setData({ storageSyncStatus: t('storageSyncFail') });
           this.refresh();
         });
