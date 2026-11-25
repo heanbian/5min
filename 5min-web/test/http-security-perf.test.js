@@ -260,6 +260,11 @@ test('HTTP 页面与静态资源延迟在可接受范围', async () => {
 
     const js = await bench('/js/app.js', 20);
     assert.ok(js.p95 < 120, 'app.js p95=' + js.p95);
+    assert.ok(js.bytes < 250 * 1024, 'app.js 过大: ' + js.bytes);
+
+    const cloudSync = await bench('/js/cloudSync.js', 15);
+    assert.ok(cloudSync.p95 < 120, 'cloudSync.js p95=' + cloudSync.p95);
+    assert.ok(cloudSync.bytes < 40 * 1024, 'cloudSync.js 过大: ' + cloudSync.bytes);
 
     const api = await bench('/api/status', 40);
     assert.ok(api.p95 < 60, 'status p95=' + api.p95);
@@ -267,6 +272,19 @@ test('HTTP 页面与静态资源延迟在可接受范围', async () => {
 
     const css = await bench('/css/app.css', 20);
     assert.ok(css.p95 < 120, 'css p95=' + css.p95);
+
+    // Storage auth path should stay cheap even when rejecting bad input.
+    const samples = [];
+    for (let i = 0; i < 20; i += 1) {
+      const res = await request(port, '/api/v1/storage/register', {
+        method: 'POST',
+        body: JSON.stringify({ deviceSecret: 'x'.repeat(64) })
+      });
+      assert.equal(res.status, 400);
+      samples.push(res.ms);
+    }
+    const p95 = percentile(samples, 0.95);
+    assert.ok(p95 < 80, 'storage reject p95=' + p95);
   });
 });
 

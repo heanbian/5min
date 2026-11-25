@@ -95,6 +95,26 @@ class PrefsStore(context: Context) {
         secure.clear()
     }
 
+    /** Recovery code: deviceId:deviceSecret */
+    fun formatRecoveryCode(): String {
+        val id = deviceId
+        val secret = deviceSecret
+        if (id.isBlank() || secret.isBlank()) return ""
+        return "$id:$secret"
+    }
+
+    fun parseRecoveryCode(raw: String): Pair<String, String>? {
+        val text = raw.trim()
+        val idx = text.indexOf(':')
+        if (idx <= 0) return null
+        val id = text.substring(0, idx).trim()
+        val secret = text.substring(idx + 1).trim()
+        if (id.isBlank() || secret.length < 32) return null
+        if (!id.matches(Regex("^[0-9a-fA-F-]{36}$"))) return null
+        if (!secret.matches(Regex("^[0-9a-fA-F]+$"))) return null
+        return id to secret
+    }
+
     var privacyAccepted: Boolean
         get() = sp.getBoolean(KEY_PRIVACY, false)
         set(value) {

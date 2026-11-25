@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct MineView: View {
     @Environment(TimerViewModel.self) private var model
@@ -9,6 +10,9 @@ struct MineView: View {
     @State private var editorMinutes = "5"
     @State private var showBeianAlert = false
     @State private var showCloudConfirm = false
+    @State private var backupRevealed = false
+    @State private var restoreCode = ""
+    @State private var promptRecoveryOnce = false
 
     private enum MineSheet: String, Identifiable {
         case lang, sound, storage, customScenes, feedback, standRitual, alertProfile
@@ -104,6 +108,85 @@ struct MineView: View {
                             .foregroundStyle(FiveMinColor.muted)
                             .padding(.horizontal, 4)
                     }
+                    if model.storageMode == PrefsStore.modeCloud, !model.recoveryCode().isEmpty {
+                        card {
+                            Button {
+                                backupRevealed = true
+                            } label: {
+                                Text(model.t("storageBackupShow"))
+                                    .font(FiveMinFont.ui(15))
+                                    .foregroundStyle(FiveMinColor.ink)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 16)
+                                    .frame(minHeight: 48)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            if backupRevealed {
+                                Divider().padding(.leading, 16)
+                                Text(model.recoveryCode())
+                                    .font(FiveMinFont.ui(12))
+                                    .monospaced()
+                                    .foregroundStyle(FiveMinColor.ink)
+                                    .textSelection(.enabled)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 10)
+                                Text(model.t("storageBackupHint"))
+                                    .font(FiveMinFont.ui(12))
+                                    .foregroundStyle(FiveMinColor.muted)
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 4)
+                                Button {
+                                    UIPasteboard.general.string = model.recoveryCode()
+                                } label: {
+                                    Text(model.t("storageBackupCopy"))
+                                        .font(FiveMinFont.ui(14, weight: .semibold))
+                                        .foregroundStyle(FiveMinColor.brandStrong)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 16)
+                                        .frame(minHeight: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    card {
+                        Text(model.t("storageRestoreLabel"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.ink)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                        TextField(model.t("storageRestorePlaceholder"), text: $restoreCode)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(FiveMinFont.ui(13))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                        Text(model.t("storageRestoreHint"))
+                            .font(FiveMinFont.ui(12))
+                            .foregroundStyle(FiveMinColor.muted)
+                            .padding(.horizontal, 16)
+                        Button {
+                            Task {
+                                let (ok, _) = await model.restoreWithCode(restoreCode)
+                                if ok {
+                                    restoreCode = ""
+                                    backupRevealed = false
+                                }
+                            }
+                        } label: {
+                            Text(model.t("storageRestoreAction"))
+                                .font(FiveMinFont.ui(14, weight: .semibold))
+                                .foregroundStyle(FiveMinColor.brandStrong)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 16)
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 8)
+                    }
 
                     sectionTitle(model.t("mineSectionSupport"))
                     card {
@@ -154,10 +237,20 @@ struct MineView: View {
         .alert(model.t("storageModeCloud"), isPresented: $showCloudConfirm) {
             Button(model.t("cancelLabel"), role: .cancel) {}
             Button(model.t("confirmLabel")) {
+                promptRecoveryOnce = true
                 model.setStorageMode(PrefsStore.modeCloud)
             }
         } message: {
             Text(model.t("storageCloudConfirm"))
+        }
+        .onChange(of: model.storageSyncStatus) { _, status in
+            guard promptRecoveryOnce else { return }
+            guard model.storageMode == PrefsStore.modeCloud else { return }
+            guard status == model.t("storageSyncOk") else { return }
+            promptRecoveryOnce = false
+            if !model.recoveryCode().isEmpty {
+                backupRevealed = true
+            }
         }
     }
 

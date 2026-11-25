@@ -115,6 +115,26 @@ final class PrefsStore {
         defaults.removeObject(forKey: deviceSecretKey)
     }
 
+    /// Recovery code: deviceId:deviceSecret
+    func formatRecoveryCode() -> String {
+        let id = deviceId
+        let secret = deviceSecret
+        if id.isEmpty || secret.isEmpty { return "" }
+        return "\(id):\(secret)"
+    }
+
+    func parseRecoveryCode(_ raw: String) -> (deviceId: String, deviceSecret: String)? {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let idx = text.firstIndex(of: ":") else { return nil }
+        let id = String(text[..<idx]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let secret = String(text[text.index(after: idx)...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        if id.isEmpty || secret.count < 32 { return nil }
+        let idOk = id.range(of: #"^[0-9a-fA-F-]{36}$"#, options: .regularExpression) != nil
+        let secretOk = secret.range(of: #"^[0-9a-fA-F]+$"#, options: .regularExpression) != nil
+        guard idOk, secretOk else { return nil }
+        return (id, secret)
+    }
+
     /// One-shot: move legacy UserDefaults credentials into Keychain.
     func migrateDeviceCredentialsToKeychainIfNeeded() {
         let legacyId = defaults.string(forKey: deviceIdKey) ?? ""

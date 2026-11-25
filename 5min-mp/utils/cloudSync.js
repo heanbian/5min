@@ -189,8 +189,9 @@ function mergeRemoteSessions(remoteSessions) {
 }
 
 async function register() {
-  const { deviceId, deviceSecret } = ensureDeviceCredentials();
-  await request('POST', '/register', { deviceId, deviceSecret });
+  // Credentials only in X-Device-* headers — body must not include them (server 400).
+  ensureDeviceCredentials();
+  await request('POST', '/register', {});
 }
 
 async function pushSnapshot() {
@@ -256,6 +257,25 @@ function disableCloud() {
   prefs.clearDeviceCredentials();
 }
 
+/** Restore from user-held recovery code, then sync. */
+async function restoreWithCode(code) {
+  const parsed = prefs.parseRecoveryCode(code);
+  if (!parsed) {
+    const err = new Error('invalid');
+    err.code = 'invalid';
+    throw err;
+  }
+  prefs.setDeviceCredentials(parsed.deviceId, parsed.deviceSecret);
+  prefs.setStorageMode('cloud');
+  try {
+    await syncNow();
+  } catch (e) {
+    prefs.setStorageMode('local');
+    prefs.clearDeviceCredentials();
+    throw e;
+  }
+}
+
 module.exports = {
   API_BASE,
   syncNow,
@@ -267,4 +287,5 @@ module.exports = {
   clearRemoteSessions,
   enableCloud,
   disableCloud,
+  restoreWithCode,
 };

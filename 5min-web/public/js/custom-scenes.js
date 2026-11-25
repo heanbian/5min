@@ -87,6 +87,16 @@ const writeAll = (list) => {
 /** @returns {{id:string,name:string,min:number}[]} */
 export const listCustomScenes = () => readAll();
 
+/** Replace all custom scenes (cloud merge). */
+export const setCustomScenes = (scenes) => {
+  const cleaned = (Array.isArray(scenes) ? scenes : [])
+    .map(sanitizeScene)
+    .filter(Boolean)
+    .slice(0, MAX_COUNT);
+  writeAll(cleaned);
+  return cleaned;
+};
+
 /** @param {string} id */
 export const getCustomScene = (id) => {
   const sid = String(id || '');

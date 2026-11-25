@@ -8,5 +8,5 @@
     <string name="shortcut_toilet_long">Start toilet · 5 min</string>
     <string name="widget_description">Today\'s sessions · tap to start toilet timer</string>
     <string name="widget_today_count">Today · %1$d</string>
-    <string name="widget_start_toilet">Start 5 min</string>
+    <string name="widget_start_toilet">Start toilet</string>
 </resources>

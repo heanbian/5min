@@ -402,6 +402,30 @@ final class TimerViewModel {
         storageSyncStatus = ""
     }
 
+    func recoveryCode() -> String { prefs.formatRecoveryCode() }
+
+    /// Returns `(ok, invalidFormat)`.
+    func restoreWithCode(_ code: String) async -> (Bool, Bool) {
+        storageSyncStatus = t("storageSyncing")
+        let err = await cloud.restoreWithCode(code)
+        if err == nil {
+            reloadPrefsFromStore()
+            recordsEpoch += 1
+            refreshTodayStats()
+            refreshSuggested()
+            storageMode = prefs.storageMode
+            storageSyncStatus = t("storageRestoreOk")
+            return (true, false)
+        }
+        if err == "invalid" {
+            storageSyncStatus = t("storageRestoreInvalid")
+            return (false, true)
+        }
+        storageMode = prefs.storageMode
+        storageSyncStatus = t("storageRestoreFail")
+        return (false, false)
+    }
+
     private func reloadPrefsFromStore() {
         let saved = prefs.locale
         if !saved.isEmpty {

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Sesi hari ini · ketuk untuk mulai</string>
+    <string name="widget_today_count">Hari ini · %1$d</string>
+    <string name="widget_start_toilet">Mulai toilet</string>
+</resources>

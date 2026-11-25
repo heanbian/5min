@@ -50,6 +50,8 @@ import {
   shareSummaryValues,
   deleteSession,
   clearHistory,
+  updateSessionElapsed,
+  exportHistoryCsv,
 } from './history.js';
 import {
   listCustomScenes,
@@ -79,6 +81,9 @@ import {
 } from './scene-profiles.js';
 import { SCENE_GROUPS, SCENES } from './scenes-data.js';
 import { rank as rankScenes, TOP_N as SUGGESTED_TOP_N, LABEL_KEY as SUGGESTED_LABEL_KEY } from './scene-ranker.js';
+import * as p0 from './p0Features.js';
+import * as prefs from './prefs.js';
+import * as cloudSync from './cloudSync.js';
 
 const CIRC = 2 * Math.PI * 54;
 
@@ -103,10 +108,6 @@ const sceneTriggerLabel = document.querySelector('#sceneTriggerLabel');
 const sceneList = document.querySelector('#sceneList');
 const brandTitle = document.querySelector('#brandTitle');
 const footnote = document.querySelector('#footnote');
-const langWrap = document.querySelector('#langWrap');
-const langBtn = document.querySelector('#langBtn');
-const langBtnLabel = document.querySelector('#langBtnLabel');
-const langPanel = document.querySelector('#langPanel');
 const stageSection = document.querySelector('#stageSection');
 const actionsSection = document.querySelector('#actionsSection');
 const ambientBtn = document.querySelector('#ambientBtn');
@@ -126,7 +127,12 @@ const historyList = document.querySelector('#historyList');
 const historyEmptyHint = document.querySelector('#historyEmptyHint');
 const historyClearBtn = document.querySelector('#historyClearBtn');
 const shareBtn = document.querySelector('#shareBtn');
+const exportBtn = document.querySelector('#exportBtn');
 const shareToast = document.querySelector('#shareToast');
+const overtimeInsightEl = document.querySelector('#overtimeInsight');
+const overtimeInsightTitle = document.querySelector('#overtimeInsightTitle');
+const overtimeInsightLine = document.querySelector('#overtimeInsightLine');
+const overtimeInsightHint = document.querySelector('#overtimeInsightHint');
 const customScenesBtn = document.querySelector('#customScenesBtn');
 const customScenesSheet = document.querySelector('#customScenesSheet');
 const customScenesBackdrop = document.querySelector('#customScenesBackdrop');
@@ -142,11 +148,99 @@ const customSceneNameLabel = document.querySelector('#customSceneNameLabel');
 const customSceneMinLabel = document.querySelector('#customSceneMinLabel');
 const customSceneSaveBtn = document.querySelector('#customSceneSaveBtn');
 const customSceneCancelBtn = document.querySelector('#customSceneCancelBtn');
+const settingsLangLabel = document.querySelector('#settingsLangLabel');
+const settingsLocaleSelect = document.querySelector('#settingsLocaleSelect');
+const settingsBtn = document.querySelector('#settingsBtn');
+const settingsSheet = document.querySelector('#settingsSheet');
+const settingsBackdrop = document.querySelector('#settingsBackdrop');
+const settingsClose = document.querySelector('#settingsClose');
+const settingsTitle = document.querySelector('#settingsTitle');
+const alertProfileLabel = document.querySelector('#alertProfileLabel');
+const alertProfileSelect = document.querySelector('#alertProfileSelect');
+const alertProfileHint = document.querySelector('#alertProfileHint');
+const standRitualLabel = document.querySelector('#standRitualLabel');
+const standRitualSelect = document.querySelector('#standRitualSelect');
+const overtimeInsightPrefLabel = document.querySelector('#overtimeInsightPrefLabel');
+const overtimeInsightToggle = document.querySelector('#overtimeInsightToggle');
+const storageModeLabel = document.querySelector('#storageModeLabel');
+const storageModeSelect = document.querySelector('#storageModeSelect');
+const storageModeHint = document.querySelector('#storageModeHint');
+const storageSyncStatus = document.querySelector('#storageSyncStatus');
+const storageBackupBlock = document.querySelector('#storageBackupBlock');
+const storageBackupShowBtn = document.querySelector('#storageBackupShowBtn');
+const storageBackupCode = document.querySelector('#storageBackupCode');
+const storageBackupCopyBtn = document.querySelector('#storageBackupCopyBtn');
+const storageRestoreLabel = document.querySelector('#storageRestoreLabel');
+const storageRestoreInput = document.querySelector('#storageRestoreInput');
+const storageRestoreHint = document.querySelector('#storageRestoreHint');
+const storageRestoreBtn = document.querySelector('#storageRestoreBtn');
+const ritualMask = document.querySelector('#ritualMask');
+const ritualTitle = document.querySelector('#ritualTitle');
+const ritualStep0 = document.querySelector('#ritualStep0');
+const ritualStep1 = document.querySelector('#ritualStep1');
+const ritualStep2 = document.querySelector('#ritualStep2');
+const ritualSkip = document.querySelector('#ritualSkip');
+const ritualDone = document.querySelector('#ritualDone');
+const confirmMask = document.querySelector('#confirmMask');
+const confirmMessage = document.querySelector('#confirmMessage');
+const confirmCancel = document.querySelector('#confirmCancel');
+const confirmOk = document.querySelector('#confirmOk');
+
+/** @type {((ok: boolean) => void) | null} */
+let confirmResolver = null;
+
+/**
+ * In-app confirm (replaces window.confirm).
+ * @param {string} message
+ * @returns {Promise<boolean>}
+ */
+const showConfirm = (message) => {
+  if (!confirmMask || !confirmMessage || !confirmCancel || !confirmOk) {
+    return Promise.resolve(globalThis.confirm(message));
+  }
+  if (confirmResolver) {
+    confirmResolver(false);
+    confirmResolver = null;
+  }
+  confirmMessage.textContent = message;
+  confirmCancel.textContent = tr('cancelLabel');
+  confirmOk.textContent = tr('confirmLabel');
+  confirmMask.hidden = false;
+  window.setTimeout(() => confirmOk.focus(), 0);
+  return new Promise((resolve) => {
+    confirmResolver = resolve;
+  });
+};
+
+const closeConfirm = (ok) => {
+  if (confirmMask) confirmMask.hidden = true;
+  const resolve = confirmResolver;
+  confirmResolver = null;
+  if (resolve) resolve(!!ok);
+};
 
 /** @type {string} */
 let historyFilterSceneId = '';
 /** @type {number} */
 let shareToastTimer = 0;
+/** @type {number} */
+let prefsPushTimer = 0;
+let inOvertime = false;
+let overtimeAt = 0;
+let overtimeMs = 0;
+/** @type {string} */
+let lastRecordedSessionId = '';
+/** @type {boolean[]} */
+let ritualChecks = [false, false, false];
+
+/** Debounce cloud prefs writes to avoid burst traffic while tuning settings. */
+const schedulePrefsPush = () => {
+  if (prefsPushTimer) clearTimeout(prefsPushTimer);
+  prefsPushTimer = window.setTimeout(() => {
+    prefsPushTimer = 0;
+    void cloudSync.pushPrefsOnly().catch(() => {});
+  }, 400);
+};
 
 const qs = new URLSearchParams(location.search);
 const secRaw = Number.parseInt(qs.get('sec') ?? '', 10);
@@ -583,8 +677,6 @@ const applyStaticI18n = () => {
   document.documentElement.dir = 'ltr';
   document.documentElement.dataset.script = pack.dir === 'rtl' ? 'rtl' : 'ltr';
   syncBrandTitle();
-  if (langBtn) langBtn.setAttribute('aria-label', pack.langLabel);
-  if (langPanel) langPanel.setAttribute('aria-label', pack.langLabel);
   syncLangSelect();
   stageSection.setAttribute('aria-label', pack.stageLabel);
   actionsSection.setAttribute('aria-label', pack.actionsLabel);
@@ -625,14 +717,23 @@ const applyStaticI18n = () => {
   }
 };
 
+const anySheetOpen = () =>
+  !(recordsSheet?.hidden ?? true)
+  || !(customScenesSheet?.hidden ?? true)
+  || !(settingsSheet?.hidden ?? true);
+
 const syncPanelI18n = () => {
   if (recordsBtn) recordsBtn.setAttribute('aria-label', tr('tabRecords'));
+  if (settingsBtn) settingsBtn.setAttribute('aria-label', tr('settingsLabel'));
   if (customScenesBtn) customScenesBtn.setAttribute('aria-label', tr('customScenesLabel'));
   if (recordsTitle) recordsTitle.textContent = tr('tabRecords');
+  if (settingsTitle) settingsTitle.textContent = tr('settingsTitle') || tr('settingsLabel');
   if (customScenesTitle) customScenesTitle.textContent = tr('customScenesLabel');
+  if (settingsLangLabel) settingsLangLabel.textContent = tr('langLabel');
   if (historyFilterLabel) historyFilterLabel.textContent = tr('historyFilterLabel');
   if (historyClearBtn) historyClearBtn.textContent = tr('historyClear');
   if (shareBtn) shareBtn.textContent = tr('shareLabel');
+  if (exportBtn) exportBtn.textContent = tr('exportLabel');
   if (customScenesHint) customScenesHint.textContent = tr('customScenesEmptyHint');
   if (customSceneNameLabel) customSceneNameLabel.textContent = tr('customSceneNameLabel');
   if (customSceneMinLabel) customSceneMinLabel.textContent = tr('customSceneMinLabel');
@@ -644,37 +745,198 @@ const syncPanelI18n = () => {
   if (customSceneCancelBtn) customSceneCancelBtn.textContent = tr('cancelLabel');
   if (recordsClose) recordsClose.setAttribute('aria-label', tr('closeLabel'));
   if (customScenesClose) customScenesClose.setAttribute('aria-label', tr('closeLabel'));
+  if (settingsClose) settingsClose.setAttribute('aria-label', tr('closeLabel'));
   if (recordsBackdrop) recordsBackdrop.setAttribute('aria-label', tr('closeLabel'));
   if (customScenesBackdrop) customScenesBackdrop.setAttribute('aria-label', tr('closeLabel'));
+  if (settingsBackdrop) settingsBackdrop.setAttribute('aria-label', tr('closeLabel'));
+  syncSettingsI18n();
+  if (ritualMask && !ritualMask.hidden) refreshRitualLabels();
+};
+
+const fillSelect = (select, options, current) => {
+  if (!select) return;
+  select.replaceChildren();
+  for (const opt of options) {
+    const el = document.createElement('option');
+    el.value = opt.value;
+    el.textContent = opt.label;
+    if (opt.value === current) el.selected = true;
+    select.appendChild(el);
+  }
+};
+
+const syncSettingsI18n = () => {
+  if (alertProfileLabel) alertProfileLabel.textContent = tr('alertProfileLabel');
+  if (alertProfileHint) alertProfileHint.textContent = tr('alertProfileHint');
+  fillSelect(alertProfileSelect, [
+    { value: p0.PROFILE_NORMAL, label: tr('alertProfileNormal') },
+    { value: p0.PROFILE_QUIET, label: tr('alertProfileQuiet') },
+    { value: p0.PROFILE_SILENT, label: tr('alertProfileSilent') },
+  ], p0.getAlertProfile());
+
+  if (standRitualLabel) standRitualLabel.textContent = tr('standRitualLabel');
+  fillSelect(standRitualSelect, [
+    { value: p0.RITUAL_OFF, label: tr('standRitualOff') },
+    { value: p0.RITUAL_BASIC, label: tr('standRitualBasic') },
+  ], p0.getStandRitual());
+
+  if (overtimeInsightPrefLabel) overtimeInsightPrefLabel.textContent = tr('prefOvertimeInsight');
+  if (overtimeInsightToggle instanceof HTMLInputElement) {
+    overtimeInsightToggle.checked = p0.getShowOvertimeInsight();
+  }
+
+  // Web: single row label「数据存储」, skip separate「存储方式」.
+  if (storageModeLabel) storageModeLabel.textContent = tr('storageSection');
+  if (storageModeHint) storageModeHint.textContent = tr('storageModeHint');
+  fillSelect(storageModeSelect, [
+    { value: 'local', label: tr('storageModeLocal') },
+    { value: 'cloud', label: tr('storageModeCloud') },
+  ], prefs.getStorageMode());
+
+  if (storageBackupShowBtn) storageBackupShowBtn.textContent = tr('storageBackupShow');
+  if (storageBackupCopyBtn) storageBackupCopyBtn.textContent = tr('storageBackupCopy');
+  if (storageRestoreLabel) storageRestoreLabel.textContent = tr('storageRestoreLabel');
+  if (storageRestoreHint) storageRestoreHint.textContent = tr('storageRestoreHint');
+  if (storageRestoreInput) {
+    storageRestoreInput.placeholder = tr('storageRestorePlaceholder');
+  }
+  if (storageRestoreBtn) storageRestoreBtn.textContent = tr('storageRestoreAction');
+  syncStorageBackupUi();
+};
+
+const syncStorageBackupUi = () => {
+  const cloud = prefs.getStorageMode() === 'cloud';
+  // Cloud mode always offers backup UI; credentials are created on first show/enable.
+  if (storageBackupBlock) storageBackupBlock.hidden = !cloud;
+  if (!cloud) {
+    if (storageBackupCode) {
+      storageBackupCode.hidden = true;
+      storageBackupCode.textContent = '';
+    }
+    if (storageBackupCopyBtn) storageBackupCopyBtn.hidden = true;
+  }
 };
 
 const setRecordsOpen = (open) => {
   if (!recordsSheet || !recordsBtn) return;
   recordsSheet.hidden = !open;
   recordsBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  document.body.classList.toggle('sheet-open', open || !(customScenesSheet?.hidden ?? true));
   if (open) {
     setCustomScenesOpen(false);
+    setSettingsOpen(false);
     setSceneListOpen(false);
     setAmbientPanelOpen(false);
-    setLangPanelOpen(false);
     renderRecordsPanel();
   }
+  document.body.classList.toggle('sheet-open', anySheetOpen());
 };
 
 const setCustomScenesOpen = (open) => {
-  if (!customScenesSheet || !customScenesBtn) return;
+  if (!customScenesSheet) return;
   customScenesSheet.hidden = !open;
-  customScenesBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  document.body.classList.toggle('sheet-open', open || !(recordsSheet?.hidden ?? true));
+  if (customScenesBtn) {
+    customScenesBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
   if (open) {
     setRecordsOpen(false);
+    setSettingsOpen(false);
     setSceneListOpen(false);
     setAmbientPanelOpen(false);
-    setLangPanelOpen(false);
     resetCustomSceneForm();
     renderCustomScenesPanel();
   }
+  document.body.classList.toggle('sheet-open', anySheetOpen());
+};
+
+const setSettingsOpen = (open) => {
+  if (!settingsSheet || !settingsBtn) return;
+  settingsSheet.hidden = !open;
+  settingsBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) {
+    setRecordsOpen(false);
+    setCustomScenesOpen(false);
+    setSceneListOpen(false);
+    setAmbientPanelOpen(false);
+    syncSettingsI18n();
+  }
+  document.body.classList.toggle('sheet-open', anySheetOpen());
+};
+
+const setStorageStatus = (msg, visible = true) => {
+  if (!storageSyncStatus) return;
+  storageSyncStatus.hidden = !visible || !msg;
+  storageSyncStatus.textContent = msg || '';
+};
+
+const sceneLabelForExport = (row) => {
+  const sid = row.sceneId || '';
+  if (!sid) return '';
+  const builtIn = findBuiltInScene(sid);
+  if (builtIn) return tr(builtIn.titleKey);
+  const custom = getCustomScene(sid);
+  if (custom) return custom.name;
+  return sid;
+};
+
+const downloadCsv = (text) => {
+  const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `5min-history-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+};
+
+const fmtOvertime = (ms) => {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
+const commitOvertimeToHistoryIfNeeded = () => {
+  if (!inOvertime || overtimeMs <= 0 || !lastRecordedSessionId) return;
+  const ot = overtimeMs;
+  updateSessionElapsed(lastRecordedSessionId, totalMs + overtimeMs);
+  p0.recordOvertime(ot);
+  renderDailyStats();
+};
+
+const clearOvertimeState = () => {
+  inOvertime = false;
+  overtimeAt = 0;
+  overtimeMs = 0;
+};
+
+const refreshRitualLabels = () => {
+  const scene = findBuiltInScene(activeScene || '');
+  const group = scene?.group || (getCustomScene(activeScene || '') ? CUSTOM_GROUP_ID : '');
+  const pack = p0.resolveRitualPack(activeScene || '', group);
+  const steps = pack.stepKeys || [];
+  if (ritualTitle) ritualTitle.textContent = tr(pack.titleKey || 'standRitualTitle');
+  if (ritualStep0) ritualStep0.textContent = tr(steps[0] || 'standRitualStepUp');
+  if (ritualStep1) ritualStep1.textContent = tr(steps[1] || 'standRitualStepStretch');
+  if (ritualStep2) ritualStep2.textContent = tr(steps[2] || 'standRitualStepLeave');
+  if (ritualSkip) ritualSkip.textContent = tr('standRitualSkip');
+  if (ritualDone) ritualDone.textContent = tr('standRitualDone');
+};
+
+const maybeShowRitual = () => {
+  if (p0.getStandRitual() !== p0.RITUAL_BASIC || !ritualMask) return;
+  ritualChecks = [false, false, false];
+  refreshRitualLabels();
+  for (const btn of ritualMask.querySelectorAll('.ritual-step')) {
+    btn.classList.remove('is-on');
+  }
+  ritualMask.hidden = false;
+};
+
+const dismissRitual = () => {
+  if (ritualMask) ritualMask.hidden = true;
 };
 
 const showShareToast = (msg) => {
@@ -688,12 +950,38 @@ const showShareToast = (msg) => {
   }, 2200);
 };
 
+const renderOvertimeInsight = () => {
+  if (!overtimeInsightEl) return;
+  if (!p0.getShowOvertimeInsight()) {
+    overtimeInsightEl.hidden = true;
+    return;
+  }
+  const stats = p0.readOvertimeStats();
+  overtimeInsightEl.hidden = false;
+  if (overtimeInsightTitle) overtimeInsightTitle.textContent = tr('overtimeInsightTitle');
+  if (overtimeInsightHint) {
+    overtimeInsightHint.textContent = stats.count > 0
+      ? tr('overtimeInsightTip')
+      : tr('overtimeInsightHint');
+  }
+  if (overtimeInsightLine) {
+    overtimeInsightLine.textContent = stats.count > 0
+      ? tr('overtimeInsightLine', {
+        count: String(stats.count),
+        mins: String(p0.insightMinutes(stats.ms)),
+      })
+      : tr('overtimeInsightEmpty');
+  }
+};
+
 const renderRecordsPanel = () => {
   if (!recordsPeriod || !recordsStreak || !historyList) return;
   const all = getHistory();
   let periodMins = 0;
   for (let i = 0; i < all.length; i += 1) periodMins += all[i].minutes;
   const streak = getStreak(all);
+
+  renderOvertimeInsight();
 
   recordsPeriod.replaceChildren();
   const periodLabel = document.createElement('span');
@@ -827,26 +1115,16 @@ const renderCustomScenesPanel = () => {
   }
 };
 
-const setLangPanelOpen = (open) => {
-  if (!langBtn || !langPanel) return;
-  langPanel.hidden = !open;
-  langBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-};
-
 const syncLangSelect = () => {
-  if (!langPanel || !langBtnLabel) return;
-  langBtnLabel.textContent = LOCALE_NATIVE_NAMES[locale] ?? locale;
-  langPanel.replaceChildren();
-  for (const code of LOCALE_CODES) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.lang = code;
-    btn.setAttribute('role', 'option');
-    btn.setAttribute('aria-selected', code === locale ? 'true' : 'false');
-    btn.classList.toggle('active', code === locale);
-    btn.textContent = LOCALE_NATIVE_NAMES[code] ?? code;
-    langPanel.append(btn);
-  }
+  if (!settingsLocaleSelect) return;
+  fillSelect(
+    settingsLocaleSelect,
+    LOCALE_CODES.map((code) => ({
+      value: code,
+      label: LOCALE_NATIVE_NAMES[code] ?? code,
+    })),
+    locale,
+  );
 };
 
 const setLocale = async (next) => {
@@ -854,8 +1132,10 @@ const setLocale = async (next) => {
   await ensureLocale(resolved);
   locale = resolved;
   try { localStorage.setItem(STORAGE_KEY, locale); } catch { /* ignore */ }
+  prefs.setLocale(locale);
   applyStaticI18n();
   render();
+  schedulePrefsPush();
 };
 
 const stopTitleBlink = () => {
@@ -948,10 +1228,16 @@ const requestNotifyOnce = async () => {
   try { await Notification.requestPermission(); } catch { /* ignore */ }
 };
 
-/** Fire sound + vibration (+ notification). Always pair channels — each API is flaky alone. */
+/** Fire sound + vibration (+ notification). Honors alert profile + finish prefs. */
 const fireFinishAlert = () => {
   needAlertOnVisible = document.visibilityState !== 'visible';
-  alertFinish({ notify: maybeNotify });
+  const alerts = p0.resolveFinishAlerts(prefs);
+  alertFinish({
+    notify: maybeNotify,
+    withTone: alerts.withTone,
+    withVibrate: alerts.withVibrate,
+    withNotify: alerts.withNotify,
+  });
 };
 
 const acquireWakeLock = async () => {
@@ -990,24 +1276,32 @@ const setTone = (tone) => {
 };
 
 const render = () => {
-  const clock = fmt(remainMs);
+  let clock = fmt(remainMs);
+  if (inOvertime) clock = `+${fmtOvertime(overtimeMs)}`;
   if (clock !== lastDialClock) {
     lastDialClock = clock;
     timeLabel.textContent = clock;
-    timeText.innerHTML = digitalWatchSvg(clock);
+    // Digits only into SVG (non-digits stripped); overtime "+" via CSS class.
+    timeText.innerHTML = digitalWatchSvg(inOvertime ? fmtOvertime(overtimeMs) : clock);
   }
-  timeText.classList.toggle('is-running', !!running);
-  const ratio = totalMs > 0 ? Math.min(1, Math.max(0, remainMs / totalMs)) : 0;
+  timeText.classList.toggle('is-running', !!running || inOvertime);
+  timeText.classList.toggle('is-overtime', !!inOvertime);
+  const ratio = inOvertime
+    ? 0
+    : (totalMs > 0 ? Math.min(1, Math.max(0, remainMs / totalMs)) : 0);
   progress.style.strokeDashoffset = String(CIRC * (1 - ratio));
 
   if (!titleBlinkId) {
     const suffix = tr('titleSuffix') || '';
-    document.title = (running || remainMs < totalMs)
-      ? (suffix ? `${fmt(remainMs)} · ${suffix}` : fmt(remainMs))
+    document.title = (running || remainMs < totalMs || inOvertime)
+      ? (suffix ? `${clock} · ${suffix}` : clock)
       : tr('titleIdle');
   }
 
-  if (finished) {
+  if (inOvertime) {
+    setTone('danger');
+    statusEl.textContent = tr('statusOvertime', { n: fmtOvertime(overtimeMs) });
+  } else if (finished) {
     setTone('danger');
     statusEl.textContent = statusDoneText();
   } else if (remainMs <= 60_000 && (running || remainMs < totalMs)) {
@@ -1031,12 +1325,22 @@ const clearTick = () => {
 
 const scheduleTick = () => {
   clearTick();
+  if (inOvertime) {
+    tickId = window.setTimeout(tick, 200);
+    return;
+  }
   if (!running) return;
   const delay = Math.max(16, remainMs % 1000 || 1000);
   tickId = window.setTimeout(tick, delay);
 };
 
 const tick = () => {
+  if (inOvertime) {
+    overtimeMs = Math.max(0, Date.now() - overtimeAt);
+    render();
+    scheduleTick();
+    return;
+  }
   if (!running) return;
   remainMs = endAt - Date.now();
   if (remainMs <= 0) {
@@ -1052,9 +1356,12 @@ const finish = () => {
   running = false;
   finished = true;
   clearTick();
-  recordCompletedSession(totalMs, activeScene || '');
+  const rec = recordCompletedSession(totalMs, activeScene || '');
+  lastRecordedSessionId = rec.sessionId || '';
   renderDailyStats();
-  // Keep media channel warm through the alert; clear keepalive after fire.
+  inOvertime = true;
+  overtimeAt = Date.now();
+  overtimeMs = 0;
   render();
   startBtn.disabled = false;
   resetBtn.disabled = false;
@@ -1064,7 +1371,12 @@ const finish = () => {
   stopAudioKeepAlive();
   releaseWakeLock();
   startTitleBlink();
+  maybeShowRitual();
+  scheduleTick();
   persistTimerSession();
+  if (prefs.getStorageMode() === 'cloud') {
+    void cloudSync.pushSessionsOnly().catch(() => {});
+  }
 };
 
 const start = () => {
@@ -1085,6 +1397,12 @@ const start = () => {
   stopTitleBlink();
   clearAlerts();
   needAlertOnVisible = false;
+  dismissRitual();
+  if (finished || inOvertime) {
+    commitOvertimeToHistoryIfNeeded();
+    clearOvertimeState();
+    lastRecordedSessionId = '';
+  }
   requestNotifyOnce();
   // Must unlock inside this click gesture (iOS / Android / HarmonyOS autoplay).
   void unlockAlertAudio();
@@ -1107,6 +1425,10 @@ const start = () => {
 };
 
 const reset = () => {
+  commitOvertimeToHistoryIfNeeded();
+  clearOvertimeState();
+  lastRecordedSessionId = '';
+  dismissRitual();
   running = false;
   finished = false;
   endAt = 0;
@@ -1152,12 +1474,13 @@ const syncAmbientUi = () => {
 
 void (async () => {
   await ensureLocale(locale);
+  prefs.setLocale(locale);
   applyStaticI18n();
   // URL ?sec= wins over a previous same-tab session.
   const restored = bootSec <= 0 && restoreTimerSession();
   if (restored) {
     syncSceneUi();
-    resetBtn.disabled = !(running || finished || remainMs < totalMs);
+    resetBtn.disabled = !(running || finished || remainMs < totalMs || inOvertime);
     setSetupEnabled(!running);
     if (running) {
       scheduleTick();
@@ -1175,22 +1498,17 @@ void (async () => {
   syncAmbientUi();
   renderDailyStats();
   render();
+  if (prefs.getStorageMode() === 'cloud') {
+    void cloudSync.syncNow({
+      onLocale: (code) => {
+        if (code && code !== locale) void setLocale(code);
+      },
+    }).then(() => {
+      renderDailyStats();
+      if (!recordsSheet?.hidden) renderRecordsPanel();
+    }).catch(() => {});
+  }
 })();
-
-langBtn?.addEventListener('click', (event) => {
-  event.stopPropagation();
-  const open = langPanel?.hidden !== false;
-  setAmbientPanelOpen(false);
-  setSceneListOpen(false);
-  setLangPanelOpen(open);
-});
-
-langPanel?.addEventListener('click', (event) => {
-  const btn = event.target.closest('button[data-lang]');
-  if (!(btn instanceof HTMLButtonElement)) return;
-  void setLocale(btn.dataset.lang);
-  setLangPanelOpen(false);
-});
 
 /* pointerdown：尽早占用用户手势，提升 iOS / 部分 WebView 音频解锁成功率 */
 startBtn.addEventListener('pointerdown', () => {
@@ -1204,7 +1522,6 @@ sceneTrigger?.addEventListener('click', (event) => {
   if (sceneTrigger.disabled) return;
   const open = sceneList?.hidden !== false;
   setAmbientPanelOpen(false);
-  setLangPanelOpen(false);
   setSceneListOpen(open);
 });
 
@@ -1232,6 +1549,10 @@ recordsBtn?.addEventListener('click', (event) => {
 recordsClose?.addEventListener('click', () => setRecordsOpen(false));
 recordsBackdrop?.addEventListener('click', () => setRecordsOpen(false));
 
+settingsLocaleSelect?.addEventListener('change', () => {
+  void setLocale(settingsLocaleSelect.value);
+});
+
 customScenesBtn?.addEventListener('click', (event) => {
   event.stopPropagation();
   setCustomScenesOpen(!!customScenesSheet?.hidden);
@@ -1246,19 +1567,30 @@ historyFilter?.addEventListener('change', () => {
 });
 
 historyClearBtn?.addEventListener('click', () => {
-  if (!globalThis.confirm(tr('historyClearConfirm'))) return;
-  clearHistory();
-  renderRecordsPanel();
-  renderDailyStats();
+  void (async () => {
+    if (!(await showConfirm(tr('historyClearConfirm')))) return;
+    clearHistory();
+    renderRecordsPanel();
+    renderDailyStats();
+    if (prefs.getStorageMode() === 'cloud') {
+      void cloudSync.clearRemoteSessions().catch(() => {});
+    }
+  })();
 });
 
 historyList?.addEventListener('click', (event) => {
   const btn = event.target.closest('button[data-history-delete]');
   if (!(btn instanceof HTMLButtonElement)) return;
-  if (!globalThis.confirm(tr('historyDeleteConfirm'))) return;
-  deleteSession(btn.dataset.historyDelete || '');
-  renderRecordsPanel();
-  renderDailyStats();
+  const id = btn.dataset.historyDelete || '';
+  void (async () => {
+    if (!(await showConfirm(tr('historyDeleteConfirm')))) return;
+    deleteSession(id);
+    renderRecordsPanel();
+    renderDailyStats();
+    if (prefs.getStorageMode() === 'cloud' && id) {
+      void cloudSync.deleteRemoteSession(id).catch(() => {});
+    }
+  })();
 });
 
 shareBtn?.addEventListener('click', () => {
@@ -1274,6 +1606,158 @@ shareBtn?.addEventListener('click', () => {
     if (result === 'copied') showShareToast(tr('shareCopied'));
     else if (result === 'failed') showShareToast(tr('shareFailed'));
   })();
+});
+
+exportBtn?.addEventListener('click', () => {
+  try {
+    const csv = exportHistoryCsv(sceneLabelForExport, tr('exportCsvHeader'));
+    downloadCsv(csv);
+    showShareToast(tr('exportDone'));
+  } catch {
+    showShareToast(tr('exportFailed'));
+  }
+});
+
+settingsBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  setSettingsOpen(!!settingsSheet?.hidden);
+});
+settingsClose?.addEventListener('click', () => setSettingsOpen(false));
+settingsBackdrop?.addEventListener('click', () => setSettingsOpen(false));
+
+alertProfileSelect?.addEventListener('change', () => {
+  p0.setAlertProfile(alertProfileSelect.value);
+  schedulePrefsPush();
+});
+
+standRitualSelect?.addEventListener('change', () => {
+  p0.setStandRitual(standRitualSelect.value);
+  schedulePrefsPush();
+});
+
+overtimeInsightToggle?.addEventListener('change', () => {
+  if (!(overtimeInsightToggle instanceof HTMLInputElement)) return;
+  p0.setShowOvertimeInsight(overtimeInsightToggle.checked);
+  schedulePrefsPush();
+  if (!recordsSheet?.hidden) renderOvertimeInsight();
+});
+
+storageModeSelect?.addEventListener('change', () => {
+  void (async () => {
+    const next = storageModeSelect.value === 'cloud' ? 'cloud' : 'local';
+    if (next === prefs.getStorageMode()) return;
+    if (next === 'cloud') {
+      if (!(await showConfirm(tr('storageCloudConfirm')))) {
+        storageModeSelect.value = 'local';
+        return;
+      }
+      setStorageStatus(tr('storageSyncing'));
+      try {
+        await cloudSync.enableCloud({
+          onLocale: (code) => {
+            if (code && code !== locale) void setLocale(code);
+          },
+        });
+        setStorageStatus(tr('storageSyncOk'));
+        syncStorageBackupUi();
+        cloudSync.ensureDeviceCredentials();
+        const code = prefs.formatRecoveryCode();
+        if (storageBackupCode && code) {
+          storageBackupCode.hidden = false;
+          storageBackupCode.textContent = code;
+        }
+        if (storageBackupCopyBtn && code) storageBackupCopyBtn.hidden = false;
+        renderDailyStats();
+      } catch (err) {
+        storageModeSelect.value = 'local';
+        const msg = err && err.message ? String(err.message) : '';
+        setStorageStatus(msg && msg !== 'network' ? msg : tr('storageSyncFail'));
+        syncStorageBackupUi();
+      }
+      return;
+    }
+    cloudSync.disableCloud();
+    setStorageStatus('', false);
+    syncStorageBackupUi();
+  })();
+});
+
+storageBackupShowBtn?.addEventListener('click', () => {
+  if (prefs.getStorageMode() !== 'cloud') {
+    setStorageStatus(tr('storageModeHint'));
+    return;
+  }
+  cloudSync.ensureDeviceCredentials();
+  const code = prefs.formatRecoveryCode();
+  if (!code || !storageBackupCode) {
+    setStorageStatus(tr('storageRestoreFail'));
+    return;
+  }
+  storageBackupCode.hidden = false;
+  storageBackupCode.textContent = code;
+  if (storageBackupCopyBtn) storageBackupCopyBtn.hidden = false;
+});
+
+storageBackupCopyBtn?.addEventListener('click', () => {
+  void (async () => {
+    const code = prefs.formatRecoveryCode();
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      setStorageStatus(tr('storageBackupCopied'));
+    } catch {
+      setStorageStatus(tr('exportFailed'));
+    }
+  })();
+});
+
+storageRestoreBtn?.addEventListener('click', () => {
+  void (async () => {
+    const raw = storageRestoreInput?.value || '';
+    if (!prefs.parseRecoveryCode(raw)) {
+      setStorageStatus(tr('storageRestoreInvalid'));
+      return;
+    }
+    setStorageStatus(tr('storageSyncing'));
+    try {
+      await cloudSync.restoreWithCode(raw, {
+        onLocale: (code) => {
+          if (code && code !== locale) void setLocale(code);
+        },
+      });
+      if (storageModeSelect) storageModeSelect.value = 'cloud';
+      setStorageStatus(tr('storageRestoreOk'));
+      syncStorageBackupUi();
+      renderDailyStats();
+      if (!recordsSheet?.hidden) renderRecordsPanel();
+    } catch (e) {
+      if (e && e.code === 'invalid') setStorageStatus(tr('storageRestoreInvalid'));
+      else setStorageStatus(tr('storageRestoreFail'));
+      if (storageModeSelect) storageModeSelect.value = prefs.getStorageMode();
+      syncStorageBackupUi();
+    }
+  })();
+});
+
+ritualMask?.addEventListener('click', (event) => {
+  const stepBtn = event.target.closest('[data-ritual-step]');
+  if (stepBtn instanceof HTMLElement) {
+    const idx = Number(stepBtn.dataset.ritualStep);
+    if (idx >= 0 && idx <= 2) {
+      ritualChecks[idx] = !ritualChecks[idx];
+      stepBtn.classList.toggle('is-on', ritualChecks[idx]);
+    }
+    return;
+  }
+});
+
+ritualSkip?.addEventListener('click', () => dismissRitual());
+ritualDone?.addEventListener('click', () => dismissRitual());
+
+confirmCancel?.addEventListener('click', () => closeConfirm(false));
+confirmOk?.addEventListener('click', () => closeConfirm(true));
+confirmMask?.addEventListener('click', (event) => {
+  if (event.target === confirmMask) closeConfirm(false);
 });
 
 customSceneList?.addEventListener('click', (event) => {
@@ -1302,17 +1786,19 @@ customSceneList?.addEventListener('click', (event) => {
   }
   const delBtn = event.target.closest('button[data-custom-delete]');
   if (!(delBtn instanceof HTMLButtonElement)) return;
-  if (!globalThis.confirm(tr('customSceneDeleteConfirm'))) return;
   const id = delBtn.dataset.customDelete || '';
-  deleteCustomScene(id);
-  if (activeScene === id) {
-    activeScene = null;
-    persistTimerSession();
-    syncSceneUi();
-  }
-  if (customSceneEditId?.value === id) resetCustomSceneForm();
-  renderCustomScenesPanel();
-  syncSceneSelect();
+  void (async () => {
+    if (!(await showConfirm(tr('customSceneDeleteConfirm')))) return;
+    deleteCustomScene(id);
+    if (activeScene === id) {
+      activeScene = null;
+      persistTimerSession();
+      syncSceneUi();
+    }
+    if (customSceneEditId?.value === id) resetCustomSceneForm();
+    renderCustomScenesPanel();
+    syncSceneSelect();
+  })();
 });
 
 customSceneForm?.addEventListener('submit', (event) => {
@@ -1351,7 +1837,6 @@ ambientBtn?.addEventListener('click', (event) => {
   event.stopPropagation();
   const open = ambientPanel?.hidden !== false;
   setSceneListOpen(false);
-  setLangPanelOpen(false);
   setAmbientPanelOpen(open);
 });
 
@@ -1373,9 +1858,6 @@ document.addEventListener('pointerdown', (event) => {
   if (ambientWrap && ambientPanel && !ambientPanel.hidden && !ambientWrap.contains(target)) {
     setAmbientPanelOpen(false);
   }
-  if (langWrap && langPanel && !langPanel.hidden && !langWrap.contains(target)) {
-    setLangPanelOpen(false);
-  }
   if (sceneSelect && sceneList && !sceneList.hidden && !sceneSelect.contains(target)) {
     setSceneListOpen(false);
   }
@@ -1383,18 +1865,25 @@ document.addEventListener('pointerdown', (event) => {
 
 /* 结束后轻触表盘可再次触发振动与提示音（用户手势；iOS 无 Vibration API 时依赖声音） */
 stageSection.addEventListener('pointerup', () => {
-  if (!finished) return;
+  if (!finished && !inOvertime) return;
   needAlertOnVisible = false;
+  const alerts = p0.resolveFinishAlerts(prefs);
+  if (!alerts.withTone && !alerts.withVibrate) return;
   void realertFromGesture();
 });
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
+    if (confirmMask && !confirmMask.hidden) {
+      closeConfirm(false);
+      return;
+    }
     setSceneListOpen(false);
     setAmbientPanelOpen(false);
-    setLangPanelOpen(false);
     setRecordsOpen(false);
     setCustomScenesOpen(false);
+    setSettingsOpen(false);
+    dismissRitual();
     return;
   }
   if (event.code !== 'Space' && event.key !== ' ') return;
@@ -1428,10 +1917,16 @@ document.addEventListener('visibilitychange', () => {
     }
     return;
   }
+  if (inOvertime) {
+    overtimeMs = Math.max(0, Date.now() - overtimeAt);
+    render();
+    scheduleTick();
+  }
   if (!finished) return;
   if (needAlertOnVisible) {
     needAlertOnVisible = false;
-    alertOnVisible();
+    const alerts = p0.resolveFinishAlerts(prefs);
+    if (alerts.withTone || alerts.withVibrate) alertOnVisible();
   }
   startTitleBlink();
 });

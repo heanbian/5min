@@ -190,6 +190,35 @@ function todayStats() {
   return { count, totalMs: ms };
 }
 
+/**
+ * Export history as CSV text (UTF-8).
+ * @param {(row: object) => string} sceneLabel
+ * @param {string} headerLine
+ */
+function exportHistoryCsv(sceneLabel, headerLine) {
+  const rows = getHistory();
+  const lines = [String(headerLine || 'Time,Scene,Planned min,Actual min')];
+  const esc = (v) => {
+    const s = String(v);
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+  for (let i = 0; i < rows.length; i += 1) {
+    const row = rows[i];
+    const at = new Date(row.at);
+    const iso = Number.isNaN(at.getTime()) ? String(row.at) : at.toISOString();
+    const scene = String(
+      (typeof sceneLabel === 'function' ? sceneLabel(row) : '') || row.sceneId || '',
+    );
+    const planned = String(row.minutes);
+    const actual = String(
+      Math.max(1, Math.round((row.elapsedMs || row.minutes * 60000) / 60000)),
+    );
+    lines.push([esc(iso), esc(scene), esc(planned), esc(actual)].join(','));
+  }
+  return `${lines.join('\n')}\n`;
+}
+
 module.exports = {
   HISTORY_DAYS,
   STORAGE_KEY,
@@ -201,4 +230,5 @@ module.exports = {
   getHistory,
   shareSummaryValues,
   todayStats,
+  exportHistoryCsv,
 };

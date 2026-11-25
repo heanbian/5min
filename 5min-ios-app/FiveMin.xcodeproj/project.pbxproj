@@ -37,6 +37,7 @@
 		B20000000000000000000004 /* TimerActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* TimerActivityAttributes.swift */; };
 		B20000000000000000000005 /* WidgetShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* WidgetShared.swift */; };
 		W20000000000000000000001 /* FiveMinWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = W10000000000000000000001 /* FiveMinWidgetBundle.swift */; };
+		W20000000000000000000020 /* shared in Resources */ = {isa = PBXBuildFile; fileRef = CBB26D8D4A3F4970A417872E /* shared */; };
 		W20000000000000000000002 /* TimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = W10000000000000000000002 /* TimerLiveActivity.swift */; };
 		W20000000000000000000003 /* TimerHomeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = W10000000000000000000003 /* TimerHomeWidget.swift */; };
 		W20000000000000000000004 /* StartToiletIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = W10000000000000000000004 /* StartToiletIntent.swift */; };
@@ -386,6 +387,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				W20000000000000000000020 /* shared in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

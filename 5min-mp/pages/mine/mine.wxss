@@ -413,3 +413,51 @@
   margin-bottom: 12rpx;
 }
 
+.storage-extra {
+  margin-top: 16rpx;
+}
+
+.backup-code-wrap {
+  padding: 8rpx 32rpx 16rpx;
+}
+
+.backup-code {
+  font-size: 22rpx;
+  line-height: 1.45;
+  color: var(--ink);
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.restore-block {
+  padding: 24rpx 32rpx 8rpx;
+}
+
+.restore-label {
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.restore-input {
+  width: 100%;
+  min-height: 72rpx;
+  padding: 12rpx 20rpx;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(215, 229, 220, 0.95);
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.restore-action {
+  padding-left: 0;
+  padding-right: 0;
+  min-height: 80rpx;
+}
+
+.brand-link {
+  color: var(--brand-strong, #2f9a68);
+  font-weight: 600;
+}
+

@@ -127,6 +127,17 @@ Page({
     storageModeHint: '',
     storageSyncStatus: '',
     storageOptions: [],
+    showBackupBlock: false,
+    backupRevealed: false,
+    backupCode: '',
+    storageBackupShow: '',
+    storageBackupHint: '',
+    storageBackupCopy: '',
+    storageRestoreLabel: '',
+    storageRestoreHint: '',
+    storageRestorePlaceholder: '',
+    storageRestoreAction: '',
+    restoreCode: '',
   },
 
   onLoad() {
@@ -205,6 +216,15 @@ Page({
         { id: 'local', label: t('storageModeLocal') },
         { id: 'cloud', label: t('storageModeCloud') },
       ],
+      showBackupBlock:
+        prefs.getStorageMode() === 'cloud' && !!prefs.formatRecoveryCode(),
+      storageBackupShow: t('storageBackupShow'),
+      storageBackupHint: t('storageBackupHint'),
+      storageBackupCopy: t('storageBackupCopy'),
+      storageRestoreLabel: t('storageRestoreLabel'),
+      storageRestoreHint: t('storageRestoreHint'),
+      storageRestorePlaceholder: t('storageRestorePlaceholder'),
+      storageRestoreAction: t('storageRestoreAction'),
       localeOptions: appLocaleCodes().map((code) => ({
         code,
         label: nativeName(code),
@@ -213,6 +233,83 @@ Page({
         id,
         label: t(ambientKeyOf(id)),
       })),
+    });
+    if (prefs.getStorageMode() !== 'cloud') {
+      this.setData({ backupRevealed: false, backupCode: '' });
+    }
+  },
+
+  onShowRecoveryCode() {
+    const code = prefs.formatRecoveryCode();
+    if (!code) return;
+    this.setData({
+      backupRevealed: true,
+      backupCode: code,
+    });
+  },
+
+  onCopyRecoveryCode() {
+    const code = this.data.backupCode || prefs.formatRecoveryCode();
+    if (!code) return;
+    wx.setClipboardData({
+      data: code,
+      success: () => {
+        wx.showToast({ title: t('storageBackupCopied'), icon: 'none' });
+      },
+    });
+  },
+
+  onRestoreInput(e) {
+    this.setData({ restoreCode: e.detail.value || '' });
+  },
+
+  onRestoreWithCode() {
+    const code = this.data.restoreCode || '';
+    const parsed = prefs.parseRecoveryCode(code);
+    if (!parsed) {
+      wx.showToast({ title: t('storageRestoreInvalid'), icon: 'none' });
+      return;
+    }
+    this.setData({ storageSyncStatus: t('storageSyncing') });
+    cloudSync
+      .restoreWithCode(code)
+      .then(() => {
+        this.setData({
+          storageSyncStatus: t('storageRestoreOk'),
+          restoreCode: '',
+          backupRevealed: false,
+          backupCode: '',
+        });
+        updateTabBarLabels();
+        this.refresh();
+      })
+      .catch((err) => {
+        const msg =
+          err && err.code === 'invalid'
+            ? t('storageRestoreInvalid')
+            : t('storageRestoreFail');
+        this.setData({ storageSyncStatus: msg });
+        this.refresh();
+      });
+  },
+
+  maybePromptRecoveryCode() {
+    const code = prefs.formatRecoveryCode();
+    if (!code) return;
+    this.setData({
+      showBackupBlock: true,
+      backupRevealed: true,
+      backupCode: code,
+    });
+    wx.showModal({
+      title: t('storageBackupLabel'),
+      content: t('storageBackupHint'),
+      confirmText: t('storageBackupCopy'),
+      cancelText: t('confirmLabel'),
+      success: (res) => {
+        if (!res.confirm) return;
+        this.onCopyRecoveryCode();
+      },
     });
   },
 
@@ -255,6 +352,7 @@ Page({
           this.setData({ storageSyncStatus: t('storageSyncOk') });
           updateTabBarLabels();
           this.refresh();
+          this.maybePromptRecoveryCode();
         })
         .catch(() => {
           // enableCloud already reverts mode + clears credentials
@@ -264,6 +362,7 @@ Page({
       return;
     }
     cloudSync.disableCloud();
+    this.setData({ backupRevealed: false, backupCode: '' });
     this.refresh();
   },
 

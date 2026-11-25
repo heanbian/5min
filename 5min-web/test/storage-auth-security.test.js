@@ -175,5 +175,62 @@ test('storage 拒绝 JSON body 中的 deviceId/deviceSecret', async () => {
     });
     assert.ok(snap.status >= 400);
     assert.equal(snap.headers['cache-control'], 'no-store');
+
+    // Header-only register with empty JSON body: invalid credentials → 400 (not body-auth path).
+    const emptyBody = await request(port, '/api/v1/storage/register', {
+      method: 'POST',
+      headers: {
+        'X-Device-Id': 'not-a-uuid',
+        'X-Device-Secret': 'short'
+      },
+      body: JSON.stringify({})
+    });
+    assert.equal(emptyBody.status, 400);
+    const emptyJson = JSON.parse(emptyBody.body.toString('utf8'));
+    assert.equal(emptyJson.success, false);
+    assert.match(String(emptyJson.message || ''), /deviceId|deviceSecret|无效/);
+
+    // Valid-shaped headers + empty body should not trip body-auth rejection.
+    const shaped = await request(port, '/api/v1/storage/register', {
+      method: 'POST',
+      headers: {
+        'X-Device-Id': '00000000-0000-4000-8000-000000000099',
+        'X-Device-Secret': 'd'.repeat(64)
+      },
+      body: JSON.stringify({})
+    });
+    assert.notEqual(shaped.status, 400, 'empty body must not look like body credentials');
+    // DB may be unavailable in this harness → 500; auth shape must still be accepted.
+    assert.ok([200, 500].includes(shaped.status), 'status=' + shaped.status);
+    if (shaped.status === 200) {
+      const ok = JSON.parse(shaped.body.toString('utf8'));
+      assert.equal(ok.success, true);
+    }
+  });
+});
+
+test('storage 写接口限流在突发下返回 429', async () => {
+  await withServer(async (port) => {
+    const headers = {
+      'X-Device-Id': '00000000-0000-4000-8000-000000000077',
+      'X-Device-Secret': 'e'.repeat(64),
+      'Content-Type': 'application/json'
+    };
+    let saw429 = false;
+    // REGISTER_LIMIT is 10/min; fire well above that.
+    for (let i = 0; i < 24; i += 1) {
+      const res = await request(port, '/api/v1/storage/register', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({})
+      });
+      if (res.status === 429) {
+        saw429 = true;
+        const json = JSON.parse(res.body.toString('utf8'));
+        assert.equal(json.success, false);
+        break;
+      }
+    }
+    assert.equal(saw429, true, 'expected register rate limit 429');
   });
 });

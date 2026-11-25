@@ -22,6 +22,15 @@ struct RecordsView: View {
         ])
     }
 
+    private var exportCsvURL: URL {
+        let csv = HistoryStore.shared.exportHistoryCsv(headerLine: model.t("exportCsvHeader")) { row in
+            model.sceneTitle(for: row.sceneId.isEmpty ? nil : row.sceneId) ?? model.t("historySceneDefault")
+        }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("5min-history.csv")
+        try? csv.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -156,13 +165,20 @@ struct RecordsView: View {
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 8) {
             Text(model.t("tabRecords"))
                 .font(FiveMinFont.ui(20, weight: .semibold))
                 .foregroundStyle(FiveMinColor.ink)
             Spacer()
             ShareLink(item: shareText) {
                 Text(model.t("shareLabel"))
+                    .font(FiveMinFont.ui(14, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.brandStrong)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            ShareLink(item: exportCsvURL) {
+                Text(model.t("exportLabel"))
                     .font(FiveMinFont.ui(14, weight: .semibold))
                     .foregroundStyle(FiveMinColor.brandStrong)
                     .frame(minHeight: 44)

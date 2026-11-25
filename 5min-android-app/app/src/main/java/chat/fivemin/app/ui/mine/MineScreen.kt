@@ -35,6 +35,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,9 +84,15 @@ fun MineScreen(vm: TimerViewModel) {
     var editorMinutes by remember { mutableStateOf(state.customMin.toString()) }
     var checkingUpdate by remember { mutableStateOf(false) }
     var pendingUpdate by remember { mutableStateOf<AndroidLatest?>(null) }
+    var backupRevealed by remember { mutableStateOf(false) }
+    var restoreCode by remember { mutableStateOf("") }
+    var promptRecoveryOnce by remember { mutableStateOf(false) }
     val appVersion = remember(context) { AppUpdate.localVersionName(context) }
     val soundIds = listOf("off", "rain", "waves", "clock")
     val quickMins = listOf(3, 5, 10, 15, 25)
+    val recoveryCode = remember(state.storageMode, state.storageSyncStatus) {
+        if (state.storageMode == "cloud") vm.recoveryCode() else ""
+    }
 
     fun openUrl(url: String) {
         AppUpdate.openUrl(context, url)
@@ -260,6 +267,94 @@ fun MineScreen(vm: TimerViewModel) {
                     color = FiveMinColors.muted,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+            if (state.storageMode == "cloud" && recoveryCode.isNotBlank()) {
+                CardBlock {
+                    Text(
+                        text = vm.t("storageBackupShow"),
+                        color = FiveMinColors.ink,
+                        fontSize = 15.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { backupRevealed = true }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                    )
+                    if (backupRevealed) {
+                        HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                        Text(
+                            text = recoveryCode,
+                            color = FiveMinColors.ink,
+                            fontSize = 12.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        )
+                        Text(
+                            text = vm.t("storageBackupHint"),
+                            color = FiveMinColors.muted,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        )
+                        Text(
+                            text = vm.t("storageBackupCopy"),
+                            color = FiveMinColors.brandStrong,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    cm.setPrimaryClip(ClipData.newPlainText("recovery", recoveryCode))
+                                    Toast.makeText(
+                                        context,
+                                        vm.t("storageBackupCopied"),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                        )
+                    }
+                }
+            }
+            CardBlock {
+                Text(
+                    text = vm.t("storageRestoreLabel"),
+                    color = FiveMinColors.ink,
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+                OutlinedTextField(
+                    value = restoreCode,
+                    onValueChange = { restoreCode = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    placeholder = { Text(vm.t("storageRestorePlaceholder")) },
+                    singleLine = true,
+                    textStyle = TextStyle(fontSize = 13.sp),
+                )
+                Text(
+                    text = vm.t("storageRestoreHint"),
+                    color = FiveMinColors.muted,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+                Text(
+                    text = vm.t("storageRestoreAction"),
+                    color = FiveMinColors.brandStrong,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            vm.restoreWithCode(restoreCode) { ok, _ ->
+                                if (ok) {
+                                    restoreCode = ""
+                                    backupRevealed = false
+                                }
+                            }
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
             }
 
@@ -446,6 +541,7 @@ fun MineScreen(vm: TimerViewModel) {
             confirmButton = {
                 TextButton(onClick = {
                     confirmCloud = false
+                    promptRecoveryOnce = true
                     vm.setStorageMode("cloud")
                 }) {
                     Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong)
@@ -460,6 +556,17 @@ fun MineScreen(vm: TimerViewModel) {
             text = { Text(vm.t("storageCloudConfirm")) },
             containerColor = FiveMinColors.surface,
         )
+    }
+
+    LaunchedEffect(state.storageMode, state.storageSyncStatus, promptRecoveryOnce) {
+        if (!promptRecoveryOnce) return@LaunchedEffect
+        if (state.storageMode != "cloud") return@LaunchedEffect
+        if (state.storageSyncStatus != vm.t("storageSyncOk")) return@LaunchedEffect
+        promptRecoveryOnce = false
+        if (vm.recoveryCode().isNotBlank()) {
+            backupRevealed = true
+            Toast.makeText(context, vm.t("storageBackupHint"), Toast.LENGTH_LONG).show()
+        }
     }
 
     // Keep dialog when-block closed: remaining cases continue below

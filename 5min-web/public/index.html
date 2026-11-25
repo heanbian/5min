@@ -109,7 +109,7 @@
  <img src="img/logo.svg" width="108" height="32" alt="如厕计时器">
  <h1 id="brandTitle">如厕计时器</h1>
  </div>
- <div class="top-tools">
+ <div class="top-tools" role="toolbar" aria-label="工具">
  <button type="button" class="icon-btn" id="recordsBtn" aria-expanded="false" aria-controls="recordsSheet" aria-label="记录">
  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
  <path fill="currentColor" d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2zm0 2v11.2l5-2.1 5 2.1V6H7z"/>
@@ -133,15 +133,11 @@
  <button type="button" data-ambient="clock">钟声</button>
  </div>
  </div>
- <div class="lang" id="langWrap">
- <button type="button" class="lang-trigger" id="langBtn" aria-expanded="false" aria-haspopup="listbox" aria-controls="langPanel" aria-label="语言">
- <span id="langBtnLabel">简体中文</span>
- <svg class="lang-caret" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
- <path fill="currentColor" d="M1.1 1.2 6 6.1l4.9-4.9 1.1 1.1L6 8.3.0 2.3z"/>
+ <button type="button" class="icon-btn" id="settingsBtn" aria-expanded="false" aria-controls="settingsSheet" aria-label="设置">
+ <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+ <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.12.54.02.68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/>
  </svg>
  </button>
- <div class="menu-panel" id="langPanel" hidden role="listbox" aria-label="Language"></div>
- </div>
  </div>
  </header>
 
@@ -193,6 +189,11 @@
  <button type="button" class="sheet-close" id="recordsClose" aria-label="关闭">×</button>
  </header>
  <div class="sheet-body">
+ <div class="insight-card" id="overtimeInsight" hidden>
+ <div class="insight-title" id="overtimeInsightTitle"></div>
+ <div class="insight-line" id="overtimeInsightLine"></div>
+ <p class="insight-hint" id="overtimeInsightHint"></p>
+ </div>
  <div class="sheet-stat-row" id="recordsPeriod"></div>
  <div class="sheet-stat-row" id="recordsStreak"></div>
  <div class="sheet-toolbar">
@@ -201,13 +202,96 @@
  <select id="historyFilter"></select>
  </label>
  <div class="sheet-toolbar-actions">
+ <button type="button" class="ghost sheet-btn" id="exportBtn">导出</button>
  <button type="button" class="ghost sheet-btn" id="shareBtn">分享</button>
  <button type="button" class="ghost sheet-btn" id="historyClearBtn">清空</button>
  </div>
  </div>
  <p class="sheet-hint" id="historyEmptyHint" hidden></p>
  <ul class="history-list" id="historyList"></ul>
- <p class="sheet-toast" id="shareToast" hidden></p>
+ <div class="sheet-toast" id="shareToast" hidden role="status" aria-live="polite"></div>
+ </div>
+ </div>
+</div>
+
+<div class="sheet" id="settingsSheet" hidden>
+ <button type="button" class="sheet-backdrop" id="settingsBackdrop" tabindex="-1" aria-label="关闭"></button>
+ <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+ <header class="sheet-head">
+ <h2 class="sheet-title" id="settingsTitle">设置</h2>
+ <button type="button" class="sheet-close" id="settingsClose" aria-label="关闭">×</button>
+ </header>
+ <div class="sheet-body settings-body">
+ <section class="settings-section">
+ <label class="settings-row">
+ <span id="settingsLangLabel"></span>
+ <select id="settingsLocaleSelect"></select>
+ </label>
+ </section>
+ <section class="settings-section">
+ <label class="settings-row">
+ <span id="alertProfileLabel"></span>
+ <select id="alertProfileSelect"></select>
+ </label>
+ <p class="sheet-hint" id="alertProfileHint"></p>
+ </section>
+ <section class="settings-section">
+ <label class="settings-row">
+ <span id="standRitualLabel"></span>
+ <select id="standRitualSelect"></select>
+ </label>
+ </section>
+ <section class="settings-section">
+ <label class="settings-row settings-toggle">
+ <span id="overtimeInsightPrefLabel"></span>
+ <input type="checkbox" id="overtimeInsightToggle">
+ </label>
+ </section>
+ <section class="settings-section">
+ <label class="settings-row">
+ <span id="storageModeLabel"></span>
+ <select id="storageModeSelect"></select>
+ </label>
+ <p class="sheet-hint" id="storageModeHint"></p>
+ <p class="sheet-hint" id="storageSyncStatus" hidden></p>
+ <div class="settings-backup" id="storageBackupBlock" hidden>
+ <button type="button" class="ghost sheet-btn" id="storageBackupShowBtn"></button>
+ <p class="sheet-hint mono" id="storageBackupCode" hidden></p>
+ <button type="button" class="ghost sheet-btn" id="storageBackupCopyBtn" hidden></button>
+ </div>
+ <div class="settings-restore">
+ <label class="field">
+ <span id="storageRestoreLabel"></span>
+ <input type="text" id="storageRestoreInput" autocomplete="off" spellcheck="false">
+ </label>
+ <p class="sheet-hint" id="storageRestoreHint"></p>
+ <button type="button" class="ghost sheet-btn" id="storageRestoreBtn"></button>
+ </div>
+ </section>
+ </div>
+ </div>
+</div>
+
+<div class="ritual-mask" id="ritualMask" hidden>
+ <div class="ritual-card" role="dialog" aria-modal="true" aria-labelledby="ritualTitle">
+ <h2 class="ritual-title" id="ritualTitle"></h2>
+ <div class="ritual-steps">
+ <button type="button" class="ritual-step" data-ritual-step="0">
+ <span class="ritual-check" aria-hidden="true"></span>
+ <span class="ritual-step-label" id="ritualStep0"></span>
+ </button>
+ <button type="button" class="ritual-step" data-ritual-step="1">
+ <span class="ritual-check" aria-hidden="true"></span>
+ <span class="ritual-step-label" id="ritualStep1"></span>
+ </button>
+ <button type="button" class="ritual-step" data-ritual-step="2">
+ <span class="ritual-check" aria-hidden="true"></span>
+ <span class="ritual-step-label" id="ritualStep2"></span>
+ </button>
+ </div>
+ <div class="ritual-actions">
+ <button type="button" class="ritual-btn ritual-btn-ghost" id="ritualSkip"></button>
+ <button type="button" class="ritual-btn ritual-btn-primary" id="ritualDone"></button>
  </div>
  </div>
 </div>
@@ -237,6 +321,16 @@
  <button type="button" class="ghost sheet-btn" id="customSceneCancelBtn" hidden>取消</button>
  </div>
  </form>
+ </div>
+ </div>
+</div>
+
+<div class="confirm-mask" id="confirmMask" hidden>
+ <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage">
+ <p class="confirm-message" id="confirmMessage"></p>
+ <div class="confirm-actions">
+ <button type="button" class="confirm-btn confirm-btn-ghost" id="confirmCancel"></button>
+ <button type="button" class="confirm-btn confirm-btn-primary" id="confirmOk"></button>
  </div>
  </div>
 </div>

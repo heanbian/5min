@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Sesiones de hoy · toca para empezar</string>
+    <string name="widget_today_count">Hoy · %1$d</string>
+    <string name="widget_start_toilet">Iniciar baño</string>
+</resources>

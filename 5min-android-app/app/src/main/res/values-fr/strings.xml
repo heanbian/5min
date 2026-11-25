@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Sessions du jour · toucher pour démarrer</string>
+    <string name="widget_today_count">Aujourd\'hui · %1$d</string>
+    <string name="widget_start_toilet">Démarrer toilettes</string>
+</resources>

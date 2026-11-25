@@ -360,6 +360,33 @@ final class HistoryStore {
         return (list.count, list.reduce(0) { $0 + $1.minutes }, streakDays(from: list))
     }
 
+    /// Export history as CSV (UTF-8). Columns: Time, Scene, Planned min, Actual min.
+    func exportHistoryCsv(headerLine: String, sceneLabel: (SyncSession) -> String) -> String {
+        let rows = exportForSync()
+        var lines: [String] = [headerLine.isEmpty ? "Time,Scene,Planned min,Actual min" : headerLine]
+        func esc(_ v: String) -> String {
+            if v.contains(",") || v.contains("\"") || v.contains("\n") {
+                return "\"\(v.replacingOccurrences(of: "\"", with: "\"\""))\""
+            }
+            return v
+        }
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        for row in rows {
+            let date = Date(timeIntervalSince1970: TimeInterval(row.at) / 1000.0)
+            var stamp = iso.string(from: date)
+            if stamp.isEmpty {
+                stamp = ISO8601DateFormatter().string(from: date)
+            }
+            let scene = sceneLabel(row)
+            let planned = "\(row.minutes)"
+            let elapsed = row.elapsedMs > 0 ? row.elapsedMs : Int64(row.minutes) * 60_000
+            let actual = "\(max(1, Int((Double(elapsed) / 60_000.0).rounded())))"
+            lines.append([esc(stamp), esc(scene), esc(planned), esc(actual)].joined(separator: ","))
+        }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
     private static func startOfDayMs(_ at: Int64) -> Int64 {
         let cal = Calendar.current
         let date = Date(timeIntervalSince1970: TimeInterval(at) / 1000)

@@ -59,6 +59,10 @@ export struct MineTab {
   @State storageMode: string = STORAGE_MODE_LOCAL;
   @State storageModeName: string = '';
   @State storageSyncStatus: string = '';
+  @State backupRevealed: boolean = false;
+  @State backupCode: string = '';
+  @State restoreCode: string = '';
+  @State promptRecoveryOnce: boolean = false;
   @State appVersion: string = '—';
   @State checkingUpdate: boolean = false;
   @State pendingUpdateName: string = '';
@@ -367,12 +371,22 @@ export struct MineTab {
     if (mode === STORAGE_MODE_CLOUD) {
       this.storageSyncStatus = this.t('storageSyncing');
       this.uiTick = this.uiTick + 1;
+      this.promptRecoveryOnce = true;
       const ok = await this.cloud.enableCloud();
       if (ok) {
         this.storageMode = STORAGE_MODE_CLOUD;
         this.storageSyncStatus = this.t('storageSyncOk');
         await this.reloadFromPrefsAfterCloud();
+        if (this.promptRecoveryOnce) {
+          this.promptRecoveryOnce = false;
+          const code = await this.prefs.formatRecoveryCode();
+          if (code) {
+            this.backupCode = code;
+            this.backupRevealed = true;
+          }
+        }
       } else {
+        this.promptRecoveryOnce = false;
         this.storageMode = STORAGE_MODE_LOCAL;
         this.storageSyncStatus = this.t('storageSyncFail');
       }
@@ -382,7 +396,66 @@ export struct MineTab {
     await this.cloud.disableCloud();
     this.storageMode = STORAGE_MODE_LOCAL;
     this.storageSyncStatus = '';
+    this.backupRevealed = false;
+    this.backupCode = '';
     this.refreshLabels();
+  }
+
+  async showRecoveryCode(): Promise<void> {
+    const code = await this.prefs.formatRecoveryCode();
+    if (!code) {
+      return;
+    }
+    this.backupCode = code;
+    this.backupRevealed = true;
+    this.uiTick = this.uiTick + 1;
+  }
+
+  async copyRecoveryCode(): Promise<void> {
+    const code = this.backupCode || await this.prefs.formatRecoveryCode();
+    if (!code) {
+      return;
+    }
+    try {
+      const systemPasteboard = pasteboard.getSystemPasteboard();
+      const pasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, code);
+      await systemPasteboard.setData(pasteData);
+      this.getUIContext().getPromptAction().showToast({
+        message: this.t('storageBackupCopied'),
+        duration: 2000
+      });
+    } catch (_) {
+    }
+  }
+
+  async restoreWithCode(): Promise<void> {
+    if (!this.cloud) {
+      return;
+    }
+    const parsed = this.prefs.parseRecoveryCode(this.restoreCode);
+    if (!parsed) {
+      this.storageSyncStatus = this.t('storageRestoreInvalid');
+      this.uiTick = this.uiTick + 1;
+      return;
+    }
+    this.storageSyncStatus = this.t('storageSyncing');
+    this.uiTick = this.uiTick + 1;
+    const err = await this.cloud.restoreWithCode(this.restoreCode);
+    if (!err) {
+      this.storageMode = STORAGE_MODE_CLOUD;
+      this.storageSyncStatus = this.t('storageRestoreOk');
+      this.restoreCode = '';
+      this.backupRevealed = false;
+      this.backupCode = '';
+      await this.reloadFromPrefsAfterCloud();
+    } else if (err === 'invalid') {
+      this.storageSyncStatus = this.t('storageRestoreInvalid');
+    } else {
+      this.storageMode = STORAGE_MODE_LOCAL;
+      this.storageSyncStatus = this.t('storageRestoreFail');
+    }
+    this.refreshLabels();
+    this.uiTick = this.uiTick + 1;
   }
 
   /** After a successful cloud pull, refresh Mine + AppStorage from prefs. */
@@ -907,6 +980,102 @@ export struct MineTab {
                     .width('100%')
                     .padding({ left: 4, right: 4 })
                 }
+
+                if (this.storageMode === STORAGE_MODE_CLOUD) {
+                  Column({ space: 0 }) {
+                    Row() {
+                      Text(this.t('storageBackupShow'))
+                        .fontSize(15)
+                        .fontColor($r('app.color.ink'))
+                        .layoutWeight(1)
+                      Text('›')
+                        .fontSize(18)
+                        .fontColor($r('app.color.muted'))
+                    }
+                    .width('100%')
+                    .height(FiveMinDimens.controlH)
+                    .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
+                    .onClick(() => this.showRecoveryCode())
+
+                    if (this.backupRevealed && this.backupCode.length > 0) {
+                      Divider().color(FiveMinDimens.cardBorder).margin({ left: FiveMinDimens.padBody })
+                      Text(this.backupCode)
+                        .fontSize(12)
+                        .fontColor($r('app.color.ink'))
+                        .width('100%')
+                        .padding({
+                          left: FiveMinDimens.padBody,
+                          right: FiveMinDimens.padBody,
+                          top: 10,
+                          bottom: 8
+                        })
+                      Text(this.t('storageBackupHint'))
+                        .fontSize(12)
+                        .fontColor($r('app.color.muted'))
+                        .width('100%')
+                        .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, bottom: 4 })
+                      Text(this.t('storageBackupCopy'))
+                        .fontSize(14)
+                        .fontWeight(FontWeight.Medium)
+                        .fontColor($r('app.color.brand_strong'))
+                        .width('100%')
+                        .padding({
+                          left: FiveMinDimens.padBody,
+                          right: FiveMinDimens.padBody,
+                          top: 10,
+                          bottom: 14
+                        })
+                        .onClick(() => this.copyRecoveryCode())
+                    }
+                  }
+                  .width('100%')
+                  .backgroundColor(FiveMinDimens.cardSurface)
+                  .border({ width: 1, color: FiveMinDimens.cardBorder })
+                  .borderRadius(FiveMinDimens.radiusCard)
+                  .margin({ top: 8 })
+                }
+
+                Column({ space: 8 }) {
+                  Text(this.t('storageRestoreLabel'))
+                    .fontSize(15)
+                    .fontColor($r('app.color.ink'))
+                    .width('100%')
+                    .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, top: 12 })
+                  TextInput({
+                    placeholder: this.t('storageRestorePlaceholder'),
+                    text: this.restoreCode
+                  })
+                    .height(40)
+                    .fontSize(13)
+                    .padding({ left: 10, right: 10 })
+                    .margin({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
+                    .backgroundColor(Color.Transparent)
+                    .onChange((v: string) => {
+                      this.restoreCode = v;
+                    })
+                  Text(this.t('storageRestoreHint'))
+                    .fontSize(12)
+                    .fontColor($r('app.color.muted'))
+                    .width('100%')
+                    .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
+                  Text(this.t('storageRestoreAction'))
+                    .fontSize(14)
+                    .fontWeight(FontWeight.Medium)
+                    .fontColor($r('app.color.brand_strong'))
+                    .width('100%')
+                    .padding({
+                      left: FiveMinDimens.padBody,
+                      right: FiveMinDimens.padBody,
+                      top: 8,
+                      bottom: 14
+                    })
+                    .onClick(() => this.restoreWithCode())
+                }
+                .width('100%')
+                .backgroundColor(FiveMinDimens.cardSurface)
+                .border({ width: 1, color: FiveMinDimens.cardBorder })
+                .borderRadius(FiveMinDimens.radiusCard)
+                .margin({ top: 8 })
               }
               .width('100%')
 

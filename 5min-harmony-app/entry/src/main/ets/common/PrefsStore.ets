@@ -17,6 +17,17 @@ import {
 
 const STORE = '5min_prefs';
 
+/** Parsed recovery code (deviceId:deviceSecret). */
+export class RecoveryCreds {
+  deviceId: string = '';
+  deviceSecret: string = '';
+
+  constructor(deviceId: string, deviceSecret: string) {
+    this.deviceId = deviceId;
+    this.deviceSecret = deviceSecret;
+  }
+}
+
 export class CustomScene {
   id: string = '';
   name: string = '';
@@ -95,6 +106,36 @@ export class PrefsStore {
     await this.pref?.put('device_id', '');
     await this.pref?.put('device_secret', '');
     await this.pref?.flush();
+  }
+
+  /** Recovery code: deviceId:deviceSecret */
+  async formatRecoveryCode(): Promise<string> {
+    const id = await this.getDeviceId();
+    const secret = await this.getDeviceSecret();
+    if (!id || !secret) {
+      return '';
+    }
+    return `${id}:${secret}`;
+  }
+
+  parseRecoveryCode(raw: string): RecoveryCreds | null {
+    const text = String(raw || '').trim();
+    const idx = text.indexOf(':');
+    if (idx <= 0) {
+      return null;
+    }
+    const deviceId = text.substring(0, idx).trim();
+    const deviceSecret = text.substring(idx + 1).trim();
+    if (!deviceId || deviceSecret.length < 32) {
+      return null;
+    }
+    if (!/^[0-9a-fA-F-]{36}$/.test(deviceId)) {
+      return null;
+    }
+    if (!/^[0-9a-fA-F]+$/.test(deviceSecret)) {
+      return null;
+    }
+    return new RecoveryCreds(deviceId, deviceSecret);
   }
 
   private async migrateFinishAlertPrefsIfNeeded(): Promise<void> {

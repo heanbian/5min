@@ -58,6 +58,7 @@ Page({
     streakText: '',
     shareLabel: '',
     shareCopyLabel: '',
+    exportLabel: '',
     rows: [],
     privacyAccepted: true,
     privacyChecked: false,
@@ -173,8 +174,89 @@ Page({
       streakText,
       shareLabel: t('shareLabel'),
       shareCopyLabel: t('shareCopyAction'),
+      exportLabel: t('exportLabel'),
       rows,
     });
+  },
+
+  sceneLabelForRow(row) {
+    let scene = t('historySceneDefault');
+    if (row && row.sceneId) {
+      const title = resolveSceneTitle(row.sceneId);
+      if (title) scene = title;
+      const custom = prefs.getCustomScenes().find((s) => s.id === row.sceneId);
+      if (custom) scene = custom.name;
+    }
+    return scene;
+  },
+
+  buildExportCsv() {
+    return history.exportHistoryCsv(
+      (row) => this.sceneLabelForRow(row),
+      t('exportCsvHeader'),
+    );
+  },
+
+  copyCsvFallback(csv) {
+    wx.setClipboardData({
+      data: csv,
+      success: () => {
+        wx.showToast({ title: t('exportDone'), icon: 'none' });
+      },
+      fail: () => {
+        wx.showToast({ title: t('exportFailed'), icon: 'none' });
+      },
+    });
+  },
+
+  onExportCsv() {
+    const csv = this.buildExportCsv();
+    const fs = wx.getFileSystemManager();
+    const path = `${wx.env.USER_DATA_PATH}/5min-history.csv`;
+    try {
+      fs.writeFileSync(path, csv, 'utf8');
+    } catch (e) {
+      this.copyCsvFallback(csv);
+      return;
+    }
+    if (typeof wx.shareFileMessage === 'function') {
+      wx.shareFileMessage({
+        filePath: path,
+        fileName: '5min-history.csv',
+        success: () => {
+          wx.showToast({ title: t('exportDone'), icon: 'none' });
+        },
+        fail: () => {
+          if (typeof wx.openDocument === 'function') {
+            wx.openDocument({
+              filePath: path,
+              fileType: 'csv',
+              showMenu: true,
+              success: () => {
+                wx.showToast({ title: t('exportDone'), icon: 'none' });
+              },
+              fail: () => this.copyCsvFallback(csv),
+            });
+            return;
+          }
+          this.copyCsvFallback(csv);
+        },
+      });
+      return;
+    }
+    if (typeof wx.openDocument === 'function') {
+      wx.openDocument({
+        filePath: path,
+        fileType: 'csv',
+        showMenu: true,
+        success: () => {
+          wx.showToast({ title: t('exportDone'), icon: 'none' });
+        },
+        fail: () => this.copyCsvFallback(csv),
+      });
+      return;
+    }
+    this.copyCsvFallback(csv);
   },
 
   buildShareText() {

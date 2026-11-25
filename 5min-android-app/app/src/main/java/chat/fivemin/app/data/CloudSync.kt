@@ -101,6 +101,30 @@ class CloudSync(
         prefs.clearDeviceCredentials()
     }
 
+    /**
+     * Restore from user-held recovery code, then sync.
+     * @return null on success, "invalid" / "fail" on error.
+     */
+    fun restoreWithCode(code: String, onResult: (String?) -> Unit) {
+        val parsed = prefs.parseRecoveryCode(code)
+        if (parsed == null) {
+            onResult("invalid")
+            return
+        }
+        prefs.setDeviceCredentials(parsed.first, parsed.second)
+        prefs.storageMode = MODE_CLOUD
+        executor.execute {
+            val ok = runCatching { syncNow() }.isSuccess
+            if (!ok) {
+                prefs.storageMode = MODE_LOCAL
+                prefs.clearDeviceCredentials()
+                onResult("fail")
+            } else {
+                onResult(null)
+            }
+        }
+    }
+
     fun syncNow() {
         register()
         request(

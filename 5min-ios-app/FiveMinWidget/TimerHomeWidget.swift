@@ -22,21 +22,79 @@ struct TimerHomeProvider: TimelineProvider {
     }
 }
 
+/// Widget strings from Bundle.main `shared/locales/*.json` (same packs as SharedCatalog).
 enum WidgetCopy {
-    static var isZh: Bool {
-        Locale.current.language.languageCode?.identifier == "zh"
+    private static let localeCodes = [
+        "zh-CN", "zh-TW", "en", "fr", "ru", "es", "ar", "de", "bo", "ja", "ko", "pt", "id",
+    ]
+    private static let defaultLocale = "zh-CN"
+
+    private static let pack: [String: String] = {
+        loadPack(for: resolveLocale(preferred: Locale.preferredLanguages))
+    }()
+
+    static var brand: String { t("brandTitle", fallback: "Toilet Timer") }
+    static func todayCount(_ n: Int) -> String {
+        t("widgetTodayCount", fallback: "Today · {n}").replacingOccurrences(of: "{n}", with: "\(n)")
+    }
+    static var startToilet: String { t("widgetStartToilet", fallback: "Start toilet") }
+    static var description: String {
+        t("widgetDescription", fallback: "Today's sessions · tap to start toilet timer")
+    }
+    static var running: String { t("widgetRunning", fallback: "Countdown") }
+    static var paused: String { t("widgetPaused", fallback: "Paused") }
+
+    private static func t(_ key: String, fallback: String) -> String {
+        pack[key] ?? fallback
     }
 
-    static var brand: String { isZh ? "如厕计时器" : "Toilet Timer" }
-    static func todayCount(_ n: Int) -> String {
-        isZh ? "今日 \(n) 次" : "Today · \(n)"
+    private static func resolveLocale(preferred: [String]) -> String {
+        for tag in preferred {
+            if let hit = match(tag) { return hit }
+        }
+        return defaultLocale
     }
-    static var startToilet: String { isZh ? "开始如厕" : "Start toilet" }
-    static var description: String {
-        isZh ? "今日次数与快速开始如厕" : "Today's sessions · tap to start toilet timer"
+
+    private static func match(_ tag: String) -> String? {
+        let lower = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "_", with: "-")
+        if lower.isEmpty { return nil }
+        if localeCodes.contains(lower) { return lower }
+        let parts = lower.split(separator: "-").map(String.init)
+        let base = parts.first?.lowercased() ?? ""
+        let region = parts.count > 1 ? parts[1].uppercased() : ""
+        if base == "zh" {
+            if ["TW", "HK", "MO"].contains(region) || lower.lowercased().contains("hant") {
+                return "zh-TW"
+            }
+            return "zh-CN"
+        }
+        if base == "en" { return "en" }
+        if localeCodes.contains(base) { return base }
+        return nil
     }
-    static var running: String { isZh ? "倒计时中" : "Countdown" }
-    static var paused: String { isZh ? "已暂停" : "Paused" }
+
+    private static func loadPack(for code: String) -> [String: String] {
+        if let pack = readLocaleJSON(code) { return pack }
+        if code != defaultLocale, let pack = readLocaleJSON(defaultLocale) { return pack }
+        if let pack = readLocaleJSON("en") { return pack }
+        return [:]
+    }
+
+    private static func readLocaleJSON(_ code: String) -> [String: String]? {
+        let url = Bundle.main.url(forResource: code, withExtension: "json", subdirectory: "shared/locales")
+            ?? Bundle.main.url(forResource: code, withExtension: "json")
+        guard let url,
+              let data = try? Data(contentsOf: url),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        var flat: [String: String] = [:]
+        for (k, v) in obj {
+            flat[k] = "\(v)"
+        }
+        return flat
+    }
 }
 
 struct TimerHomeWidget: Widget {

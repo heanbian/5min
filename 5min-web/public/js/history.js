@@ -110,6 +110,50 @@ export const deleteSession = (id) => {
   writeAll(prune(readAll()).filter((row) => row.id !== id));
 };
 
+/** Update elapsed/minutes for an existing session (overtime bump). */
+export const updateSessionElapsed = (id, elapsedMs) => {
+  if (!id) return;
+  const ms = Math.max(0, Math.floor(Number(elapsedMs) || 0));
+  const minutes = Math.max(1, Math.round(ms / 60_000));
+  const list = prune(readAll());
+  const idx = list.findIndex((row) => row.id === id);
+  if (idx < 0) return;
+  list[idx] = { ...list[idx], minutes, elapsedMs: ms };
+  writeAll(list);
+};
+
+/** Escape a CSV cell; neutralize spreadsheet formula injection (=,+,-,@). */
+export const escapeCsvCell = (value) => {
+  let s = String(value == null ? '' : value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+
+/**
+ * Export history as CSV text (UTF-8).
+ * @param {(row: {id:string,at:number,minutes:number,sceneId:string,elapsedMs:number}) => string} sceneLabel
+ * @param {string} headerLine
+ */
+export const exportHistoryCsv = (sceneLabel, headerLine) => {
+  const rows = getHistory();
+  const lines = [String(headerLine || 'Time,Scene,Planned min,Actual min')];
+  for (let i = 0; i < rows.length; i += 1) {
+    const row = rows[i];
+    const at = new Date(row.at);
+    const iso = Number.isNaN(at.getTime()) ? String(row.at) : at.toISOString();
+    const scene = String(sceneLabel?.(row) || row.sceneId || '');
+    const planned = String(row.minutes);
+    const actual = String(
+      Math.max(1, Math.round((row.elapsedMs || row.minutes * 60_000) / 60_000)),
+    );
+    lines.push(
+      [escapeCsvCell(iso), escapeCsvCell(scene), escapeCsvCell(planned), escapeCsvCell(actual)].join(','),
+    );
+  }
+  return `${lines.join('\n')}\n`;
+};
+
 export const clearHistory = () => {
   writeAll([]);
 };

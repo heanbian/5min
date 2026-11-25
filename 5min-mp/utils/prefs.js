@@ -295,6 +295,30 @@ function clearDeviceCredentials() {
   }
 }
 
+/** Recovery code: deviceId:deviceSecret */
+function formatRecoveryCode() {
+  const id = getDeviceId();
+  const secret = getDeviceSecret();
+  if (!id || !secret) return '';
+  return `${id}:${secret}`;
+}
+
+/**
+ * @param {string} raw
+ * @returns {{ deviceId: string, deviceSecret: string } | null}
+ */
+function parseRecoveryCode(raw) {
+  const text = String(raw || '').trim();
+  const idx = text.indexOf(':');
+  if (idx <= 0) return null;
+  const deviceId = text.slice(0, idx).trim();
+  const deviceSecret = text.slice(idx + 1).trim();
+  if (!deviceId || deviceSecret.length < 32) return null;
+  if (!/^[0-9a-fA-F-]{36}$/.test(deviceId)) return null;
+  if (!/^[0-9a-fA-F]+$/.test(deviceSecret)) return null;
+  return { deviceId, deviceSecret };
+}
+
 module.exports = {
   MAX_COUNT,
   MAX_NAME,
@@ -325,4 +349,6 @@ module.exports = {
   getDeviceSecret,
   setDeviceCredentials,
   clearDeviceCredentials,
+  formatRecoveryCode,
+  parseRecoveryCode,
 };

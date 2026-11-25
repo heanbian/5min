@@ -456,6 +456,48 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(storageMode = "local", storageSyncStatus = "") }
     }
 
+    fun restoreWithCode(code: String, onDone: (ok: Boolean, invalid: Boolean) -> Unit) {
+        _state.update { it.copy(storageSyncStatus = t("storageSyncing")) }
+        cloud.restoreWithCode(code) { err ->
+            viewModelScope.launch {
+                withContext(Dispatchers.Main) {
+                    when (err) {
+                        null -> {
+                            reloadPrefsFromStore()
+                            bumpRecordsEpoch()
+                            refreshTodayStats()
+                            refreshSuggested()
+                            _state.update {
+                                it.copy(
+                                    storageMode = prefs.storageMode,
+                                    storageSyncStatus = t("storageRestoreOk"),
+                                )
+                            }
+                            onDone(true, false)
+                        }
+                        "invalid" -> {
+                            _state.update {
+                                it.copy(storageSyncStatus = t("storageRestoreInvalid"))
+                            }
+                            onDone(false, true)
+                        }
+                        else -> {
+                            _state.update {
+                                it.copy(
+                                    storageMode = prefs.storageMode,
+                                    storageSyncStatus = t("storageRestoreFail"),
+                                )
+                            }
+                            onDone(false, false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun recoveryCode(): String = prefs.formatRecoveryCode()
+
     private fun reloadPrefsFromStore() {
         _state.update {
             it.copy(

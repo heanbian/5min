@@ -406,13 +406,23 @@ export const clearAlerts = () => {
 
 /**
  * Full finish alert. Call while page may still hold wake lock / foreground.
- * @param {{ notify?: () => void }} [opts]
+ * @param {{
+ *   notify?: () => void,
+ *   withTone?: boolean,
+ *   withVibrate?: boolean,
+ *   withNotify?: boolean,
+ * }} [opts]
  */
 export const alertFinish = (opts = {}) => {
+  const withTone = opts.withTone !== false;
+  const withVibrate = opts.withVibrate !== false;
+  const withNotify = opts.withNotify !== false;
   preferPlaybackSession();
-  scheduleFinishHaptics();
-  void playAllAudio();
-  try { opts.notify?.(); } catch { /* ignore */ }
+  if (withVibrate) scheduleFinishHaptics();
+  if (withTone) void playAllAudio();
+  if (withNotify) {
+    try { opts.notify?.(); } catch { /* ignore */ }
+  }
   // Drop the silent unlock loop after the cue finishes (avoids lingering iOS Now Playing).
   window.setTimeout(() => stopSilentLoop(), ALERT_DURATION_MS + 300);
 };

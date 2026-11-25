@@ -245,6 +245,31 @@ class HistoryStore(context: Context) {
      */
     fun streakDays(): Int = streakFromDaySet(sortedDayStarts())
 
+    /**
+     * Export history as CSV (UTF-8). Columns: Time, Scene, Planned min, Actual min.
+     */
+    fun exportHistoryCsv(headerLine: String, sceneLabel: (SyncSession) -> String): String {
+        val rows = exportForSync()
+        val lines = ArrayList<String>(rows.size + 1)
+        lines += headerLine.ifBlank { "Time,Scene,Planned min,Actual min" }
+        fun esc(v: String): String {
+            return if (v.contains(',') || v.contains('"') || v.contains('\n')) {
+                "\"${v.replace("\"", "\"\"")}\""
+            } else {
+                v
+            }
+        }
+        for (row in rows) {
+            val iso = Instant.ofEpochMilli(row.at).toString()
+            val scene = sceneLabel(row)
+            val planned = row.minutes.toString()
+            val elapsed = if (row.elapsedMs > 0L) row.elapsedMs else row.minutes * 60_000L
+            val actual = max(1, (elapsed / 60_000.0).roundToInt()).toString()
+            lines += listOf(esc(iso), esc(scene), esc(planned), esc(actual)).joinToString(",")
+        }
+        return lines.joinToString("\n", postfix = "\n")
+    }
+
     /** Period count/mins + streak from a single history read. */
     fun shareSummaryValues(): Triple<Int, Int, Int> {
         val list = getHistory()

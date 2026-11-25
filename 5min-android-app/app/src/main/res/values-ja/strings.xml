@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">今日の回数とトイレ開始</string>
+    <string name="widget_today_count">今日 %1$d 回</string>
+    <string name="widget_start_toilet">トイレ開始</string>
+</resources>

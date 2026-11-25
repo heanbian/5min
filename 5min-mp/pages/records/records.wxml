@@ -33,6 +33,7 @@
       <view class="share-actions">
         <button class="share-btn" open-type="share">{{shareLabel}}</button>
         <button class="share-btn share-btn-ghost" bindtap="onCopyShare">{{shareCopyLabel}}</button>
+        <button class="share-btn share-btn-ghost" bindtap="onExportCsv">{{exportLabel}}</button>
       </view>
     </view>
 

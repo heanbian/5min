@@ -92,6 +92,7 @@
 .share-actions {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 16rpx;
 }
 

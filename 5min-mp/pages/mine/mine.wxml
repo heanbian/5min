@@ -76,6 +76,40 @@
     <view class="hint" wx:if="{{storageModeHint}}">{{storageModeHint}}</view>
     <view class="hint" wx:if="{{storageSyncStatus}}">{{storageSyncStatus}}</view>
 
+    <view class="card storage-extra" wx:if="{{showBackupBlock}}">
+      <view class="row" bindtap="onShowRecoveryCode">
+        <text class="row-title">{{storageBackupShow}}</text>
+        <text class="chev">›</text>
+      </view>
+      <block wx:if="{{backupRevealed}}">
+        <view class="row-line"></view>
+        <view class="backup-code-wrap">
+          <text class="backup-code" user-select>{{backupCode}}</text>
+        </view>
+        <view class="hint">{{storageBackupHint}}</view>
+        <view class="row" bindtap="onCopyRecoveryCode">
+          <text class="row-title">{{storageBackupCopy}}</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="card storage-extra">
+      <view class="restore-block">
+        <text class="row-title restore-label">{{storageRestoreLabel}}</text>
+        <input
+          class="restore-input"
+          value="{{restoreCode}}"
+          placeholder="{{storageRestorePlaceholder}}"
+          bindinput="onRestoreInput"
+          confirm-type="done"
+        />
+        <view class="hint">{{storageRestoreHint}}</view>
+        <view class="row restore-action" bindtap="onRestoreWithCode">
+          <text class="row-title brand-link">{{storageRestoreAction}}</text>
+        </view>
+      </view>
+    </view>
+
     <view class="section-label section-gap">{{mineSectionSupport}}</view>
     <view class="card">
       <view class="row" bindtap="onOpenPrivacy">

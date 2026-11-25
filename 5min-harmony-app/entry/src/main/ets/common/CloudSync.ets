@@ -79,6 +79,27 @@ export class CloudSync {
     await this.prefs.clearDeviceCredentials();
   }
 
+  /**
+   * Restore from user-held recovery code, then sync.
+   * @returns null on success, 'invalid' / 'fail' on error.
+   */
+  async restoreWithCode(code: string): Promise<string | null> {
+    const parsed = this.prefs.parseRecoveryCode(code);
+    if (!parsed) {
+      return 'invalid';
+    }
+    await this.prefs.setDeviceCredentials(parsed.deviceId, parsed.deviceSecret);
+    await this.prefs.setStorageMode(STORAGE_MODE_CLOUD);
+    try {
+      await this.syncNow();
+      return null;
+    } catch (_) {
+      await this.prefs.setStorageMode(STORAGE_MODE_LOCAL);
+      await this.prefs.clearDeviceCredentials();
+      return 'fail';
+    }
+  }
+
   async syncNow(): Promise<void> {
     await this.register();
     await this.request('PUT', '/snapshot', await this.snapshotBody());

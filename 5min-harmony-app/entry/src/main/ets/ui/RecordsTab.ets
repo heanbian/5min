@@ -3,7 +3,7 @@ import { promptAction } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { SharedCatalog, SceneItem } from '../common/SharedCatalog';
 import { PrefsStore, CustomScene } from '../common/PrefsStore';
-import { HistoryStore, HistoryItem, HISTORY_DAYS } from '../common/HistoryStore';
+import { HistoryStore, HistoryItem, SyncSession, HISTORY_DAYS } from '../common/HistoryStore';
 import { CloudSync } from '../common/CloudSync';
 import { insightMinutes } from '../common/P0Features';
 import { resolveLocale } from '../common/I18n';
@@ -152,6 +152,51 @@ export struct RecordsTab {
     } catch (_) {
       try {
         prompt.showToast({ message: this.t('shareFailed'), duration: 2000 });
+      } catch (__) {
+      }
+    }
+  }
+
+  private escCsv(v: string): string {
+    if (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0) {
+      return `"${v.replace(/"/g, '""')}"`;
+    }
+    return v;
+  }
+
+  private buildExportCsv(rows: SyncSession[]): string {
+    const lines: string[] = [];
+    lines.push(this.t('exportCsvHeader'));
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const at = new Date(row.at);
+      const iso = isNaN(at.getTime()) ? String(row.at) : at.toISOString();
+      const scene = this.resolveSceneTitle(row.sceneId);
+      const planned = String(row.minutes);
+      const elapsed = row.elapsedMs > 0 ? row.elapsedMs : row.minutes * 60000;
+      const actual = String(Math.max(1, Math.round(elapsed / 60000)));
+      lines.push([
+        this.escCsv(iso),
+        this.escCsv(scene),
+        this.escCsv(planned),
+        this.escCsv(actual)
+      ].join(','));
+    }
+    return `${lines.join('\n')}\n`;
+  }
+
+  async exportCsv(): Promise<void> {
+    const prompt = this.getUIContext().getPromptAction();
+    try {
+      const rows = await this.history.exportForSync();
+      const csv = this.buildExportCsv(rows);
+      const systemPasteboard = pasteboard.getSystemPasteboard();
+      const pasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, csv);
+      await systemPasteboard.setData(pasteData);
+      prompt.showToast({ message: this.t('exportDone'), duration: 2000 });
+    } catch (_) {
+      try {
+        prompt.showToast({ message: this.t('exportFailed'), duration: 2000 });
       } catch (__) {
       }
     }
@@ -309,8 +354,15 @@ export struct RecordsTab {
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.brand_strong'))
-              .padding({ left: 12, right: 4, top: 10, bottom: 10 })
+              .padding({ left: 8, right: 4, top: 10, bottom: 10 })
               .onClick(() => this.shareSummary())
+            Text(this.t('exportLabel'))
+              .fontSize(14)
+              .fontFamily(FiveMinFont.semiBold)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.brand_strong'))
+              .padding({ left: 4, right: 4, top: 10, bottom: 10 })
+              .onClick(() => this.exportCsv())
           }
         }
         .width('100%')

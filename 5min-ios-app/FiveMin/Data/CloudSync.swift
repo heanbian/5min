@@ -136,6 +136,30 @@ final class CloudSync: @unchecked Sendable {
         prefs.clearDeviceCredentials()
     }
 
+    /// Restore from user-held recovery code, then sync.
+    /// Returns `nil` on success, `"invalid"` / `"fail"` on error.
+    func restoreWithCode(_ code: String) async -> String? {
+        guard let parsed = prefs.parseRecoveryCode(code) else { return "invalid" }
+        prefs.setDeviceCredentials(id: parsed.deviceId, secret: parsed.deviceSecret)
+        prefs.storageMode = Self.modeCloud
+        return await withCheckedContinuation { continuation in
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.resume(returning: "fail")
+                    return
+                }
+                do {
+                    try self.syncNow()
+                    continuation.resume(returning: nil)
+                } catch {
+                    self.prefs.storageMode = Self.modeLocal
+                    self.prefs.clearDeviceCredentials()
+                    continuation.resume(returning: "fail")
+                }
+            }
+        }
+    }
+
     func syncNow() throws {
         try register()
         _ = try request(

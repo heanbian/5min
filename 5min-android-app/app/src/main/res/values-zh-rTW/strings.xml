@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">今日次數與快速開始如廁</string>
+    <string name="widget_today_count">今日 %1$d 次</string>
+    <string name="widget_start_toilet">開始如廁</string>
+</resources>

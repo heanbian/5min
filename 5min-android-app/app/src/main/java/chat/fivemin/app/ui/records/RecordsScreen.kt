@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import chat.fivemin.app.FiveMinApp
@@ -103,6 +104,26 @@ fun RecordsScreen(vm: TimerViewModel) {
         context.startActivity(Intent.createChooser(intent, vm.t("shareLabel")))
     }
 
+    fun exportCsv() {
+        val history = FiveMinApp.instance.history
+        val csv = history.exportHistoryCsv(vm.t("exportCsvHeader")) { row ->
+            vm.sceneTitle(row.sceneId.takeIf { it.isNotBlank() })
+                ?: vm.t("historySceneDefault")
+        }
+        try {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_SUBJECT, "5min-history.csv")
+                putExtra(Intent.EXTRA_TEXT, csv)
+                putExtra(Intent.EXTRA_TITLE, "5min-history.csv")
+            }
+            context.startActivity(Intent.createChooser(intent, vm.t("exportLabel")))
+            Toast.makeText(context, vm.t("exportDone"), Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            Toast.makeText(context, vm.t("exportFailed"), Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val filterOptions = remember(state.recordsEpoch, state.locale, state.customScenes) {
         val all = FiveMinApp.instance.history.getHistory()
         all.map { it.sceneId }.filter { it.isNotBlank() }.distinct()
@@ -141,8 +162,17 @@ fun RecordsScreen(vm: TimerViewModel) {
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
-                    .padding(start = 8.dp, end = 14.dp, top = 8.dp, bottom = 8.dp)
+                    .padding(start = 8.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
                     .clickable { shareSummary() },
+            )
+            Text(
+                text = vm.t("exportLabel"),
+                color = FiveMinColors.brandStrong,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .padding(end = 14.dp, top = 8.dp, bottom = 8.dp)
+                    .clickable { exportCsv() },
             )
             if (rows.isNotEmpty() || filterOptions.isNotEmpty()) {
                 Text(
