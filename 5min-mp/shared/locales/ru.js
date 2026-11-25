@@ -329,5 +329,13 @@ module.exports = {
   "shareFailed": "Не удалось поделиться",
   "shareCopyAction": "Копировать текст",
   "invalidLink": "Ссылка недоступна",
-  "linkCopied": "Ссылка скопирована — откройте в браузере"
+  "linkCopied": "Ссылка скопирована — откройте в браузере",
+  "customSceneMinLabel": "Минуты",
+  "customSceneDeleteConfirm": "Удалить эту пользовательскую сцену?",
+  "widgetTodayCount": "Сегодня · {n}",
+  "widgetRemain": "Осталось {time}",
+  "widgetTapOpen": "Нажмите, чтобы открыть",
+  "widgetStartToilet": "Начать туалет",
+  "widgetDescription": "Сессии за сегодня · нажмите, чтобы начать",
+  "docNotFound": "Документ не найден"
 };

@@ -4,14 +4,14 @@
 
 - **bundleName**：`chat.5min.app`
 - **App ID（AGC）**：`6917621936327753309`
-- **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（与 Android `1.0.0` 对齐；`versionCode` 采用 `major*1000000+minor*1000+patch`）
+- **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（当前 `1.0.17` / `1000017`；`versionCode` 采用 `major*1000000+minor*1000+patch`）
 - **技术**：ArkTS · ArkUI（Stage）· Preferences · Vibrator · Notification
 
 ## 功能
 
 - 时长预设与分组场景（与 Web / Android 共享 `rawfile/shared`）
 - 绝对时间戳倒计时；到期本地通知 + 约 5 秒报警音与振动
-- 今日累计；多语言（简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག）
+- 今日累计；多语言（简体中文、繁体中文、English、Deutsch、Español、Français、Bahasa Indonesia、日本語、한국어、Português、Русский、العربية、བོད་ཡིག）
 - 计时页常亮（`setWindowKeepScreenOn`）
 
 ## 打开工程
@@ -66,8 +66,8 @@ cd ../5min-web && npm run export-shared
 
 ```bash
 chmod +x scripts/release.sh
-./scripts/release.sh hap # → store/release/5min-harmony-app-1.0.0.hap
-./scripts/release.sh app # → store/release/5min-harmony-app-1.0.0.app
+./scripts/release.sh hap # → store/release/5min-harmony-app-1.0.17.hap
+./scripts/release.sh app # → store/release/5min-harmony-app-1.0.17.app
 ```
 
 也可在 DevEco：`Build` → `Build Hap(s)/APP(s)` → `Build App(s)`。

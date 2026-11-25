@@ -329,5 +329,13 @@ module.exports = {
   "shareFailed": "共有に失敗",
   "shareCopyAction": "テキストをコピー",
   "invalidLink": "リンクを開けません",
-  "linkCopied": "リンクをコピーしました。ブラウザで開いてください"
+  "linkCopied": "リンクをコピーしました。ブラウザで開いてください",
+  "customSceneMinLabel": "分数",
+  "customSceneDeleteConfirm": "このカスタムシーンを削除しますか？",
+  "widgetTodayCount": "今日 {n} 回",
+  "widgetRemain": "残り {time}",
+  "widgetTapOpen": "タップして開く",
+  "widgetStartToilet": "トイレ開始",
+  "widgetDescription": "今日の回数とトイレ開始",
+  "docNotFound": "ドキュメントがありません"
 };

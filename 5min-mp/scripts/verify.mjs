@@ -80,6 +80,11 @@ check('required copy keys', () => {
     'privacyMessage',
     'tabHome',
     'tabMine',
+    'docNotFound',
+    'widgetTodayCount',
+    'widgetTapOpen',
+    'customSceneMinLabel',
+    'customSceneDeleteConfirm',
   ];
   for (const k of need) {
     assert.equal(typeof zhCN[k], 'string', k);

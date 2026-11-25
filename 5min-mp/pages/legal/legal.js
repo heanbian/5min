@@ -5,6 +5,7 @@
  */
 
 const { getLegalDoc } = require('../../utils/legalDocs');
+const { t } = require('../../utils/i18n');
 
 Page({
   data: {
@@ -22,7 +23,7 @@ Page({
     }
     const doc = getLegalDoc(docId);
     if (!doc) {
-      wx.showToast({ title: '文档不存在', icon: 'none' });
+      wx.showToast({ title: t('docNotFound'), icon: 'none' });
       setTimeout(() => wx.navigateBack({ fail() {} }), 400);
       return;
     }

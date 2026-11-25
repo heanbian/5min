@@ -259,11 +259,11 @@
   "overtimeInsightHint": "Menyadari lewat waktu membantu Anda berdiri dengan tenang.",
   "overtimeInsightTip": "Lain kali, perhatikan sinyal selesai sedikit lebih awal agar bisa beralih dengan tenang.",
   "prefOvertimeInsight": "Tampilkan wawasan lewat waktu",
-  "standRitualSection": "Ritual berdiri",
+  "standRitualSection": "Ritual setelah timer",
   "standRitualLabel": "Ritual setelah timer",
   "standRitualOff": "Mati",
   "standRitualBasic": "Dasar (3 langkah)",
-  "standRitualTitle": "Ritual berdiri",
+  "standRitualTitle": "Ritual setelah timer",
   "standRitualStepUp": "Saya sudah berdiri",
   "standRitualStepStretch": "Peregangan singkat",
   "standRitualStepLeave": "Siap pergi",
@@ -329,5 +329,13 @@
   "shareFailed": "Gagal membagikan",
   "shareCopyAction": "Salin teks",
   "invalidLink": "Tautan tidak tersedia",
-  "linkCopied": "Tautan disalin — buka di peramban"
+  "linkCopied": "Tautan disalin — buka di peramban",
+  "customSceneMinLabel": "Menit",
+  "customSceneDeleteConfirm": "Hapus adegan kustom ini?",
+  "widgetTodayCount": "Hari ini · {n}",
+  "widgetRemain": "Sisa {time}",
+  "widgetTapOpen": "Ketuk untuk membuka",
+  "widgetStartToilet": "Mulai toilet",
+  "widgetDescription": "Sesi hari ini · ketuk untuk mulai",
+  "docNotFound": "Dokumen tidak ditemukan"
 }

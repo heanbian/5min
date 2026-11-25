@@ -336,4 +336,10 @@ export default Object.freeze({
     "linkCopied": "Tautan disalin — buka di peramban",
     "customSceneMinLabel": "Menit",
     "customSceneDeleteConfirm": "Hapus adegan kustom ini?",
+    "widgetTodayCount": "Hari ini · {n}",
+    "widgetRemain": "Sisa {time}",
+    "widgetTapOpen": "Ketuk untuk membuka",
+    "widgetStartToilet": "Mulai toilet",
+    "widgetDescription": "Sesi hari ini · ketuk untuk mulai",
+    "docNotFound": "Dokumen tidak ditemukan",
 });

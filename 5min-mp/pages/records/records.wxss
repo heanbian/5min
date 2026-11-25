@@ -262,6 +262,15 @@
   flex-direction: row;
   align-items: flex-start;
   gap: 16rpx;
+  transition: background-color 0.12s ease;
+}
+
+.hist-row:active {
+  background-color: rgba(47, 154, 104, 0.06);
+}
+
+.hist-delete:active {
+  opacity: 0.7;
 }
 
 .hist-main {

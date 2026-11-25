@@ -259,11 +259,11 @@
   "overtimeInsightHint": "超過に気づくことは、落ち着いて立ち上がる助けになります。",
   "overtimeInsightTip": "次回は終了サインを少し早めに意識すると、落ち着いて次へ移れます。",
   "prefOvertimeInsight": "超過の記録を表示",
-  "standRitualSection": "立ち上がり儀式",
+  "standRitualSection": "終了後の儀式",
   "standRitualLabel": "終了後の儀式",
   "standRitualOff": "オフ",
   "standRitualBasic": "基本（3ステップ）",
-  "standRitualTitle": "立ち上がり儀式",
+  "standRitualTitle": "終了後の儀式",
   "standRitualStepUp": "立ち上がりました",
   "standRitualStepStretch": "軽く伸びをする",
   "standRitualStepLeave": "離れる準備",
@@ -329,5 +329,13 @@
   "shareFailed": "共有に失敗",
   "shareCopyAction": "テキストをコピー",
   "invalidLink": "リンクを開けません",
-  "linkCopied": "リンクをコピーしました。ブラウザで開いてください"
+  "linkCopied": "リンクをコピーしました。ブラウザで開いてください",
+  "customSceneMinLabel": "分数",
+  "customSceneDeleteConfirm": "このカスタムシーンを削除しますか？",
+  "widgetTodayCount": "今日 {n} 回",
+  "widgetRemain": "残り {time}",
+  "widgetTapOpen": "タップして開く",
+  "widgetStartToilet": "トイレ開始",
+  "widgetDescription": "今日の回数とトイレ開始",
+  "docNotFound": "ドキュメントがありません"
 }

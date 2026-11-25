@@ -24,7 +24,7 @@ struct TimerLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.state.running ? "Running" : "Paused")
+                    Text(context.state.running ? WidgetCopy.running : WidgetCopy.paused)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -51,7 +51,7 @@ struct TimerLiveActivity: Widget {
             VStack(alignment: .leading, spacing: 4) {
                 Text(context.attributes.sceneTitle)
                     .font(.headline)
-                Text(context.state.running ? "Countdown" : "Paused")
+                Text(context.state.running ? WidgetCopy.running : WidgetCopy.paused)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

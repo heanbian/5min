@@ -51,18 +51,26 @@ function allowRegister(req) {
   return allowLimited(registerHits, clientIp(req) || 'unknown', REGISTER_LIMIT);
 }
 
+function rejectBodyAuth(req, res, next) {
+  // Auth material only via headers — never accept in JSON body (logs/APM/proxies).
+  const body = req.body;
+  if (body && typeof body === 'object' &&
+      (Object.prototype.hasOwnProperty.call(body, 'deviceSecret') ||
+       Object.prototype.hasOwnProperty.call(body, 'deviceId'))) {
+    return sendErr(res, 400, '请使用请求头传递凭证');
+  }
+  return next();
+}
+
 function registerStorageRoutes(app) {
   const router = express.Router();
   router.use(express.json({ limit: '256kb' }));
+  router.use(rejectBodyAuth);
 
   router.post('/register', async (req, res) => {
     try {
       if (!allowRegister(req) || !allowWrite(req)) return sendErr(res, 429, '请求过于频繁');
-      // Auth material only via headers — never accept deviceSecret in JSON body (logs/APM).
-      if (req.body && Object.prototype.hasOwnProperty.call(req.body, 'deviceSecret')) {
-        return sendErr(res, 400, '请使用请求头传递凭证');
-      }
-      const deviceId = String(req.get('X-Device-Id') || req.body?.deviceId || '');
+      const deviceId = String(req.get('X-Device-Id') || '');
       const deviceSecret = String(req.get('X-Device-Secret') || '');
       const result = await cloud.registerDevice(deviceId, deviceSecret);
       if (!result.ok) return sendErr(res, result.status, result.message);

@@ -635,11 +635,19 @@ struct Index {
     }
     this.lastGlancePublishAt = now;
     const remain = this.state.running ? formatMs(this.state.remainMs) : '';
+    const countVars: Record<string, string> = {};
+    countVars['n'] = `${this.state.statsCount}`;
+    const remainVars: Record<string, string> = {};
+    remainVars['time'] = remain;
     WidgetGlance.publish(
       this.context,
       this.state.statsCount,
       remain,
-      this.state.running
+      this.state.running,
+      this.t('brandTitle'),
+      this.t('widgetTodayCount', countVars),
+      this.state.running && remain.length > 0 ? this.t('widgetRemain', remainVars) : '',
+      this.t('widgetTapOpen')
     ).catch(() => {
     });
   }
@@ -1640,6 +1648,7 @@ struct Index {
           .height(FiveMinDimens.iconTap)
           .justifyContent(FlexAlign.Center)
           .alignItems(VerticalAlign.Center)
+          .accessibilityText(this.t('tabMine'))
           .onClick(() => {
             this.onTabChange(2);
           })
@@ -1747,6 +1756,12 @@ struct Index {
                 color: 'rgba(47, 154, 104, 0.32)',
                 offsetX: 0,
                 offsetY: 6
+              })
+              .accessibilityText(this.startLabel)
+              .stateStyles({
+                pressed: {
+                  .opacity(0.88)
+                }
               })
               .onClick(() => this.toggleStart())
             Text(this.t('reset'))

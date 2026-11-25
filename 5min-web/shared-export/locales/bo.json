@@ -259,11 +259,11 @@
   "overtimeInsightHint": "བརྒལ་པ་མཐོང་ན་དལ་གྱིས་ལངས་ཐུབ།",
   "overtimeInsightTip": "ཐེངས་རྗེས་མར་མཇུག་བརྡ་སྔ་ཙམ་ལ་གཟབ་ནན་བྱས་ན་གང་བདེར་བརྗེ་ཆོག",
   "prefOvertimeInsight": "དུས་ཚོད་བརྒལ་པའི་གཟུགས་བརྙན་འཆར།",
-  "standRitualSection": "ལངས་པའི་ཆོ་ག",
+  "standRitualSection": "མཇུག་གི་ཆོ་ག",
   "standRitualLabel": "མཇུག་གི་ཆོ་ག",
   "standRitualOff": "ཁ་རྒྱག",
   "standRitualBasic": "གཞི་རིམ་གོམ་གསུམ།",
-  "standRitualTitle": "ལངས་པའི་ཆོ་ག",
+  "standRitualTitle": "མཇུག་གི་ཆོ་ག",
   "standRitualStepUp": "ང་ལངས་ཟིན།",
   "standRitualStepStretch": "ལུས་འགུལ་ཙམ།",
   "standRitualStepLeave": "འགྲོ་རན།",
@@ -329,5 +329,13 @@
   "shareFailed": "བགོ་འགྲེམ་མ་ཐུབ།",
   "shareCopyAction": "ཡི་གེ་བཤུ།",
   "invalidLink": "སྦྲེལ་མཐུད་བཀོལ་མི་ཐུབ།",
-  "linkCopied": "སྦྲེལ་མཐུད་བཤུས་ཟིན། བཤར་ཆས་ནང་ཁ་ཕྱེ།"
+  "linkCopied": "སྦྲེལ་མཐུད་བཤུས་ཟིན། བཤར་ཆས་ནང་ཁ་ཕྱེ།",
+  "customSceneMinLabel": "སྐར་མ།",
+  "customSceneDeleteConfirm": "རང་བཟོ་བརྙན་ཡུལ་འདི་སུབ་རྒྱུ་ཡིན་ནམ།",
+  "widgetTodayCount": "དེ་རིང་ {n} ཐེངས།",
+  "widgetRemain": "ལྷག་མ {time}",
+  "widgetTapOpen": "རྡེབ་ནས་ཁ་ཕྱེ།",
+  "widgetStartToilet": "གསང་སྤྱོད་འགོ་འཛུགས།",
+  "widgetDescription": "དེ་རིང་གི་ཐེངས་གྲངས་དང་འགོ་འཛུགས།",
+  "docNotFound": "ཡིག་ཆ་མེད།"
 }

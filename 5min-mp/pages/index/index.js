@@ -27,7 +27,6 @@ const {
   clearFinishAlertPending,
   realertFinishIfPending,
 } = require('../../utils/alert');
-const { requestFinishSubscribe } = require('../../utils/subscribeNotify');
 const { drawDigitalWatch } = require('../../utils/digitalWatch');
 const {
   initAmbient,
@@ -819,17 +818,8 @@ Page({
     }
   },
 
-  async start() {
+  start() {
     if (this.remainMs <= 0) return;
-    // Subscribe-message grant is one-shot for future server push only; still
-    // prompt when finishNotify is on so product can wire templates later.
-    if (prefs.getFinishNotify()) {
-      try {
-        await requestFinishSubscribe();
-      } catch (e) {
-        /* ignore */
-      }
-    }
     clearAlerts();
     clearFinishAlertPending();
     unlockAlertAudio();

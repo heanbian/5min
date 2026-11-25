@@ -26,13 +26,21 @@ function freePort() {
 function request(port, pathname, opts = {}) {
   const t0 = performance.now();
   return new Promise((resolve, reject) => {
+    const payload = opts.body == null ? null : Buffer.from(String(opts.body), 'utf8');
+    const headers = Object.assign({}, opts.headers || {});
+    if (payload && !headers['Content-Type'] && !headers['content-type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (payload) {
+      headers['Content-Length'] = String(payload.length);
+    }
     const req = http.request(
       {
         host: '127.0.0.1',
         port,
         path: pathname,
         method: opts.method || 'GET',
-        headers: opts.headers || {}
+        headers
       },
       (res) => {
         const chunks = [];
@@ -49,6 +57,7 @@ function request(port, pathname, opts = {}) {
     );
     req.on('error', reject);
     req.setTimeout(15000, () => req.destroy(new Error('timeout')));
+    if (payload) req.write(payload);
     req.end();
   });
 }
@@ -204,6 +213,25 @@ test('HTTP 安全响应头、敏感路径与路径穿越', async () => {
     assert.match(downloadHtml, /css\/download\.css\?v=[0-9a-f]+/i);
     assert.match(downloadHtml, /js\/download\.js\?v=[0-9a-f]+/i);
     assert.equal(/\?v=16\b/.test(downloadHtml), false);
+
+    // Round 2: storage auth must never accept credentials in JSON body.
+    const bodyAuth = await request(port, '/api/v1/storage/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        deviceId: '00000000-0000-4000-8000-000000000001',
+        deviceSecret: 'a'.repeat(64)
+      })
+    });
+    assert.equal(bodyAuth.status, 400, 'reject body credentials');
+    const bodyAuthJson = JSON.parse(bodyAuth.body.toString('utf8'));
+    assert.equal(bodyAuthJson.success, false);
+    assert.match(String(bodyAuthJson.message || ''), /请求头/);
+
+    const headerOnlyMissing = await request(port, '/api/v1/storage/snapshot', {
+      method: 'GET',
+      headers: { 'X-Device-Id': 'not-a-uuid', 'X-Device-Secret': 'short' }
+    });
+    assert.ok(headerOnlyMissing.status >= 400, 'invalid header credentials rejected');
   });
 });
 

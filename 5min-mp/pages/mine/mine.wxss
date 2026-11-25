@@ -72,6 +72,11 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  transition: background-color 0.12s ease;
+}
+
+.row:active {
+  background-color: rgba(47, 154, 104, 0.08);
 }
 
 .row-switch switch {

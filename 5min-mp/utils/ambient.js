@@ -167,13 +167,6 @@ function pauseAmbient() {
   clearGraph();
 }
 
-function stopAmbient() {
-  mode = 'off';
-  clearGraph();
-  persist(mode);
-  return mode;
-}
-
 function setAmbientMode(next) {
   if (AMBIENT_MODES.indexOf(next) < 0) return mode;
   clearGraph();
@@ -209,5 +202,4 @@ module.exports = {
   getAmbientMode,
   setAmbientMode,
   pauseAmbient,
-  stopAmbient,
 };

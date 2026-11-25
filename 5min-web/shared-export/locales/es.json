@@ -259,11 +259,11 @@
   "overtimeInsightHint": "Ver el tiempo extra ayuda a levantarse con calma.",
   "overtimeInsightTip": "La próxima vez, note un poco antes la señal de fin para cambiar con calma.",
   "prefOvertimeInsight": "Mostrar retrato de tiempo extra",
-  "standRitualSection": "Ritual de levantarse",
+  "standRitualSection": "Ritual al terminar",
   "standRitualLabel": "Ritual al terminar",
   "standRitualOff": "Desactivado",
   "standRitualBasic": "Básico (3 pasos)",
-  "standRitualTitle": "Ritual de levantarse",
+  "standRitualTitle": "Ritual al terminar",
   "standRitualStepUp": "Ya me levanté",
   "standRitualStepStretch": "Estiramiento breve",
   "standRitualStepLeave": "Listo para salir",
@@ -329,5 +329,13 @@
   "shareFailed": "Error al compartir",
   "shareCopyAction": "Copiar texto",
   "invalidLink": "Enlace no disponible",
-  "linkCopied": "Enlace copiado: ábralo en el navegador"
+  "linkCopied": "Enlace copiado: ábralo en el navegador",
+  "customSceneMinLabel": "Minutos",
+  "customSceneDeleteConfirm": "¿Eliminar esta escena personalizada?",
+  "widgetTodayCount": "Hoy · {n}",
+  "widgetRemain": "Quedan {time}",
+  "widgetTapOpen": "Toca para abrir",
+  "widgetStartToilet": "Iniciar baño",
+  "widgetDescription": "Sesiones de hoy · toca para empezar",
+  "docNotFound": "Documento no encontrado"
 }

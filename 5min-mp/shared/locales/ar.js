@@ -330,5 +330,13 @@ module.exports = {
   "shareFailed": "فشلت المشاركة",
   "shareCopyAction": "نسخ النص",
   "invalidLink": "الرابط غير متاح",
-  "linkCopied": "تم نسخ الرابط — افتحه في المتصفح"
+  "linkCopied": "تم نسخ الرابط — افتحه في المتصفح",
+  "customSceneMinLabel": "الدقائق",
+  "customSceneDeleteConfirm": "هل تريد حذف هذا المشهد المخصّص؟",
+  "widgetTodayCount": "اليوم · {n}",
+  "widgetRemain": "متبقي {time}",
+  "widgetTapOpen": "انقر للفتح",
+  "widgetStartToilet": "بدء المرحاض",
+  "widgetDescription": "جلسات اليوم · انقر للبدء",
+  "docNotFound": "المستند غير موجود"
 };

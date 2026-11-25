@@ -31,6 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:background="@drawable/timer_widget_btn"
+        android:contentDescription="@string/widget_start_toilet"
         android:paddingHorizontal="14dp"
         android:paddingVertical="8dp"
         android:text="@string/widget_start_toilet"

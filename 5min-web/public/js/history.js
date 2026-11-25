@@ -104,21 +104,6 @@ export const recordSession = (elapsedMs, sceneId = '') => {
   return id;
 };
 
-/**
- * @param {string} id
- * @param {number} elapsedMs
- */
-export const updateSessionElapsed = (id, elapsedMs) => {
-  if (!id) return;
-  const ms = Math.max(0, Math.floor(Number(elapsedMs) || 0));
-  const minutes = Math.max(1, Math.round(ms / 60_000));
-  const list = prune(readAll());
-  const idx = list.findIndex((row) => row.id === id);
-  if (idx < 0) return;
-  list[idx] = { ...list[idx], minutes, elapsedMs: ms };
-  writeAll(list);
-};
-
 /** @param {string} id */
 export const deleteSession = (id) => {
   if (!id) return;
@@ -156,9 +141,6 @@ export const getHistory = (sceneId) => {
   }
   return list.slice().sort((a, b) => b.at - a.at);
 };
-
-/** Alias of getHistory — product Batch B naming. */
-export const listSessions = (sceneId) => getHistory(sceneId);
 
 export const periodStats = () => {
   const list = getHistory();

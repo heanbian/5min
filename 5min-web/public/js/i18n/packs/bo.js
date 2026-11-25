@@ -336,4 +336,10 @@ export default Object.freeze({
     "linkCopied": "སྦྲེལ་མཐུད་བཤུས་ཟིན། བཤར་ཆས་ནང་ཁ་ཕྱེ།",
     "customSceneMinLabel": "སྐར་མ།",
     "customSceneDeleteConfirm": "རང་བཟོ་བརྙན་ཡུལ་འདི་སུབ་རྒྱུ་ཡིན་ནམ།",
+    "widgetTodayCount": "དེ་རིང་ {n} ཐེངས།",
+    "widgetRemain": "ལྷག་མ {time}",
+    "widgetTapOpen": "རྡེབ་ནས་ཁ་ཕྱེ།",
+    "widgetStartToilet": "གསང་སྤྱོད་འགོ་འཛུགས།",
+    "widgetDescription": "དེ་རིང་གི་ཐེངས་གྲངས་དང་འགོ་འཛུགས།",
+    "docNotFound": "ཡིག་ཆ་མེད།",
 });

@@ -329,5 +329,13 @@
   "shareFailed": "공유 실패",
   "shareCopyAction": "텍스트 복사",
   "invalidLink": "링크를 열 수 없음",
-  "linkCopied": "링크가 복사되었습니다. 브라우저에서 여세요"
+  "linkCopied": "링크가 복사되었습니다. 브라우저에서 여세요",
+  "customSceneMinLabel": "분",
+  "customSceneDeleteConfirm": "이 맞춤 장면을 삭제할까요?",
+  "widgetTodayCount": "오늘 {n}회",
+  "widgetRemain": "남음 {time}",
+  "widgetTapOpen": "탭하여 열기",
+  "widgetStartToilet": "화장실 시작",
+  "widgetDescription": "오늘 횟수 · 탭하여 시작",
+  "docNotFound": "문서를 찾을 수 없음"
 }

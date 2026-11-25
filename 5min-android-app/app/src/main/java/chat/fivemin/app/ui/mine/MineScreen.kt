@@ -560,7 +560,7 @@ fun MineScreen(vm: TimerViewModel) {
                                 )
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = null,
+                                    contentDescription = vm.t("historyDelete"),
                                     tint = FiveMinColors.muted,
                                     modifier = Modifier
                                         .size(22.dp)

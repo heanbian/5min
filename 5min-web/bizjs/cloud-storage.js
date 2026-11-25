@@ -89,8 +89,9 @@ async function ensureCloudStorageTables() {
 }
 
 function readAuth(req) {
-  const deviceId = clampStr(req.get('x-device-id') || req.body?.deviceId, 64);
-  const deviceSecret = clampStr(req.get('x-device-secret') || req.body?.deviceSecret, 128);
+  // Auth material only via headers — never from JSON body (logs/APM/proxies).
+  const deviceId = clampStr(req.get('x-device-id'), 64);
+  const deviceSecret = clampStr(req.get('x-device-secret'), 128);
   return { deviceId, deviceSecret };
 }
 

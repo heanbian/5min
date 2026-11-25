@@ -259,11 +259,11 @@
   "overtimeInsightHint": "초과를 알아차리면 차분히 일어서는 데 도움이 됩니다.",
   "overtimeInsightTip": "다음에는 종료 신호를 조금 더 일찍 의식하면 다음으로 부드럽게 넘어갈 수 있습니다.",
   "prefOvertimeInsight": "초과 기록 표시",
-  "standRitualSection": "일어서기 의식",
+  "standRitualSection": "종료 후 의식",
   "standRitualLabel": "종료 후 의식",
   "standRitualOff": "끄기",
   "standRitualBasic": "기본 (3단계)",
-  "standRitualTitle": "일어서기 의식",
+  "standRitualTitle": "종료 후 의식",
   "standRitualStepUp": "일어섰습니다",
   "standRitualStepStretch": "가볍게 스트레칭",
   "standRitualStepLeave": "떠날 준비",
@@ -329,5 +329,13 @@
   "shareFailed": "공유 실패",
   "shareCopyAction": "텍스트 복사",
   "invalidLink": "링크를 열 수 없음",
-  "linkCopied": "링크가 복사되었습니다. 브라우저에서 여세요"
+  "linkCopied": "링크가 복사되었습니다. 브라우저에서 여세요",
+  "customSceneMinLabel": "분",
+  "customSceneDeleteConfirm": "이 맞춤 장면을 삭제할까요?",
+  "widgetTodayCount": "오늘 {n}회",
+  "widgetRemain": "남음 {time}",
+  "widgetTapOpen": "탭하여 열기",
+  "widgetStartToilet": "화장실 시작",
+  "widgetDescription": "오늘 횟수 · 탭하여 시작",
+  "docNotFound": "문서를 찾을 수 없음"
 }

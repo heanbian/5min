@@ -259,11 +259,11 @@
   "overtimeInsightHint": "看見超時，是為了更從容地起身。",
   "overtimeInsightTip": "下次可提前留意結束提示，從容切換到下一件事。",
   "prefOvertimeInsight": "顯示超時畫像",
-  "standRitualSection": "起身儀式",
+  "standRitualSection": "結束後儀式",
   "standRitualLabel": "結束後儀式",
   "standRitualOff": "關閉",
   "standRitualBasic": "基礎三步",
-  "standRitualTitle": "起身儀式",
+  "standRitualTitle": "結束後儀式",
   "standRitualStepUp": "我已起身",
   "standRitualStepStretch": "稍作伸展",
   "standRitualStepLeave": "準備離開",
@@ -329,5 +329,13 @@
   "shareFailed": "分享失敗",
   "shareCopyAction": "複製文案",
   "invalidLink": "連結不可用",
-  "linkCopied": "連結已複製，請在瀏覽器開啟"
+  "linkCopied": "連結已複製，請在瀏覽器開啟",
+  "customSceneMinLabel": "時長（分鐘）",
+  "customSceneDeleteConfirm": "確定刪除該自訂場景？",
+  "widgetTodayCount": "今日 {n} 次",
+  "widgetRemain": "剩餘 {time}",
+  "widgetTapOpen": "輕觸開啟",
+  "widgetStartToilet": "開始如廁",
+  "widgetDescription": "今日次數與快速開始如廁",
+  "docNotFound": "文件不存在"
 }

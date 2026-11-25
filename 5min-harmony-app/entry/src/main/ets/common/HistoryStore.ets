@@ -340,17 +340,6 @@ export class HistoryStore {
     await HistoryStore.pruneOld(this.store);
   }
 
-  async periodStats(): Promise<[number, number]> {
-    const list = await this.getHistory();
-    let count = 0;
-    let minutes = 0;
-    for (let i = 0; i < list.length; i++) {
-      count += 1;
-      minutes += list[i].minutes;
-    }
-    return [count, minutes];
-  }
-
   async todayStats(): Promise<[number, number]> {
     if (!this.store) {
       return [0, 0];

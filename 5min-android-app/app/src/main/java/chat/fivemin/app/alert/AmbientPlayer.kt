@@ -39,8 +39,6 @@ object AmbientPlayer {
 
     private val lock = Any()
 
-    fun currentMode(): String = mode
-
     fun setMode(mode: String) {
         val next = if (mode == "rain" || mode == "waves" || mode == "clock") mode else "off"
         synchronized(lock) {

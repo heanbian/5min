@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Toilet Timer</string>
+    <string name="channel_timer">Countdown</string>
+    <string name="channel_finish">Timer finished</string>
+    <string name="notif_running">Countdown</string>
+    <string name="shortcut_toilet_short">Start toilet</string>
+    <string name="shortcut_toilet_long">Start toilet · 5 min</string>
+    <string name="widget_description">Today\'s sessions · tap to start toilet timer</string>
+    <string name="widget_today_count">Today · %1$d</string>
+    <string name="widget_start_toilet">Start 5 min</string>
+</resources>

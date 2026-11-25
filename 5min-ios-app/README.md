@@ -107,7 +107,7 @@ cp ExportOptions.plist.example ExportOptions.plist
 2. Xcode Target → General → Version / Build
  （或 `project.pbxproj` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`）
 
-当前：`1.0.9`（Build `10`）。每次上架递增 Build；对外版本变了再改 Version。
+当前：`1.0.11`（Build `12`）。每次上架递增 Build；对外版本变了再改 Version。
 
 ---
 
@@ -120,7 +120,7 @@ chmod +x scripts/release.sh
 cp ExportOptions.plist.example ExportOptions.plist # 首次
 # 编辑 teamID
 ./scripts/release.sh
-# → store/release/5min-ios-app-1.0.0.ipa
+# → store/release/5min-ios-app-1.0.11.ipa
 ```
 
 ### 方式 B：Xcode

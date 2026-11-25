@@ -239,11 +239,6 @@ class HistoryStore(context: Context) {
         pruneOld()
     }
 
-    fun periodStats(): Pair<Int, Int> {
-        val list = getHistory()
-        return list.size to list.sumOf { it.minutes }
-    }
-
     /**
      * Consecutive calendar days (ending today or yesterday) with ≥1 completed session.
      * Returns 0 when today and yesterday are both empty.

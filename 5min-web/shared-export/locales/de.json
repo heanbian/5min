@@ -259,11 +259,11 @@
   "overtimeInsightHint": "Überziehung zu sehen hilft, gelassener aufzustehen.",
   "overtimeInsightTip": "Achten Sie beim nächsten Mal etwas früher auf das Endsignal, um ruhig weiterzumachen.",
   "prefOvertimeInsight": "Überziehungsbild anzeigen",
-  "standRitualSection": "Aufsteh-Ritual",
+  "standRitualSection": "Ritual nach dem Timer",
   "standRitualLabel": "Ritual nach dem Timer",
   "standRitualOff": "Aus",
   "standRitualBasic": "Basis (3 Schritte)",
-  "standRitualTitle": "Aufsteh-Ritual",
+  "standRitualTitle": "Ritual nach dem Timer",
   "standRitualStepUp": "Ich bin aufgestanden",
   "standRitualStepStretch": "Kurz dehnen",
   "standRitualStepLeave": "Bereit zu gehen",
@@ -329,5 +329,13 @@
   "shareFailed": "Teilen fehlgeschlagen",
   "shareCopyAction": "Text kopieren",
   "invalidLink": "Link nicht verfügbar",
-  "linkCopied": "Link kopiert — im Browser öffnen"
+  "linkCopied": "Link kopiert — im Browser öffnen",
+  "customSceneMinLabel": "Minuten",
+  "customSceneDeleteConfirm": "Diese individuelle Szene löschen?",
+  "widgetTodayCount": "Heute · {n}",
+  "widgetRemain": "Noch {time}",
+  "widgetTapOpen": "Tippen zum Öffnen",
+  "widgetStartToilet": "Toilette starten",
+  "widgetDescription": "Heutige Sitzungen · Tippen zum Starten",
+  "docNotFound": "Dokument nicht gefunden"
 }

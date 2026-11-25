@@ -28,8 +28,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import android.app.Activity
-import android.view.WindowManager
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -46,7 +44,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,7 +61,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -96,19 +93,6 @@ fun TimerHome(
             ritualLeave = false
         }
     }
-    val view = LocalView.current
-    DisposableEffect(state.running) {
-        val window = (view.context as? Activity)?.window
-        if (state.running) {
-            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        } else {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
-        onDispose {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
-    }
-
     val ringColor = when (state.phase) {
         TimerPhase.Warn -> FiveMinColors.warn
         TimerPhase.Done -> FiveMinColors.danger
@@ -169,7 +153,8 @@ fun TimerHome(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgBrush),
+            .background(bgBrush)
+            .then(if (state.running) Modifier.keepScreenOn() else Modifier),
     ) {
         // Soft radial glow (matches web body background)
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -210,7 +195,7 @@ fun TimerHome(
                 ) {
                     Image(
                         painter = painterResource(R.drawable.logo),
-                        contentDescription = "5min",
+                        contentDescription = vm.t("brandTitle"),
                         modifier = Modifier
                             .height(24.dp)
                             .width(24.dp * 108f / 32f),
@@ -244,7 +229,7 @@ fun TimerHome(
                         } else {
                             Icons.AutoMirrored.Filled.VolumeUp
                         },
-                        contentDescription = vm.t("ambientLabel"),
+                        contentDescription = vm.t("tabMine"),
                         tint = if (state.ambient == "off") {
                             FiveMinColors.muted.copy(alpha = 0.45f)
                         } else {

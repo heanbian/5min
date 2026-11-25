@@ -21,7 +21,7 @@ export default class EntryFormAbility extends FormExtensionAbility {
   onUpdateForm(formId: string): void {
     hilog.info(LOG_DOMAIN, LOG_TAG, 'onUpdateForm %{public}s', formId);
     WidgetGlance.read(this.context).then((data) => {
-      return WidgetGlance.pushForm(formId, data.todayCount, data.remainText, data.running);
+      return WidgetGlance.pushFormData(formId, data);
     }).catch((e: Error) => {
       hilog.warn(LOG_DOMAIN, LOG_TAG, 'onUpdateForm failed %{public}s', JSON.stringify(e));
     });

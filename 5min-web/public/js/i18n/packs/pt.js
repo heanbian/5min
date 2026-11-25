@@ -336,4 +336,10 @@ export default Object.freeze({
     "linkCopied": "Ligação copiada — abra no navegador",
     "customSceneMinLabel": "Minutos",
     "customSceneDeleteConfirm": "Excluir esta cena personalizada?",
+    "widgetTodayCount": "Hoje · {n}",
+    "widgetRemain": "Restam {time}",
+    "widgetTapOpen": "Toque para abrir",
+    "widgetStartToilet": "Iniciar banheiro",
+    "widgetDescription": "Sessões de hoje · toque para começar",
+    "docNotFound": "Documento não encontrado",
 });

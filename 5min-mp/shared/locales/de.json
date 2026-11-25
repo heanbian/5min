@@ -329,5 +329,13 @@
   "shareFailed": "Teilen fehlgeschlagen",
   "shareCopyAction": "Text kopieren",
   "invalidLink": "Link nicht verfügbar",
-  "linkCopied": "Link kopiert — im Browser öffnen"
+  "linkCopied": "Link kopiert — im Browser öffnen",
+  "customSceneMinLabel": "Minuten",
+  "customSceneDeleteConfirm": "Diese individuelle Szene löschen?",
+  "widgetTodayCount": "Heute · {n}",
+  "widgetRemain": "Noch {time}",
+  "widgetTapOpen": "Tippen zum Öffnen",
+  "widgetStartToilet": "Toilette starten",
+  "widgetDescription": "Heutige Sitzungen · Tippen zum Starten",
+  "docNotFound": "Dokument nicht gefunden"
 }

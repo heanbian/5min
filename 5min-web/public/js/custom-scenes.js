@@ -134,12 +134,3 @@ export const deleteCustomScene = (id) => {
   writeAll(readAll().filter((s) => s.id !== sid));
 };
 
-/** Replace entire list (cloud merge). */
-export const replaceCustomScenes = (scenes) => {
-  const cleaned = (Array.isArray(scenes) ? scenes : [])
-    .map(sanitizeScene)
-    .filter(Boolean)
-    .slice(0, MAX_COUNT);
-  writeAll(cleaned);
-  return cleaned;
-};

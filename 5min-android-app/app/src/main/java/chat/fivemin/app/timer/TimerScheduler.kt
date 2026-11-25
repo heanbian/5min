@@ -9,17 +9,10 @@ import android.util.Log
 
 object TimerScheduler {
     const val ACTION_FINISH = "chat.fivemin.app.action.TIMER_FINISH"
-    const val EXTRA_END_AT = "end_at"
     const val EXTRA_ELAPSED = "elapsed_ms"
     const val EXTRA_SCENE = "scene_name"
     const val EXTRA_SCENE_ID = "scene_id"
     private const val TAG = "TimerScheduler"
-
-    fun canScheduleExact(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
-        val am = context.getSystemService(AlarmManager::class.java) ?: return false
-        return am.canScheduleExactAlarms()
-    }
 
     /** Schedule finish wake-up. Never throws — falls back when exact alarm is denied. */
     fun scheduleExact(
@@ -30,7 +23,7 @@ object TimerScheduler {
         sceneId: String = "",
     ) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
-        val pi = pending(context, endAt, elapsedMs, sceneName, sceneId)
+        val pi = pending(context, elapsedMs, sceneName, sceneId)
         try {
             // minSdk 26: setExactAndAllowWhileIdle is always available.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
@@ -53,7 +46,7 @@ object TimerScheduler {
     fun cancel(context: Context) {
         val am = context.getSystemService(AlarmManager::class.java) ?: return
         try {
-            am.cancel(pending(context, 0L, 0L, "", ""))
+            am.cancel(pending(context, 0L, "", ""))
         } catch (_: Exception) {
             // ignore
         }
@@ -61,14 +54,12 @@ object TimerScheduler {
 
     private fun pending(
         context: Context,
-        endAt: Long,
         elapsedMs: Long,
         sceneName: String,
         sceneId: String,
     ): PendingIntent {
         val intent = Intent(context, TimerAlarmReceiver::class.java).apply {
             action = ACTION_FINISH
-            putExtra(EXTRA_END_AT, endAt)
             putExtra(EXTRA_ELAPSED, elapsedMs)
             putExtra(EXTRA_SCENE, sceneName)
             putExtra(EXTRA_SCENE_ID, sceneId)

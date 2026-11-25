@@ -59,7 +59,6 @@ let alertUri = null;
 let keepAliveId = 0;
 /** @type {number[]} */
 let hapticTimerIds = [];
-let unlocked = false;
 
 const supportsVibrate = () => typeof navigator.vibrate === 'function';
 
@@ -396,7 +395,6 @@ export const unlockAlertAudio = async () => {
   }
 
   await Promise.allSettled(pending);
-  unlocked = true;
 };
 
 export const clearAlerts = () => {
@@ -443,5 +441,3 @@ export const alertOnVisible = () => {
 };
 
 export const getVibratePattern = () => [...VIBRATE_PATTERN];
-
-export const isAlertUnlocked = () => unlocked;

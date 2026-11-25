@@ -315,11 +315,6 @@ final class HistoryStore {
         return sqlite3_last_insert_rowid(db)
     }
 
-    func periodStats() -> (count: Int, minutes: Int) {
-        let list = getHistory()
-        return (list.count, list.reduce(0) { $0 + $1.minutes })
-    }
-
     func todayStats() -> (count: Int, ms: Int64) {
         queue.sync {
             guard let db else { return (0, 0) }
@@ -359,54 +354,10 @@ final class HistoryStore {
         return streak
     }
 
-    /// Single history read for share copy (avoids periodStats + streakDays double scan).
+    /// Single history read for share copy (avoids double scan for streak).
     func shareSummaryValues() -> (count: Int, minutes: Int, streak: Int) {
         let list = getHistory()
         return (list.count, list.reduce(0) { $0 + $1.minutes }, streakDays(from: list))
-    }
-
-    // MARK: - Async wrappers (keep sync SQLite internals)
-
-    private func offMain<T>(_ work: @escaping () -> T) async -> T {
-        await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
-                continuation.resume(returning: work())
-            }
-        }
-    }
-
-    func getHistoryAsync(sceneId: String? = nil) async -> [HistoryItem] {
-        await offMain { self.getHistory(sceneId: sceneId) }
-    }
-
-    func todayStatsAsync() async -> (count: Int, ms: Int64) {
-        await offMain { self.todayStats() }
-    }
-
-    func periodStatsAsync() async -> (count: Int, minutes: Int) {
-        await offMain { self.periodStats() }
-    }
-
-    func streakDaysAsync() async -> Int {
-        await offMain { self.streakDays() }
-    }
-
-    func shareSummaryValuesAsync() async -> (count: Int, minutes: Int, streak: Int) {
-        await offMain { self.shareSummaryValues() }
-    }
-
-    @discardableResult
-    func recordSessionAsync(elapsedMs: Int64, sceneId: String = "") async -> Int64 {
-        await offMain { self.recordSession(elapsedMs: elapsedMs, sceneId: sceneId) }
-    }
-
-    @discardableResult
-    func deleteSessionAsync(id: Int64) async -> String {
-        await offMain { self.deleteSession(id: id) }
-    }
-
-    func clearHistoryAsync() async {
-        await offMain { self.clearHistory() }
     }
 
     private static func startOfDayMs(_ at: Int64) -> Int64 {

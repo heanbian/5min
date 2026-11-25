@@ -15,7 +15,7 @@
 - 绝对时间戳倒计时；前台服务 + 精确闹钟到期提醒
 - 到期通知 / 振动 / 提示音；环境音选「关闭」则静音（仍可振动与横幅）
 - 记录：近 14 日本地 SQLite（`files/5min-chat/5min_chat_history.db`），三行展示，升级可查
-- 我的：语言（简体中文、繁体中文、English、Deutsch、Русский、Français、བོད་ཡིག）、提示音、默认时长、反馈 / 隐私 / 条款 / 关于 / 软件更新（拉取 `https://5min.chat/app/android-latest.json`）
+- 我的：语言（简体中文、繁体中文、English、Deutsch、Español、Français、Bahasa Indonesia、日本語、한국어、Português、Русский、العربية、བོད་ཡིག）、提示音、默认时长、反馈 / 隐私 / 条款 / 关于 / 软件更新（拉取 `https://5min.chat/app/android-latest.json`）
 - 首次启动隐私同意门；计时中常亮（`FLAG_KEEP_SCREEN_ON`）
 
 ## 打开工程
@@ -56,8 +56,8 @@ keytool -genkeypair -v \
 ```bash
 # 推荐：自动选用 JDK 21 / Android Studio JBR
 chmod +x scripts/release.sh
-./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.0.apk
-./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.0.aab
+./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.16.apk
+./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.16.aab
 
 # 或手动：
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home

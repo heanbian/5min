@@ -33,7 +33,7 @@ cd 5min-web && npm run export-shared
 cd 5min-web
 cp -n server.conf.example server.conf   # 填写 DB_* / PORT
 npm install
-npm run dev                             # 或 ./run.sh → http://127.0.0.1:8080/
+npm run dev                             # 或 ./run.sh → http://127.0.0.1:3300/
 ```
 
 ## 仓库约定

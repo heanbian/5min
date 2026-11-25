@@ -329,5 +329,13 @@ module.exports = {
   "shareFailed": "Échec du partage",
   "shareCopyAction": "Copier le texte",
   "invalidLink": "Lien indisponible",
-  "linkCopied": "Lien copié — ouvrez-le dans un navigateur"
+  "linkCopied": "Lien copié — ouvrez-le dans un navigateur",
+  "customSceneMinLabel": "Minutes",
+  "customSceneDeleteConfirm": "Supprimer cette scène personnalisée ?",
+  "widgetTodayCount": "Aujourd'hui · {n}",
+  "widgetRemain": "Reste {time}",
+  "widgetTapOpen": "Toucher pour ouvrir",
+  "widgetStartToilet": "Démarrer toilettes",
+  "widgetDescription": "Sessions du jour · toucher pour démarrer",
+  "docNotFound": "Document introuvable"
 };

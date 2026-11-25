@@ -336,4 +336,10 @@ export default Object.freeze({
     "linkCopied": "連結已複製，請在瀏覽器開啟",
     "customSceneMinLabel": "時長（分鐘）",
     "customSceneDeleteConfirm": "確定刪除該自訂場景？",
+    "widgetTodayCount": "今日 {n} 次",
+    "widgetRemain": "剩餘 {time}",
+    "widgetTapOpen": "輕觸開啟",
+    "widgetStartToilet": "開始如廁",
+    "widgetDescription": "今日次數與快速開始如廁",
+    "docNotFound": "文件不存在",
 });

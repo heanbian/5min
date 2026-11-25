@@ -1,6 +1,6 @@
 /**
  * 2×2 glance card: today session count + remain when timer is running.
- * Tap routes to EntryAbility.
+ * Tap routes to EntryAbility. Copy lines are published by the main ability (i18n).
  */
 const CARD_STORAGE = new LocalStorage();
 
@@ -10,37 +10,43 @@ struct WidgetCard {
   @LocalStorageProp('todayCount') todayCount: number = 0;
   @LocalStorageProp('remainText') remainText: string = '';
   @LocalStorageProp('running') running: boolean = false;
-  @LocalStorageProp('countLine') countLine: string = '今日 0 次';
+  @LocalStorageProp('brandTitle') brandTitle: string = '';
+  @LocalStorageProp('countLine') countLine: string = '';
   @LocalStorageProp('remainLine') remainLine: string = '';
+  @LocalStorageProp('tapOpen') tapOpen: string = '';
 
   build() {
     Column({ space: 6 }) {
-      Text('如厕计时器')
-        .fontSize(12)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#5F6F66')
-        .width('100%')
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
+      if (this.brandTitle.length > 0) {
+        Text(this.brandTitle)
+          .fontSize(12)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#5F6F66')
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
 
-      Text(this.countLine.length > 0 ? this.countLine : `今日 ${this.todayCount} 次`)
-        .fontSize(22)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#1F2A24')
-        .width('100%')
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
+      if (this.countLine.length > 0) {
+        Text(this.countLine)
+          .fontSize(22)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#1F2A24')
+          .width('100%')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
 
-      if (this.running && (this.remainLine.length > 0 || this.remainText.length > 0)) {
-        Text(this.remainLine.length > 0 ? this.remainLine : `剩余 ${this.remainText}`)
+      if (this.running && this.remainLine.length > 0) {
+        Text(this.remainLine)
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
           .fontColor('#2F9A68')
           .width('100%')
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
-      } else {
-        Text('轻触打开')
+      } else if (this.tapOpen.length > 0) {
+        Text(this.tapOpen)
           .fontSize(12)
           .fontColor('#8A9A90')
           .width('100%')

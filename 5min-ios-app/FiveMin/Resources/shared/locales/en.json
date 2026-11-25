@@ -329,5 +329,13 @@
   "shareFailed": "Share failed",
   "shareCopyAction": "Copy text",
   "invalidLink": "Link unavailable",
-  "linkCopied": "Link copied — open it in a browser"
+  "linkCopied": "Link copied — open it in a browser",
+  "customSceneMinLabel": "Minutes",
+  "customSceneDeleteConfirm": "Delete this custom scene?",
+  "widgetTodayCount": "Today · {n}",
+  "widgetRemain": "Left {time}",
+  "widgetTapOpen": "Tap to open",
+  "widgetStartToilet": "Start toilet",
+  "widgetDescription": "Today's sessions · tap to start toilet timer",
+  "docNotFound": "Document not found"
 }
