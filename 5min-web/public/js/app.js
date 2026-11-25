@@ -168,9 +168,15 @@ const storageModeHint = document.querySelector('#storageModeHint');
 const storageSyncStatus = document.querySelector('#storageSyncStatus');
 const storageBackupBlock = document.querySelector('#storageBackupBlock');
 const storageBackupShowBtn = document.querySelector('#storageBackupShowBtn');
+const storageBackupShowLabel = document.querySelector('#storageBackupShowLabel');
+const storageBackupBody = document.querySelector('#storageBackupBody');
 const storageBackupCode = document.querySelector('#storageBackupCode');
+const storageBackupHint = document.querySelector('#storageBackupHint');
 const storageBackupCopyBtn = document.querySelector('#storageBackupCopyBtn');
+const storageBackupStatus = document.querySelector('#storageBackupStatus');
+const storageRestoreToggle = document.querySelector('#storageRestoreToggle');
 const storageRestoreLabel = document.querySelector('#storageRestoreLabel');
+const storageRestoreBody = document.querySelector('#storageRestoreBody');
 const storageRestoreInput = document.querySelector('#storageRestoreInput');
 const storageRestoreHint = document.querySelector('#storageRestoreHint');
 const storageRestoreBtn = document.querySelector('#storageRestoreBtn');
@@ -793,7 +799,9 @@ const syncSettingsI18n = () => {
     { value: 'cloud', label: tr('storageModeCloud') },
   ], prefs.getStorageMode());
 
-  if (storageBackupShowBtn) storageBackupShowBtn.textContent = tr('storageBackupShow');
+  if (storageBackupShowLabel) storageBackupShowLabel.textContent = tr('storageBackupShow');
+  else if (storageBackupShowBtn) storageBackupShowBtn.textContent = tr('storageBackupShow');
+  if (storageBackupHint) storageBackupHint.textContent = tr('storageBackupHint');
   if (storageBackupCopyBtn) storageBackupCopyBtn.textContent = tr('storageBackupCopy');
   if (storageRestoreLabel) storageRestoreLabel.textContent = tr('storageRestoreLabel');
   if (storageRestoreHint) storageRestoreHint.textContent = tr('storageRestoreHint');
@@ -804,16 +812,19 @@ const syncSettingsI18n = () => {
   syncStorageBackupUi();
 };
 
+const setDrawerOpen = (toggleEl, bodyEl, open) => {
+  if (toggleEl) toggleEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (bodyEl) bodyEl.hidden = !open;
+};
+
 const syncStorageBackupUi = () => {
   const cloud = prefs.getStorageMode() === 'cloud';
   // Cloud mode always offers backup UI; credentials are created on first show/enable.
   if (storageBackupBlock) storageBackupBlock.hidden = !cloud;
   if (!cloud) {
-    if (storageBackupCode) {
-      storageBackupCode.hidden = true;
-      storageBackupCode.textContent = '';
-    }
-    if (storageBackupCopyBtn) storageBackupCopyBtn.hidden = true;
+    setDrawerOpen(storageBackupShowBtn, storageBackupBody, false);
+    if (storageBackupCode) storageBackupCode.textContent = '';
+    setBackupStatus('', false);
   }
 };
 
@@ -866,6 +877,12 @@ const setStorageStatus = (msg, visible = true) => {
   if (!storageSyncStatus) return;
   storageSyncStatus.hidden = !visible || !msg;
   storageSyncStatus.textContent = msg || '';
+};
+
+const setBackupStatus = (msg, visible = true) => {
+  if (!storageBackupStatus) return;
+  storageBackupStatus.hidden = !visible || !msg;
+  storageBackupStatus.textContent = msg || '';
 };
 
 const sceneLabelForExport = (row) => {
@@ -1276,16 +1293,14 @@ const setTone = (tone) => {
 };
 
 const render = () => {
-  let clock = fmt(remainMs);
-  if (inOvertime) clock = `+${fmtOvertime(overtimeMs)}`;
+  // Overtime keeps ticking in status / session stats; dial stays at 00:00 (no "+").
+  const clock = inOvertime ? fmt(0) : fmt(remainMs);
   if (clock !== lastDialClock) {
     lastDialClock = clock;
     timeLabel.textContent = clock;
-    // Digits only into SVG (non-digits stripped); overtime "+" via CSS class.
-    timeText.innerHTML = digitalWatchSvg(inOvertime ? fmtOvertime(overtimeMs) : clock);
+    timeText.innerHTML = digitalWatchSvg(clock);
   }
-  timeText.classList.toggle('is-running', !!running || inOvertime);
-  timeText.classList.toggle('is-overtime', !!inOvertime);
+  timeText.classList.toggle('is-running', !!running);
   const ratio = inOvertime
     ? 0
     : (totalMs > 0 ? Math.min(1, Math.max(0, remainMs / totalMs)) : 0);
@@ -1663,10 +1678,9 @@ storageModeSelect?.addEventListener('change', () => {
         cloudSync.ensureDeviceCredentials();
         const code = prefs.formatRecoveryCode();
         if (storageBackupCode && code) {
-          storageBackupCode.hidden = false;
           storageBackupCode.textContent = code;
+          setDrawerOpen(storageBackupShowBtn, storageBackupBody, true);
         }
-        if (storageBackupCopyBtn && code) storageBackupCopyBtn.hidden = false;
         renderDailyStats();
       } catch (err) {
         storageModeSelect.value = 'local';
@@ -1687,15 +1701,21 @@ storageBackupShowBtn?.addEventListener('click', () => {
     setStorageStatus(tr('storageModeHint'));
     return;
   }
+  const open = storageBackupShowBtn.getAttribute('aria-expanded') === 'true';
+  if (open) {
+    setDrawerOpen(storageBackupShowBtn, storageBackupBody, false);
+    setBackupStatus('', false);
+    return;
+  }
   cloudSync.ensureDeviceCredentials();
   const code = prefs.formatRecoveryCode();
   if (!code || !storageBackupCode) {
     setStorageStatus(tr('storageRestoreFail'));
     return;
   }
-  storageBackupCode.hidden = false;
   storageBackupCode.textContent = code;
-  if (storageBackupCopyBtn) storageBackupCopyBtn.hidden = false;
+  setBackupStatus('', false);
+  setDrawerOpen(storageBackupShowBtn, storageBackupBody, true);
 });
 
 storageBackupCopyBtn?.addEventListener('click', () => {
@@ -1704,11 +1724,16 @@ storageBackupCopyBtn?.addEventListener('click', () => {
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
-      setStorageStatus(tr('storageBackupCopied'));
+      setBackupStatus(tr('storageBackupCopied'));
     } catch {
-      setStorageStatus(tr('exportFailed'));
+      setBackupStatus(tr('exportFailed'));
     }
   })();
+});
+
+storageRestoreToggle?.addEventListener('click', () => {
+  const open = storageRestoreToggle.getAttribute('aria-expanded') === 'true';
+  setDrawerOpen(storageRestoreToggle, storageRestoreBody, !open);
 });
 
 storageRestoreBtn?.addEventListener('click', () => {
@@ -1727,6 +1752,8 @@ storageRestoreBtn?.addEventListener('click', () => {
       });
       if (storageModeSelect) storageModeSelect.value = 'cloud';
       setStorageStatus(tr('storageRestoreOk'));
+      if (storageRestoreInput) storageRestoreInput.value = '';
+      setDrawerOpen(storageRestoreToggle, storageRestoreBody, false);
       syncStorageBackupUi();
       renderDailyStats();
       if (!recordsSheet?.hidden) renderRecordsPanel();

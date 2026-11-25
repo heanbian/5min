@@ -186,7 +186,7 @@
  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="recordsTitle">
  <header class="sheet-head">
  <h2 class="sheet-title" id="recordsTitle">记录</h2>
- <button type="button" class="sheet-close" id="recordsClose" aria-label="关闭">×</button>
+ <button type="button" class="sheet-close" id="recordsClose" aria-label="关闭"><svg class="sheet-close-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.2 3.2l9.6 9.6M12.8 3.2l-9.6 9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
  </header>
  <div class="sheet-body">
  <div class="insight-card" id="overtimeInsight" hidden>
@@ -219,53 +219,57 @@
  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
  <header class="sheet-head">
  <h2 class="sheet-title" id="settingsTitle">设置</h2>
- <button type="button" class="sheet-close" id="settingsClose" aria-label="关闭">×</button>
+ <button type="button" class="sheet-close" id="settingsClose" aria-label="关闭"><svg class="sheet-close-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.2 3.2l9.6 9.6M12.8 3.2l-9.6 9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
  </header>
  <div class="sheet-body settings-body">
  <section class="settings-section">
+ <div class="settings-group">
  <label class="settings-row">
- <span id="settingsLangLabel"></span>
- <select id="settingsLocaleSelect"></select>
+ <span class="settings-label" id="settingsLangLabel"></span>
+ <select class="settings-value" id="settingsLocaleSelect"></select>
  </label>
- </section>
- <section class="settings-section">
  <label class="settings-row">
- <span id="alertProfileLabel"></span>
- <select id="alertProfileSelect"></select>
+ <span class="settings-label" id="alertProfileLabel"></span>
+ <select class="settings-value" id="alertProfileSelect"></select>
  </label>
- <p class="sheet-hint" id="alertProfileHint"></p>
- </section>
- <section class="settings-section">
+ <p class="sheet-hint settings-row-hint" id="alertProfileHint"></p>
  <label class="settings-row">
- <span id="standRitualLabel"></span>
- <select id="standRitualSelect"></select>
+ <span class="settings-label" id="standRitualLabel"></span>
+ <select class="settings-value" id="standRitualSelect"></select>
  </label>
- </section>
- <section class="settings-section">
  <label class="settings-row settings-toggle">
- <span id="overtimeInsightPrefLabel"></span>
+ <span class="settings-label" id="overtimeInsightPrefLabel"></span>
  <input type="checkbox" id="overtimeInsightToggle">
  </label>
- </section>
- <section class="settings-section">
  <label class="settings-row">
- <span id="storageModeLabel"></span>
- <select id="storageModeSelect"></select>
+ <span class="settings-label" id="storageModeLabel"></span>
+ <select class="settings-value" id="storageModeSelect"></select>
  </label>
+ </div>
  <p class="sheet-hint" id="storageModeHint"></p>
  <p class="sheet-hint" id="storageSyncStatus" hidden></p>
- <div class="settings-backup" id="storageBackupBlock" hidden>
- <button type="button" class="ghost sheet-btn" id="storageBackupShowBtn"></button>
- <p class="sheet-hint mono" id="storageBackupCode" hidden></p>
- <button type="button" class="primary sheet-btn" id="storageBackupCopyBtn" hidden></button>
+ <div class="settings-drawer" id="storageBackupBlock" hidden>
+ <button type="button" class="settings-drawer-toggle" id="storageBackupShowBtn" aria-expanded="false">
+ <span id="storageBackupShowLabel"></span>
+ <span class="settings-drawer-chevron" aria-hidden="true">›</span>
+ </button>
+ <div class="settings-drawer-body" id="storageBackupBody" hidden>
+ <p class="sheet-hint mono" id="storageBackupCode"></p>
+ <p class="sheet-hint" id="storageBackupHint"></p>
+ <button type="button" class="primary sheet-btn" id="storageBackupCopyBtn"></button>
+ <p class="sheet-hint" id="storageBackupStatus" hidden role="status" aria-live="polite"></p>
  </div>
- <div class="settings-restore">
- <label class="field">
+ </div>
+ <div class="settings-drawer" id="storageRestoreBlock">
+ <button type="button" class="settings-drawer-toggle" id="storageRestoreToggle" aria-expanded="false">
  <span id="storageRestoreLabel"></span>
+ <span class="settings-drawer-chevron" aria-hidden="true">›</span>
+ </button>
+ <div class="settings-drawer-body" id="storageRestoreBody" hidden>
  <input type="text" id="storageRestoreInput" autocomplete="off" spellcheck="false">
- </label>
  <p class="sheet-hint" id="storageRestoreHint"></p>
  <button type="button" class="primary sheet-btn" id="storageRestoreBtn"></button>
+ </div>
  </div>
  </section>
  </div>
@@ -301,7 +305,7 @@
  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="customScenesTitle">
  <header class="sheet-head">
  <h2 class="sheet-title" id="customScenesTitle">自定义场景</h2>
- <button type="button" class="sheet-close" id="customScenesClose" aria-label="关闭">×</button>
+ <button type="button" class="sheet-close" id="customScenesClose" aria-label="关闭"><svg class="sheet-close-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.2 3.2l9.6 9.6M12.8 3.2l-9.6 9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
  </header>
  <div class="sheet-body">
  <p class="sheet-hint" id="customScenesHint"></p>
