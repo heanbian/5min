@@ -116,7 +116,6 @@ const ambientWrap = document.querySelector('#ambientWrap');
 const metaDescription = document.querySelector('meta[name="description"]');
 const recordsBtn = document.querySelector('#recordsBtn');
 const recordsSheet = document.querySelector('#recordsSheet');
-const recordsBackdrop = document.querySelector('#recordsBackdrop');
 const recordsClose = document.querySelector('#recordsClose');
 const recordsTitle = document.querySelector('#recordsTitle');
 const recordsPeriod = document.querySelector('#recordsPeriod');
@@ -135,7 +134,6 @@ const overtimeInsightLine = document.querySelector('#overtimeInsightLine');
 const overtimeInsightHint = document.querySelector('#overtimeInsightHint');
 const customScenesBtn = document.querySelector('#customScenesBtn');
 const customScenesSheet = document.querySelector('#customScenesSheet');
-const customScenesBackdrop = document.querySelector('#customScenesBackdrop');
 const customScenesClose = document.querySelector('#customScenesClose');
 const customScenesTitle = document.querySelector('#customScenesTitle');
 const customScenesHint = document.querySelector('#customScenesHint');
@@ -152,7 +150,6 @@ const settingsLangLabel = document.querySelector('#settingsLangLabel');
 const settingsLocaleSelect = document.querySelector('#settingsLocaleSelect');
 const settingsBtn = document.querySelector('#settingsBtn');
 const settingsSheet = document.querySelector('#settingsSheet');
-const settingsBackdrop = document.querySelector('#settingsBackdrop');
 const settingsClose = document.querySelector('#settingsClose');
 const settingsTitle = document.querySelector('#settingsTitle');
 const alertProfileLabel = document.querySelector('#alertProfileLabel');
@@ -752,9 +749,6 @@ const syncPanelI18n = () => {
   if (recordsClose) recordsClose.setAttribute('aria-label', tr('closeLabel'));
   if (customScenesClose) customScenesClose.setAttribute('aria-label', tr('closeLabel'));
   if (settingsClose) settingsClose.setAttribute('aria-label', tr('closeLabel'));
-  if (recordsBackdrop) recordsBackdrop.setAttribute('aria-label', tr('closeLabel'));
-  if (customScenesBackdrop) customScenesBackdrop.setAttribute('aria-label', tr('closeLabel'));
-  if (settingsBackdrop) settingsBackdrop.setAttribute('aria-label', tr('closeLabel'));
   syncSettingsI18n();
   if (ritualMask && !ritualMask.hidden) refreshRitualLabels();
 };
@@ -1562,7 +1556,6 @@ recordsBtn?.addEventListener('click', (event) => {
 });
 
 recordsClose?.addEventListener('click', () => setRecordsOpen(false));
-recordsBackdrop?.addEventListener('click', () => setRecordsOpen(false));
 
 settingsLocaleSelect?.addEventListener('change', () => {
   void setLocale(settingsLocaleSelect.value);
@@ -1574,7 +1567,6 @@ customScenesBtn?.addEventListener('click', (event) => {
 });
 
 customScenesClose?.addEventListener('click', () => setCustomScenesOpen(false));
-customScenesBackdrop?.addEventListener('click', () => setCustomScenesOpen(false));
 
 historyFilter?.addEventListener('change', () => {
   historyFilterSceneId = historyFilter.value || '';
@@ -1638,7 +1630,6 @@ settingsBtn?.addEventListener('click', (event) => {
   setSettingsOpen(!!settingsSheet?.hidden);
 });
 settingsClose?.addEventListener('click', () => setSettingsOpen(false));
-settingsBackdrop?.addEventListener('click', () => setSettingsOpen(false));
 
 alertProfileSelect?.addEventListener('change', () => {
   p0.setAlertProfile(alertProfileSelect.value);
@@ -1783,9 +1774,6 @@ ritualDone?.addEventListener('click', () => dismissRitual());
 
 confirmCancel?.addEventListener('click', () => closeConfirm(false));
 confirmOk?.addEventListener('click', () => closeConfirm(true));
-confirmMask?.addEventListener('click', (event) => {
-  if (event.target === confirmMask) closeConfirm(false);
-});
 
 customSceneList?.addEventListener('click', (event) => {
   const useBtn = event.target.closest('button[data-custom-use]');

@@ -819,7 +819,8 @@
     backdrop-filter:blur(2px);
     -webkit-backdrop-filter:blur(2px);
     box-shadow:none;
-    cursor:pointer;
+    cursor:default;
+    pointer-events:auto;
   }
   .sheet:not([hidden]) button.sheet-backdrop{
     animation:sheet-fade .22s ease both;
