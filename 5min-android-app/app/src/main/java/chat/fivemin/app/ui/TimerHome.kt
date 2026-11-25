@@ -37,7 +37,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import chat.fivemin.app.ui.DialogActionButton
+import chat.fivemin.app.ui.DialogBtnStyle
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -572,9 +573,11 @@ fun TimerHome(
         AlertDialog(
             onDismissRequest = { sceneOpen = false },
             confirmButton = {
-                TextButton(onClick = { sceneOpen = false }) {
-                    Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
-                }
+                DialogActionButton(
+                    text = vm.t("confirmLabel"),
+                    onClick = { sceneOpen = false },
+                    style = DialogBtnStyle.Primary,
+                )
             },
             containerColor = FiveMinColors.surface,
             shape = RoundedCornerShape(FiveMinDimens.radius),
@@ -662,14 +665,18 @@ fun TimerHome(
         AlertDialog(
             onDismissRequest = { vm.dismissStandRitual() },
             dismissButton = {
-                TextButton(onClick = { vm.dismissStandRitual() }) {
-                    Text(vm.t("standRitualSkip"), color = FiveMinColors.muted)
-                }
+                DialogActionButton(
+                    text = vm.t("standRitualSkip"),
+                    onClick = { vm.dismissStandRitual() },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             confirmButton = {
-                TextButton(onClick = { vm.dismissStandRitual() }) {
-                    Text(vm.t("standRitualDone"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
-                }
+                DialogActionButton(
+                    text = vm.t("standRitualDone"),
+                    onClick = { vm.dismissStandRitual() },
+                    style = DialogBtnStyle.Primary,
+                )
             },
             containerColor = FiveMinColors.surface,
             shape = RoundedCornerShape(FiveMinDimens.radiusDialog),

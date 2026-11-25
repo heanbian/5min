@@ -33,8 +33,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import chat.fivemin.app.ui.DialogActionButton
+import chat.fivemin.app.ui.DialogBtnStyle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -437,9 +438,11 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.Lang -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { dialog = MineDialog.None },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             title = { Text(vm.t("langLabel"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -465,9 +468,11 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.Sound -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { dialog = MineDialog.None },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             title = { Text(vm.t("ambientLabel"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -493,9 +498,11 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.Storage -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { dialog = MineDialog.None },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             title = { Text(vm.t("storageModeLabel"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -526,9 +533,11 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.StandRitual -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { dialog = MineDialog.None },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             title = { Text(vm.t("standRitualLabel"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -557,9 +566,11 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.AlertProfile -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.brandStrong)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { dialog = MineDialog.None },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             title = { Text(vm.t("alertProfileLabel"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -593,18 +604,22 @@ fun MineScreen(vm: TimerViewModel) {
         AlertDialog(
             onDismissRequest = { confirmCloud = false },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmCloud = false
-                    promptRecoveryOnce = true
-                    vm.setStorageMode("cloud")
-                }) {
-                    Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong)
-                }
+                DialogActionButton(
+                    text = vm.t("confirmLabel"),
+                    onClick = {
+                        confirmCloud = false
+                        promptRecoveryOnce = true
+                        vm.setStorageMode("cloud")
+                    },
+                    style = DialogBtnStyle.Primary,
+                )
             },
             dismissButton = {
-                TextButton(onClick = { confirmCloud = false }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { confirmCloud = false },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             title = { Text(vm.t("storageModeCloud"), fontWeight = FontWeight.SemiBold) },
             text = { Text(vm.t("storageCloudConfirm")) },
@@ -628,131 +643,128 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.None, MineDialog.Lang, MineDialog.Sound, MineDialog.Storage,
         MineDialog.StandRitual, MineDialog.AlertProfile,
         -> Unit
-        MineDialog.CustomScenes -> AlertDialog(
-            onDismissRequest = { dialog = MineDialog.None },
-            dismissButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { openSceneEditor(null) },
-                    enabled = state.customScenes.size < CustomScene.MAX_COUNT,
-                ) {
-                    Text(
-                        vm.t("customSceneAdd"),
-                        color = if (state.customScenes.size < CustomScene.MAX_COUNT) {
-                            FiveMinColors.brandStrong
-                        } else {
-                            FiveMinColors.muted
-                        },
-                        fontWeight = FontWeight.SemiBold,
+        MineDialog.CustomScenes -> {
+            val canAdd = state.customScenes.size < CustomScene.MAX_COUNT
+            AlertDialog(
+                onDismissRequest = { dialog = MineDialog.None },
+                dismissButton = {
+                    DialogActionButton(
+                        text = vm.t("cancelLabel"),
+                        onClick = { dialog = MineDialog.None },
+                        style = DialogBtnStyle.Ghost,
                     )
-                }
-            },
-            title = { Text(vm.t("customScenesLabel"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                if (state.customScenes.isEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Text(
-                            text = vm.t("customScenesEmptyHint"),
-                            color = FiveMinColors.muted,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                        Text(
+                },
+                confirmButton = {
+                    if (state.customScenes.isNotEmpty()) {
+                        DialogActionButton(
                             text = vm.t("customSceneAdd"),
-                            modifier = Modifier
-                                .background(FiveMinColors.brand, RoundedCornerShape(12.dp))
-                                .clickable { openSceneEditor(null) }
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            color = FiveMinColors.surface,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
+                            onClick = { openSceneEditor(null) },
+                            style = DialogBtnStyle.Primary,
+                            enabled = canAdd,
                         )
                     }
-                } else {
-                    LazyColumn(modifier = Modifier.height(360.dp)) {
-                        items(state.customScenes, key = { it.id }) { scene ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable { openSceneEditor(scene) },
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    Text(
-                                        text = scene.name,
-                                        color = FiveMinColors.ink,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Medium,
-                                    )
-                                    Text(
-                                        text = "${scene.min} ${vm.t("customUnit")}",
-                                        color = FiveMinColors.muted,
-                                        fontSize = 13.sp,
-                                    )
-                                }
-                                Text(
-                                    text = vm.t("customSceneUse"),
-                                    modifier = Modifier
-                                        .background(FiveMinColors.brandSoft, RoundedCornerShape(8.dp))
-                                        .clickable {
-                                            vm.queueCustomScene(scene.id)
-                                            dialog = MineDialog.None
-                                            vm.setSelectedTab(1)
+                },
+                title = { Text(vm.t("customScenesLabel"), fontWeight = FontWeight.SemiBold) },
+                containerColor = FiveMinColors.surface,
+                text = {
+                    if (state.customScenes.isEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Text(
+                                text = vm.t("customScenesEmptyHint"),
+                                color = FiveMinColors.muted,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 20.sp,
+                            )
+                            DialogActionButton(
+                                text = vm.t("customSceneAdd"),
+                                onClick = { openSceneEditor(null) },
+                                style = DialogBtnStyle.Primary,
+                                enabled = canAdd,
+                                fillMaxWidth = true,
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            LazyColumn(modifier = Modifier.height(320.dp)) {
+                                items(state.customScenes, key = { it.id }) { scene ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable { openSceneEditor(scene) },
+                                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            Text(
+                                                text = scene.name,
+                                                color = FiveMinColors.ink,
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                            Text(
+                                                text = "${scene.min} ${vm.t("customUnit")}",
+                                                color = FiveMinColors.muted,
+                                                fontSize = 13.sp,
+                                            )
                                         }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                                    color = FiveMinColors.brandStrong,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = vm.t("historyDelete"),
-                                    tint = FiveMinColors.muted,
-                                    modifier = Modifier
-                                        .size(22.dp)
-                                        .clickable { vm.deleteCustomScene(scene.id) },
-                                )
+                                        Text(
+                                            text = vm.t("customSceneUse"),
+                                            modifier = Modifier
+                                                .background(FiveMinColors.brandSoft, RoundedCornerShape(8.dp))
+                                                .clickable {
+                                                    vm.queueCustomScene(scene.id)
+                                                    dialog = MineDialog.None
+                                                    vm.setSelectedTab(1)
+                                                }
+                                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                                            color = FiveMinColors.brandStrong,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp,
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = vm.t("historyDelete"),
+                                            tint = FiveMinColors.muted,
+                                            modifier = Modifier
+                                                .size(22.dp)
+                                                .clickable { vm.deleteCustomScene(scene.id) },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            },
-        )
+                },
+            )
+        }
         MineDialog.SceneEditor -> {
             val canSave = CustomScene.normalizedName(editorName).isNotEmpty()
             AlertDialog(
                 onDismissRequest = { dialog = MineDialog.CustomScenes },
                 dismissButton = {
-                    TextButton(onClick = { dialog = MineDialog.CustomScenes }) {
-                        Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
-                    }
+                    DialogActionButton(
+                        text = vm.t("cancelLabel"),
+                        onClick = { dialog = MineDialog.CustomScenes },
+                        style = DialogBtnStyle.Ghost,
+                    )
                 },
                 confirmButton = {
-                    TextButton(
+                    DialogActionButton(
+                        text = vm.t("confirmLabel"),
                         onClick = { saveSceneEditor() },
+                        style = DialogBtnStyle.Primary,
                         enabled = canSave,
-                    ) {
-                        Text(
-                            vm.t("confirmLabel"),
-                            color = if (canSave) FiveMinColors.brandStrong else FiveMinColors.muted,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+                    )
                 },
                 title = {
                     Text(
@@ -866,20 +878,22 @@ fun MineScreen(vm: TimerViewModel) {
             AlertDialog(
                 onDismissRequest = { dialog = MineDialog.None },
                 confirmButton = {
-                    TextButton(onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("email", email)
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                            clip.description?.extras = android.os.PersistableBundle().apply {
-                                putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                    DialogActionButton(
+                        text = vm.t("copyEmailLabel"),
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("email", email)
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                clip.description?.extras = android.os.PersistableBundle().apply {
+                                    putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                                }
                             }
-                        }
-                        clipboard.setPrimaryClip(clip)
-                        dialog = MineDialog.None
-                        Toast.makeText(context, vm.t("emailCopied"), Toast.LENGTH_SHORT).show()
-                    }) {
-                        Text(vm.t("copyEmailLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
-                    }
+                            clipboard.setPrimaryClip(clip)
+                            dialog = MineDialog.None
+                            Toast.makeText(context, vm.t("emailCopied"), Toast.LENGTH_SHORT).show()
+                        },
+                        style = DialogBtnStyle.Primary,
+                    )
                 },
                 title = { Text(vm.t("feedbackLabel"), fontWeight = FontWeight.SemiBold) },
                 containerColor = FiveMinColors.surface,
@@ -887,14 +901,14 @@ fun MineScreen(vm: TimerViewModel) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
                             text = vm.t("feedbackBody"),
-                            color = FiveMinColors.ink,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
+                            color = FiveMinColors.muted,
+                            fontSize = 14.sp,
                             textAlign = TextAlign.Center,
+                            lineHeight = 20.sp,
                         )
                         Text(
                             text = email,
@@ -910,9 +924,11 @@ fun MineScreen(vm: TimerViewModel) {
         MineDialog.Beian -> AlertDialog(
             onDismissRequest = { dialog = MineDialog.None },
             confirmButton = {
-                TextButton(onClick = { dialog = MineDialog.None }) {
-                    Text(vm.t("confirmLabel"), color = FiveMinColors.brandStrong, fontWeight = FontWeight.SemiBold)
-                }
+                DialogActionButton(
+                    text = vm.t("confirmLabel"),
+                    onClick = { dialog = MineDialog.None },
+                    style = DialogBtnStyle.Primary,
+                )
             },
             title = { Text(vm.t("beianTitle"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -935,7 +951,8 @@ fun MineScreen(vm: TimerViewModel) {
                     pendingUpdate = null
                 },
                 confirmButton = {
-                    TextButton(
+                    DialogActionButton(
+                        text = vm.t("softwareUpdateAction"),
                         onClick = {
                             val url = latest?.apkUrl?.takeIf { it.isNotBlank() }
                                 ?: latest?.pageUrl
@@ -944,23 +961,18 @@ fun MineScreen(vm: TimerViewModel) {
                             dialog = MineDialog.None
                             pendingUpdate = null
                         },
-                    ) {
-                        Text(
-                            vm.t("softwareUpdateAction"),
-                            color = FiveMinColors.brandStrong,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+                        style = DialogBtnStyle.Primary,
+                    )
                 },
                 dismissButton = {
-                    TextButton(
+                    DialogActionButton(
+                        text = vm.t("cancelLabel"),
                         onClick = {
                             dialog = MineDialog.None
                             pendingUpdate = null
                         },
-                    ) {
-                        Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
-                    }
+                        style = DialogBtnStyle.Ghost,
+                    )
                 },
                 title = { Text(vm.t("softwareUpdateLabel"), fontWeight = FontWeight.SemiBold) },
                 containerColor = FiveMinColors.surface,

@@ -28,7 +28,8 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import chat.fivemin.app.ui.DialogActionButton
+import chat.fivemin.app.ui.DialogBtnStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -449,18 +450,22 @@ fun RecordsScreen(vm: TimerViewModel) {
         RecordsDialog.ClearAll -> AlertDialog(
             onDismissRequest = { dialog = RecordsDialog.None },
             dismissButton = {
-                TextButton(onClick = { dialog = RecordsDialog.None }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = { dialog = RecordsDialog.None },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    vm.clearHistory()
-                    filterSceneId = null
-                    dialog = RecordsDialog.None
-                }) {
-                    Text(vm.t("confirmLabel"), color = FiveMinColors.danger, fontWeight = FontWeight.SemiBold)
-                }
+                DialogActionButton(
+                    text = vm.t("confirmLabel"),
+                    onClick = {
+                        vm.clearHistory()
+                        filterSceneId = null
+                        dialog = RecordsDialog.None
+                    },
+                    style = DialogBtnStyle.Danger,
+                )
             },
             title = { Text(vm.t("historyClear"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
@@ -472,21 +477,25 @@ fun RecordsScreen(vm: TimerViewModel) {
                 pendingDeleteId = null
             },
             dismissButton = {
-                TextButton(onClick = {
-                    dialog = RecordsDialog.None
-                    pendingDeleteId = null
-                }) {
-                    Text(vm.t("cancelLabel"), color = FiveMinColors.muted)
-                }
+                DialogActionButton(
+                    text = vm.t("cancelLabel"),
+                    onClick = {
+                        dialog = RecordsDialog.None
+                        pendingDeleteId = null
+                    },
+                    style = DialogBtnStyle.Ghost,
+                )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    pendingDeleteId?.let { vm.deleteHistorySession(it) }
-                    dialog = RecordsDialog.None
-                    pendingDeleteId = null
-                }) {
-                    Text(vm.t("historyDelete"), color = FiveMinColors.danger, fontWeight = FontWeight.SemiBold)
-                }
+                DialogActionButton(
+                    text = vm.t("historyDelete"),
+                    onClick = {
+                        pendingDeleteId?.let { vm.deleteHistorySession(it) }
+                        dialog = RecordsDialog.None
+                        pendingDeleteId = null
+                    },
+                    style = DialogBtnStyle.Danger,
+                )
             },
             title = { Text(vm.t("historyDelete"), fontWeight = FontWeight.SemiBold) },
             containerColor = FiveMinColors.surface,
