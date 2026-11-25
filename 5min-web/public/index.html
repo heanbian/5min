@@ -109,7 +109,7 @@
  <img src="img/logo.svg" width="108" height="32" alt="如厕计时器">
  <h1 id="brandTitle">如厕计时器</h1>
  </div>
- <div class="top-tools" role="toolbar" aria-label="工具">
+ <nav class="top-tools" aria-label="工具">
  <button type="button" class="icon-btn" id="recordsBtn" aria-expanded="false" aria-controls="recordsSheet" aria-label="记录">
  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
  <path fill="currentColor" d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2zm0 2v11.2l5-2.1 5 2.1V6H7z"/>
@@ -126,11 +126,11 @@
  <path fill="currentColor" d="M4 9v6h3.2L12 19.5V4.5L7.2 9H4zm11.5 3a3.5 3.5 0 0 0-1.8-3.1v6.2A3.5 3.5 0 0 0 15.5 12zm-1.8-7.4v1.7a6 6 0 0 1 0 11.4v1.7a7.7 7.7 0 0 0 0-14.8z"/>
  </svg>
  </button>
- <div class="menu-panel" id="ambientPanel" hidden role="group" aria-label="环境音">
- <button type="button" data-ambient="off" class="active">关闭</button>
- <button type="button" data-ambient="rain">雨声</button>
- <button type="button" data-ambient="waves">海浪</button>
- <button type="button" data-ambient="clock">钟声</button>
+ <div class="menu-panel" id="ambientPanel" hidden role="menu" aria-label="环境音">
+ <button type="button" role="menuitem" data-ambient="off" class="active">关闭</button>
+ <button type="button" role="menuitem" data-ambient="rain">雨声</button>
+ <button type="button" role="menuitem" data-ambient="waves">海浪</button>
+ <button type="button" role="menuitem" data-ambient="clock">钟声</button>
  </div>
  </div>
  <button type="button" class="icon-btn" id="settingsBtn" aria-expanded="false" aria-controls="settingsSheet" aria-label="设置">
@@ -138,17 +138,17 @@
  <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.12.54.02.68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/>
  </svg>
  </button>
- </div>
+ </nav>
  </header>
 
  <section class="stage" id="stageSection" aria-label="计时">
- <div class="dial" role="timer" aria-atomic="true" aria-live="polite">
+ <div class="dial" role="timer" aria-atomic="true">
  <svg viewBox="0 0 120 120" aria-hidden="true">
  <circle class="track" cx="60" cy="60" r="54"></circle>
  <circle class="progress" id="progress" cx="60" cy="60" r="54"></circle>
  </svg>
  <div class="time" id="timeText" aria-hidden="true"></div>
- <span class="visually-hidden" id="timeLabel">05:00</span>
+ <span class="visually-hidden" id="timeLabel" aria-live="polite">05:00</span>
  </div>
  <div class="cue" id="notice" data-tone="safe">
  <p class="status" id="status">请点击「开始」</p>

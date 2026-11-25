@@ -17,9 +17,9 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v10';
+const CACHE = '5min-shell-v11';
 
-/* Minimal shell: CJK fonts + non-default locale packs load on demand */
+/* Timer shell + app module graph; CJK fonts / non-default locale packs load on demand */
 const PRECACHE = [
   './',
   './index.html',
@@ -30,6 +30,16 @@ const PRECACHE = [
   './js/alert.js',
   './js/ambient.js',
   './js/stats.js',
+  './js/history.js',
+  './js/prefs.js',
+  './js/cloudSync.js',
+  './js/share.js',
+  './js/custom-scenes.js',
+  './js/p0Features.js',
+  './js/scene-ranker.js',
+  './js/scene-profiles.js',
+  './js/scene-profiles-data.js',
+  './js/scenes-data.js',
   './js/i18n/locales.js',
   './js/i18n/packs/zh-CN.js',
   './fonts/PlusJakartaSans-Regular.woff2',
@@ -58,23 +68,32 @@ function isShellPath(pathname) {
   );
 }
 
+async function putInCache(request, response) {
+  try {
+    const cache = await caches.open(CACHE);
+    await cache.put(request, response);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE);
+      await cache.addAll(PRECACHE);
+      await self.skipWaiting();
+    })()
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-      )
-      .then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })()
   );
 });
 
@@ -85,7 +104,7 @@ self.addEventListener('fetch', (event) => {
   let url;
   try {
     url = new URL(req.url);
-  } catch (e) {
+  } catch {
     return;
   }
   if (url.origin !== self.location.origin) return;
@@ -93,26 +112,22 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate') {
     const isHome = url.pathname === '/' || url.pathname === '/index.html';
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res.ok && isHome) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
-          }
+      (async () => {
+        try {
+          const res = await fetch(req);
+          if (res.ok && isHome) await putInCache('./index.html', res.clone());
           return res;
-        })
-        .catch(() => {
-          // Only the timer shell is precached — do not serve it for about/privacy/etc.
+        } catch {
           if (!isHome) return Response.error();
-          return caches.match('./index.html').then((cached) => cached || caches.match('./'));
-        })
+          return (await caches.match('./index.html')) || (await caches.match('./')) || Response.error();
+        }
+      })()
     );
     return;
   }
 
   if (!isShellPath(url.pathname)) return;
 
-  /* Versioned CSS/JS: cache-first by URL. Unversioned: network-first for freshness. */
   const isVersioned = url.searchParams.has('v');
   const isCssOrJs =
     url.pathname.startsWith('/css/') || url.pathname.startsWith('/js/');
@@ -120,28 +135,26 @@ self.addEventListener('fetch', (event) => {
 
   if (networkFirst) {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          }
+      (async () => {
+        try {
+          const res = await fetch(req);
+          if (res.ok) await putInCache(req, res.clone());
           return res;
-        })
-        .catch(() => caches.match(req).then((cached) => cached || Response.error()))
+        } catch {
+          return (await caches.match(req)) || Response.error();
+        }
+      })()
     );
     return;
   }
 
   event.respondWith(
-    caches.match(req).then((cached) => {
+    (async () => {
+      const cached = await caches.match(req);
       if (cached) return cached;
-      return fetch(req).then((res) => {
-        if (!res.ok) return res;
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      });
-    })
+      const res = await fetch(req);
+      if (res.ok) await putInCache(req, res.clone());
+      return res;
+    })()
   );
 });

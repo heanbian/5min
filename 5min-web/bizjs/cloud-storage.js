@@ -194,10 +194,16 @@ function sanitizeSession(raw) {
 
 async function pruneOldSessions(deviceId) {
   const db = pool();
+  const cut = cutoffMs();
+  // Drop expired live rows and soft-deleted tombstones past the retention window.
   await db.query(
     `DELETE FROM fivemin_cloud_sessions
-     WHERE device_id = $1 AND deleted = FALSE AND at_ms < $2`,
-    [deviceId, cutoffMs()]
+     WHERE device_id = $1
+       AND (
+         (deleted = FALSE AND at_ms < $2)
+         OR (deleted = TRUE AND updated_at < to_timestamp($2 / 1000.0))
+       )`,
+    [deviceId, cut]
   );
 }
 

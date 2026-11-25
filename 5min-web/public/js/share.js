@@ -15,8 +15,7 @@
  */
 
 /**
- * Share habit summary — Web Share API with clipboard fallback;
- * optional canvas PNG when navigator.share supports files.
+ * Share habit summary — Web Share API, then Clipboard API.
  */
 
 /**
@@ -38,7 +37,6 @@ export const shareSummary = async ({ title, text, brand = '5min.chat' }) => {
       return 'shared';
     } catch (err) {
       if (err && /** @type {{name?:string}} */ (err).name === 'AbortError') return 'failed';
-      /* fall through to clipboard */
     }
   }
 
@@ -50,21 +48,7 @@ export const shareSummary = async ({ title, text, brand = '5min.chat' }) => {
   } catch {
     /* ignore */
   }
-
-  try {
-    const ta = document.createElement('textarea');
-    ta.value = safeText;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(ta);
-    return ok ? 'copied' : 'failed';
-  } catch {
-    return 'failed';
-  }
+  return 'failed';
 };
 
 /**

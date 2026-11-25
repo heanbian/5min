@@ -15,17 +15,23 @@ import { setAmbientMode, getAmbientMode } from './ambient.js';
 
 const API_BASE = '/api/v1/storage';
 
-const randomBytes = (len) => {
-  const out = new Uint8Array(len);
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    crypto.getRandomValues(out);
-    return out;
+const requireWebCrypto = () => {
+  if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
+    throw new Error('Web Crypto required for device credentials');
   }
-  for (let i = 0; i < len; i += 1) out[i] = (Math.random() * 256) | 0;
+};
+
+const randomBytes = (len) => {
+  requireWebCrypto();
+  const out = new Uint8Array(len);
+  crypto.getRandomValues(out);
   return out;
 };
 
 const makeUuid = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
   const bytes = randomBytes(16);
   bytes[6] = (bytes[6] & 0x0f) | 0x40;
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
@@ -36,10 +42,8 @@ const makeUuid = () => {
   );
 };
 
-const makeSecret = () => {
-  const bytes = randomBytes(32);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-};
+const makeSecret = () =>
+  Array.from(randomBytes(32), (b) => b.toString(16).padStart(2, '0')).join('');
 
 export const ensureDeviceCredentials = () => {
   let deviceId = prefs.getDeviceId();

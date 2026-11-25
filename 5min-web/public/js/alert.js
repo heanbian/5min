@@ -141,14 +141,12 @@ const makeAlertUri = () => {
     const t0 = i * 0.62;
     tone(t0, t0 + 0.2, i % 2 === 0 ? 140 : 175, 'square', 0.36);
   }
-  // Rising chime cycles across ~5s
   for (let cycle = 0; cycle < 4; cycle += 1) {
     const base = 0.35 + cycle * 1.15;
     tone(base, base + 0.28, 523.25, 'sine', 0.52);
     tone(base + 0.14, base + 0.42, 659.25, 'sine', 0.52);
     tone(base + 0.28, base + 0.58, 783.99, 'sine', 0.55);
   }
-  // Soft clip
   for (let i = 0; i < n; i += 1) {
     samples[i] = Math.max(-1, Math.min(1, samples[i]));
   }

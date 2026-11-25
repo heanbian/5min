@@ -111,7 +111,6 @@ const startWaves = (audioCtx) => {
   src.start();
   nodes.push(src, filter, gain);
 
-  // Slow swell
   const swell = () => {
     if (!ctx || mode !== 'waves' || !gain) return;
     const now = ctx.currentTime;

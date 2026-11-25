@@ -913,7 +913,6 @@
     overscroll-behavior:contain;
     min-height:0;
     flex:1 1 auto;
-    -webkit-overflow-scrolling:touch;
   }
   .sheet-stat-row{
     display:flex;
@@ -1088,7 +1087,6 @@
   .settings-row select.settings-value{
     appearance:none;
     -webkit-appearance:none;
-    -moz-appearance:none;
     flex:0 1 52%;
     min-width:0;
     max-width:58%;
