@@ -1,10 +1,13 @@
 /**
  * Copyright 2026 学记宝 / xuejibao.com
  * Licensed under the Apache License, Version 2.0
+ *
+ * Compatibility shim. Prefer services/privacy + behaviors/privacyGuard +
+ * pages/boot + components/consent-card.
  */
 
+const privacy = require('../services/privacy');
 const { t } = require('./i18n');
-const prefs = require('./prefs');
 const { openLegal } = require('./legalDocs');
 const { updateTabBarLabels } = require('./tabBar');
 
@@ -21,49 +24,80 @@ function privacyLabels() {
 
 function syncTabBar(accepted) {
   try {
-    if (accepted) wx.showTabBar({ animation: false });
-    else wx.hideTabBar({ animation: false });
+    if (accepted) {
+      wx.showTabBar({ animation: false });
+      updateTabBarLabels();
+    } else {
+      wx.hideTabBar({ animation: false });
+    }
   } catch (e) {
     /* ignore */
   }
 }
 
 function applyPrivacyState(page) {
-  const accepted = prefs.isPrivacyAccepted();
-  const app = getApp();
-  if (app && app.globalData) app.globalData.privacyAccepted = accepted;
-  syncTabBar(accepted);
-  if (accepted) updateTabBarLabels();
-  page.setData({
-    privacyAccepted: accepted,
-    privacyChecked: false,
-    ...privacyLabels(),
-  });
+  const accepted = privacy.syncGlobal();
+  if (!accepted) {
+    privacy.ensureAcceptedOrBoot();
+    return;
+  }
+  syncTabBar(true);
+  page.setData({ privacyAccepted: true, ...privacyLabels() });
+}
+
+function privacyHandlers(options) {
+  const opts = options || {};
+  return {
+    onPrivacyGateAccepted() {
+      this.setData({ privacyAccepted: true, privacyChecked: false });
+      if (typeof opts.onAccepted === 'function') {
+        try {
+          opts.onAccepted.call(this);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    },
+    onPrivacyCheckChange(e) {
+      const values = (e && e.detail && e.detail.value) || [];
+      this.setData({ privacyChecked: values.indexOf('agree') >= 0 });
+    },
+    onTogglePrivacyCheck() {
+      this.setData({ privacyChecked: !this.data.privacyChecked });
+    },
+    onOpenPrivacy() {
+      openLegal('privacy');
+    },
+    onOpenTerms() {
+      openLegal('terms');
+    },
+    onAcceptPrivacy() {
+      if (!this.data.privacyChecked) return;
+      privacy.accept();
+      syncTabBar(true);
+      this.setData({ privacyAccepted: true, privacyChecked: false });
+      if (typeof opts.onAccepted === 'function') {
+        try {
+          opts.onAccepted.call(this);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    },
+  };
 }
 
 function bindPrivacyHandlers(page) {
-  page.onTogglePrivacyCheck = function onTogglePrivacyCheck() {
-    this.setData({ privacyChecked: !this.data.privacyChecked });
-  };
-  page.onOpenPrivacy = function onOpenPrivacy() {
-    openLegal('privacy');
-  };
-  page.onOpenTerms = function onOpenTerms() {
-    openLegal('terms');
-  };
-  page.onAcceptPrivacy = function onAcceptPrivacy() {
-    if (!this.data.privacyChecked) return;
-    prefs.setPrivacyAccepted(true);
-    const app = getApp();
-    if (app && app.globalData) app.globalData.privacyAccepted = true;
-    syncTabBar(true);
-    this.setData({ privacyAccepted: true });
-  };
+  const handlers = privacyHandlers();
+  Object.keys(handlers).forEach((key) => {
+    page[key] = handlers[key];
+  });
 }
 
 module.exports = {
   privacyLabels,
   applyPrivacyState,
+  privacyHandlers,
   bindPrivacyHandlers,
   syncTabBar,
 };

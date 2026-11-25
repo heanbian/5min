@@ -36,54 +36,25 @@ const {
 } = require('../../utils/ambient');
 const prefs = require('../../utils/prefs');
 const p0 = require('../../utils/p0Features');
-const { readNavMetrics } = require('../../utils/navMetrics');
+const privacyGuard = require('../../behaviors/privacyGuard');
+const navChrome = require('../../behaviors/navChrome');
+const privacy = require('../../services/privacy');
 const {
-  applyPrivacyState,
-  bindPrivacyHandlers,
-} = require('../../utils/privacyUi');
-const { updateTabBarLabels } = require('../../utils/tabBar');
+  formatTime,
+  formatOvertime,
+  visualPhase: visualPhaseOf,
+  phaseColor,
+} = require('../../services/timer');
 
 const WARN_MS = 60 * 1000;
 
-function pad2(n) {
-  return String(n).padStart(2, '0');
-}
-
-function formatTime(ms) {
-  const totalSec = Math.max(0, Math.ceil(ms / 1000));
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m}:${pad2(s)}`;
-}
-
-function formatOvertime(ms) {
-  const totalSec = Math.max(0, Math.floor(ms / 1000));
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  if (m > 0) return `${m}:${pad2(s)}`;
-  return `0:${pad2(s)}`;
-}
-
 function visualPhase(remainMs, running, finished) {
-  if (finished || remainMs <= 0) return 'done';
-  if (remainMs <= WARN_MS) return 'warn';
-  if (running) return 'running';
-  return 'idle';
-}
-
-function phaseColor(phase, kind) {
-  if (phase === 'warn') return '#c9862d';
-  if (phase === 'done') return '#d2554a';
-  if (kind === 'ring') return '#2f9a68';
-  // 计时数字默认最黑，不使用品牌色
-  return '#000000';
+  return visualPhaseOf(remainMs, running, finished, WARN_MS);
 }
 
 Page({
+  behaviors: [privacyGuard, navChrome],
   data: {
-    navBarHeight: 44,
-    navPadTop: 44,
-    navPadRight: 96,
     brandTitle: '',
     stageLabel: '',
     actionsLabel: '',
@@ -110,14 +81,6 @@ Page({
     tabMine: '',
     canvasCss: 260,
     ambient: 'off',
-    privacyAccepted: true,
-    privacyChecked: false,
-    privacyTitle: '',
-    privacyMessage: '',
-    privacyCheckLabel: '',
-    privacyLink: '',
-    termsLink: '',
-    privacyAgree: '',
     showIgnore: false,
     finishIgnoreLabel: '',
     showRitual: false,
@@ -149,14 +112,9 @@ Page({
   ctx: null,
   lastLocale: '',
 
+  noop() {},
+
   onLoad() {
-    bindPrivacyHandlers(this);
-    const acceptPrivacy = this.onAcceptPrivacy.bind(this);
-    this.onAcceptPrivacy = () => {
-      acceptPrivacy();
-      this.reopenCanvasSoon();
-    };
-    const nav = readNavMetrics();
     const ambient = initAmbient();
     this.migrateLegacyCustomMinIfNeeded();
     const custom = prefs.getCustomMin(DEFAULT_MIN);
@@ -175,17 +133,14 @@ Page({
         this.activeSceneId = null;
       }
     }
-    this.setData({
-      ...nav,
-      ambient,
-    });
+    this.setData({ ambient });
     this.applyLabels(true);
     this.refreshStats();
     this.refreshUi();
   },
 
   onReady() {
-    if (this.data.privacyAccepted) this.initCanvas();
+    if (privacy.isAccepted()) this.initCanvas();
   },
 
   reopenCanvasSoon() {
@@ -195,8 +150,7 @@ Page({
   },
 
   onShow() {
-    applyPrivacyState(this);
-    updateTabBarLabels();
+    if (!this.guardPrivacy()) return;
     const locale = getLocale();
     if (locale !== this.lastLocale) {
       this.lastLocale = locale;
@@ -430,7 +384,10 @@ Page({
       ctx.stroke();
     }
 
-    drawDigitalWatch(ctx, size, timeText, timeColor, { blinking: this.running });
+    // Colon blink while countdown or overtime is actively ticking.
+    drawDigitalWatch(ctx, size, timeText, timeColor, {
+      blinking: !!(this.running || this.inOvertime),
+    });
   },
 
   refreshStats() {
@@ -636,6 +593,17 @@ Page({
     this.tickTimer = setInterval(() => this.tick(), 200);
   },
 
+  /** Redraw canvas only — keeps colon blink at tick rate without setData churn. */
+  paintDialOnly(timeText, phase) {
+    const remain = this.remainMs;
+    const dialProgress = this.inOvertime
+      ? 0
+      : this.totalMs > 0
+        ? remain / this.totalMs
+        : 0;
+    this.drawDial(dialProgress, timeText, phase);
+  },
+
   tick() {
     if (this.inOvertime) {
       this.overtimeMs = Math.max(0, Date.now() - this.overtimeAt);
@@ -643,6 +611,9 @@ Page({
       if (dial !== this.lastTickDial) {
         this.lastTickDial = dial;
         this.refreshTickUi();
+      } else {
+        // ~200ms ticks so Date.now()/500 colon phase actually flips.
+        this.paintDialOnly(dial, 'done');
       }
       return;
     }
@@ -658,6 +629,8 @@ Page({
     if (dial !== this.lastTickDial) {
       this.lastTickDial = dial;
       this.refreshTickUi();
+    } else {
+      this.paintDialOnly(dial, visualPhase(remain, true, false));
     }
   },
 

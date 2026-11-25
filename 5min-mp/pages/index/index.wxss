@@ -24,15 +24,21 @@
   --warn-soft: #fff6e8;
   --danger: #d2554a;
   --danger-soft: #ffefed;
-  /* 首页操作按钮 / 场景选择 / 芯片统一大圆角（22px） */
+  /* 与 app.wxss 全局 token 对齐；首页按钮保持略大圆角 */
   --radius: 44rpx;
-  --control-h: 104rpx;
-  --row-h: 80rpx;
+  --control-h: 96rpx;
+  --btn-h: 88rpx;
+  --row-h: 96rpx;
   --pad-x: 40rpx;
   --pad-y: 36rpx;
-  --section-gap: 40rpx;
+  --section-gap: 32rpx;
   --stage-gap: 36rpx;
   --dial-size: 520rpx;
+  --title-size: 36rpx;
+  --body-size: 28rpx;
+  --row-title-size: 30rpx;
+  --label-size: 24rpx;
+  --hint-size: 24rpx;
 
   box-sizing: border-box;
   min-height: 100vh;
@@ -106,6 +112,10 @@
   margin-left: auto;
   flex-shrink: 0;
   height: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .tool-wrap {
@@ -123,6 +133,15 @@
   align-items: center;
   justify-content: center;
   margin-right: -8rpx;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.icon-btn:active {
+  background: transparent;
+  opacity: 0.7;
 }
 
 .icon-volume {
@@ -403,6 +422,11 @@
   box-shadow: 0 4rpx 16rpx rgba(31, 42, 36, 0.04);
 }
 
+.scene-trigger:active {
+  background: rgba(229, 245, 236, 0.55);
+  border-color: rgba(47, 154, 104, 0.28);
+}
+
 .scene-trigger.disabled {
   opacity: 0.4;
 }
@@ -448,6 +472,7 @@
   width: 100%;
   max-width: 620rpx;
   background: linear-gradient(180deg, rgba(229, 245, 236, 0.55) 0%, var(--surface) 42%);
+  border: 2rpx solid rgba(215, 229, 220, 0.95);
   border-radius: var(--radius-dialog, 32rpx);
   padding: 36rpx 32rpx 28rpx;
   box-sizing: border-box;
@@ -472,16 +497,31 @@
 
 .ritual-step {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 20rpx;
-  min-height: 72rpx;
-  padding: 8rpx 0;
+  min-height: 88rpx;
+  padding: 16rpx 18rpx;
+  margin-bottom: 12rpx;
+  border: 2rpx solid rgba(215, 229, 220, 0.95);
+  border-radius: var(--radius-sm, 24rpx);
+  background: rgba(248, 252, 249, 0.9);
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ritual-step:last-child {
+  margin-bottom: 0;
+}
+
+.ritual-step.is-on {
+  border-color: rgba(47, 154, 104, 0.35);
+  background: rgba(229, 245, 236, 0.72);
 }
 
 .ritual-check {
   width: 40rpx;
   height: 40rpx;
-  border-radius: 12rpx;
+  border-radius: 50%;
   border: 2rpx solid var(--line);
   background: var(--surface);
   color: #fff;
@@ -528,12 +568,24 @@
 }
 
 .ritual-btn-ghost {
-  background: var(--ghost-bg);
+  background: var(--surface);
   color: var(--muted);
+  border: 2rpx solid rgba(215, 229, 220, 0.95);
+  box-sizing: border-box;
+}
+
+.ritual-btn-ghost:active {
+  background: rgba(229, 245, 236, 0.55);
+  color: var(--ink);
 }
 
 .ritual-btn-primary {
-  background: var(--brand);
+  background: linear-gradient(180deg, var(--brand-lift) 0%, var(--brand) 55%, var(--brand-strong) 100%);
   color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(47, 154, 104, 0.22);
+}
+
+.ritual-btn-primary:active {
+  opacity: 0.92;
 }
 

@@ -9,7 +9,7 @@
   </view>
   <view class="title-line"></view>
 
-  <scroll-view scroll-y class="body" enhanced show-scrollbar="{{false}}">
+  <scroll-view scroll-y class="body" show-scrollbar="{{false}}">
     <view class="section-label">{{weekStatsLabel}}</view>
     <view class="stats-row">
       <view class="stat-card">
@@ -40,8 +40,7 @@
     <view class="insight-card" wx:if="{{showOvertimeInsight}}">
       <text class="insight-title">{{overtimeInsightTitle}}</text>
       <text class="insight-line">{{overtimeInsightLine}}</text>
-      <text class="insight-hint">{{overtimeInsightHint}}</text>
-      <text class="insight-hint">{{overtimeInsightTip}}</text>
+      <text class="insight-hint" wx:if="{{overtimeInsightHint}}">{{overtimeInsightHint}}</text>
     </view>
 
     <view class="history-head">
@@ -88,25 +87,4 @@
     <view class="safe-bottom"></view>
   </scroll-view>
 
-  <!-- privacy gate -->
-  <view class="privacy-mask" wx:if="{{!privacyAccepted}}">
-    <view class="privacy-card">
-      <text class="privacy-title">{{privacyTitle}}</text>
-      <text class="privacy-msg">{{privacyMessage}}</text>
-      <view class="privacy-check" bindtap="onTogglePrivacyCheck">
-        <view class="check-box {{privacyChecked ? 'check-on' : ''}}">
-          <text wx:if="{{privacyChecked}}" class="check-mark">✓</text>
-        </view>
-        <text class="check-label">{{privacyCheckLabel}}</text>
-      </view>
-      <view class="privacy-links">
-        <text class="link" bindtap="onOpenPrivacy">{{privacyLink}}</text>
-        <text class="link" bindtap="onOpenTerms">{{termsLink}}</text>
-      </view>
-      <view
-        class="privacy-btn {{privacyChecked ? '' : 'privacy-btn-off'}}"
-        bindtap="onAcceptPrivacy"
-      >{{privacyAgree}}</view>
-    </view>
-  </view>
 </view>

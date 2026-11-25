@@ -2,7 +2,7 @@
  Copyright 2026 学记宝 / xuejibao.com
  Licensed under the Apache License, Version 2.0
 -->
-<scroll-view scroll-y class="legal" enhanced show-scrollbar="{{false}}">
+<scroll-view scroll-y class="legal" show-scrollbar="{{false}}">
   <view class="legal-inner">
     <text class="legal-title">{{title}}</text>
     <text class="legal-meta">{{meta}}</text>
@@ -31,6 +31,8 @@
       </view>
     </block>
 
-    <view class="legal-safe"></view>
+    <!-- Explicit spacer: rich-text often collapses parent padding -->
+    <view class="legal-card-pad"></view>
   </view>
+  <view class="legal-bottom-space"></view>
 </scroll-view>

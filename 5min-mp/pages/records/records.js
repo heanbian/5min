@@ -9,12 +9,8 @@ const { getStreak } = require('../../utils/streak');
 const { resolveSceneTitle } = require('../../utils/catalog');
 const prefs = require('../../utils/prefs');
 const p0 = require('../../utils/p0Features');
-const { readNavMetrics } = require('../../utils/navMetrics');
-const {
-  applyPrivacyState,
-  bindPrivacyHandlers,
-} = require('../../utils/privacyUi');
-const { updateTabBarLabels } = require('../../utils/tabBar');
+const privacyGuard = require('../../behaviors/privacyGuard');
+const navChrome = require('../../behaviors/navChrome');
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -29,9 +25,8 @@ function formatDateTime(at) {
 }
 
 Page({
+  behaviors: [privacyGuard, navChrome],
   data: {
-    navBarHeight: 44,
-    navPadTop: 44,
     tabTitle: '',
     weekStatsLabel: '',
     weekStatsCountLabel: '',
@@ -52,7 +47,6 @@ Page({
     overtimeInsightTitle: '',
     overtimeInsightLine: '',
     overtimeInsightHint: '',
-    overtimeInsightTip: '',
     showOvertimeInsight: true,
     streakLabel: '',
     streakText: '',
@@ -60,24 +54,12 @@ Page({
     shareCopyLabel: '',
     exportLabel: '',
     rows: [],
-    privacyAccepted: true,
-    privacyChecked: false,
-    privacyTitle: '',
-    privacyMessage: '',
-    privacyCheckLabel: '',
-    privacyLink: '',
-    termsLink: '',
-    privacyAgree: '',
   },
 
-  onLoad() {
-    bindPrivacyHandlers(this);
-    this.setData(readNavMetrics());
-  },
+  noop() {},
 
   onShow() {
-    applyPrivacyState(this);
-    updateTabBarLabels();
+    if (!this.guardPrivacy()) return;
     this.reload();
   },
 
@@ -167,8 +149,8 @@ Page({
       periodMins,
       overtimeInsightTitle: t('overtimeInsightTitle'),
       overtimeInsightLine,
-      overtimeInsightHint: t('overtimeInsightHint'),
-      overtimeInsightTip: t('overtimeInsightTip'),
+      overtimeInsightHint:
+        ot.count > 0 ? t('overtimeInsightTip') : t('overtimeInsightHint'),
       showOvertimeInsight: showInsight,
       streakLabel: t('streakLabel'),
       streakText,

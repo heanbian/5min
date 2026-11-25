@@ -272,7 +272,7 @@ module.exports = {
   "overtimeInsightTip": "다음에는 종료 신호를 조금 더 일찍 의식하면 다음으로 부드럽게 넘어갈 수 있습니다.",
   "prefOvertimeInsight": "초과 기록 표시",
   "standRitualSection": "종료 후 의식",
-  "standRitualLabel": "종료 후 의식",
+  "standRitualLabel": "의식 모드",
   "standRitualOff": "끄기",
   "standRitualBasic": "기본 (3단계)",
   "standRitualTitle": "종료 후 의식",

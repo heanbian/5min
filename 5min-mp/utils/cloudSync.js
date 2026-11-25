@@ -11,64 +11,127 @@ const p0 = require('./p0Features');
 
 const API_BASE = 'https://5min.chat/api/v1/storage';
 
-function randomBytes(len) {
+/** UUID that appears when version/variant bits are stamped onto an all-zero buffer. */
+const WEAK_UUID_RE = /^0{8}-0{4}-4000-8000-0{12}$/i;
+
+function isAllZero(bytes) {
+  if (!bytes || !bytes.length) return true;
+  for (let i = 0; i < bytes.length; i += 1) {
+    if (bytes[i] !== 0) return false;
+  }
+  return true;
+}
+
+/**
+ * Sync entropy. Do NOT call wx.getRandomValues(typedArray) — WeChat's API is
+ * async Object form `{ length }` and the TypedArray call leaves buffers as zeros
+ * (producing 00000000-0000-4000-8000-000000000000 data codes).
+ */
+function randomBytesSync(len) {
   const out = new Uint8Array(len);
-  // Prefer CSPRNG when the runtime exposes it (基础库 ≥ 2.23).
-  if (typeof wx !== 'undefined' && typeof wx.getRandomValues === 'function') {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     try {
-      wx.getRandomValues(out);
-      return out;
+      crypto.getRandomValues(out);
+      if (!isAllZero(out)) return out;
     } catch (_) {
       /* fall through */
     }
   }
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    crypto.getRandomValues(out);
-    return out;
+  let seed =
+    (Date.now() >>> 0) ^
+    ((Math.random() * 0xffffffff) >>> 0);
+  try {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+      seed ^= (performance.now() * 1000) >>> 0;
+    }
+  } catch (_) {
+    /* ignore */
   }
-  // Last resort — still better than a pure Math.random loop for UUID shape.
   for (let i = 0; i < len; i += 1) {
-    out[i] = (Math.random() * 256) | 0;
+    seed = (Math.imul(seed ^ (i * 2654435761), 1597334677) >>> 0);
+    out[i] = ((seed >>> 16) ^ ((Math.random() * 256) | 0)) & 0xff;
+  }
+  if (isAllZero(out)) {
+    for (let i = 0; i < len; i += 1) out[i] = ((Math.random() * 255) | 0) + 1;
   }
   return out;
 }
 
-function makeUuid() {
-  const bytes = randomBytes(16);
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+/** Prefer WeChat CSPRNG when available (基础库 ≥ 2.17.3). */
+function randomBytesAsync(len) {
+  return new Promise((resolve) => {
+    const done = (buf) => {
+      try {
+        const view = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+        if (view.length >= len && !isAllZero(view.subarray(0, len))) {
+          resolve(view.length === len ? view : view.subarray(0, len));
+          return;
+        }
+      } catch (_) {
+        /* fall through */
+      }
+      resolve(randomBytesSync(len));
+    };
+
+    if (typeof wx !== 'undefined' && typeof wx.getRandomValues === 'function') {
+      try {
+        wx.getRandomValues({
+          length: len,
+          success(res) {
+            done(res && res.randomValues);
+          },
+          fail() {
+            done(null);
+          },
+        });
+        return;
+      } catch (_) {
+        /* fall through */
+      }
+    }
+    done(null);
+  });
+}
+
+function bytesToUuid(bytes) {
+  const b = bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const hex = Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
   return (
-    hex.slice(0, 8) +
-    '-' +
-    hex.slice(8, 12) +
-    '-' +
-    hex.slice(12, 16) +
-    '-' +
-    hex.slice(16, 20) +
-    '-' +
-    hex.slice(20)
+    `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-` +
+    `${hex.slice(16, 20)}-${hex.slice(20)}`
   );
 }
 
-function makeSecret() {
-  const bytes = randomBytes(32);
+function bytesToHex(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function ensureDeviceCredentials() {
+function isWeakDeviceCredentials(deviceId, deviceSecret) {
+  if (!deviceId || !deviceSecret) return true;
+  if (/^0+$/i.test(deviceSecret)) return true;
+  if (WEAK_UUID_RE.test(deviceId)) return true;
+  return false;
+}
+
+async function ensureDeviceCredentials() {
   let deviceId = prefs.getDeviceId();
   let deviceSecret = prefs.getDeviceSecret();
-  if (!deviceId || !deviceSecret) {
-    deviceId = makeUuid();
-    deviceSecret = makeSecret();
+  if (isWeakDeviceCredentials(deviceId, deviceSecret)) {
+    deviceId = bytesToUuid(await randomBytesAsync(16));
+    deviceSecret = bytesToHex(await randomBytesAsync(32));
+    if (isWeakDeviceCredentials(deviceId, deviceSecret)) {
+      deviceId = bytesToUuid(randomBytesSync(16));
+      deviceSecret = bytesToHex(randomBytesSync(32));
+    }
     prefs.setDeviceCredentials(deviceId, deviceSecret);
   }
   return { deviceId, deviceSecret };
 }
 
-function request(method, path, body) {
-  const { deviceId, deviceSecret } = ensureDeviceCredentials();
+async function request(method, path, body) {
+  const { deviceId, deviceSecret } = await ensureDeviceCredentials();
   const opts = {
     url: API_BASE + path,
     method,
@@ -190,7 +253,7 @@ function mergeRemoteSessions(remoteSessions) {
 
 async function register() {
   // Credentials only in X-Device-* headers — body must not include them (server 400).
-  ensureDeviceCredentials();
+  await ensureDeviceCredentials();
   await request('POST', '/register', {});
 }
 
@@ -278,6 +341,8 @@ async function restoreWithCode(code) {
 
 module.exports = {
   API_BASE,
+  ensureDeviceCredentials,
+  isWeakDeviceCredentials,
   syncNow,
   pushSnapshot,
   pullAndMerge,

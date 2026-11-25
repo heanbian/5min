@@ -9,22 +9,23 @@
   </view>
   <view class="title-line"></view>
 
-  <scroll-view scroll-y class="body" enhanced show-scrollbar="{{false}}">
+  <!-- 勿用 enhanced：原生滚动层会挡住普通 fixed 弹层点击 -->
+  <scroll-view scroll-y class="body" show-scrollbar="{{false}}">
     <view class="section-label">{{mineSectionPrefs}}</view>
     <view class="card">
-      <view class="row" bindtap="onOpenLang">
+      <view class="row" catchtap="onOpenLang">
         <text class="row-title">{{langLabel}}</text>
         <text class="row-value">{{localeName}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenSound">
+      <view class="row" catchtap="onOpenSound">
         <text class="row-title">{{ambientLabel}}</text>
         <text class="row-value">{{ambientName}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenCustomScenes">
+      <view class="row" catchtap="onOpenCustomScenes">
         <text class="row-title">{{customScenesLabel}}</text>
         <text class="row-value">{{customScenesValue}}</text>
         <text class="chev">›</text>
@@ -48,17 +49,22 @@
         <switch checked="{{finishNotify}}" color="#2f9a68" bindchange="onToggleFinishNotify" />
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenAlertProfile">
+      <view class="row" catchtap="onOpenAlertProfile">
         <text class="row-title">{{alertProfileLabel}}</text>
         <text class="row-value">{{alertProfileName}}</text>
         <text class="chev">›</text>
+      </view>
+      <view class="row-line"></view>
+      <view class="row row-switch">
+        <text class="row-title">{{prefOvertimeInsight}}</text>
+        <switch checked="{{overtimeInsight}}" color="#2f9a68" bindchange="onToggleOvertimeInsight" />
       </view>
     </view>
     <view class="hint" wx:if="{{alertProfileHint}}">{{alertProfileHint}}</view>
 
     <view class="section-label section-gap">{{standRitualSection}}</view>
     <view class="card">
-      <view class="row" bindtap="onOpenRitual">
+      <view class="row" catchtap="onOpenRitual">
         <text class="row-title">{{standRitualLabel}}</text>
         <text class="row-value">{{standRitualName}}</text>
         <text class="chev">›</text>
@@ -67,35 +73,25 @@
 
     <view class="section-label section-gap">{{storageSection}}</view>
     <view class="card">
-      <view class="row" bindtap="onOpenStorage">
+      <view class="row" catchtap="onOpenStorage">
         <text class="row-title">{{storageModeLabel}}</text>
         <text class="row-value">{{storageModeName}}</text>
         <text class="chev">›</text>
       </view>
     </view>
     <view class="hint" wx:if="{{storageModeHint}}">{{storageModeHint}}</view>
-    <view class="hint" wx:if="{{storageSyncStatus}}">{{storageSyncStatus}}</view>
-
-    <view class="card storage-extra" wx:if="{{showBackupBlock}}">
-      <view class="row" bindtap="onShowRecoveryCode">
-        <text class="row-title">{{storageBackupShow}}</text>
-        <text class="chev">›</text>
-      </view>
-      <block wx:if="{{backupRevealed}}">
-        <view class="row-line"></view>
-        <view class="backup-code-wrap">
-          <text class="backup-code" user-select>{{backupCode}}</text>
-        </view>
-        <view class="hint">{{storageBackupHint}}</view>
-        <view class="row" bindtap="onCopyRecoveryCode">
-          <text class="row-title">{{storageBackupCopy}}</text>
-        </view>
-      </block>
-    </view>
+    <view class="sync-status" wx:if="{{storageSyncStatus}}">{{storageSyncStatus}}</view>
 
     <view class="card storage-extra">
+      <block wx:if="{{showBackupBlock}}">
+        <view class="row" catchtap="onShowRecoveryCode">
+          <text class="row-title">{{storageBackupShow}}</text>
+          <text class="chev">›</text>
+        </view>
+        <view class="row-line"></view>
+      </block>
       <view class="restore-block">
-        <text class="row-title restore-label">{{storageRestoreLabel}}</text>
+        <text class="restore-label">{{storageRestoreLabel}}</text>
         <input
           class="restore-input"
           value="{{restoreCode}}"
@@ -103,36 +99,34 @@
           bindinput="onRestoreInput"
           confirm-type="done"
         />
-        <view class="hint">{{storageRestoreHint}}</view>
-        <view class="row restore-action" bindtap="onRestoreWithCode">
-          <text class="row-title brand-link">{{storageRestoreAction}}</text>
-        </view>
+        <text class="restore-hint">{{storageRestoreHint}}</text>
+        <view class="storage-btn" bindtap="onRestoreWithCode">{{storageRestoreAction}}</view>
       </view>
     </view>
 
     <view class="section-label section-gap">{{mineSectionSupport}}</view>
     <view class="card">
-      <view class="row" bindtap="onOpenPrivacy">
+      <view class="row" catchtap="onOpenPrivacy">
         <text class="row-title">{{privacyLink}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenTerms">
+      <view class="row" catchtap="onOpenTerms">
         <text class="row-title">{{termsLink}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenAbout">
+      <view class="row" catchtap="onOpenAbout">
         <text class="row-title">{{aboutLabel}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onFeedback">
+      <view class="row" catchtap="onFeedback">
         <text class="row-title">{{feedbackLabel}}</text>
         <text class="chev">›</text>
       </view>
       <view class="row-line"></view>
-      <view class="row" bindtap="onOpenBeian">
+      <view class="row" catchtap="onOpenBeian">
         <text class="row-title">{{beianEntry}}</text>
         <text class="chev">›</text>
       </view>
@@ -140,18 +134,23 @@
     <view class="safe-bottom"></view>
   </scroll-view>
 
-  <!-- sheets -->
-  <view class="sheet-mask" wx:if="{{dialog}}" catchtouchmove="noop" bindtap="onCloseDialog">
+  <!-- root-portal 脱离页面层级，避免被 scroll-view / 原生组件遮挡 -->
+  <root-portal wx:if="{{dialog}}" enable="{{true}}">
+  <view
+    class="sheet-mask"
+    catchtouchmove="noop"
+    bindtap="onMaskClose"
+  >
     <view class="sheet" catchtap="noop">
       <view class="sheet-head">
         <text class="sheet-title">{{dialogTitle}}</text>
-        <block wx:if="{{dialog === 'scenes'}}">
-          <text
-            class="sheet-add {{canAddScene ? '' : 'sheet-add-off'}}"
-            bindtap="onAddScene"
-          >＋</text>
-        </block>
-        <text class="sheet-close" bindtap="onCloseDialog">✕</text>
+        <!-- 空态用下方「添加场景」；有列表时才显示标题栏 ＋，避免重复入口 -->
+        <text
+          wx:if="{{dialog === 'scenes' && sceneRows.length > 0 && canAddScene}}"
+          class="sheet-add"
+          catchtap="onAddScene"
+        >＋</text>
+        <text class="sheet-close" catchtap="onCloseDialog">✕</text>
       </view>
 
       <block wx:if="{{dialog === 'lang'}}">
@@ -160,7 +159,7 @@
           wx:key="code"
           class="sheet-item {{item.code === locale ? 'sheet-item-on' : ''}}"
           data-code="{{item.code}}"
-          bindtap="onPickLocale"
+          catchtap="onPickLocale"
         >{{item.label}}</view>
       </block>
 
@@ -170,7 +169,7 @@
           wx:key="id"
           class="sheet-item {{item.id === ambient ? 'sheet-item-on' : ''}}"
           data-id="{{item.id}}"
-          bindtap="onPickAmbient"
+          catchtap="onPickAmbient"
         >{{item.label}}</view>
       </block>
 
@@ -180,7 +179,7 @@
           wx:key="id"
           class="sheet-item {{item.id === storageMode ? 'sheet-item-on' : ''}}"
           data-id="{{item.id}}"
-          bindtap="onPickStorage"
+          catchtap="onPickStorage"
         >{{item.label}}</view>
       </block>
 
@@ -190,7 +189,7 @@
           wx:key="id"
           class="sheet-item {{item.id === standRitual ? 'sheet-item-on' : ''}}"
           data-id="{{item.id}}"
-          bindtap="onPickRitual"
+          catchtap="onPickRitual"
         >{{item.label}}</view>
       </block>
 
@@ -200,14 +199,14 @@
           wx:key="id"
           class="sheet-item {{item.id === alertProfile ? 'sheet-item-on' : ''}}"
           data-id="{{item.id}}"
-          bindtap="onPickAlertProfile"
+          catchtap="onPickAlertProfile"
         >{{item.label}}</view>
       </block>
 
       <block wx:if="{{dialog === 'scenes'}}">
         <view class="scenes-box" wx:if="{{sceneRows.length === 0}}">
           <text class="scenes-empty-hint">{{customScenesEmptyHint}}</text>
-          <view class="btn-ok scenes-add-btn" bindtap="onAddScene">{{customSceneAdd}}</view>
+          <view class="btn-ok scenes-add-btn" catchtap="onAddScene">{{customSceneAdd}}</view>
         </view>
         <view class="scenes-list" wx:else>
           <view
@@ -218,7 +217,7 @@
             <view
               class="scene-main"
               data-id="{{item.id}}"
-              bindtap="onEditScene"
+              catchtap="onEditScene"
             >
               <text class="scene-name">{{item.name}}</text>
               <text class="scene-min">{{item.minLabel}}</text>
@@ -249,7 +248,7 @@
           />
           <text class="editor-label editor-label-gap">{{customMinutesLabel}}</text>
           <view class="editor-min-row">
-            <view class="nudge-btn" data-delta="-1" bindtap="onNudgeMinutes">−</view>
+            <view class="nudge-btn" data-delta="-1" catchtap="onNudgeMinutes">−</view>
             <input
               class="editor-min-input"
               type="number"
@@ -257,7 +256,7 @@
               value="{{editorMinutes}}"
               bindinput="onEditorMinutesInput"
             />
-            <view class="nudge-btn" data-delta="1" bindtap="onNudgeMinutes">＋</view>
+            <view class="nudge-btn" data-delta="1" catchtap="onNudgeMinutes">＋</view>
           </view>
           <view class="quick-row">
             <view
@@ -265,14 +264,14 @@
               wx:key="*this"
               class="quick-chip"
               data-min="{{item}}"
-              bindtap="onQuickMin"
+              catchtap="onQuickMin"
             >{{item}}</view>
           </view>
           <view class="duration-actions">
-            <view class="btn-cancel" bindtap="onCloseSceneEditor">{{cancelLabel}}</view>
+            <view class="btn-cancel" catchtap="onCloseSceneEditor">{{cancelLabel}}</view>
             <view
               class="btn-ok {{editorConfirmDisabled ? 'btn-ok-off' : ''}}"
-              bindtap="onConfirmSceneEditor"
+              catchtap="onConfirmSceneEditor"
             >{{confirmLabel}}</view>
           </view>
         </view>
@@ -281,34 +280,24 @@
       <block wx:if="{{dialog === 'feedback'}}">
         <view class="feedback-box">
           <text class="feedback-hint">{{feedbackHint}}</text>
-          <text class="feedback-email" selectable>{{feedbackEmail}}</text>
+          <text class="feedback-email" user-select="{{true}}">{{feedbackEmail}}</text>
           <view class="duration-actions">
-            <view class="btn-ok" bindtap="onCopyFeedbackEmail">{{copyEmailLabel}}</view>
+            <view class="btn-ok" catchtap="onCopyFeedbackEmail">{{copyEmailLabel}}</view>
           </view>
+        </view>
+      </block>
+
+      <block wx:if="{{dialog === 'backup'}}">
+        <view class="backup-sheet">
+          <view class="backup-code-wrap">
+            <text class="backup-code" user-select="{{true}}">{{backupCode}}</text>
+          </view>
+          <text class="restore-hint">{{storageBackupHint}}</text>
+          <view class="storage-btn" catchtap="onCopyRecoveryCode">{{storageBackupCopy}}</view>
         </view>
       </block>
 
     </view>
   </view>
-
-  <view class="privacy-mask" wx:if="{{!privacyAccepted}}">
-    <view class="privacy-card">
-      <text class="privacy-title">{{privacyTitle}}</text>
-      <text class="privacy-msg">{{privacyMessage}}</text>
-      <view class="privacy-check" bindtap="onTogglePrivacyCheck">
-        <view class="check-box {{privacyChecked ? 'check-on' : ''}}">
-          <text wx:if="{{privacyChecked}}" class="check-mark">✓</text>
-        </view>
-        <text class="check-label">{{privacyCheckLabel}}</text>
-      </view>
-      <view class="privacy-links">
-        <text class="link" bindtap="onOpenPrivacy">{{privacyLink}}</text>
-        <text class="link" bindtap="onOpenTerms">{{termsLink}}</text>
-      </view>
-      <view
-        class="privacy-btn {{privacyChecked ? '' : 'privacy-btn-off'}}"
-        bindtap="onAcceptPrivacy"
-      >{{privacyAgree}}</view>
-    </view>
-  </view>
+  </root-portal>
 </view>

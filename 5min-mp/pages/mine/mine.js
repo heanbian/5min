@@ -15,13 +15,10 @@ const p0 = require('../../utils/p0Features');
 const cloudSync = require('../../utils/cloudSync');
 const { DEFAULT_MIN } = require('../../utils/catalog');
 const { setAmbientMode, getAmbientMode, initAmbient } = require('../../utils/ambient');
-const { openHttps } = require('../../utils/openUrl');
-const { readNavMetrics } = require('../../utils/navMetrics');
-const {
-  applyPrivacyState,
-  bindPrivacyHandlers,
-} = require('../../utils/privacyUi');
+const privacyGuard = require('../../behaviors/privacyGuard');
+const navChrome = require('../../behaviors/navChrome');
 const { updateTabBarLabels } = require('../../utils/tabBar');
+const { openLegal } = require('../../utils/legalDocs');
 
 function ritualLabel(mode) {
   return mode === p0.RITUAL_BASIC ? t('standRitualBasic') : t('standRitualOff');
@@ -54,9 +51,8 @@ function sceneRowsFromPrefs() {
 }
 
 Page({
+  behaviors: [privacyGuard, navChrome],
   data: {
-    navBarHeight: 44,
-    navPadTop: 44,
     tabTitle: '',
     mineSectionPrefs: '',
     mineSectionSupport: '',
@@ -77,6 +73,7 @@ Page({
     customUnit: '',
     dialog: '',
     dialogTitle: '',
+    maskClosable: true,
     localeOptions: [],
     soundOptions: [],
     sceneRows: [],
@@ -97,12 +94,6 @@ Page({
     feedbackHint: '',
     feedbackEmail: '',
     copyEmailLabel: '',
-    privacyAccepted: true,
-    privacyChecked: false,
-    privacyTitle: '',
-    privacyMessage: '',
-    privacyCheckLabel: '',
-    privacyAgree: '',
     prefAlertsSection: '',
     prefFinishTone: '',
     prefFinishVibrate: '',
@@ -120,6 +111,8 @@ Page({
     alertProfile: p0.PROFILE_NORMAL,
     alertProfileHint: '',
     alertProfileOptions: [],
+    prefOvertimeInsight: '',
+    overtimeInsight: true,
     storageSection: '',
     storageModeLabel: '',
     storageMode: 'local',
@@ -128,7 +121,6 @@ Page({
     storageSyncStatus: '',
     storageOptions: [],
     showBackupBlock: false,
-    backupRevealed: false,
     backupCode: '',
     storageBackupShow: '',
     storageBackupHint: '',
@@ -141,17 +133,47 @@ Page({
   },
 
   onLoad() {
-    bindPrivacyHandlers(this);
     initAmbient();
-    this.setData(readNavMetrics());
   },
 
   onShow() {
-    applyPrivacyState(this);
+    if (!this.guardPrivacy()) return;
     this.refresh();
   },
 
   noop() {},
+
+  /**
+   * Open bottom sheet.
+   * Mask dismiss is locked briefly so the same tap that opens cannot close it.
+   */
+  openSheet(dialog, extra) {
+    const name = String(dialog || '');
+    if (!name) return;
+    this._sheetOpenedAt = Date.now();
+    this.data.maskClosable = false;
+    this.data.dialog = name;
+    const payload = Object.assign(
+      { dialog: name, maskClosable: false },
+      extra || {},
+    );
+    this.setData(payload);
+    if (this._maskUnlockTimer) clearTimeout(this._maskUnlockTimer);
+    this._maskUnlockTimer = setTimeout(() => {
+      this._maskUnlockTimer = 0;
+      if (this.data.dialog === name) {
+        this.data.maskClosable = true;
+        this.setData({ maskClosable: true });
+      }
+    }, 400);
+  },
+
+  onMaskClose() {
+    if (!this.data.dialog) return;
+    if (!this.data.maskClosable) return;
+    if (Date.now() - (this._sheetOpenedAt || 0) < 400) return;
+    this.onCloseDialog();
+  },
 
   refresh() {
     const locale = getLocale();
@@ -204,6 +226,8 @@ Page({
       alertProfile: p0.getAlertProfile(),
       alertProfileName: alertProfileLabel(p0.getAlertProfile()),
       alertProfileHint: t('alertProfileHint'),
+      prefOvertimeInsight: t('prefOvertimeInsight'),
+      overtimeInsight: p0.getShowOvertimeInsight(),
       storageSection: t('storageSection'),
       storageModeLabel: t('storageModeLabel'),
       storageMode: prefs.getStorageMode(),
@@ -216,8 +240,7 @@ Page({
         { id: 'local', label: t('storageModeLocal') },
         { id: 'cloud', label: t('storageModeCloud') },
       ],
-      showBackupBlock:
-        prefs.getStorageMode() === 'cloud' && !!prefs.formatRecoveryCode(),
+      showBackupBlock: prefs.getStorageMode() === 'cloud',
       storageBackupShow: t('storageBackupShow'),
       storageBackupHint: t('storageBackupHint'),
       storageBackupCopy: t('storageBackupCopy'),
@@ -235,17 +258,33 @@ Page({
       })),
     });
     if (prefs.getStorageMode() !== 'cloud') {
-      this.setData({ backupRevealed: false, backupCode: '' });
+      this.setData({ backupCode: '' });
+      if (this.data.dialog === 'backup') this.setData({ dialog: '' });
     }
   },
 
   onShowRecoveryCode() {
-    const code = prefs.formatRecoveryCode();
-    if (!code) return;
-    this.setData({
-      backupRevealed: true,
-      backupCode: code,
-    });
+    if (prefs.getStorageMode() !== 'cloud') return;
+    cloudSync
+      .ensureDeviceCredentials()
+      .then(() => {
+        const code = prefs.formatRecoveryCode();
+        if (!code || cloudSync.isWeakDeviceCredentials(
+          prefs.getDeviceId(),
+          prefs.getDeviceSecret(),
+        )) {
+          wx.showToast({ title: t('storageSyncFail'), icon: 'none' });
+          return;
+        }
+        this.openSheet('backup', {
+          showBackupBlock: true,
+          backupCode: code,
+          dialogTitle: t('storageBackupShow'),
+        });
+      })
+      .catch(() => {
+        wx.showToast({ title: t('storageSyncFail'), icon: 'none' });
+      });
   },
 
   onCopyRecoveryCode() {
@@ -277,8 +316,8 @@ Page({
         this.setData({
           storageSyncStatus: t('storageRestoreOk'),
           restoreCode: '',
-          backupRevealed: false,
           backupCode: '',
+          dialog: '',
         });
         updateTabBarLabels();
         this.refresh();
@@ -296,26 +335,15 @@ Page({
   maybePromptRecoveryCode() {
     const code = prefs.formatRecoveryCode();
     if (!code) return;
-    this.setData({
+    this.openSheet('backup', {
       showBackupBlock: true,
-      backupRevealed: true,
       backupCode: code,
-    });
-    wx.showModal({
-      title: t('storageBackupLabel'),
-      content: t('storageBackupHint'),
-      confirmText: t('storageBackupCopy'),
-      cancelText: t('confirmLabel'),
-      success: (res) => {
-        if (!res.confirm) return;
-        this.onCopyRecoveryCode();
-      },
+      dialogTitle: t('storageBackupShow'),
     });
   },
 
   onOpenStorage() {
-    this.setData({
-      dialog: 'storage',
+    this.openSheet('storage', {
       dialogTitle: t('storageModeLabel'),
       storageOptions: [
         { id: 'local', label: t('storageModeLocal') },
@@ -362,21 +390,24 @@ Page({
       return;
     }
     cloudSync.disableCloud();
-    this.setData({ backupRevealed: false, backupCode: '' });
+    this.setData({ backupCode: '', dialog: '' });
     this.refresh();
   },
 
   onCloseDialog() {
+    if (this._maskUnlockTimer) {
+      clearTimeout(this._maskUnlockTimer);
+      this._maskUnlockTimer = 0;
+    }
     if (this.data.dialog === 'sceneEditor') {
       this.onCloseSceneEditor();
       return;
     }
-    this.setData({ dialog: '' });
+    this.setData({ dialog: '', maskClosable: true });
   },
 
   onOpenLang() {
-    this.setData({
-      dialog: 'lang',
+    this.openSheet('lang', {
       dialogTitle: t('langLabel'),
       localeOptions: appLocaleCodes().map((code) => ({
         code,
@@ -386,8 +417,7 @@ Page({
   },
 
   onOpenSound() {
-    this.setData({
-      dialog: 'sound',
+    this.openSheet('sound', {
       dialogTitle: t('ambientLabel'),
       soundOptions: SOUND_IDS.map((id) => ({
         id,
@@ -398,8 +428,7 @@ Page({
 
   onOpenCustomScenes() {
     const scenes = prefs.getCustomScenes();
-    this.setData({
-      dialog: 'scenes',
+    this.openSheet('scenes', {
       dialogTitle: t('customScenesLabel'),
       sceneRows: sceneRowsFromPrefs(),
       canAddScene: scenes.length < prefs.MAX_COUNT,
@@ -412,8 +441,7 @@ Page({
   onAddScene() {
     if (prefs.getCustomScenes().length >= prefs.MAX_COUNT) return;
     const customMin = prefs.getCustomMin(DEFAULT_MIN);
-    this.setData({
-      dialog: 'sceneEditor',
+    this.openSheet('sceneEditor', {
       dialogTitle: t('customSceneAdd'),
       editorSceneId: '',
       editorName: '',
@@ -429,8 +457,7 @@ Page({
     const id = e.currentTarget.dataset.id;
     const scene = prefs.getCustomScenes().find((s) => s.id === id);
     if (!scene) return;
-    this.setData({
-      dialog: 'sceneEditor',
+    this.openSheet('sceneEditor', {
       dialogTitle: t('customSceneEdit'),
       editorSceneId: scene.id,
       editorName: scene.name,
@@ -540,8 +567,24 @@ Page({
     });
   },
 
+  onOpenPrivacy() {
+    openLegal('privacy');
+  },
+
+  onOpenTerms() {
+    openLegal('terms');
+  },
+
   onOpenAbout() {
-    openHttps('https://5min.chat/about.html');
+    const app = getApp();
+    const ver =
+      (app && app.globalData && app.globalData.appVersion) || '1.0.0';
+    wx.showModal({
+      title: t('aboutTitle'),
+      content: `${t('aboutBody')}\n\n${t('aboutVersion', { n: ver })}`,
+      showCancel: false,
+      confirmText: t('confirmLabel'),
+    });
   },
 
   onPickLocale(e) {
@@ -584,8 +627,7 @@ Page({
   },
 
   onOpenRitual() {
-    this.setData({
-      dialog: 'ritual',
+    this.openSheet('ritual', {
       dialogTitle: t('standRitualLabel'),
       ritualOptions: [
         { id: p0.RITUAL_OFF, label: t('standRitualOff') },
@@ -599,11 +641,11 @@ Page({
     p0.setStandRitual(id);
     this.setData({ dialog: '' });
     this.refresh();
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onOpenAlertProfile() {
-    this.setData({
-      dialog: 'alertProfile',
+    this.openSheet('alertProfile', {
       dialogTitle: t('alertProfileLabel'),
       alertProfileOptions: [
         { id: p0.PROFILE_NORMAL, label: t('alertProfileNormal') },
@@ -618,11 +660,18 @@ Page({
     p0.setAlertProfile(id);
     this.setData({ dialog: '' });
     this.refresh();
+    cloudSync.pushPrefsOnly().catch(() => {});
+  },
+
+  onToggleOvertimeInsight(e) {
+    const on = !!e.detail.value;
+    p0.setShowOvertimeInsight(on);
+    this.setData({ overtimeInsight: on });
+    cloudSync.pushPrefsOnly().catch(() => {});
   },
 
   onFeedback() {
-    this.setData({
-      dialog: 'feedback',
+    this.openSheet('feedback', {
       dialogTitle: t('feedbackLabel'),
       feedbackHint: t('feedbackBody'),
       feedbackEmail: t('feedbackEmail'),

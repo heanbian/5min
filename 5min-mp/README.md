@@ -43,6 +43,7 @@
 
 ```bash
 node scripts/verify.mjs
+node scripts/functional-verify.mjs
 ```
 
 ## 目录结构

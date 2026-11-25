@@ -272,7 +272,7 @@ module.exports = {
   "overtimeInsightTip": "Next time, watch for the finish cue a bit earlier so you can switch calmly.",
   "prefOvertimeInsight": "Show overtime insight",
   "standRitualSection": "After-timer ritual",
-  "standRitualLabel": "After-timer ritual",
+  "standRitualLabel": "Ritual mode",
   "standRitualOff": "Off",
   "standRitualBasic": "Basic (3 steps)",
   "standRitualTitle": "After-timer ritual",

@@ -1,0 +1,41 @@
+<!--
+ Copyright 2026 学记宝 / xuejibao.com
+ Licensed under the Apache License, Version 2.0
+ Zero native components on this page (no button/checkbox/canvas) so nothing
+ can steal hit-testing from the consent controls.
+-->
+<view class="boot" wx:if="{{ready}}">
+  <view class="boot-brand">
+    <image class="boot-logo" src="/assets/logo.png" mode="aspectFit" />
+    <text class="boot-product">{{brandTitle}}</text>
+  </view>
+
+  <view class="boot-card">
+    <text class="boot-title">{{privacyTitle}}</text>
+    <text class="boot-msg">{{privacyMessage}}</text>
+
+    <view
+      class="boot-check"
+      hover-class="boot-check-hover"
+      hover-stay-time="70"
+      bindtap="onToggleAgree"
+    >
+      <view class="boot-box {{agreed ? 'is-on' : ''}}">
+        <text wx:if="{{agreed}}" class="boot-tick">✓</text>
+      </view>
+      <text class="boot-check-label">{{privacyCheckLabel}}</text>
+    </view>
+
+    <view class="boot-links">
+      <view class="boot-link" hover-class="boot-link-hover" bindtap="onOpenPrivacy">{{privacyLink}}</view>
+      <view class="boot-link" hover-class="boot-link-hover" bindtap="onOpenTerms">{{termsLink}}</view>
+    </view>
+
+    <view
+      class="boot-btn {{agreed ? '' : 'is-off'}}"
+      hover-class="{{agreed ? 'boot-btn-hover' : ''}}"
+      hover-stay-time="80"
+      bindtap="onAccept"
+    >{{privacyAgree}}</view>
+  </view>
+</view>

@@ -308,14 +308,23 @@ function formatRecoveryCode() {
  * @returns {{ deviceId: string, deviceSecret: string } | null}
  */
 function parseRecoveryCode(raw) {
-  const text = String(raw || '').trim();
+  const text = String(raw || '').trim().replace(/\s+/g, '');
   const idx = text.indexOf(':');
   if (idx <= 0) return null;
-  const deviceId = text.slice(0, idx).trim();
-  const deviceSecret = text.slice(idx + 1).trim();
-  if (!deviceId || deviceSecret.length < 32) return null;
-  if (!/^[0-9a-fA-F-]{36}$/.test(deviceId)) return null;
-  if (!/^[0-9a-fA-F]+$/.test(deviceSecret)) return null;
+  const deviceId = text.slice(0, idx);
+  const deviceSecret = text.slice(idx + 1);
+  // Align with server DEVICE_ID_RE / SECRET_RE and 5min-web.
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      deviceId,
+    )
+  ) {
+    return null;
+  }
+  if (!/^[0-9a-f]{32,128}$/i.test(deviceSecret)) return null;
+  // Reject all-zero / broken CSPRNG leftovers.
+  if (/^0{8}-0{4}-4000-8000-0{12}$/i.test(deviceId)) return null;
+  if (/^0+$/i.test(deviceSecret)) return null;
   return { deviceId, deviceSecret };
 }
 

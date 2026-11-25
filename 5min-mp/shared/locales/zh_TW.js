@@ -272,7 +272,7 @@ module.exports = {
   "overtimeInsightTip": "下次可提前留意結束提示，從容切換到下一件事。",
   "prefOvertimeInsight": "顯示超時畫像",
   "standRitualSection": "結束後儀式",
-  "standRitualLabel": "結束後儀式",
+  "standRitualLabel": "儀式模式",
   "standRitualOff": "關閉",
   "standRitualBasic": "基礎三步",
   "standRitualTitle": "結束後儀式",

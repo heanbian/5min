@@ -272,7 +272,7 @@ module.exports = {
   "overtimeInsightTip": "La próxima vez, note un poco antes la señal de fin para cambiar con calma.",
   "prefOvertimeInsight": "Mostrar retrato de tiempo extra",
   "standRitualSection": "Ritual al terminar",
-  "standRitualLabel": "Ritual al terminar",
+  "standRitualLabel": "Modo de ritual",
   "standRitualOff": "Desactivado",
   "standRitualBasic": "Básico (3 pasos)",
   "standRitualTitle": "Ritual al terminar",

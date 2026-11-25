@@ -154,13 +154,16 @@ function replaceAll(list) {
 
 /** Sessions in last HISTORY_DAYS, newest first; optional sceneId filter. */
 function getHistory(sceneId) {
-  let list = prune(readAll());
-  writeAll(list);
+  const raw = readAll();
+  const list = prune(raw);
+  // Avoid rewriting storage on every read when nothing expired.
+  if (list.length !== raw.length) writeAll(list);
+  let out = list;
   if (sceneId) {
     const sid = String(sceneId);
-    list = list.filter((row) => row.sceneId === sid);
+    out = list.filter((row) => row.sceneId === sid);
   }
-  return list.slice().sort((a, b) => b.at - a.at);
+  return out.slice().sort((a, b) => b.at - a.at);
 }
 
 /** Period count/mins + streak from a single history read. */
@@ -195,14 +198,17 @@ function todayStats() {
  * @param {(row: object) => string} sceneLabel
  * @param {string} headerLine
  */
+/** Escape a CSV cell; neutralize spreadsheet formula injection (=,+,-,@). */
+function escapeCsvCell(value) {
+  let s = String(value == null ? '' : value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
 function exportHistoryCsv(sceneLabel, headerLine) {
   const rows = getHistory();
   const lines = [String(headerLine || 'Time,Scene,Planned min,Actual min')];
-  const esc = (v) => {
-    const s = String(v);
-    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-    return s;
-  };
   for (let i = 0; i < rows.length; i += 1) {
     const row = rows[i];
     const at = new Date(row.at);
@@ -214,7 +220,14 @@ function exportHistoryCsv(sceneLabel, headerLine) {
     const actual = String(
       Math.max(1, Math.round((row.elapsedMs || row.minutes * 60000) / 60000)),
     );
-    lines.push([esc(iso), esc(scene), esc(planned), esc(actual)].join(','));
+    lines.push(
+      [
+        escapeCsvCell(iso),
+        escapeCsvCell(scene),
+        escapeCsvCell(planned),
+        escapeCsvCell(actual),
+      ].join(','),
+    );
   }
   return `${lines.join('\n')}\n`;
 }
@@ -230,5 +243,6 @@ module.exports = {
   getHistory,
   shareSummaryValues,
   todayStats,
+  escapeCsvCell,
   exportHistoryCsv,
 };

@@ -27,9 +27,8 @@
 
   <view class="stage" aria-label="{{stageLabel}}">
     <view class="dial" bindtap="onDialTap">
-      <!-- canvas 为原生层，遮罩打开时必须卸载，否则会盖住普通 view -->
       <canvas
-        wx:if="{{privacyAccepted && !showRitual}}"
+        wx:if="{{!showRitual}}"
         type="2d"
         id="progressCanvas"
         class="dial-canvas"
@@ -106,16 +105,16 @@
   <view class="ritual-mask" wx:if="{{showRitual}}">
     <view class="ritual-card">
       <text class="ritual-title">{{ritualTitle}}</text>
-      <scroll-view scroll-y class="ritual-steps" enhanced show-scrollbar="{{false}}">
-        <view class="ritual-step" bindtap="onToggleRitualUp">
+      <scroll-view scroll-y class="ritual-steps" show-scrollbar="{{false}}">
+        <view class="ritual-step {{ritualUp ? 'is-on' : ''}}" bindtap="onToggleRitualUp">
           <view class="ritual-check {{ritualUp ? 'on' : ''}}">{{ritualUp ? '✓' : ''}}</view>
           <text class="ritual-step-label">{{ritualStepUp}}</text>
         </view>
-        <view class="ritual-step" bindtap="onToggleRitualStretch">
+        <view class="ritual-step {{ritualStretch ? 'is-on' : ''}}" bindtap="onToggleRitualStretch">
           <view class="ritual-check {{ritualStretch ? 'on' : ''}}">{{ritualStretch ? '✓' : ''}}</view>
           <text class="ritual-step-label">{{ritualStepStretch}}</text>
         </view>
-        <view class="ritual-step" bindtap="onToggleRitualLeave">
+        <view class="ritual-step {{ritualLeave ? 'is-on' : ''}}" bindtap="onToggleRitualLeave">
           <view class="ritual-check {{ritualLeave ? 'on' : ''}}">{{ritualLeave ? '✓' : ''}}</view>
           <text class="ritual-step-label">{{ritualStepLeave}}</text>
         </view>
@@ -124,27 +123,6 @@
         <view class="ritual-btn ritual-btn-ghost" bindtap="onRitualSkip">{{ritualSkip}}</view>
         <view class="ritual-btn ritual-btn-primary" bindtap="onRitualDone">{{ritualDone}}</view>
       </view>
-    </view>
-  </view>
-
-  <view class="privacy-mask" wx:if="{{!privacyAccepted}}">
-    <view class="privacy-card">
-      <text class="privacy-title">{{privacyTitle}}</text>
-      <text class="privacy-msg">{{privacyMessage}}</text>
-      <view class="privacy-check" bindtap="onTogglePrivacyCheck">
-        <view class="check-box {{privacyChecked ? 'check-on' : ''}}">
-          <text wx:if="{{privacyChecked}}" class="check-mark">✓</text>
-        </view>
-        <text class="check-label">{{privacyCheckLabel}}</text>
-      </view>
-      <view class="privacy-links">
-        <text class="link" bindtap="onOpenPrivacy">{{privacyLink}}</text>
-        <text class="link" bindtap="onOpenTerms">{{termsLink}}</text>
-      </view>
-      <view
-        class="privacy-btn {{privacyChecked ? '' : 'privacy-btn-off'}}"
-        bindtap="onAcceptPrivacy"
-      >{{privacyAgree}}</view>
     </view>
   </view>
 </view>

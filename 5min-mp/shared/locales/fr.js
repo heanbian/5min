@@ -272,7 +272,7 @@ module.exports = {
   "overtimeInsightTip": "La prochaine fois, guettez un peu plus tôt le signal de fin pour enchaîner calmement.",
   "prefOvertimeInsight": "Afficher le portrait des dépassements",
   "standRitualSection": "Rituel après le timer",
-  "standRitualLabel": "Rituel après le timer",
+  "standRitualLabel": "Mode du rituel",
   "standRitualOff": "Désactivé",
   "standRitualBasic": "Basique (3 étapes)",
   "standRitualTitle": "Rituel après le timer",
