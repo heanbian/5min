@@ -44,4 +44,4 @@ npm run dev                             # 或 ./run.sh → http://127.0.0.1:3300
 
 ## 许可
 
-各子项目沿用 Apache-2.0（见 `5min-web/LICENSE`）。仅供习惯提醒。
+各子项目沿用 [Apache-2.0](./LICENSE)。仅供习惯提醒。
