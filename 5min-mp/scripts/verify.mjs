@@ -63,7 +63,6 @@ global.wx = {
 global.getApp = () => ({ globalData: { privacyAccepted: false } });
 
 const { isAllowedHttps } = require('../utils/openUrl.js');
-const { getLegalDoc } = require('../utils/legalDocs.js');
 const { sceneById, PRESET_MINS, DEFAULT_MIN } = require('../utils/catalog.js');
 const { t, initLocale, setLocale } = require('../utils/i18n.js');
 
@@ -152,11 +151,12 @@ check('https allowlist', () => {
 });
 
 check('in-app legal docs', () => {
-  for (const id of ['privacy', 'terms']) {
+  const { getLegalDoc } = require('../utils/legalDocs.js');
+  for (const id of ['privacy', 'terms', 'about']) {
     const doc = getLegalDoc(id);
     assert.ok(doc, id);
     assert.ok(doc.title.length > 0, `${id}.title`);
-    assert.ok(Array.isArray(doc.blocks) && doc.blocks.length > 5, `${id}.blocks`);
+    assert.ok(Array.isArray(doc.blocks) && doc.blocks.length > 3, `${id}.blocks`);
   }
   assert.equal(getLegalDoc('nope'), null);
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));

@@ -46,6 +46,7 @@ export struct RecordsTab {
   @State showFilter: boolean = false;
   @State showOvertimeInsight: boolean = true;
   @State overtimeInsightLine: string = '';
+  @State overtimeInsightNote: string = '';
 
   private catalog: SharedCatalog = new SharedCatalog();
   private prefs: PrefsStore = new PrefsStore();
@@ -122,8 +123,10 @@ export struct RecordsTab {
       vars['count'] = `${ot.count}`;
       vars['mins'] = `${insightMinutes(ot.ms)}`;
       this.overtimeInsightLine = this.t('overtimeInsightLine', vars);
+      this.overtimeInsightNote = this.t('overtimeInsightTip');
     } else {
       this.overtimeInsightLine = this.t('overtimeInsightEmpty');
+      this.overtimeInsightNote = this.t('overtimeInsightHint');
     }
   }
 
@@ -157,11 +160,16 @@ export struct RecordsTab {
     }
   }
 
+  /** Escape CSV cell; neutralize spreadsheet formula injection (=,+,-,@). */
   private escCsv(v: string): string {
-    if (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0) {
-      return `"${v.replace(/"/g, '""')}"`;
+    let s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) {
+      s = `'${s}`;
     }
-    return v;
+    if (/[",\n\r]/.test(s)) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
   }
 
   private buildExportCsv(rows: SyncSession[]): string {
@@ -457,17 +465,11 @@ export struct RecordsTab {
                     .fontWeight(FontWeight.Medium)
                     .fontColor($r('app.color.ink'))
                     .width('100%')
-                  Text(this.t('overtimeInsightHint'))
+                  Text(this.overtimeInsightNote)
                     .fontSize(13)
                     .fontColor($r('app.color.muted'))
                     .width('100%')
                     .lineHeight(19)
-                  Text(this.t('overtimeInsightTip'))
-                    .fontSize(12)
-                    .fontColor($r('app.color.muted'))
-                    .margin({ top: 4 })
-                    .width('100%')
-                    .lineHeight(18)
                 }
                 .width('100%')
                 .padding(FiveMinDimens.padBody)

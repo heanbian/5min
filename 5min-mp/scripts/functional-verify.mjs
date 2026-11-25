@@ -243,6 +243,9 @@ await check('privacy boot routing + consent accept', () => {
 
   openLegal('privacy');
   assert.ok(navigations.some((u) => String(u).includes('legal?doc=privacy')));
+  navigations.length = 0;
+  openLegal('about');
+  assert.ok(navigations.some((u) => String(u).includes('legal?doc=about')));
 });
 
 await check('tab pages use privacyGuard; consent is boot-only', () => {
@@ -369,6 +372,7 @@ await check('mine.js defines openSheet and sheet openers', () => {
   assert.ok(js.includes('onOpenAbout'));
   assert.ok(js.includes("openLegal('privacy')"));
   assert.ok(js.includes("openLegal('terms')"));
+  assert.ok(js.includes("openLegal('about')"));
 });
 
 if (failed) {

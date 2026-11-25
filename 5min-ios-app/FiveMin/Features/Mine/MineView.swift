@@ -11,6 +11,7 @@ struct MineView: View {
     @State private var showBeianAlert = false
     @State private var showCloudConfirm = false
     @State private var backupRevealed = false
+    @State private var restoreRevealed = false
     @State private var restoreCode = ""
     @State private var promptRecoveryOnce = false
 
@@ -111,81 +112,115 @@ struct MineView: View {
                     if model.storageMode == PrefsStore.modeCloud, !model.recoveryCode().isEmpty {
                         card {
                             Button {
-                                backupRevealed = true
+                                withAnimation(.easeInOut(duration: 0.18)) {
+                                    backupRevealed.toggle()
+                                }
                             } label: {
-                                Text(model.t("storageBackupShow"))
-                                    .font(FiveMinFont.ui(15))
-                                    .foregroundStyle(FiveMinColor.ink)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 16)
-                                    .frame(minHeight: 48)
-                                    .contentShape(Rectangle())
+                                HStack {
+                                    Text(model.t("storageBackupShow"))
+                                        .font(FiveMinFont.ui(15))
+                                        .foregroundStyle(FiveMinColor.ink)
+                                    Spacer(minLength: 0)
+                                    Text("›")
+                                        .font(FiveMinFont.ui(18))
+                                        .foregroundStyle(FiveMinColor.muted)
+                                        .rotationEffect(.degrees(backupRevealed ? 90 : 0))
+                                }
+                                .padding(.horizontal, 16)
+                                .frame(minHeight: 48)
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             if backupRevealed {
                                 Divider().padding(.leading, 16)
-                                Text(model.recoveryCode())
-                                    .font(FiveMinFont.ui(12))
-                                    .monospaced()
-                                    .foregroundStyle(FiveMinColor.ink)
-                                    .textSelection(.enabled)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 10)
-                                Text(model.t("storageBackupHint"))
-                                    .font(FiveMinFont.ui(12))
-                                    .foregroundStyle(FiveMinColor.muted)
-                                    .padding(.horizontal, 16)
-                                    .padding(.bottom, 4)
-                                Button {
-                                    UIPasteboard.general.string = model.recoveryCode()
-                                } label: {
-                                    Text(model.t("storageBackupCopy"))
-                                        .font(FiveMinFont.ui(14, weight: .semibold))
-                                        .foregroundStyle(FiveMinColor.brandStrong)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 16)
-                                        .frame(minHeight: 44)
-                                        .contentShape(Rectangle())
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text(model.recoveryCode())
+                                        .font(FiveMinFont.ui(12))
+                                        .monospaced()
+                                        .foregroundStyle(FiveMinColor.ink)
+                                        .textSelection(.enabled)
+                                        .lineSpacing(4)
+                                    Text(model.t("storageBackupHint"))
+                                        .font(FiveMinFont.ui(12))
+                                        .foregroundStyle(FiveMinColor.muted)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Button {
+                                        UIPasteboard.general.string = model.recoveryCode()
+                                    } label: {
+                                        Text(model.t("storageBackupCopy"))
+                                            .font(FiveMinFont.ui(15, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 44)
+                                            .background(FiveMinColor.brand)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
                             }
                         }
                     }
                     card {
-                        Text(model.t("storageRestoreLabel"))
-                            .font(FiveMinFont.ui(15))
-                            .foregroundStyle(FiveMinColor.ink)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
-                        TextField(model.t("storageRestorePlaceholder"), text: $restoreCode)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .font(FiveMinFont.ui(13))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                        Text(model.t("storageRestoreHint"))
-                            .font(FiveMinFont.ui(12))
-                            .foregroundStyle(FiveMinColor.muted)
-                            .padding(.horizontal, 16)
                         Button {
-                            Task {
-                                let (ok, _) = await model.restoreWithCode(restoreCode)
-                                if ok {
-                                    restoreCode = ""
-                                    backupRevealed = false
-                                }
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                restoreRevealed.toggle()
                             }
                         } label: {
-                            Text(model.t("storageRestoreAction"))
-                                .font(FiveMinFont.ui(14, weight: .semibold))
-                                .foregroundStyle(FiveMinColor.brandStrong)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 16)
-                                .frame(minHeight: 44)
-                                .contentShape(Rectangle())
+                            HStack {
+                                Text(model.t("storageRestoreLabel"))
+                                    .font(FiveMinFont.ui(15))
+                                    .foregroundStyle(FiveMinColor.ink)
+                                Spacer(minLength: 0)
+                                Text("›")
+                                    .font(FiveMinFont.ui(18))
+                                    .foregroundStyle(FiveMinColor.muted)
+                                    .rotationEffect(.degrees(restoreRevealed ? 90 : 0))
+                            }
+                            .padding(.horizontal, 16)
+                            .frame(minHeight: 48)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .padding(.bottom, 8)
+                        if restoreRevealed {
+                            Divider().padding(.leading, 16)
+                            VStack(alignment: .leading, spacing: 12) {
+                                TextField(model.t("storageRestorePlaceholder"), text: $restoreCode)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                                    .font(FiveMinFont.ui(13))
+                                    .padding(.horizontal, 12)
+                                    .frame(height: 44)
+                                    .background(FiveMinColor.bg2)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                Text(model.t("storageRestoreHint"))
+                                    .font(FiveMinFont.ui(12))
+                                    .foregroundStyle(FiveMinColor.muted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Button {
+                                    Task {
+                                        let (ok, _) = await model.restoreWithCode(restoreCode)
+                                        if ok {
+                                            restoreCode = ""
+                                            backupRevealed = false
+                                            restoreRevealed = false
+                                        }
+                                    }
+                                } label: {
+                                    Text(model.t("storageRestoreAction"))
+                                        .font(FiveMinFont.ui(15, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 44)
+                                        .background(FiveMinColor.brand)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                        }
                     }
 
                     sectionTitle(model.t("mineSectionSupport"))

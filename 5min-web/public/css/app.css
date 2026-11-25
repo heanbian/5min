@@ -1051,6 +1051,11 @@
     flex-shrink:0;
     accent-color:var(--brand);
   }
+  .settings-backup .primary.sheet-btn,
+  .settings-restore .primary.sheet-btn{
+    width:100%;
+    justify-content:center;
+  }
   .settings-backup,
   .settings-restore{
     display:flex;

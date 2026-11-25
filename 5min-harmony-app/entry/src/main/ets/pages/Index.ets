@@ -154,7 +154,7 @@ struct Index {
   private tickId: number = -1;
   private finishedHandled: boolean = false;
   private lastRecordedSessionId: number = 0;
-  private inOvertime: boolean = false;
+  @State inOvertime: boolean = false;
   private overtimeMs: number = 0;
   private overtimeAt: number = 0;
   private context: common.UIAbilityContext | null = null;
@@ -726,6 +726,12 @@ struct Index {
     this.privacyAccepted = true;
   }
 
+  declinePrivacy(): void {
+    if (this.context) {
+      this.context.terminateSelf();
+    }
+  }
+
   async openPrivacy(): Promise<void> {
     if (this.context) {
       await openExternalUrl(this.context, PRIVACY_URL);
@@ -1264,6 +1270,22 @@ struct Index {
                   this.acceptPrivacy();
                 }
               })
+
+            Text(this.t('privacyDisagree'))
+              .width('100%')
+              .height(44)
+              .fontSize(14)
+              .fontColor($r('app.color.muted'))
+              .textAlign(TextAlign.Center)
+              .onClick(() => this.declinePrivacy())
+
+            Text(this.t('privacyFooter'))
+              .fontSize(12)
+              .fontColor($r('app.color.muted'))
+              .width('100%')
+              .lineHeight(18)
+              .textAlign(TextAlign.Center)
+              .margin({ top: 4 })
           }
           .width('100%')
           .padding({ left: 24, right: 24, top: 8, bottom: 28 })
@@ -1669,7 +1691,7 @@ struct Index {
             DigitalWatchTime({
               text: this.clock,
               color: this.timeColor,
-              blinking: this.running
+              blinking: this.running || this.inOvertime
             })
               .width(FiveMinDimens.dialTimeW)
               .height(FiveMinDimens.dialTimeH)

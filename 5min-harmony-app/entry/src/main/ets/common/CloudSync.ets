@@ -10,6 +10,7 @@ import { HistoryStore, SyncSession } from './HistoryStore';
 const API_BASE = 'https://5min.chat/api/v1/storage';
 const LOG_DOMAIN = 0x5f1d;
 const LOG_TAG = 'CloudSync';
+const WEAK_UUID_RE = /^0{8}-0{4}-4000-8000-0{12}$/i;
 
 export class CloudSync {
   private prefs: PrefsStore;
@@ -24,14 +25,40 @@ export class CloudSync {
     return (await this.prefs.getStorageMode()) === STORAGE_MODE_CLOUD;
   }
 
+  /** True when id/secret are empty, all-zero, or broken CSPRNG leftovers. */
+  static isWeakDeviceCredentials(deviceId: string, deviceSecret: string): boolean {
+    if (!deviceId || !deviceSecret) {
+      return true;
+    }
+    if (/^0+$/i.test(deviceSecret)) {
+      return true;
+    }
+    if (WEAK_UUID_RE.test(deviceId)) {
+      return true;
+    }
+    return false;
+  }
+
+  private mintCredentials(): [string, string] {
+    const deviceId = util.generateRandomUUID().toLowerCase();
+    const deviceSecret =
+      util.generateRandomUUID().replace(/-/g, '') +
+      util.generateRandomUUID().replace(/-/g, '');
+    return [deviceId, deviceSecret];
+  }
+
   async ensureCredentials(): Promise<[string, string]> {
     let deviceId = await this.prefs.getDeviceId();
     let deviceSecret = await this.prefs.getDeviceSecret();
-    if (!deviceId || !deviceSecret) {
-      deviceId = util.generateRandomUUID().toLowerCase();
-      deviceSecret =
-        util.generateRandomUUID().replace(/-/g, '') +
-        util.generateRandomUUID().replace(/-/g, '');
+    if (CloudSync.isWeakDeviceCredentials(deviceId, deviceSecret)) {
+      let minted = this.mintCredentials();
+      deviceId = minted[0];
+      deviceSecret = minted[1];
+      if (CloudSync.isWeakDeviceCredentials(deviceId, deviceSecret)) {
+        minted = this.mintCredentials();
+        deviceId = minted[0];
+        deviceSecret = minted[1];
+      }
       await this.prefs.setDeviceCredentials(deviceId, deviceSecret);
     }
     return [deviceId, deviceSecret];

@@ -119,20 +119,25 @@ export class PrefsStore {
   }
 
   parseRecoveryCode(raw: string): RecoveryCreds | null {
-    const text = String(raw || '').trim();
+    // Align with MP/web: strip all whitespace, UUID v1–v5, hex secret 32–128.
+    const text = String(raw || '').trim().replace(/\s+/g, '');
     const idx = text.indexOf(':');
     if (idx <= 0) {
       return null;
     }
-    const deviceId = text.substring(0, idx).trim();
-    const deviceSecret = text.substring(idx + 1).trim();
-    if (!deviceId || deviceSecret.length < 32) {
+    const deviceId = text.substring(0, idx);
+    const deviceSecret = text.substring(idx + 1);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
       return null;
     }
-    if (!/^[0-9a-fA-F-]{36}$/.test(deviceId)) {
+    if (!/^[0-9a-f]{32,128}$/i.test(deviceSecret)) {
       return null;
     }
-    if (!/^[0-9a-fA-F]+$/.test(deviceSecret)) {
+    // Reject all-zero / broken CSPRNG leftovers.
+    if (/^0{8}-0{4}-4000-8000-0{12}$/i.test(deviceId)) {
+      return null;
+    }
+    if (/^0+$/i.test(deviceSecret)) {
       return null;
     }
     return new RecoveryCreds(deviceId, deviceSecret);

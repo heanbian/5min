@@ -35,7 +35,7 @@
 2. 选择「导入项目」，目录指向本仓库的 `5min-mp/`
 3. AppID 使用 `project.config.json` 中已配置的正式 AppID
 
-隐私政策与用户协议在 `pages/legal/` 内嵌展示（与官网文案对齐），无需配置业务域名即可阅读与通过审核。关于页仍走 `<web-view>`，正式环境若打开「关于」需在小程序后台配置业务域名 `5min.chat`。
+隐私政策、用户协议与关于在 `pages/legal/` 内嵌展示（与官网文案对齐），无需配置业务域名即可阅读与通过审核。其他外链仍走 `<web-view>`，正式环境若打开需在小程序后台配置业务域名 `5min.chat`。
 
 上传代码密钥（`private.*.key`）仅用于 CI / `miniprogram-ci`，已在 `.gitignore` 与 `packOptions.ignore` 中排除，勿提交仓库。
 

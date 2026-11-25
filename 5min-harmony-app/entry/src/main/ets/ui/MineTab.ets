@@ -52,6 +52,7 @@ export struct MineTab {
   @State finishTone: boolean = true;
   @State finishVibrate: boolean = true;
   @State finishNotify: boolean = true;
+  @State showOvertimeInsight: boolean = true;
   @State standRitual: string = RITUAL_BASIC;
   @State standRitualName: string = '';
   @State alertProfile: string = PROFILE_NORMAL;
@@ -60,6 +61,7 @@ export struct MineTab {
   @State storageModeName: string = '';
   @State storageSyncStatus: string = '';
   @State backupRevealed: boolean = false;
+  @State restoreRevealed: boolean = false;
   @State backupCode: string = '';
   @State restoreCode: string = '';
   @State promptRecoveryOnce: boolean = false;
@@ -111,6 +113,7 @@ export struct MineTab {
     this.finishTone = await this.prefs.getFinishTone();
     this.finishVibrate = await this.prefs.getFinishVibrate();
     this.finishNotify = await this.prefs.getFinishNotify();
+    this.showOvertimeInsight = await this.prefs.getShowOvertimeInsight();
     AppStorage.setOrCreate('appFinishTone', this.finishTone);
     AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
     AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
@@ -320,6 +323,12 @@ export struct MineTab {
     this.pushPrefsIfCloud();
   }
 
+  async setShowOvertimeInsight(on: boolean): Promise<void> {
+    this.showOvertimeInsight = on;
+    await this.prefs.setShowOvertimeInsight(on);
+    this.pushPrefsIfCloud();
+  }
+
   async setStandRitual(mode: string): Promise<void> {
     this.closeDialog();
     this.standRitual = mode === RITUAL_BASIC ? RITUAL_BASIC : RITUAL_OFF;
@@ -397,18 +406,44 @@ export struct MineTab {
     this.storageMode = STORAGE_MODE_LOCAL;
     this.storageSyncStatus = '';
     this.backupRevealed = false;
+    this.restoreRevealed = false;
     this.backupCode = '';
     this.refreshLabels();
   }
 
-  async showRecoveryCode(): Promise<void> {
-    const code = await this.prefs.formatRecoveryCode();
-    if (!code) {
+  async toggleRecoveryDrawer(): Promise<void> {
+    if (this.backupRevealed) {
+      this.backupRevealed = false;
+      this.uiTick = this.uiTick + 1;
       return;
     }
-    this.backupCode = code;
-    this.backupRevealed = true;
-    this.uiTick = this.uiTick + 1;
+    if (!this.cloud) {
+      return;
+    }
+    try {
+      await this.cloud.ensureCredentials();
+      const code = await this.prefs.formatRecoveryCode();
+      const id = await this.prefs.getDeviceId();
+      const secret = await this.prefs.getDeviceSecret();
+      if (!code || CloudSync.isWeakDeviceCredentials(id, secret)) {
+        this.getUIContext().getPromptAction().showToast({
+          message: this.t('storageSyncFail'),
+          duration: 2000
+        });
+        return;
+      }
+      this.backupCode = code;
+      this.backupRevealed = true;
+      this.uiTick = this.uiTick + 1;
+    } catch (_) {
+      try {
+        this.getUIContext().getPromptAction().showToast({
+          message: this.t('storageSyncFail'),
+          duration: 2000
+        });
+      } catch (__) {
+      }
+    }
   }
 
   async copyRecoveryCode(): Promise<void> {
@@ -446,6 +481,7 @@ export struct MineTab {
       this.storageSyncStatus = this.t('storageRestoreOk');
       this.restoreCode = '';
       this.backupRevealed = false;
+      this.restoreRevealed = false;
       this.backupCode = '';
       await this.reloadFromPrefsAfterCloud();
     } else if (err === 'invalid') {
@@ -469,6 +505,7 @@ export struct MineTab {
     this.finishTone = await this.prefs.getFinishTone();
     this.finishVibrate = await this.prefs.getFinishVibrate();
     this.finishNotify = await this.prefs.getFinishNotify();
+    this.showOvertimeInsight = await this.prefs.getShowOvertimeInsight();
     AppStorage.setOrCreate('appFinishTone', this.finishTone);
     AppStorage.setOrCreate('appFinishVibrate', this.finishVibrate);
     AppStorage.setOrCreate('appFinishNotify', this.finishNotify);
@@ -524,6 +561,20 @@ export struct MineTab {
   }
 
   async deleteCustomScene(id: string): Promise<void> {
+    try {
+      const result = await this.getUIContext().getPromptAction().showDialog({
+        message: this.t('customSceneDeleteConfirm'),
+        buttons: [
+          { text: this.t('cancelLabel'), color: '#6B7280' },
+          { text: this.t('historyDelete'), color: '#C2410C' }
+        ]
+      });
+      if (result.index !== 1) {
+        return;
+      }
+    } catch (_) {
+      return;
+    }
     const next = this.customScenes.filter((s) => s.id !== id);
     await this.persistScenes(next);
     const pending = AppStorage.get<string>('pendingSceneId');
@@ -833,6 +884,21 @@ export struct MineTab {
                   Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
 
                   Row() {
+                    Text(this.t('prefOvertimeInsight'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Toggle({ type: ToggleType.Switch, isOn: this.showOvertimeInsight })
+                      .selectedColor($r('app.color.brand'))
+                      .onChange((on: boolean) => this.setShowOvertimeInsight(on))
+                  }
+                  .width('100%')
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
+
+                  Divider().color($r('app.color.line')).margin({ left: FiveMinDimens.padBody })
+
+                  Row() {
                     Text(this.t('alertProfileLabel'))
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
@@ -991,41 +1057,57 @@ export struct MineTab {
                       Text('›')
                         .fontSize(18)
                         .fontColor($r('app.color.muted'))
+                        .rotate({
+                          angle: this.backupRevealed ? 90 : 0,
+                          centerX: '50%',
+                          centerY: '50%'
+                        })
+                        .animation({ duration: 180, curve: Curve.EaseInOut })
                     }
                     .width('100%')
                     .height(FiveMinDimens.controlH)
                     .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
-                    .onClick(() => this.showRecoveryCode())
+                    .onClick(() => this.toggleRecoveryDrawer())
 
                     if (this.backupRevealed && this.backupCode.length > 0) {
                       Divider().color(FiveMinDimens.cardBorder).margin({ left: FiveMinDimens.padBody })
-                      Text(this.backupCode)
-                        .fontSize(12)
-                        .fontColor($r('app.color.ink'))
-                        .width('100%')
-                        .padding({
-                          left: FiveMinDimens.padBody,
-                          right: FiveMinDimens.padBody,
-                          top: 10,
-                          bottom: 8
-                        })
-                      Text(this.t('storageBackupHint'))
-                        .fontSize(12)
-                        .fontColor($r('app.color.muted'))
-                        .width('100%')
-                        .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, bottom: 4 })
-                      Text(this.t('storageBackupCopy'))
-                        .fontSize(14)
-                        .fontWeight(FontWeight.Medium)
-                        .fontColor($r('app.color.brand_strong'))
-                        .width('100%')
-                        .padding({
-                          left: FiveMinDimens.padBody,
-                          right: FiveMinDimens.padBody,
-                          top: 10,
-                          bottom: 14
-                        })
-                        .onClick(() => this.copyRecoveryCode())
+                      Column({ space: 12 }) {
+                        Text(this.backupCode)
+                          .fontSize(12)
+                          .fontColor($r('app.color.ink'))
+                          .width('100%')
+                          .lineHeight(18)
+                        Text(this.t('storageBackupHint'))
+                          .fontSize(12)
+                          .fontColor($r('app.color.muted'))
+                          .width('100%')
+                          .lineHeight(18)
+                        Text(this.t('storageBackupCopy'))
+                          .width('100%')
+                          .height(44)
+                          .fontSize(15)
+                          .fontFamily(FiveMinFont.semiBold)
+                          .fontWeight(FontWeight.Medium)
+                          .fontColor(Color.White)
+                          .textAlign(TextAlign.Center)
+                          .backgroundColor($r('app.color.brand'))
+                          .borderRadius(FiveMinDimens.radiusSm)
+                          .shadow({
+                            radius: 8,
+                            color: 'rgba(47, 154, 104, 0.22)',
+                            offsetX: 0,
+                            offsetY: 3
+                          })
+                          .onClick(() => this.copyRecoveryCode())
+                      }
+                      .width('100%')
+                      .padding({
+                        left: FiveMinDimens.padBody,
+                        right: FiveMinDimens.padBody,
+                        top: 14,
+                        bottom: 16
+                      })
+                      .alignItems(HorizontalAlign.Start)
                     }
                   }
                   .width('100%')
@@ -1033,49 +1115,87 @@ export struct MineTab {
                   .border({ width: 1, color: FiveMinDimens.cardBorder })
                   .borderRadius(FiveMinDimens.radiusCard)
                   .margin({ top: 8 })
+                  .clip(true)
                 }
 
-                Column({ space: 8 }) {
-                  Text(this.t('storageRestoreLabel'))
-                    .fontSize(15)
-                    .fontColor($r('app.color.ink'))
-                    .width('100%')
-                    .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, top: 12 })
-                  TextInput({
-                    placeholder: this.t('storageRestorePlaceholder'),
-                    text: this.restoreCode
+                Column({ space: 0 }) {
+                  Row() {
+                    Text(this.t('storageRestoreLabel'))
+                      .fontSize(15)
+                      .fontColor($r('app.color.ink'))
+                      .layoutWeight(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor($r('app.color.muted'))
+                      .rotate({
+                        angle: this.restoreRevealed ? 90 : 0,
+                        centerX: '50%',
+                        centerY: '50%'
+                      })
+                      .animation({ duration: 180, curve: Curve.EaseInOut })
+                  }
+                  .width('100%')
+                  .height(FiveMinDimens.controlH)
+                  .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
+                  .onClick(() => {
+                    this.restoreRevealed = !this.restoreRevealed;
                   })
-                    .height(40)
-                    .fontSize(13)
-                    .padding({ left: 10, right: 10 })
-                    .margin({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
-                    .backgroundColor(Color.Transparent)
-                    .onChange((v: string) => {
-                      this.restoreCode = v;
-                    })
-                  Text(this.t('storageRestoreHint'))
-                    .fontSize(12)
-                    .fontColor($r('app.color.muted'))
-                    .width('100%')
-                    .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
-                  Text(this.t('storageRestoreAction'))
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.brand_strong'))
+
+                  if (this.restoreRevealed) {
+                    Divider().color(FiveMinDimens.cardBorder).margin({ left: FiveMinDimens.padBody })
+                    Column({ space: 12 }) {
+                      TextInput({
+                        placeholder: this.t('storageRestorePlaceholder'),
+                        text: this.restoreCode
+                      })
+                        .height(44)
+                        .fontSize(13)
+                        .padding({ left: 12, right: 12 })
+                        .width('100%')
+                        .backgroundColor($r('app.color.bg2'))
+                        .borderRadius(FiveMinDimens.radiusSm)
+                        .onChange((v: string) => {
+                          this.restoreCode = v;
+                        })
+                      Text(this.t('storageRestoreHint'))
+                        .fontSize(12)
+                        .fontColor($r('app.color.muted'))
+                        .width('100%')
+                        .lineHeight(18)
+                      Text(this.t('storageRestoreAction'))
+                        .width('100%')
+                        .height(44)
+                        .fontSize(15)
+                        .fontFamily(FiveMinFont.semiBold)
+                        .fontWeight(FontWeight.Medium)
+                        .fontColor(Color.White)
+                        .textAlign(TextAlign.Center)
+                        .backgroundColor($r('app.color.brand'))
+                        .borderRadius(FiveMinDimens.radiusSm)
+                        .shadow({
+                          radius: 8,
+                          color: 'rgba(47, 154, 104, 0.22)',
+                          offsetX: 0,
+                          offsetY: 3
+                        })
+                        .onClick(() => this.restoreWithCode())
+                    }
                     .width('100%')
                     .padding({
                       left: FiveMinDimens.padBody,
                       right: FiveMinDimens.padBody,
-                      top: 8,
-                      bottom: 14
+                      top: 14,
+                      bottom: 16
                     })
-                    .onClick(() => this.restoreWithCode())
+                    .alignItems(HorizontalAlign.Start)
+                  }
                 }
                 .width('100%')
                 .backgroundColor(FiveMinDimens.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .margin({ top: 8 })
+                .clip(true)
               }
               .width('100%')
 

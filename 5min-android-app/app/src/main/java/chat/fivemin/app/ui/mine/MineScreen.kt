@@ -45,6 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +87,7 @@ fun MineScreen(vm: TimerViewModel) {
     var checkingUpdate by remember { mutableStateOf(false) }
     var pendingUpdate by remember { mutableStateOf<AndroidLatest?>(null) }
     var backupRevealed by remember { mutableStateOf(false) }
+    var restoreRevealed by remember { mutableStateOf(false) }
     var restoreCode by remember { mutableStateOf("") }
     var promptRecoveryOnce by remember { mutableStateOf(false) }
     val appVersion = remember(context) { AppUpdate.localVersionName(context) }
@@ -271,91 +274,142 @@ fun MineScreen(vm: TimerViewModel) {
             }
             if (state.storageMode == "cloud" && recoveryCode.isNotBlank()) {
                 CardBlock {
-                    Text(
-                        text = vm.t("storageBackupShow"),
-                        color = FiveMinColors.ink,
-                        fontSize = 15.sp,
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { backupRevealed = true }
+                            .clickable { backupRevealed = !backupRevealed }
                             .padding(horizontal = 16.dp, vertical = 14.dp),
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = vm.t("storageBackupShow"),
+                            color = FiveMinColors.ink,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = "›",
+                            color = FiveMinColors.muted,
+                            fontSize = 18.sp,
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (backupRevealed) 90f else 0f
+                            },
+                        )
+                    }
                     if (backupRevealed) {
                         HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
-                        Text(
-                            text = recoveryCode,
-                            color = FiveMinColors.ink,
-                            fontSize = 12.sp,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                        )
-                        Text(
-                            text = vm.t("storageBackupHint"),
-                            color = FiveMinColors.muted,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                        )
-                        Text(
-                            text = vm.t("storageBackupCopy"),
-                            color = FiveMinColors.brandStrong,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    cm.setPrimaryClip(ClipData.newPlainText("recovery", recoveryCode))
-                                    Toast.makeText(
-                                        context,
-                                        vm.t("storageBackupCopied"),
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
-                        )
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = recoveryCode,
+                                color = FiveMinColors.ink,
+                                fontSize = 12.sp,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                lineHeight = 18.sp,
+                            )
+                            Text(
+                                text = vm.t("storageBackupHint"),
+                                color = FiveMinColors.muted,
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp,
+                            )
+                            Text(
+                                text = vm.t("storageBackupCopy"),
+                                color = Color.White,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(FiveMinColors.brand)
+                                    .clickable {
+                                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                        cm.setPrimaryClip(ClipData.newPlainText("recovery", recoveryCode))
+                                        Toast.makeText(
+                                            context,
+                                            vm.t("storageBackupCopied"),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
+                                    .padding(vertical = 12.dp),
+                            )
+                        }
                     }
                 }
             }
             CardBlock {
-                Text(
-                    text = vm.t("storageRestoreLabel"),
-                    color = FiveMinColors.ink,
-                    fontSize = 15.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                )
-                OutlinedTextField(
-                    value = restoreCode,
-                    onValueChange = { restoreCode = it },
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    placeholder = { Text(vm.t("storageRestorePlaceholder")) },
-                    singleLine = true,
-                    textStyle = TextStyle(fontSize = 13.sp),
-                )
-                Text(
-                    text = vm.t("storageRestoreHint"),
-                    color = FiveMinColors.muted,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-                Text(
-                    text = vm.t("storageRestoreAction"),
-                    color = FiveMinColors.brandStrong,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            vm.restoreWithCode(restoreCode) { ok, _ ->
-                                if (ok) {
-                                    restoreCode = ""
-                                    backupRevealed = false
-                                }
-                            }
-                        }
+                        .clickable { restoreRevealed = !restoreRevealed }
                         .padding(horizontal = 16.dp, vertical = 14.dp),
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = vm.t("storageRestoreLabel"),
+                        color = FiveMinColors.ink,
+                        fontSize = 15.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "›",
+                        color = FiveMinColors.muted,
+                        fontSize = 18.sp,
+                        modifier = Modifier.graphicsLayer {
+                            rotationZ = if (restoreRevealed) 90f else 0f
+                        },
+                    )
+                }
+                if (restoreRevealed) {
+                    HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        OutlinedTextField(
+                            value = restoreCode,
+                            onValueChange = { restoreCode = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text(vm.t("storageRestorePlaceholder")) },
+                            singleLine = true,
+                            textStyle = TextStyle(fontSize = 13.sp),
+                        )
+                        Text(
+                            text = vm.t("storageRestoreHint"),
+                            color = FiveMinColors.muted,
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                        )
+                        Text(
+                            text = vm.t("storageRestoreAction"),
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(FiveMinColors.brand)
+                                .clickable {
+                                    vm.restoreWithCode(restoreCode) { ok, _ ->
+                                        if (ok) {
+                                            restoreCode = ""
+                                            backupRevealed = false
+                                            restoreRevealed = false
+                                        }
+                                    }
+                                }
+                                .padding(vertical = 12.dp),
+                        )
+                    }
+                }
             }
 
             SectionTitle(vm.t("mineSectionSupport"))

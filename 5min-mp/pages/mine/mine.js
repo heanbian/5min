@@ -576,15 +576,7 @@ Page({
   },
 
   onOpenAbout() {
-    const app = getApp();
-    const ver =
-      (app && app.globalData && app.globalData.appVersion) || '1.0.0';
-    wx.showModal({
-      title: t('aboutTitle'),
-      content: `${t('aboutBody')}\n\n${t('aboutVersion', { n: ver })}`,
-      showCancel: false,
-      confirmText: t('confirmLabel'),
-    });
+    openLegal('about');
   },
 
   onPickLocale(e) {

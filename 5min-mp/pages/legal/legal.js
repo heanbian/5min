@@ -1,7 +1,7 @@
 /**
  * Copyright 2026 学记宝 / xuejibao.com
  * Licensed under the Apache License, Version 2.0
- * Native privacy / terms reader (no business-domain web-view).
+ * Native privacy / terms / about reader (no business-domain web-view).
  */
 
 const { getLegalDoc } = require('../../utils/legalDocs');
