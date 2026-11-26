@@ -2,10 +2,7 @@ package chat.fivemin.app.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,14 +28,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import chat.fivemin.app.ui.DialogActionButton
-import chat.fivemin.app.ui.DialogBtnStyle
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -54,7 +53,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -149,7 +147,6 @@ fun TimerHome(
     val scenePlaceholder = state.activeSceneId == null
     val resetEnabled = state.running || state.remainMs < state.totalMs || state.finished
     val setupEnabled = !state.running
-    val radius = RoundedCornerShape(FiveMinDimens.radius)
 
     Box(
         modifier = Modifier
@@ -218,11 +215,9 @@ fun TimerHome(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(topbarH)
-                        .clickable(onClick = onOpenMine),
-                    contentAlignment = Alignment.Center,
+                IconButton(
+                    onClick = onOpenMine,
+                    modifier = Modifier.size(topbarH),
                 ) {
                     Icon(
                         imageVector = if (state.ambient == "off") {
@@ -356,213 +351,99 @@ fun TimerHome(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.controlGap),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(FiveMinDimens.controlH)
-                            .shadow(
-                                elevation = 8.dp,
-                                shape = radius,
-                                ambientColor = FiveMinColors.brand.copy(alpha = 0.28f),
-                                spotColor = FiveMinColors.brand.copy(alpha = 0.35f),
-                            )
-                            .clip(radius)
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        FiveMinColors.brandLift,
-                                        FiveMinColors.brand,
-                                        FiveMinColors.brandStrong,
-                                    ),
-                                ),
-                            )
-                            .clickable {
-                                if (state.running) {
-                                    vm.toggleStart()
-                                } else {
-                                    ensureStartPermissions { vm.toggleStart() }
-                                }
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = startLabel,
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(FiveMinDimens.controlH)
-                            .shadow(elevation = 2.dp, shape = radius, clip = false)
-                            .clip(radius)
-                            .border(1.5.dp, FiveMinColors.line, radius)
-                            .background(FiveMinColors.surface)
-                            .then(
-                                if (resetEnabled) {
-                                    Modifier.clickable { vm.reset() }
-                                } else {
-                                    Modifier
-                                },
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = vm.t("reset"),
-                            color = FiveMinColors.muted.copy(alpha = if (resetEnabled) 1f else 0.38f),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                        )
-                    }
+                    MaterialPrimaryButton(
+                        text = startLabel,
+                        onClick = {
+                            if (state.running) {
+                                vm.toggleStart()
+                            } else {
+                                ensureStartPermissions { vm.toggleStart() }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    MaterialSecondaryButton(
+                        text = vm.t("reset"),
+                        onClick = { vm.reset() },
+                        enabled = resetEnabled,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
 
                 if (state.sessionLogged && state.finished && !state.running) {
-                    val ignoreInteraction = remember { MutableInteractionSource() }
-                    val ignorePressed by ignoreInteraction.collectIsPressedAsState()
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(FiveMinDimens.controlH)
-                            .clip(radius)
-                            .border(
-                                1.dp,
-                                FiveMinColors.danger.copy(alpha = if (ignorePressed) 0.55f else 0.35f),
-                                radius,
-                            )
-                            .background(
-                                if (ignorePressed) FiveMinColors.dangerSoft
-                                else FiveMinColors.surface.copy(alpha = 0.82f),
-                            )
-                            .clickable(
-                                interactionSource = ignoreInteraction,
-                                indication = null,
-                                onClick = { vm.ignoreFinish() },
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = vm.t("finishIgnore"),
-                            color = FiveMinColors.danger,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp,
-                        )
-                    }
+                    MaterialDangerOutlinedButton(
+                        text = vm.t("finishIgnore"),
+                        onClick = { vm.ignoreFinish() },
+                    )
                 }
 
-                // scene trigger — 与操作按钮统一大圆角
-                val sceneRadius = RoundedCornerShape(FiveMinDimens.radius)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(FiveMinDimens.rowH)
-                        .shadow(elevation = 2.dp, shape = sceneRadius, clip = false)
-                        .clip(sceneRadius)
-                        .border(
-                            1.dp,
-                            if (sceneOpen) FiveMinColors.brand.copy(alpha = 0.45f) else FiveMinColors.line,
-                            sceneRadius,
-                        )
-                        .background(FiveMinColors.surface)
-                        .then(
-                            if (setupEnabled) {
-                                Modifier.clickable {
-                                    vm.refreshSuggested()
-                                    sceneOpen = true
-                                }
-                            } else Modifier,
-                        )
-                        .padding(horizontal = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = sceneLabel,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = when {
-                            !setupEnabled -> FiveMinColors.muted.copy(alpha = 0.4f)
-                            scenePlaceholder -> FiveMinColors.muted
-                            else -> FiveMinColors.ink
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                    )
-                    Icon(
-                        Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = if (sceneOpen) FiveMinColors.brandStrong else FiveMinColors.muted,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+                MaterialOutlinedTrigger(
+                    value = sceneLabel,
+                    onClick = {
+                        vm.refreshSuggested()
+                        sceneOpen = true
+                    },
+                    enabled = setupEnabled,
+                    expanded = sceneOpen,
+                    placeholder = scenePlaceholder,
+                )
 
                 val chipIds = vm.chipSceneIds()
                 if (chipIds.isNotEmpty()) {
-                    val chipRadius = RoundedCornerShape(FiveMinDimens.radius)
-                    val railShape = RoundedCornerShape(FiveMinDimens.radius)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(railShape)
-                            .background(FiveMinColors.brandSoft.copy(alpha = 0.72f))
-                            .border(1.dp, FiveMinColors.brand.copy(alpha = 0.12f), railShape)
-                            .padding(6.dp)
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.chipGap),
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(FiveMinDimens.radiusSm),
+                        color = FiveMinColors.brandSoft.copy(alpha = 0.72f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            FiveMinColors.brand.copy(alpha = 0.12f),
+                        ),
                     ) {
-                        chipIds.forEach { id ->
-                            val active = id == state.activeSceneId
-                            Text(
-                                text = vm.sceneTitle(id) ?: id,
-                                modifier = Modifier
-                                    .height(FiveMinDimens.suggestedChipH)
-                                    .then(
-                                        if (active) {
-                                            Modifier
-                                                .shadow(
-                                                    elevation = 4.dp,
-                                                    shape = chipRadius,
-                                                    ambientColor = FiveMinColors.brand.copy(alpha = 0.28f),
-                                                    spotColor = FiveMinColors.brand.copy(alpha = 0.3f),
-                                                )
-                                                .clip(chipRadius)
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        listOf(FiveMinColors.brandLift, FiveMinColors.brand),
-                                                    ),
-                                                )
-                                        } else {
-                                            Modifier
-                                                .clip(chipRadius)
-                                                .border(
-                                                    1.dp,
-                                                    FiveMinColors.brand.copy(alpha = 0.18f),
-                                                    chipRadius,
-                                                )
-                                                .background(FiveMinColors.surface.copy(alpha = 0.55f))
-                                        },
-                                    )
-                                    .then(
-                                        if (setupEnabled) {
-                                            Modifier.clickable { vm.selectScene(id) }
-                                        } else Modifier,
-                                    )
-                                    .padding(horizontal = 14.dp)
-                                    .wrapContentHeight(Alignment.CenterVertically),
-                                color = when {
-                                    !setupEnabled -> FiveMinColors.muted.copy(alpha = 0.4f)
-                                    active -> Color.White
-                                    else -> FiveMinColors.brandStrong
-                                },
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(6.dp)
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.chipGap),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            chipIds.forEach { id ->
+                                val active = id == state.activeSceneId
+                                FilterChip(
+                                    selected = active,
+                                    onClick = { if (setupEnabled) vm.selectScene(id) },
+                                    enabled = setupEnabled,
+                                    label = {
+                                        Text(
+                                            text = vm.sceneTitle(id) ?: id,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.sp,
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(FiveMinDimens.radiusSm),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        containerColor = FiveMinColors.surface.copy(alpha = 0.55f),
+                                        labelColor = FiveMinColors.brandStrong,
+                                        disabledContainerColor = FiveMinColors.surface.copy(alpha = 0.35f),
+                                        disabledLabelColor = FiveMinColors.muted.copy(alpha = 0.4f),
+                                        selectedContainerColor = FiveMinColors.brand,
+                                        disabledSelectedContainerColor = FiveMinColors.brandSoft,
+                                        selectedLabelColor = Color.White,
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(
+                                        enabled = setupEnabled,
+                                        selected = active,
+                                        borderColor = FiveMinColors.brand.copy(alpha = 0.18f),
+                                        selectedBorderColor = FiveMinColors.brand,
+                                        disabledBorderColor = FiveMinColors.line.copy(alpha = 0.4f),
+                                        disabledSelectedBorderColor = FiveMinColors.line.copy(alpha = 0.4f),
+                                    ),
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
                         }
-                        // End spacer so the last chip isn't clipped by the rail.
-                        Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
             }
@@ -570,44 +451,28 @@ fun TimerHome(
     }
 
     if (sceneOpen) {
-        AlertDialog(
-            onDismissRequest = { sceneOpen = false },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("confirmLabel"),
-                    onClick = { sceneOpen = false },
-                    style = DialogBtnStyle.Primary,
-                )
-            },
-            containerColor = FiveMinColors.surface,
-            shape = RoundedCornerShape(FiveMinDimens.radius),
-            title = {
-                Text(
-                    vm.t("scenesLabel"),
-                    color = FiveMinColors.ink,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            },
-            text = {
-                LazyColumn(modifier = Modifier.height(420.dp)) {
-                    vm.pickerGroups().forEach { group ->
-                        val itemsInGroup = vm.scenesInGroup(group.id)
-                        if (itemsInGroup.isEmpty()) return@forEach
-                        item(key = "hdr:${group.id}") {
+        MaterialFormSheet(
+            title = vm.t("scenesLabel"),
+            onDismiss = { sceneOpen = false },
+        ) {
+            LazyColumn(modifier = Modifier.heightIn(max = 420.dp)) {
+                vm.pickerGroups().forEach { group ->
+                    val itemsInGroup = vm.scenesInGroup(group.id)
+                    if (itemsInGroup.isEmpty()) return@forEach
+                    item(key = "hdr:${group.id}") {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 2.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = FiveMinColors.brandSoft.copy(alpha = 0.72f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                FiveMinColors.brand.copy(alpha = 0.14f),
+                            ),
+                        ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 2.dp)
-                                    .background(
-                                        FiveMinColors.brandSoft.copy(alpha = 0.72f),
-                                        RoundedCornerShape(8.dp),
-                                    )
-                                    .border(
-                                        1.dp,
-                                        FiveMinColors.brand.copy(alpha = 0.14f),
-                                        RoundedCornerShape(8.dp),
-                                    )
-                                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
@@ -625,33 +490,49 @@ fun TimerHome(
                                     letterSpacing = 0.8.sp,
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
-                        // 推荐分组与目录/自定义会复用同一 scene id，key 必须带 group 前缀
-                        items(itemsInGroup, key = { "${group.id}:${it.id}" }) { scene ->
-                            val active = scene.id == state.activeSceneId
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    // 推荐分组与目录/自定义会复用同一 scene id，key 必须带 group 前缀
+                    items(itemsInGroup, key = { "${group.id}:${it.id}" }) { scene ->
+                        val active = scene.id == state.activeSceneId
+                        ListItem(
+                            selected = active,
+                            onClick = {
+                                vm.selectScene(scene.id)
+                                sceneOpen = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(FiveMinDimens.radiusSm)),
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent,
+                                selectedContainerColor = FiveMinColors.brandSoft,
+                            ),
+                        ) {
                             Text(
                                 text = vm.sceneLabel(scene.id) ?: scene.id,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(FiveMinDimens.rowH)
-                                    .clip(RoundedCornerShape(FiveMinDimens.radiusSm))
-                                    .background(if (active) FiveMinColors.brandSoft else Color.Transparent)
-                                    .clickable {
-                                        vm.selectScene(scene.id)
-                                        sceneOpen = false
-                                    }
-                                    .padding(horizontal = 12.dp)
-                                    .wrapContentHeight(Alignment.CenterVertically),
-                                color = if (active) FiveMinColors.brandStrong else FiveMinColors.muted,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
+                                color = if (active) FiveMinColors.brandStrong else FiveMinColors.ink,
+                                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
+                                fontSize = 16.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
                 }
-            },
-        )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                MaterialTextAction(
+                    text = vm.t("confirmLabel"),
+                    onClick = { sceneOpen = false },
+                    emphatic = true,
+                )
+            }
+        }
     }
 
     if (state.showStandRitual) {
@@ -662,50 +543,31 @@ fun TimerHome(
             { v: Boolean -> ritualStretch = v },
             { v: Boolean -> ritualLeave = v },
         )
-        AlertDialog(
+        MaterialAlertContent(
             onDismissRequest = { vm.dismissStandRitual() },
-            dismissButton = {
-                DialogActionButton(
-                    text = vm.t("standRitualSkip"),
-                    onClick = { vm.dismissStandRitual() },
-                    style = DialogBtnStyle.Ghost,
-                )
-            },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("standRitualDone"),
-                    onClick = { vm.dismissStandRitual() },
-                    style = DialogBtnStyle.Primary,
-                )
-            },
-            containerColor = FiveMinColors.surface,
-            shape = RoundedCornerShape(FiveMinDimens.radiusDialog),
-            title = {
-                Text(
-                    vm.t(pack.titleKey),
-                    color = FiveMinColors.ink,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .heightIn(max = 280.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    pack.stepKeys.forEachIndexed { index, key ->
-                        RitualCheckRow(
-                            label = vm.t(key),
-                            checked = stepChecks.getOrElse(index) { false },
-                            onCheckedChange = { checked ->
-                                setChecks.getOrNull(index)?.invoke(checked)
-                            },
-                        )
-                    }
+            title = vm.t(pack.titleKey),
+            confirmLabel = vm.t("standRitualDone"),
+            onConfirm = { vm.dismissStandRitual() },
+            dismissLabel = vm.t("standRitualSkip"),
+            onDismiss = { vm.dismissStandRitual() },
+        ) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 280.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                pack.stepKeys.forEachIndexed { index, key ->
+                    RitualCheckRow(
+                        label = vm.t(key),
+                        checked = stepChecks.getOrElse(index) { false },
+                        onCheckedChange = { checked ->
+                            setChecks.getOrNull(index)?.invoke(checked)
+                        },
+                    )
                 }
-            },
-        )
+            }
+        }
     }
 }
 
@@ -715,22 +577,22 @@ private fun RitualCheckRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ListItem(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = Modifier.fillMaxWidth(),
+        leadingContent = {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = null,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = FiveMinColors.brand,
+                    uncheckedColor = FiveMinColors.muted,
+                ),
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(
-                checkedColor = FiveMinColors.brand,
-                uncheckedColor = FiveMinColors.muted,
-            ),
-        )
         Text(
             text = label,
             color = FiveMinColors.ink,
@@ -738,7 +600,6 @@ private fun RitualCheckRow(
             fontWeight = FontWeight.Medium,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
         )
     }
 }

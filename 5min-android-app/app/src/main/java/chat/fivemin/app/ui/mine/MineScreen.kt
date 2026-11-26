@@ -5,14 +5,13 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,17 +24,36 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import chat.fivemin.app.ui.DialogActionButton
-import chat.fivemin.app.ui.DialogBtnStyle
+import chat.fivemin.app.ui.MaterialAlert
+import chat.fivemin.app.ui.MaterialFilledWideButton
+import chat.fivemin.app.ui.MaterialFormSheet
+import chat.fivemin.app.ui.MaterialPickRow
+import chat.fivemin.app.ui.MaterialPickSheet
+import chat.fivemin.app.ui.MaterialTextAction
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +62,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -74,6 +91,7 @@ private enum class MineDialog {
     None, Lang, Sound, CustomScenes, SceneEditor, Feedback, Beian, Storage, StandRitual, AlertProfile, UpdateAvailable,
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MineScreen(vm: TimerViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -182,15 +200,20 @@ fun MineScreen(vm: TimerViewModel) {
                 ),
             ),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .background(FiveMinColors.surface.copy(alpha = 0.72f))
-                .padding(horizontal = 20.dp, vertical = 14.dp),
-        ) {
-            Text(vm.t("tabMine"), color = FiveMinColors.ink, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-        }
+        TopAppBar(
+            title = {
+                Text(
+                    text = vm.t("tabMine"),
+                    color = FiveMinColors.ink,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = FiveMinColors.surface.copy(alpha = 0.92f),
+                titleContentColor = FiveMinColors.ink,
+            ),
+            modifier = Modifier.statusBarsPadding(),
+        )
         HorizontalDivider(color = FiveMinColors.line.copy(alpha = 0.85f))
 
         Column(
@@ -287,26 +310,25 @@ fun MineScreen(vm: TimerViewModel) {
             }
             if (state.storageMode == "cloud" && recoveryCode.isNotBlank()) {
                 CardBlock {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { backupRevealed = !backupRevealed }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                    ListItem(
+                        onClick = { backupRevealed = !backupRevealed },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingContent = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = FiveMinColors.muted,
+                                modifier = Modifier.graphicsLayer {
+                                    rotationZ = if (backupRevealed) 90f else 0f
+                                },
+                            )
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     ) {
                         Text(
                             text = vm.t("storageBackupShow"),
                             color = FiveMinColors.ink,
                             fontSize = 15.sp,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            text = "›",
-                            color = FiveMinColors.muted,
-                            fontSize = 18.sp,
-                            modifier = Modifier.graphicsLayer {
-                                rotationZ = if (backupRevealed) 90f else 0f
-                            },
                         )
                     }
                     if (backupRevealed) {
@@ -330,52 +352,42 @@ fun MineScreen(vm: TimerViewModel) {
                                 fontSize = 12.sp,
                                 lineHeight = 18.sp,
                             )
-                            Text(
+                            MaterialFilledWideButton(
                                 text = vm.t("storageBackupCopy"),
-                                color = Color.White,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(FiveMinColors.brand)
-                                    .clickable {
-                                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                        cm.setPrimaryClip(ClipData.newPlainText("recovery", recoveryCode))
-                                        Toast.makeText(
-                                            context,
-                                            vm.t("storageBackupCopied"),
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
-                                    }
-                                    .padding(vertical = 12.dp),
+                                onClick = {
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    cm.setPrimaryClip(ClipData.newPlainText("recovery", recoveryCode))
+                                    Toast.makeText(
+                                        context,
+                                        vm.t("storageBackupCopied"),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                },
                             )
                         }
                     }
                 }
             }
             CardBlock {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { restoreRevealed = !restoreRevealed }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                ListItem(
+                    onClick = { restoreRevealed = !restoreRevealed },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingContent = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = FiveMinColors.muted,
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (restoreRevealed) 90f else 0f
+                            },
+                        )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 ) {
                     Text(
                         text = vm.t("storageRestoreLabel"),
                         color = FiveMinColors.ink,
                         fontSize = 15.sp,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        text = "›",
-                        color = FiveMinColors.muted,
-                        fontSize = 18.sp,
-                        modifier = Modifier.graphicsLayer {
-                            rotationZ = if (restoreRevealed) 90f else 0f
-                        },
                     )
                 }
                 if (restoreRevealed) {
@@ -393,6 +405,13 @@ fun MineScreen(vm: TimerViewModel) {
                             placeholder = { Text(vm.t("storageRestorePlaceholder")) },
                             singleLine = true,
                             textStyle = TextStyle(fontSize = 13.sp),
+                            shape = RoundedCornerShape(FiveMinDimens.radiusSm),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = FiveMinColors.brand,
+                                unfocusedBorderColor = FiveMinColors.line,
+                                cursorColor = FiveMinColors.brand,
+                                focusedLabelColor = FiveMinColors.brandStrong,
+                            ),
                         )
                         Text(
                             text = vm.t("storageRestoreHint"),
@@ -400,26 +419,17 @@ fun MineScreen(vm: TimerViewModel) {
                             fontSize = 12.sp,
                             lineHeight = 18.sp,
                         )
-                        Text(
+                        MaterialFilledWideButton(
                             text = vm.t("storageRestoreAction"),
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(FiveMinColors.brand)
-                                .clickable {
-                                    vm.restoreWithCode(restoreCode) { ok, _ ->
-                                        if (ok) {
-                                            restoreCode = ""
-                                            backupRevealed = false
-                                            restoreRevealed = false
-                                        }
+                            onClick = {
+                                vm.restoreWithCode(restoreCode) { ok, _ ->
+                                    if (ok) {
+                                        restoreCode = ""
+                                        backupRevealed = false
+                                        restoreRevealed = false
                                     }
                                 }
-                                .padding(vertical = 12.dp),
+                            },
                         )
                     }
                 }
@@ -447,195 +457,109 @@ fun MineScreen(vm: TimerViewModel) {
     }
 
     when (dialog) {
-        MineDialog.Lang -> AlertDialog(
-            onDismissRequest = { dialog = MineDialog.None },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("cancelLabel"),
-                    onClick = { dialog = MineDialog.None },
-                    style = DialogBtnStyle.Ghost,
+        MineDialog.Lang -> MaterialPickSheet(
+            title = vm.t("langLabel"),
+            onDismiss = { dialog = MineDialog.None },
+        ) {
+            vm.appLocaleCodes().forEach { code ->
+                MaterialPickRow(
+                    label = catalog.t(code, "nativeName"),
+                    selected = code == state.locale,
+                    onClick = {
+                        vm.setLocale(code)
+                        dialog = MineDialog.None
+                    },
                 )
-            },
-            title = { Text(vm.t("langLabel"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                Column {
-                    vm.appLocaleCodes().forEach { code ->
-                        Text(
-                            text = catalog.t(code, "nativeName"),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    vm.setLocale(code)
-                                    dialog = MineDialog.None
-                                }
-                                .padding(vertical = 12.dp),
-                            color = if (code == state.locale) FiveMinColors.brandStrong else FiveMinColors.ink,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-            },
-        )
-        MineDialog.Sound -> AlertDialog(
-            onDismissRequest = { dialog = MineDialog.None },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("cancelLabel"),
-                    onClick = { dialog = MineDialog.None },
-                    style = DialogBtnStyle.Ghost,
+            }
+        }
+        MineDialog.Sound -> MaterialPickSheet(
+            title = vm.t("ambientLabel"),
+            onDismiss = { dialog = MineDialog.None },
+        ) {
+            soundIds.forEach { id ->
+                MaterialPickRow(
+                    label = ambientLabel(id),
+                    selected = id == state.ambient,
+                    onClick = {
+                        vm.setAmbient(id)
+                        dialog = MineDialog.None
+                    },
                 )
-            },
-            title = { Text(vm.t("ambientLabel"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                Column {
-                    soundIds.forEach { id ->
-                        Text(
-                            text = ambientLabel(id),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    vm.setAmbient(id)
-                                    dialog = MineDialog.None
-                                }
-                                .padding(vertical = 12.dp),
-                            color = if (id == state.ambient) FiveMinColors.brandStrong else FiveMinColors.ink,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-            },
-        )
-        MineDialog.Storage -> AlertDialog(
-            onDismissRequest = { dialog = MineDialog.None },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("cancelLabel"),
-                    onClick = { dialog = MineDialog.None },
-                    style = DialogBtnStyle.Ghost,
+            }
+        }
+        MineDialog.Storage -> MaterialPickSheet(
+            title = vm.t("storageModeLabel"),
+            onDismiss = { dialog = MineDialog.None },
+        ) {
+            listOf("local" to vm.t("storageModeLocal"), "cloud" to vm.t("storageModeCloud")).forEach { (id, label) ->
+                MaterialPickRow(
+                    label = label,
+                    selected = id == state.storageMode,
+                    onClick = {
+                        if (id == "local") {
+                            vm.setStorageMode("local")
+                            dialog = MineDialog.None
+                        } else {
+                            dialog = MineDialog.None
+                            confirmCloud = true
+                        }
+                    },
                 )
-            },
-            title = { Text(vm.t("storageModeLabel"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                Column {
-                    listOf("local" to vm.t("storageModeLocal"), "cloud" to vm.t("storageModeCloud")).forEach { (id, label) ->
-                        Text(
-                            text = label,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (id == "local") {
-                                        vm.setStorageMode("local")
-                                        dialog = MineDialog.None
-                                    } else {
-                                        dialog = MineDialog.None
-                                        confirmCloud = true
-                                    }
-                                }
-                                .padding(vertical = 12.dp),
-                            color = if (id == state.storageMode) FiveMinColors.brandStrong else FiveMinColors.ink,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-            },
-        )
-        MineDialog.StandRitual -> AlertDialog(
-            onDismissRequest = { dialog = MineDialog.None },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("cancelLabel"),
-                    onClick = { dialog = MineDialog.None },
-                    style = DialogBtnStyle.Ghost,
+            }
+        }
+        MineDialog.StandRitual -> MaterialPickSheet(
+            title = vm.t("standRitualLabel"),
+            onDismiss = { dialog = MineDialog.None },
+        ) {
+            listOf(
+                P0Features.RITUAL_OFF to vm.t("standRitualOff"),
+                P0Features.RITUAL_BASIC to vm.t("standRitualBasic"),
+            ).forEach { (id, label) ->
+                MaterialPickRow(
+                    label = label,
+                    selected = id == state.standRitual,
+                    onClick = {
+                        vm.setStandRitual(id)
+                        dialog = MineDialog.None
+                    },
                 )
-            },
-            title = { Text(vm.t("standRitualLabel"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                Column {
-                    listOf(
-                        P0Features.RITUAL_OFF to vm.t("standRitualOff"),
-                        P0Features.RITUAL_BASIC to vm.t("standRitualBasic"),
-                    ).forEach { (id, label) ->
-                        Text(
-                            text = label,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    vm.setStandRitual(id)
-                                    dialog = MineDialog.None
-                                }
-                                .padding(vertical = 12.dp),
-                            color = if (id == state.standRitual) FiveMinColors.brandStrong else FiveMinColors.ink,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-            },
-        )
-        MineDialog.AlertProfile -> AlertDialog(
-            onDismissRequest = { dialog = MineDialog.None },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("cancelLabel"),
-                    onClick = { dialog = MineDialog.None },
-                    style = DialogBtnStyle.Ghost,
+            }
+        }
+        MineDialog.AlertProfile -> MaterialPickSheet(
+            title = vm.t("alertProfileLabel"),
+            onDismiss = { dialog = MineDialog.None },
+        ) {
+            listOf(
+                P0Features.PROFILE_NORMAL to vm.t("alertProfileNormal"),
+                P0Features.PROFILE_QUIET to vm.t("alertProfileQuiet"),
+                P0Features.PROFILE_SILENT to vm.t("alertProfileSilent"),
+            ).forEach { (id, label) ->
+                MaterialPickRow(
+                    label = label,
+                    selected = id == state.alertProfile,
+                    onClick = {
+                        vm.setAlertProfile(id)
+                        dialog = MineDialog.None
+                    },
                 )
-            },
-            title = { Text(vm.t("alertProfileLabel"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                Column {
-                    listOf(
-                        P0Features.PROFILE_NORMAL to vm.t("alertProfileNormal"),
-                        P0Features.PROFILE_QUIET to vm.t("alertProfileQuiet"),
-                        P0Features.PROFILE_SILENT to vm.t("alertProfileSilent"),
-                    ).forEach { (id, label) ->
-                        Text(
-                            text = label,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    vm.setAlertProfile(id)
-                                    dialog = MineDialog.None
-                                }
-                                .padding(vertical = 12.dp),
-                            color = if (id == state.alertProfile) FiveMinColors.brandStrong else FiveMinColors.ink,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-            },
-        )
+            }
+        }
         else -> Unit
     }
 
     if (confirmCloud) {
-        AlertDialog(
+        MaterialAlert(
             onDismissRequest = { confirmCloud = false },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("confirmLabel"),
-                    onClick = {
-                        confirmCloud = false
-                        promptRecoveryOnce = true
-                        vm.setStorageMode("cloud")
-                    },
-                    style = DialogBtnStyle.Primary,
-                )
+            title = vm.t("storageModeCloud"),
+            text = vm.t("storageCloudConfirm"),
+            confirmLabel = vm.t("confirmLabel"),
+            onConfirm = {
+                confirmCloud = false
+                promptRecoveryOnce = true
+                vm.setStorageMode("cloud")
             },
-            dismissButton = {
-                DialogActionButton(
-                    text = vm.t("cancelLabel"),
-                    onClick = { confirmCloud = false },
-                    style = DialogBtnStyle.Ghost,
-                )
-            },
-            title = { Text(vm.t("storageModeCloud"), fontWeight = FontWeight.SemiBold) },
-            text = { Text(vm.t("storageCloudConfirm")) },
-            containerColor = FiveMinColors.surface,
+            dismissLabel = vm.t("cancelLabel"),
+            onDismiss = { confirmCloud = false },
         )
     }
 
@@ -650,360 +574,273 @@ fun MineScreen(vm: TimerViewModel) {
         }
     }
 
-    // Keep dialog when-block closed: remaining cases continue below
     when (dialog) {
         MineDialog.None, MineDialog.Lang, MineDialog.Sound, MineDialog.Storage,
         MineDialog.StandRitual, MineDialog.AlertProfile,
         -> Unit
         MineDialog.CustomScenes -> {
             val canAdd = state.customScenes.size < CustomScene.MAX_COUNT
-            AlertDialog(
-                onDismissRequest = { dialog = MineDialog.None },
-                dismissButton = {
-                    DialogActionButton(
-                        text = vm.t("cancelLabel"),
-                        onClick = { dialog = MineDialog.None },
-                        style = DialogBtnStyle.Ghost,
-                    )
-                },
-                confirmButton = {
-                    if (state.customScenes.isNotEmpty()) {
-                        DialogActionButton(
-                            text = vm.t("customSceneAdd"),
-                            onClick = { openSceneEditor(null) },
-                            style = DialogBtnStyle.Primary,
-                            enabled = canAdd,
-                        )
-                    }
-                },
-                title = { Text(vm.t("customScenesLabel"), fontWeight = FontWeight.SemiBold) },
-                containerColor = FiveMinColors.surface,
-                text = {
-                    if (state.customScenes.isEmpty()) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                        ) {
-                            Text(
-                                text = vm.t("customScenesEmptyHint"),
-                                color = FiveMinColors.muted,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 20.sp,
-                            )
-                            DialogActionButton(
-                                text = vm.t("customSceneAdd"),
-                                onClick = { openSceneEditor(null) },
-                                style = DialogBtnStyle.Primary,
-                                enabled = canAdd,
-                                fillMaxWidth = true,
-                            )
-                        }
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            LazyColumn(modifier = Modifier.height(320.dp)) {
-                                items(state.customScenes, key = { it.id }) { scene ->
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clickable { openSceneEditor(scene) },
-                                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                                        ) {
-                                            Text(
-                                                text = scene.name,
-                                                color = FiveMinColors.ink,
-                                                fontSize = 15.sp,
-                                                fontWeight = FontWeight.Medium,
-                                            )
-                                            Text(
-                                                text = "${scene.min} ${vm.t("customUnit")}",
-                                                color = FiveMinColors.muted,
-                                                fontSize = 13.sp,
-                                            )
-                                        }
-                                        Text(
-                                            text = vm.t("customSceneUse"),
-                                            modifier = Modifier
-                                                .background(FiveMinColors.brandSoft, RoundedCornerShape(8.dp))
-                                                .clickable {
-                                                    vm.queueCustomScene(scene.id)
-                                                    dialog = MineDialog.None
-                                                    vm.setSelectedTab(1)
-                                                }
-                                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                                            color = FiveMinColors.brandStrong,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.sp,
-                                        )
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = vm.t("historyDelete"),
-                                            tint = FiveMinColors.muted,
-                                            modifier = Modifier
-                                                .size(22.dp)
-                                                .clickable { vm.deleteCustomScene(scene.id) },
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-            )
-        }
-        MineDialog.SceneEditor -> {
-            val canSave = CustomScene.normalizedName(editorName).isNotEmpty()
-            AlertDialog(
-                onDismissRequest = { dialog = MineDialog.CustomScenes },
-                dismissButton = {
-                    DialogActionButton(
-                        text = vm.t("cancelLabel"),
-                        onClick = { dialog = MineDialog.CustomScenes },
-                        style = DialogBtnStyle.Ghost,
-                    )
-                },
-                confirmButton = {
-                    DialogActionButton(
-                        text = vm.t("confirmLabel"),
-                        onClick = { saveSceneEditor() },
-                        style = DialogBtnStyle.Primary,
-                        enabled = canSave,
-                    )
-                },
-                title = {
-                    Text(
-                        if (editingSceneId == null) vm.t("customSceneAdd") else vm.t("customSceneEdit"),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
-                containerColor = FiveMinColors.surface,
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(FiveMinDimens.sectionGap)) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = vm.t("customSceneNameLabel"),
-                                color = FiveMinColors.muted,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                            )
-                            OutlinedTextField(
-                                value = editorName,
-                                onValueChange = {
-                                    editorName = it.take(CustomScene.MAX_NAME_LENGTH)
-                                },
-                                placeholder = { Text(vm.t("customSceneNamePlaceholder")) },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(FiveMinDimens.fieldH),
-                                shape = RoundedCornerShape(FiveMinDimens.radius),
-                            )
-                        }
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = vm.t("customMinutesLabel"),
-                                color = FiveMinColors.muted,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                            )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.controlGap),
-                            ) {
-                                Text(
-                                    text = "−",
-                                    modifier = Modifier
-                                        .size(FiveMinDimens.controlH)
-                                        .clip(RoundedCornerShape(FiveMinDimens.radius))
-                                        .background(FiveMinColors.ghostBg)
-                                        .border(1.dp, FiveMinColors.line, RoundedCornerShape(FiveMinDimens.radius))
-                                        .clickable { nudgeEditor(-1) }
-                                        .wrapContentHeight(Alignment.CenterVertically),
-                                    color = FiveMinColors.ink,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                )
-                                OutlinedTextField(
-                                    value = editorMinutes,
-                                    onValueChange = {
-                                        editorMinutes = it.filter { ch -> ch.isDigit() }.take(3)
-                                    },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(FiveMinDimens.fieldH),
-                                    shape = RoundedCornerShape(FiveMinDimens.radius),
-                                    textStyle = TextStyle(
-                                        fontSize = 24.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        textAlign = TextAlign.Center,
-                                    ),
-                                )
-                                Text(
-                                    text = "+",
-                                    modifier = Modifier
-                                        .size(FiveMinDimens.controlH)
-                                        .clip(RoundedCornerShape(FiveMinDimens.radius))
-                                        .background(FiveMinColors.ghostBg)
-                                        .border(1.dp, FiveMinColors.line, RoundedCornerShape(FiveMinDimens.radius))
-                                        .clickable { nudgeEditor(1) }
-                                        .wrapContentHeight(Alignment.CenterVertically),
-                                    color = FiveMinColors.ink,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            quickMins.forEach { m ->
-                                Text(
-                                    text = "$m",
-                                    modifier = Modifier
-                                        .height(FiveMinDimens.chipH)
-                                        .background(FiveMinColors.brandSoft, RoundedCornerShape(FiveMinDimens.radiusSm))
-                                        .clickable { editorMinutes = m.toString() }
-                                        .padding(horizontal = 12.dp)
-                                        .wrapContentHeight(Alignment.CenterVertically),
-                                    color = FiveMinColors.brandStrong,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                        }
-                    }
-                },
-            )
-        }
-        MineDialog.Feedback -> {
-            val email = vm.t("feedbackEmail")
-            AlertDialog(
-                onDismissRequest = { dialog = MineDialog.None },
-                confirmButton = {
-                    DialogActionButton(
-                        text = vm.t("copyEmailLabel"),
-                        onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("email", email)
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                                clip.description?.extras = android.os.PersistableBundle().apply {
-                                    putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
-                                }
-                            }
-                            clipboard.setPrimaryClip(clip)
-                            dialog = MineDialog.None
-                            Toast.makeText(context, vm.t("emailCopied"), Toast.LENGTH_SHORT).show()
-                        },
-                        style = DialogBtnStyle.Primary,
-                    )
-                },
-                title = { Text(vm.t("feedbackLabel"), fontWeight = FontWeight.SemiBold) },
-                containerColor = FiveMinColors.surface,
-                text = {
+            MaterialFormSheet(
+                title = vm.t("customScenesLabel"),
+                onDismiss = { dialog = MineDialog.None },
+            ) {
+                if (state.customScenes.isEmpty()) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Text(
-                            text = vm.t("feedbackBody"),
+                            text = vm.t("customScenesEmptyHint"),
                             color = FiveMinColors.muted,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,
                             lineHeight = 20.sp,
                         )
-                        Text(
-                            text = email,
-                            color = FiveMinColors.ink,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
+                        FilledTonalButton(
+                            onClick = { openSceneEditor(null) },
+                            enabled = canAdd,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(vm.t("customSceneAdd"), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        MaterialTextAction(
+                            text = vm.t("customSceneAdd"),
+                            onClick = { openSceneEditor(null) },
+                            emphatic = true,
+                            enabled = canAdd,
                         )
                     }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 360.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        items(state.customScenes, key = { it.id }) { scene ->
+                            ListItem(
+                                onClick = { openSceneEditor(scene) },
+                                modifier = Modifier.fillMaxWidth(),
+                                supportingContent = {
+                                    Text(
+                                        text = "${scene.min} ${vm.t("customUnit")}",
+                                        color = FiveMinColors.muted,
+                                        fontSize = 13.sp,
+                                    )
+                                },
+                                trailingContent = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        MaterialTextAction(
+                                            text = vm.t("customSceneUse"),
+                                            onClick = {
+                                                vm.queueCustomScene(scene.id)
+                                                dialog = MineDialog.None
+                                                vm.setSelectedTab(1)
+                                            },
+                                            emphatic = true,
+                                        )
+                                        IconButton(onClick = { vm.deleteCustomScene(scene.id) }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = vm.t("historyDelete"),
+                                                tint = FiveMinColors.muted,
+                                            )
+                                        }
+                                    }
+                                },
+                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            ) {
+                                Text(
+                                    text = scene.name,
+                                    color = FiveMinColors.ink,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                            HorizontalDivider(color = FiveMinColors.line.copy(alpha = 0.7f))
+                        }
+                    }
+                }
+            }
+        }
+        MineDialog.SceneEditor -> {
+            val canSave = CustomScene.normalizedName(editorName).isNotEmpty()
+            MaterialFormSheet(
+                title = if (editingSceneId == null) vm.t("customSceneAdd") else vm.t("customSceneEdit"),
+                onDismiss = { dialog = MineDialog.CustomScenes },
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(FiveMinDimens.sectionGap)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = vm.t("customSceneNameLabel"),
+                            color = FiveMinColors.muted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        OutlinedTextField(
+                            value = editorName,
+                            onValueChange = {
+                                editorName = it.take(CustomScene.MAX_NAME_LENGTH)
+                            },
+                            placeholder = { Text(vm.t("customSceneNamePlaceholder")) },
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(FiveMinDimens.fieldH),
+                            shape = RoundedCornerShape(FiveMinDimens.radiusSm),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = FiveMinColors.brand,
+                                unfocusedBorderColor = FiveMinColors.line,
+                                cursorColor = FiveMinColors.brand,
+                            ),
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = vm.t("customMinutesLabel"),
+                            color = FiveMinColors.muted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(FiveMinDimens.controlGap),
+                        ) {
+                            FilledTonalIconButton(onClick = { nudgeEditor(-1) }) {
+                                Icon(Icons.Default.Remove, contentDescription = null)
+                            }
+                            OutlinedTextField(
+                                value = editorMinutes,
+                                onValueChange = {
+                                    editorMinutes = it.filter { ch -> ch.isDigit() }.take(3)
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(FiveMinDimens.fieldH),
+                                shape = RoundedCornerShape(FiveMinDimens.radiusSm),
+                                textStyle = TextStyle(
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    textAlign = TextAlign.Center,
+                                ),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = FiveMinColors.brand,
+                                    unfocusedBorderColor = FiveMinColors.line,
+                                    cursorColor = FiveMinColors.brand,
+                                ),
+                            )
+                            FilledTonalIconButton(onClick = { nudgeEditor(1) }) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                            }
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        quickMins.forEach { m ->
+                            AssistChip(
+                                onClick = { editorMinutes = m.toString() },
+                                label = {
+                                    Text(
+                                        text = "$m",
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = FiveMinColors.brandStrong,
+                                    )
+                                },
+                                shape = RoundedCornerShape(FiveMinDimens.radiusSm),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = FiveMinColors.brandSoft,
+                                ),
+                                border = AssistChipDefaults.assistChipBorder(
+                                    enabled = true,
+                                    borderColor = FiveMinColors.brand.copy(alpha = 0.18f),
+                                ),
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        MaterialTextAction(
+                            text = vm.t("cancelLabel"),
+                            onClick = { dialog = MineDialog.CustomScenes },
+                        )
+                        MaterialTextAction(
+                            text = vm.t("confirmLabel"),
+                            onClick = { saveSceneEditor() },
+                            emphatic = true,
+                            enabled = canSave,
+                        )
+                    }
+                }
+            }
+        }
+        MineDialog.Feedback -> {
+            val email = vm.t("feedbackEmail")
+            MaterialAlert(
+                onDismissRequest = { dialog = MineDialog.None },
+                title = vm.t("feedbackLabel"),
+                text = "${vm.t("feedbackBody")}\n\n$email",
+                confirmLabel = vm.t("copyEmailLabel"),
+                onConfirm = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("email", email)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        clip.description?.extras = android.os.PersistableBundle().apply {
+                            putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                        }
+                    }
+                    clipboard.setPrimaryClip(clip)
+                    dialog = MineDialog.None
+                    Toast.makeText(context, vm.t("emailCopied"), Toast.LENGTH_SHORT).show()
                 },
+                dismissLabel = vm.t("cancelLabel"),
+                onDismiss = { dialog = MineDialog.None },
             )
         }
-        MineDialog.Beian -> AlertDialog(
+        MineDialog.Beian -> MaterialAlert(
             onDismissRequest = { dialog = MineDialog.None },
-            confirmButton = {
-                DialogActionButton(
-                    text = vm.t("confirmLabel"),
-                    onClick = { dialog = MineDialog.None },
-                    style = DialogBtnStyle.Primary,
-                )
-            },
-            title = { Text(vm.t("beianTitle"), fontWeight = FontWeight.SemiBold) },
-            containerColor = FiveMinColors.surface,
-            text = {
-                Text(
-                    text = vm.t("beianIcp"),
-                    color = FiveMinColors.ink,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
+            title = vm.t("beianTitle"),
+            text = vm.t("beianIcp"),
+            confirmLabel = vm.t("confirmLabel"),
+            onConfirm = { dialog = MineDialog.None },
         )
         MineDialog.UpdateAvailable -> {
             val latest = pendingUpdate
-            AlertDialog(
+            MaterialAlert(
                 onDismissRequest = {
                     dialog = MineDialog.None
                     pendingUpdate = null
                 },
-                confirmButton = {
-                    DialogActionButton(
-                        text = vm.t("softwareUpdateAction"),
-                        onClick = {
-                            val url = latest?.apkUrl?.takeIf { it.isNotBlank() }
-                                ?: latest?.pageUrl
-                                ?: "https://5min.chat/download.html"
-                            openUrl(url)
-                            dialog = MineDialog.None
-                            pendingUpdate = null
-                        },
-                        style = DialogBtnStyle.Primary,
-                    )
+                title = vm.t("softwareUpdateLabel"),
+                text = vm.t(
+                    "softwareUpdateAvailable",
+                    mapOf("n" to (latest?.versionName ?: "")),
+                ),
+                confirmLabel = vm.t("softwareUpdateAction"),
+                onConfirm = {
+                    val url = latest?.apkUrl?.takeIf { it.isNotBlank() }
+                        ?: latest?.pageUrl
+                        ?: "https://5min.chat/download.html"
+                    openUrl(url)
+                    dialog = MineDialog.None
+                    pendingUpdate = null
                 },
-                dismissButton = {
-                    DialogActionButton(
-                        text = vm.t("cancelLabel"),
-                        onClick = {
-                            dialog = MineDialog.None
-                            pendingUpdate = null
-                        },
-                        style = DialogBtnStyle.Ghost,
-                    )
-                },
-                title = { Text(vm.t("softwareUpdateLabel"), fontWeight = FontWeight.SemiBold) },
-                containerColor = FiveMinColors.surface,
-                text = {
-                    Text(
-                        text = vm.t(
-                            "softwareUpdateAvailable",
-                            mapOf("n" to (latest?.versionName ?: "")),
-                        ),
-                        color = FiveMinColors.ink,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                dismissLabel = vm.t("cancelLabel"),
+                onDismiss = {
+                    dialog = MineDialog.None
+                    pendingUpdate = null
                 },
             )
         }
-        MineDialog.None -> Unit
     }
 }
 
@@ -1020,30 +857,49 @@ private fun SectionTitle(text: String) {
 
 @Composable
 private fun CardBlock(content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                FiveMinColors.surface.copy(alpha = 0.88f),
-                RoundedCornerShape(FiveMinDimens.radiusCard),
-            )
-            .border(
-                1.dp,
-                FiveMinColors.line.copy(alpha = 0.9f),
-                RoundedCornerShape(FiveMinDimens.radiusCard),
-            ),
-    ) { content() }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(FiveMinDimens.radiusCard),
+        colors = CardDefaults.cardColors(
+            containerColor = FiveMinColors.surface.copy(alpha = 0.96f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            FiveMinColors.line.copy(alpha = 0.9f),
+        ),
+    ) {
+        Column { content() }
+    }
 }
 
 @Composable
 private fun PrefRow(title: String, value: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(FiveMinDimens.controlH)
-            .clickable(onClick = onClick)
-            .padding(horizontal = FiveMinDimens.padBody),
-        verticalAlignment = Alignment.CenterVertically,
+    ListItem(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        trailingContent = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = value,
+                    color = FiveMinColors.muted,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.widthIn(max = 160.dp),
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = FiveMinColors.muted,
+                )
+            }
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     ) {
         Text(
             text = title,
@@ -1051,27 +907,6 @@ private fun PrefRow(title: String, value: String, onClick: () -> Unit) {
             fontSize = 15.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f)
-                .wrapContentHeight(Alignment.CenterVertically),
-        )
-        Text(
-            text = value,
-            color = FiveMinColors.muted,
-            fontSize = 14.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.End,
-            modifier = Modifier
-                .padding(start = 8.dp, end = 6.dp)
-                .widthIn(max = 160.dp)
-                .wrapContentHeight(Alignment.CenterVertically),
-        )
-        Text(
-            text = "›",
-            color = FiveMinColors.muted,
-            fontSize = 18.sp,
-            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically),
         )
     }
 }
@@ -1082,12 +917,22 @@ private fun PrefSwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(FiveMinDimens.controlH)
-            .padding(horizontal = FiveMinDimens.padBody),
-        verticalAlignment = Alignment.CenterVertically,
+    ListItem(
+        modifier = Modifier.fillMaxWidth(),
+        trailingContent = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = FiveMinColors.surface,
+                    checkedTrackColor = FiveMinColors.brand,
+                    uncheckedThumbColor = FiveMinColors.surface,
+                    uncheckedTrackColor = FiveMinColors.line,
+                    uncheckedBorderColor = FiveMinColors.line,
+                ),
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     ) {
         Text(
             text = title,
@@ -1095,33 +940,23 @@ private fun PrefSwitchRow(
             fontSize = 15.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f)
-                .wrapContentHeight(Alignment.CenterVertically),
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically),
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = FiveMinColors.surface,
-                checkedTrackColor = FiveMinColors.brand,
-                uncheckedThumbColor = FiveMinColors.surface,
-                uncheckedTrackColor = FiveMinColors.line,
-            ),
         )
     }
 }
 
 @Composable
 private fun LinkRow(title: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(FiveMinDimens.controlH)
-            .clickable(onClick = onClick)
-            .padding(horizontal = FiveMinDimens.padBody),
-        verticalAlignment = Alignment.CenterVertically,
+    ListItem(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        trailingContent = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = FiveMinColors.muted,
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     ) {
         Text(
             text = title,
@@ -1129,15 +964,6 @@ private fun LinkRow(title: String, onClick: () -> Unit) {
             fontSize = 15.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f)
-                .wrapContentHeight(Alignment.CenterVertically),
-        )
-        Text(
-            text = "›",
-            color = FiveMinColors.muted,
-            fontSize = 18.sp,
-            modifier = Modifier.wrapContentHeight(Alignment.CenterVertically),
         )
     }
 }

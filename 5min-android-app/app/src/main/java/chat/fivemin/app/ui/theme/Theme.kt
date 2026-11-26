@@ -60,10 +60,10 @@ object FiveMinDimens {
     val radius = 22.dp
     /** 列表卡片 / 统计卡 */
     val radiusCard = 14.dp
-    /** 弹层卡片（仪式等） */
-    val radiusDialog = 16.dp
+    /** 弹层卡片（Material 3 dialog ≈ 28.dp） */
+    val radiusDialog = 28.dp
     /** 底部 sheet 顶角 */
-    val radiusSheet = 18.dp
+    val radiusSheet = 28.dp
     val controlH = 52.dp
     val fieldH = 52.dp
     val rowH = 40.dp
@@ -161,9 +161,11 @@ private val AppTypography = Typography(
 )
 
 val FiveMinShapes = androidx.compose.material3.Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
     small = RoundedCornerShape(FiveMinDimens.radiusSm),
-    medium = RoundedCornerShape(FiveMinDimens.radius),
+    medium = RoundedCornerShape(FiveMinDimens.radiusCard),
     large = RoundedCornerShape(FiveMinDimens.radius),
+    extraLarge = RoundedCornerShape(FiveMinDimens.radiusDialog),
 )
 
 @Composable
