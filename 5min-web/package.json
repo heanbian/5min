@@ -1,7 +1,7 @@
 {
   "name": "5min-web",
   "author": "xuejibao",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "如厕计时器 · 5min.chat",
   "main": "server.js",
   "scripts": {

@@ -56,8 +56,8 @@ keytool -genkeypair -v \
 ```bash
 # 推荐：脚本自动选用 JDK 25 / Studio JBR
 chmod +x scripts/release.sh
-./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.17.apk
-./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.17.aab
+./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.18.apk
+./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.18.aab
 
 # 或手动：
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home

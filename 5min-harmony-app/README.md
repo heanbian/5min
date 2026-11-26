@@ -4,7 +4,7 @@
 
 - **bundleName**：`chat.5min.app`
 - **App ID（AGC）**：`6917621936327753309`
-- **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（当前 `1.0.18` / `1000018`；`versionCode` 采用 `major*1000000+minor*1000+patch`）
+- **版本**：`AppScope/app.json5` → `versionName` / `versionCode`（当前 `1.0.19` / `1000019`；`versionCode` 采用 `major*1000000+minor*1000+patch`）
 - **技术**：ArkTS · ArkUI（Stage）· Preferences · Vibrator · Notification
 
 ## 功能
@@ -66,8 +66,8 @@ cd ../5min-web && npm run export-shared
 
 ```bash
 chmod +x scripts/release.sh
-./scripts/release.sh hap # → store/release/5min-harmony-app-1.0.18.hap
-./scripts/release.sh app # → store/release/5min-harmony-app-1.0.18.app
+./scripts/release.sh hap # → store/release/5min-harmony-app-1.0.19.hap
+./scripts/release.sh app # → store/release/5min-harmony-app-1.0.19.app
 ```
 
 也可在 DevEco：`Build` → `Build Hap(s)/APP(s)` → `Build App(s)`。

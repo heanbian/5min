@@ -14,7 +14,7 @@ App({
   globalData: {
     pendingSceneId: null,
     privacyAccepted: false,
-    appVersion: '1.0.13',
+    appVersion: '1.0.14',
     finishAlertPending: null,
     finishAlerting: false,
   },
