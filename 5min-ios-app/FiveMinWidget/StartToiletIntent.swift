@@ -3,7 +3,7 @@ import Foundation
 
 /// iOS 18+: open via `OpenURLIntent` and queue the toilet scene in the App Group.
 struct StartToiletIntent: AppIntent {
-    static var title: LocalizedStringResource = "Start toilet timer"
+    static var title: LocalizedStringResource = "Start Toilet Timer"
     static var description = IntentDescription("Opens Toilet Timer and queues the toilet scene.")
 
     @MainActor
@@ -19,7 +19,7 @@ struct FiveMinAppShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: StartToiletIntent(),
             phrases: [
-                "Start toilet timer in \(.applicationName)",
+                "Start Toilet Timer in \(.applicationName)",
                 "Start \(.applicationName) toilet",
                 "用\(.applicationName)开始如厕",
                 "打开\(.applicationName)如厕计时"

@@ -125,7 +125,7 @@ check('required copy keys', () => {
     assert.equal(typeof zhCN[k], 'string', k);
     assert.ok(zhCN[k].length > 0, k);
   }
-  assert.equal(zhCN.beianIcp, '蜀ICP备14028739号-6A');
+  assert.equal(zhCN.beianIcp, '蜀ICP备14028739号-5X');
   assert.equal(zhCN.sceneToilet, '如厕 · 5 分钟');
 });
 

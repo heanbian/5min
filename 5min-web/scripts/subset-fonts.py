@@ -36,7 +36,7 @@ def collect_text() -> str:
     chunks: list[str] = [EXTRA]
     for path in PACKS.glob("*.js"):
         chunks.append(path.read_text(encoding="utf-8"))
-    for path in HTML_DIR.glob("*.html"):
+    for path in HTML_DIR.rglob("*.html"):
         chunks.append(path.read_text(encoding="utf-8"))
     css = HTML_DIR / "css"
     if css.is_dir():

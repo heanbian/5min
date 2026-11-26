@@ -45,6 +45,7 @@
     --lh-body:1.55;
     --font:"Plus Jakarta Sans","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
     --control-h:52px;
+    --page-max:40rem;
     --safe-top:env(safe-area-inset-top, 0px);
     --safe-bottom:env(safe-area-inset-bottom, 0px);
     --safe-left:env(safe-area-inset-left, 0px);
@@ -82,14 +83,13 @@
       linear-gradient(180deg, var(--danger-soft) 0%, #fff7f6 100%);
   }
 
-  /* —— 手机端（默认）—— */
   .app{
-    --app-pad-x:20px;
+    --app-pad-x:16px;
     --app-pad-y:18px;
     --dial-size:min(72vw, 280px);
     --row-h:40px;
     width:100%;
-    max-width:400px;
+    max-width:var(--page-max);
     margin:0 auto;
     min-height:100dvh;
     min-height:100svh;
@@ -695,13 +695,11 @@
     object-fit:contain;
   }
 
-  /* 平板竖屏 */
   @media (min-width: 600px){
     .app{
       --app-pad-x:24px;
       --app-pad-y:28px;
       --dial-size:min(62vw, 320px);
-      max-width:480px;
       gap:var(--space-4);
     }
     .brand h1{font-size:1.25rem}
@@ -712,7 +710,6 @@
     .cue{max-width:20rem}
   }
 
-  /* PC / 大屏：居中单栏，更大表盘与悬停态 */
   @media (min-width: 900px){
     body{
       background:
@@ -720,11 +717,10 @@
         linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 45%, #f4f8f5 100%);
     }
     .app{
-      --app-pad-x:32px;
+      --app-pad-x:24px;
       --app-pad-y:40px;
       --dial-size:min(42vh, 360px);
       --control-h:48px;
-      max-width:520px;
       justify-content:center;
       gap:28px;
     }
@@ -739,7 +735,7 @@
     .time{width:min(56%, 240px)}
     .status{font-size:var(--fs-base)}
     .cue{max-width:22rem}
-    .footnote{font-size:0.8125rem; max-width:36em; margin-inline:auto}
+    .footnote{font-size:0.8125rem}
     .app{--row-h:38px}
 
     button:active:not(:disabled){transform:translateY(1px) scale(1)}
@@ -772,14 +768,12 @@
     .beian a:hover{text-decoration:underline; color:var(--brand-strong)}
   }
 
-  /* 矮屏横屏手机：压缩纵向 */
   @media (orientation: landscape) and (max-height: 480px){
     .app{
       --dial-size:min(42vh, 200px);
       --app-pad-y:8px;
       justify-content:flex-start;
       gap:var(--space-2);
-      max-width:640px;
     }
     .brand h1{font-size:1rem}
     .brand img{height:20px}
@@ -794,7 +788,6 @@
     overflow:hidden;
   }
 
-  /* Records / custom-scenes sheets */
   .sheet{
     position:fixed;
     inset:0;

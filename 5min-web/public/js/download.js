@@ -21,7 +21,7 @@
   const SUGGEST = {
     ios: '检测到 iOS 设备，建议优先前往 App Store 安装官方客户端。',
     android: '检测到 Android 设备，建议优先下载官方安装包。',
-    harmony: '检测到 HarmonyOS 设备，建议优先通过应用链接打开或前往应用市场安装。',
+    harmony: '检测到 HarmonyOS（鸿蒙）设备，建议优先通过应用链接打开或前往应用市场安装。',
     mp: '当前处于微信内，可展开小程序码后长按识别打开。',
   };
 

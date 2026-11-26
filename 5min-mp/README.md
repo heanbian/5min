@@ -70,7 +70,7 @@ node scripts/functional-verify.mjs
 cd ../5min-web && npm run export-shared
 ```
 
-同步后请复查小程序侧专有键（如 `invalidLink`、`feedbackEmail`、`beianIcp`）。
+同步后请复查小程序侧专有键（如 `invalidLink`、`feedbackEmail`）。`beianIcp` 由导出脚本按渠道写入：网页版 `号-4`，Android / 鸿蒙 / iOS `号-6A`，微信小程序 `号-5X`。
 
 ## 许可
 

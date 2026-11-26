@@ -39,7 +39,7 @@ enum WidgetCopy {
     }
     static var startToilet: String { t("widgetStartToilet", fallback: "Start toilet") }
     static var description: String {
-        t("widgetDescription", fallback: "Today's sessions · tap to start toilet timer")
+        t("widgetDescription", fallback: "Today's sessions · tap to start Toilet Timer")
     }
     static var running: String { t("widgetRunning", fallback: "Countdown") }
     static var paused: String { t("widgetPaused", fallback: "Paused") }

@@ -461,6 +461,14 @@ app.get(/^\/[^/]+\.html$/i, (req, res, next) => {
   return sendHtmlFile(res, fileName);
 });
 
+/* Nested doc pages (e.g. /knowledge/*.html) — still go through asset ?v= rewrite */
+app.get(/^\/knowledge\/[a-z0-9-]+\.html$/i, (req, res, next) => {
+  const fileName = String(req.path || '').replace(/^\//, '');
+  if (!fileName || fileName.includes('..')) return next();
+  if (!resolvePublicFile(fileName)) return next();
+  return sendHtmlFile(res, fileName);
+});
+
 app.use(
   express.static(publicPath, {
     etag: true,

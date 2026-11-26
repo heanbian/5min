@@ -24,6 +24,8 @@
   --ink:#1f2a24;
   --muted:#5f6f66;
   --line:#d7e5dc;
+  --page-max:40rem;
+  --page-pad-x:16px;
   --radius:20px;
   --radius-sm:12px;
   --fs-sm:0.875rem;
@@ -70,13 +72,13 @@ a:hover{text-decoration:underline}
 
 .wrap{
   width:100%;
-  max-width:36rem;
+  max-width:var(--page-max);
   margin:0 auto;
   padding:
-    calc(var(--safe-top) + 24px)
-    calc(var(--safe-right) + 18px)
-    calc(var(--safe-bottom) + 40px)
-    calc(var(--safe-left) + 18px);
+    calc(var(--safe-top) + 20px)
+    calc(var(--safe-right) + var(--page-pad-x))
+    calc(var(--safe-bottom) + 36px)
+    calc(var(--safe-left) + var(--page-pad-x));
   animation:page-in .4s ease both;
 }
 
@@ -252,12 +254,13 @@ a:hover{text-decoration:underline}
 .hint-suggest[hidden]{display:none}
 
 .page-foot{
-  margin-top:20px;
-  padding-top:16px;
+  margin-top:28px;
+  padding-top:18px;
   border-top:1px solid rgba(215, 229, 220, 0.95);
+  text-align:center;
 }
 .note{
-  margin:0 0 16px;
+  margin:0 auto 14px;
   font-size:0.75rem;
   color:var(--muted);
   line-height:1.65;
@@ -265,10 +268,20 @@ a:hover{text-decoration:underline}
 .foot-nav{
   display:flex;
   flex-wrap:wrap;
-  gap:10px 16px;
-  font-size:0.8125rem;
-  font-weight:600;
+  justify-content:center;
+  align-items:center;
+  gap:6px 16px;
+  font-size:0.75rem;
+  line-height:1.65;
+  color:var(--muted);
 }
+.foot-nav a{
+  color:var(--brand-strong);
+  text-decoration:none;
+  font-weight:500;
+  padding:2px 0;
+}
+.foot-nav a:hover{text-decoration:underline}
 
 @keyframes page-in{
   from{opacity:0;transform:translateY(8px)}
@@ -276,11 +289,9 @@ a:hover{text-decoration:underline}
 }
 
 @media (min-width: 600px){
-  .wrap{
-    padding-inline:28px;
-    padding-top:calc(var(--safe-top) + 36px);
-  }
-  .page-head h1{font-size:1.75rem}
+  :root{--page-pad-x:24px}
+  .wrap{padding-top:calc(var(--safe-top) + 28px)}
+  .page-head h1{font-size:1.5rem}
   .mp-code img{
     width:180px;
     height:180px;

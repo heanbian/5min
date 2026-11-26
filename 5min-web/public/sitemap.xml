@@ -2,9 +2,51 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
  <url>
  <loc>https://5min.chat/</loc>
- <lastmod>2026-11-20</lastmod>
+ <lastmod>2026-11-26</lastmod>
  <changefreq>monthly</changefreq>
  <priority>1.0</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.8</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge/why-5-minutes.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.7</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge/phone-and-time.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.7</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge/stand-up-habit.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.7</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge/scene-beyond-toilet.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.7</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge/myths.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.7</priority>
+ </url>
+ <url>
+ <loc>https://5min.chat/knowledge/when-to-see-doctor.html</loc>
+ <lastmod>2026-11-26</lastmod>
+ <changefreq>monthly</changefreq>
+ <priority>0.7</priority>
  </url>
  <url>
  <loc>https://5min.chat/download.html</loc>
@@ -20,7 +62,7 @@
  </url>
  <url>
  <loc>https://5min.chat/faq.html</loc>
- <lastmod>2026-11-20</lastmod>
+ <lastmod>2026-11-26</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.7</priority>
  </url>

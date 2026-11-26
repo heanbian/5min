@@ -15,7 +15,7 @@
 - 默认场景：「如厕 · 5 分钟」
 - 数据：默认保存在本机；不要求注册账户；官方客户端可选云端同步偏好与近 14 日会话（需用户主动开启；云数据存放于中国境内）
 - 语言：联合国六种工作语文（简体/繁体中文、English、Français、Русский、Español、العربية）；另含 Deutsch、བོད་ཡིག、日本語、한국어、Português、Bahasa Indonesia
-- 平台：网页版、Android、HarmonyOS、iOS、微信小程序
+- 平台：网页版、Android、HarmonyOS（鸿蒙）、iOS、微信小程序
 
 ## 命名
 
@@ -28,10 +28,11 @@
 
 ## 页面
 
-- [如厕计时器](https://5min.chat/)：主应用。默认「如厕 · 5 分钟」；支持开始 / 暂停 / 重置、分组场景预设、环境音与今日统计；状态由进行中（绿）变为最后 1 分钟（琥珀）再变为超时（红）。可添加至主屏幕（轻量 PWA）。
-- [下载 App](https://5min.chat/download.html)：官方客户端与网页版获取入口（iOS App Store、Android APK、HarmonyOS 应用市场、微信小程序、网页版）。
+- [如厕计时器](https://5min.chat/)：主应用。默认「如厕 · 5 分钟」；支持开始 / 暂停 / 重置、分组场景预设、环境音与今日统计；状态由进行中（绿）变为最后 1 分钟（琥珀）再变为超时（红）。可添加至主屏幕（轻量渐进式 Web 应用（PWA））。
+- [如厕小知识](https://5min.chat/knowledge.html)：如厕习惯与时间感知相关小知识（中文）；仅供习惯提醒，非医疗内容。子页包括：为什么常提约 5 分钟、玩手机与时间感、起身习惯、其他计时场景、常见误解、何时寻求专业帮助。
+- [下载 App](https://5min.chat/download.html)：官方客户端与网页版获取入口（iOS App Store、Android APK、HarmonyOS（鸿蒙）应用市场、微信小程序、网页版）。
 - [关于](https://5min.chat/about.html)：产品定位、主要功能、适用平台与联系方式。
-- [常见问题](https://5min.chat/faq.html)：默认五分钟、提醒、本机存储与可选云同步、多端、加到主屏幕、联系方式等；含 FAQPage 结构化数据。
+- [常见问题](https://5min.chat/faq.html)：默认「如厕 · 5 分钟」、提醒、本机存储与可选云端同步、多端、添加至主屏幕、联系方式等；含 FAQPage 结构化数据。
 - [隐私政策](https://5min.chat/privacy.html)：本机存储、可选云端同步（中国境内）、设备权限、访问日志与联系方式。
 - [用户协议](https://5min.chat/terms.html)：服务说明、使用规范、免责声明与知识产权。
 
@@ -41,5 +42,5 @@
 
 ## 可选阅读
 
-- [源码仓库](https://github.com/heanbian/5min)：HTML5 + 原生 JavaScript（ES modules），无框架、无打包；含 Android / HarmonyOS / iOS / 微信小程序客户端。
+- [源码仓库](https://github.com/heanbian/5min)：HTML5 + 原生 JavaScript（ES modules），无框架、无打包；含 Android / HarmonyOS（鸿蒙） / iOS / 微信小程序客户端。
 - [站点地图](https://5min.chat/sitemap.xml)

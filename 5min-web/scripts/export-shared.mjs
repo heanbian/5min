@@ -51,6 +51,14 @@ writeFileSync(
     `export const SCENES = Object.freeze(${JSON.stringify(scenesRoot.scenes)});\n`
 );
 
+/** ICP filings differ by distribution channel (web packs keep 号-4). */
+const BEIAN_ICP_NATIVE = '蜀ICP备14028739号-6A';
+const BEIAN_ICP_MP = '蜀ICP备14028739号-5X';
+
+function localeJsonWithBeian(code, beianIcp) {
+  return JSON.stringify({ ...LOCALES[code], beianIcp }, null, 2);
+}
+
 const targets = [
   join(root, '..', '5min-android-app', 'app', 'src', 'main', 'assets', 'shared'),
   join(root, '..', '5min-harmony-app', 'entry', 'src', 'main', 'resources', 'rawfile', 'shared'),
@@ -65,10 +73,10 @@ for (const t of targets) {
   cpSync(scenesPath, join(t, 'scenes.json'));
   cpSync(profilesPath, join(t, 'locale-scene-profiles.json'));
   for (const code of LOCALE_CODES) {
-    cpSync(join(exportDir, 'locales', `${code}.json`), join(t, 'locales', `${code}.json`));
+    writeFileSync(join(t, 'locales', `${code}.json`), localeJsonWithBeian(code, BEIAN_ICP_NATIVE));
   }
   cpSync(join(exportDir, 'locales', 'index.json'), join(t, 'locales', 'index.json'));
-  console.log('synced', t);
+  console.log('synced', t, `(beianIcp=${BEIAN_ICP_NATIVE})`);
 }
 
 const mpShared = join(root, '..', '5min-mp', 'shared');
@@ -77,7 +85,10 @@ if (existsSync(dirname(mpShared))) {
   cpSync(scenesPath, join(mpShared, 'scenes.json'));
   cpSync(profilesPath, join(mpShared, 'locale-scene-profiles.json'));
   for (const code of LOCALE_CODES) {
-    cpSync(join(exportDir, 'locales', `${code}.json`), join(mpShared, 'locales', `${code}.json`));
+    writeFileSync(
+      join(mpShared, 'locales', `${code}.json`),
+      localeJsonWithBeian(code, BEIAN_ICP_MP)
+    );
   }
   writeFileSync(
     join(mpShared, 'scenes.js'),
@@ -97,5 +108,5 @@ if (existsSync(dirname(mpShared))) {
       `module.exports = ${readFileSync(join(mpShared, 'locales', src), 'utf8').trim()};\n`
     );
   }
-  console.log('synced', mpShared);
+  console.log('synced', mpShared, `(beianIcp=${BEIAN_ICP_MP})`);
 }

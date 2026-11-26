@@ -17,7 +17,7 @@
  * Bump CACHE when shipping shell asset changes.
  */
 
-const CACHE = '5min-shell-v11';
+const CACHE = '5min-shell-v12';
 
 /* Timer shell + app module graph; CJK fonts / non-default locale packs load on demand */
 const PRECACHE = [

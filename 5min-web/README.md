@@ -18,7 +18,7 @@
 | 状态反馈 | 进行中（绿）→ 剩余不足 1 分钟（琥珀）→ 超时（红） |
 | 到期提醒 | Vibration API（设备支持时）、Web Audio 提示音、Notification API（用户授权后） |
 | 屏幕唤醒 | 计时过程中尝试申请 Screen Wake Lock |
-| 轻量 PWA | `public/site.webmanifest` + `public/sw.js` 预缓存计时壳；改壳资源后请 bump `CACHE` |
+| 轻量渐进式 Web 应用（PWA） | `public/site.webmanifest` + `public/sw.js` 预缓存计时壳；改壳资源后请 bump `CACHE` |
 | 访客记录 | 服务端写入 PostgreSQL 表 `fivemin_visitor_log`（无管理页） |
 | 云存储 API | 端侧可选：设备凭证绑定偏好与近 14 日会话（`/api/v1/storage`；数据存放于中国境内） |
 | 健康检查 | `GET /api/status` → `{ success, data }` |
@@ -52,6 +52,8 @@
 │   └── storage.js            # /api/v1/storage/*
 ├── public/                   # 对外静态根（部署时与二进制同级，勿打进 ncc/pkg）
 │   ├── index.html            # 计时主页
+│   ├── knowledge.html        # 如厕小知识索引
+│   ├── knowledge/            # 如厕小知识文章（中文静态页）
 │   ├── about.html            # 关于
 │   ├── faq.html              # 常见问题
 │   ├── privacy.html          # 隐私政策
@@ -155,7 +157,7 @@ npm run export-shared
 # 等价：node scripts/export-shared.mjs
 ```
 
-文案源：`public/js/i18n/packs/*.js`（由 `locales.js` 按需加载）。同步至 Android / HarmonyOS / iOS / 微信小程序 `shared/`。
+文案源：`public/js/i18n/packs/*.js`（由 `locales.js` 按需加载）。同步至 Android / HarmonyOS（鸿蒙） / iOS / 微信小程序 `shared/`。
 
 ## 术语与文案约定
 

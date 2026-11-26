@@ -686,11 +686,12 @@ const applyStaticI18n = () => {
   resetBtn.textContent = pack.reset;
   if (footnote) {
     const links = [
+      { href: 'knowledge.html', label: pack.footerKnowledge || '如厕小知识' },
       { href: 'download.html', label: pack.downloadLabel || '下载 App' },
-      { href: 'about.html', label: pack.aboutLabel },
       { href: 'privacy.html', label: pack.footerPrivacy },
       { href: 'terms.html', label: pack.footerTerms },
       { href: 'faq.html', label: pack.footerFaq },
+      { href: 'about.html', label: pack.aboutLabel },
     ];
     const frag = document.createDocumentFragment();
     links.forEach((item) => {

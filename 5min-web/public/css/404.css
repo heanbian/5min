@@ -22,6 +22,8 @@
   --bg:#eef6f1;
   --ink:#1f2a24;
   --muted:#5f6f66;
+  --page-max:40rem;
+  --page-pad-x:16px;
   --font:"Plus Jakarta Sans","Noto Sans SC","Source Han Sans SC",system-ui,sans-serif;
   --safe-top:env(safe-area-inset-top, 0px);
   --safe-bottom:env(safe-area-inset-bottom, 0px);
@@ -60,17 +62,21 @@ body::before{
 }
 
 .page{
+  box-sizing:border-box;
+  width:100%;
+  max-width:var(--page-max);
   min-height:100dvh;
   min-height:100svh;
+  margin:0 auto;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   padding:
-    calc(var(--safe-top) + 28px)
-    calc(var(--safe-right) + 22px)
-    calc(var(--safe-bottom) + 32px)
-    calc(var(--safe-left) + 22px);
+    calc(var(--safe-top) + 20px)
+    calc(var(--safe-right) + var(--page-pad-x))
+    calc(var(--safe-bottom) + 36px)
+    calc(var(--safe-left) + var(--page-pad-x));
   text-align:center;
   animation:page-in .45s ease both;
 }
@@ -121,7 +127,8 @@ body::before{
 }
 
 .copy{
-  max-width:20rem;
+  width:100%;
+  max-width:var(--page-max);
   margin:0 auto;
 }
 .copy h1{
@@ -172,6 +179,10 @@ body::before{
 }
 @keyframes dial-spin{
   to{transform:rotate(360deg)}
+}
+
+@media (min-width: 600px){
+  :root{--page-pad-x:24px}
 }
 
 @media (prefers-reduced-motion: reduce){
