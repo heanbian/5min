@@ -49,18 +49,18 @@ keytool -genkeypair -v \
 3. **配置签名**
  复制 `keystore.properties.example` → `keystore.properties`，填入路径与密码。
 
-4. **出包（必须用 JDK 17/21，不要用 JDK 25）**
+4. **出包（JDK 25 LTS）**
 
-终端若默认是 Java 25，直接 `./gradlew` 会报错 `25.0.x`。请用脚本或先切 JDK：
+工程以 **Java 25 LTS** 构建（Gradle 9.9 + AGP 9.5）。本机需安装 Temurin 25，或使用 Android Studio 自带 JBR（亦为 25）。
 
 ```bash
-# 推荐：自动选用 JDK 21 / Android Studio JBR
+# 推荐：脚本自动选用 JDK 25 / Studio JBR
 chmod +x scripts/release.sh
 ./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.17.apk
 ./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.17.aab
 
 # 或手动：
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home
 ./gradlew :app:assembleRelease
 ./gradlew :app:bundleRelease
 ```

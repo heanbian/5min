@@ -57,8 +57,9 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        // Language / bytecode level: Java 25 LTS (Gradle 9.1+ / AGP 9.5+).
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
     buildFeatures {
         compose = true
@@ -68,6 +69,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+kotlin {
+    jvmToolchain(25)
 }
 
 // APK name: 5min-android-app-{versionName}.apk (AGP 9 Variant API)
