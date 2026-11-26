@@ -529,6 +529,19 @@ scroll-view {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+.backup-sheet .restore-input {
+  width: 100%;
+  min-height: 80rpx;
+  margin: 0 0 20rpx;
+  padding: 14rpx 22rpx;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(215, 229, 220, 0.95);
+  border-radius: var(--radius-sm, 24rpx);
+  font-size: 26rpx;
+  color: #1f2a24;
+  background: rgba(248, 252, 249, 0.95);
+}
+
 .backup-sheet .restore-hint {
   display: block;
   margin: 0 0 20rpx;

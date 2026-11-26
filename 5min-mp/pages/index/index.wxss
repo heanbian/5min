@@ -68,10 +68,20 @@
   position: relative;
   z-index: 30;
   width: 100%;
+  margin-bottom: var(--section-gap);
+  padding-left: var(--pad-x);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.topbar-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: var(--section-gap);
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
 }
 
@@ -89,6 +99,7 @@
 .brand-logo {
   width: 148rpx;
   height: 44rpx;
+  max-height: 100%;
   flex-shrink: 0;
 }
 
@@ -99,7 +110,7 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--ink);
-  line-height: 1.2;
+  line-height: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -127,8 +138,9 @@
 }
 
 .icon-btn {
-  width: 72rpx;
-  height: 72rpx;
+  width: 64rpx;
+  height: 100%;
+  max-height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,6 +149,7 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
+  box-sizing: border-box;
 }
 
 .icon-btn:active {
@@ -356,14 +369,14 @@
   color: var(--danger);
 }
 
-/* 快捷芯片：薄荷软胶囊，与主区白底表单/按钮区分 */
+/* 快捷芯片：小一号于主按钮（96rpx），小圆角 */
 .suggested-chips {
   width: 100%;
   white-space: nowrap;
   height: auto;
-  padding: 12rpx;
+  padding: 8rpx;
   box-sizing: border-box;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm, 24rpx);
   background: rgba(229, 245, 236, 0.72);
   border: 2rpx solid rgba(47, 154, 104, 0.12);
 }
@@ -372,14 +385,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: var(--suggested-chip-h, 64rpx);
-  padding: 0 28rpx;
-  margin-right: 12rpx;
-  border-radius: var(--radius);
+  height: 56rpx;
+  padding: 0 22rpx;
+  margin-right: 10rpx;
+  border-radius: var(--radius-sm, 24rpx);
   border: 2rpx solid rgba(47, 154, 104, 0.18);
   background: rgba(255, 255, 255, 0.55);
   color: var(--brand-strong);
-  font-size: 26rpx;
+  font-size: 24rpx;
   font-weight: 600;
   box-sizing: border-box;
   box-shadow: 0 2rpx 8rpx rgba(47, 154, 104, 0.06);
@@ -413,10 +426,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20rpx;
-  height: var(--row-h);
-  padding: 0 28rpx;
-  border-radius: var(--radius);
+  gap: 16rpx;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border-radius: var(--radius-sm, 24rpx);
   border: 2rpx solid var(--line);
   background: var(--surface);
   box-shadow: 0 4rpx 16rpx rgba(31, 42, 36, 0.04);
@@ -434,7 +447,7 @@
 .scene-value {
   flex: 1;
   min-width: 0;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: var(--ink);
   overflow: hidden;

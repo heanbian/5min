@@ -4,11 +4,13 @@
  对齐鸿蒙 RecordsTab
 -->
 <view class="shell" style="padding-top: {{navPadTop}}px;">
-  <view class="titlebar" style="height: {{navBarHeight}}px;">
-    <text class="title">{{tabTitle}}</text>
-    <view class="title-actions">
-      <button class="title-action" open-type="share" hover-class="title-action-hover">{{shareLabel}}</button>
-      <view class="title-action" hover-class="title-action-hover" bindtap="onExportCsv">{{exportLabel}}</view>
+  <view class="titlebar" style="height: {{navBarHeight}}px; padding-right: {{navPadRight}}px;">
+    <view class="titlebar-row">
+      <text class="title">{{tabTitle}}</text>
+      <view class="title-actions">
+        <button class="title-action" open-type="share" hover-class="title-action-hover">{{shareLabel}}</button>
+        <view class="title-action" hover-class="title-action-hover" bindtap="onExportCsv">{{exportLabel}}</view>
+      </view>
     </view>
   </view>
   <view class="title-line"></view>

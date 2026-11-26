@@ -298,6 +298,12 @@ Page({
     });
   },
 
+  onOpenRestore() {
+    this.openSheet('restore', {
+      dialogTitle: t('storageRestoreLabel'),
+    });
+  },
+
   onRestoreInput(e) {
     this.setData({ restoreCode: e.detail.value || '' });
   },

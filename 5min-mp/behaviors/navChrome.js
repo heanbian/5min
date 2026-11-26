@@ -8,18 +8,35 @@ const { readNavMetrics } = require('../utils/navMetrics');
 
 module.exports = Behavior({
   data: {
+    navPadTop: 47,
     navBarHeight: 44,
-    navPadTop: 44,
     navPadRight: 96,
   },
 
   methods: {
     applyNavChrome() {
-      this.setData(readNavMetrics());
+      const next = readNavMetrics();
+      const cur = this.data || {};
+      if (
+        cur.navPadTop === next.navPadTop &&
+        cur.navBarHeight === next.navBarHeight &&
+        cur.navPadRight === next.navPadRight
+      ) {
+        return;
+      }
+      this.setData(next);
     },
   },
 
   onLoad() {
+    this.applyNavChrome();
+  },
+
+  onReady() {
+    this.applyNavChrome();
+  },
+
+  onShow() {
     this.applyNavChrome();
   },
 });

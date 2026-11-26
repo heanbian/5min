@@ -4,8 +4,10 @@
  对齐鸿蒙 MineTab
 -->
 <view class="shell" style="padding-top: {{navPadTop}}px;">
-  <view class="titlebar" style="height: {{navBarHeight}}px;">
-    <text class="title">{{tabTitle}}</text>
+  <view class="titlebar" style="height: {{navBarHeight}}px; padding-right: {{navPadRight}}px;">
+    <view class="titlebar-row">
+      <text class="title">{{tabTitle}}</text>
+    </view>
   </view>
   <view class="title-line"></view>
 
@@ -90,17 +92,9 @@
         </view>
         <view class="row-line"></view>
       </block>
-      <view class="restore-block">
-        <text class="restore-label">{{storageRestoreLabel}}</text>
-        <input
-          class="restore-input"
-          value="{{restoreCode}}"
-          placeholder="{{storageRestorePlaceholder}}"
-          bindinput="onRestoreInput"
-          confirm-type="done"
-        />
-        <text class="restore-hint">{{storageRestoreHint}}</text>
-        <view class="storage-btn" bindtap="onRestoreWithCode">{{storageRestoreAction}}</view>
+      <view class="row" catchtap="onOpenRestore">
+        <text class="row-title">{{storageRestoreLabel}}</text>
+        <text class="chev">›</text>
       </view>
     </view>
 
@@ -294,6 +288,20 @@
           </view>
           <text class="restore-hint">{{storageBackupHint}}</text>
           <view class="storage-btn" catchtap="onCopyRecoveryCode">{{storageBackupCopy}}</view>
+        </view>
+      </block>
+
+      <block wx:if="{{dialog === 'restore'}}">
+        <view class="backup-sheet">
+          <input
+            class="restore-input"
+            value="{{restoreCode}}"
+            placeholder="{{storageRestorePlaceholder}}"
+            bindinput="onRestoreInput"
+            confirm-type="done"
+          />
+          <text class="restore-hint">{{storageRestoreHint}}</text>
+          <view class="storage-btn" catchtap="onRestoreWithCode">{{storageRestoreAction}}</view>
         </view>
       </block>
 
