@@ -1155,145 +1155,8 @@ struct Index {
           .fontSize(18)
           .fontColor($r('app.color.muted'))
       } else if (!this.privacyAccepted) {
-        // First-launch privacy consent (AppGallery 7.5)
-        Column() {
-          Scroll() {
-            Column({ space: 16 }) {
-              Text(this.t('privacyTitle'))
-                .fontSize(22)
-                .fontWeight(FontWeight.Medium)
-                .fontColor($r('app.color.ink'))
-                .width('100%')
-                .margin({ top: 8 })
-
-              Text(this.t('privacyMessage'))
-                .fontSize(14)
-                .fontColor($r('app.color.ink'))
-                .lineHeight(22)
-                .width('100%')
-            }
-            .width('100%')
-            .padding({ left: 24, right: 24, top: 28, bottom: 16 })
-            .alignItems(HorizontalAlign.Start)
-          }
-          .layoutWeight(1)
-          .width('100%')
-          .align(Alignment.TopStart)
-          .scrollBar(BarState.Off)
-
-          Column({ space: 16 }) {
-            Row({ space: 8 }) {
-              Stack({ alignContent: Alignment.Center }) {
-                Column()
-                  .width(22)
-                  .height(22)
-                  .borderRadius(6)
-                  .backgroundColor(this.privacyChecked ? $r('app.color.brand') : Color.Transparent)
-                  .border({
-                    width: 1.5,
-                    color: this.privacyChecked ? $r('app.color.brand') : $r('app.color.muted')
-                  })
-                if (this.privacyChecked) {
-                  Text('✓')
-                    .fontSize(13)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(Color.White)
-                }
-              }
-              .width(44)
-              .height(44)
-              .flexShrink(0)
-              .onClick(() => {
-                this.privacyChecked = !this.privacyChecked;
-              })
-
-              Flex({
-                wrap: FlexWrap.Wrap,
-                alignItems: ItemAlign.Center
-              }) {
-                Text(this.t('privacyCheckLabel'))
-                  .fontSize(14)
-                  .fontColor($r('app.color.ink'))
-                  .lineHeight(20)
-                  .margin({ right: 2 })
-                  .onClick(() => {
-                    this.privacyChecked = !this.privacyChecked;
-                  })
-                Text(this.t('privacyLink'))
-                  .fontSize(14)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.brand_strong'))
-                  .lineHeight(20)
-                  .onClick(() => this.openPrivacy())
-                Text(this.t('termsLink'))
-                  .fontSize(14)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.brand_strong'))
-                  .lineHeight(20)
-                  .onClick(() => this.openTerms())
-              }
-              .layoutWeight(1)
-            }
-            .width('100%')
-            .alignItems(VerticalAlign.Center)
-
-            Text(this.t('privacyAgree'))
-              .width('100%')
-              .height(52)
-              .fontSize(16)
-              .fontFamily(FiveMinFont.semiBold)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(this.privacyChecked ? Color.White : $r('app.color.muted'))
-              .textAlign(TextAlign.Center)
-              .linearGradient(this.privacyChecked ? {
-                angle: 180,
-                colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55], [$r('app.color.brand_strong'), 1]]
-              } : {
-                angle: 180,
-                colors: [[$r('app.color.brand_soft'), 0], [$r('app.color.brand_soft'), 1]]
-              })
-              .borderRadius(22)
-              .shadow(this.privacyChecked ? {
-                radius: 10,
-                color: 'rgba(47, 154, 104, 0.28)',
-                offsetX: 0,
-                offsetY: 5
-              } : {
-                radius: 0,
-                color: Color.Transparent,
-                offsetX: 0,
-                offsetY: 0
-              })
-              .opacity(this.privacyChecked ? 1 : 0.45)
-              .onClick(() => {
-                if (this.privacyChecked) {
-                  this.acceptPrivacy();
-                }
-              })
-
-            Text(this.t('privacyDisagree'))
-              .width('100%')
-              .height(44)
-              .fontSize(14)
-              .fontColor($r('app.color.muted'))
-              .textAlign(TextAlign.Center)
-              .onClick(() => this.declinePrivacy())
-
-            Text(this.t('privacyFooter'))
-              .fontSize(12)
-              .fontColor($r('app.color.muted'))
-              .width('100%')
-              .lineHeight(18)
-              .textAlign(TextAlign.Center)
-              .margin({ top: 4 })
-          }
-          .width('100%')
-          .padding({ left: 24, right: 24, top: 8, bottom: 28 })
-        }
-        .width('100%')
-        .height('100%')
-        .justifyContent(FlexAlign.Start)
-        .alignItems(HorizontalAlign.Start)
+        // First-launch privacy consent (AppGallery 7.5) — centered card, aligned with Android / iOS / MP.
+        this.PrivacyConsentPane()
       } else if (!this.ready) {
         Text('…')
           .fontSize(18)
@@ -1342,6 +1205,182 @@ struct Index {
     }
     .width('100%')
     .height('100%')
+  }
+
+  @Builder
+  PrivacyConsentPane() {
+    Scroll() {
+      Column({ space: 20 }) {
+        Row({ space: 10 }) {
+          Image($r('app.media.logo'))
+            .width(36)
+            .height(36)
+            .objectFit(ImageFit.Contain)
+          Text(this.t('brandTitle'))
+            .fontSize(20)
+            .fontFamily(FiveMinFont.semiBold)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+        .justifyContent(FlexAlign.Center)
+        .alignItems(VerticalAlign.Center)
+        .width('100%')
+
+        Column({ space: 14 }) {
+          Text(this.t('privacyTitle'))
+            .fontSize(18)
+            .fontFamily(FiveMinFont.semiBold)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.ink'))
+            .width('100%')
+
+          Text(this.t('privacyMessage'))
+            .fontSize(14)
+            .fontColor($r('app.color.muted'))
+            .lineHeight(22)
+            .width('100%')
+
+          Row({ space: 8 }) {
+            Stack({ alignContent: Alignment.Center }) {
+              Column()
+                .width(FiveMinDimens.checkBox)
+                .height(FiveMinDimens.checkBox)
+                .borderRadius(6)
+                .backgroundColor(this.privacyChecked ? $r('app.color.brand') : Color.Transparent)
+                .border({
+                  width: 1.5,
+                  color: this.privacyChecked ? $r('app.color.brand') : $r('app.color.muted')
+                })
+              if (this.privacyChecked) {
+                Text('✓')
+                  .fontSize(13)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(Color.White)
+              }
+            }
+            .width(FiveMinDimens.checkHit)
+            .height(FiveMinDimens.checkHit)
+            .flexShrink(0)
+
+            Text(this.t('privacyCheckLabel'))
+              .fontSize(14)
+              .fontColor($r('app.color.ink'))
+              .lineHeight(20)
+              .layoutWeight(1)
+          }
+          .width('100%')
+          .alignItems(VerticalAlign.Center)
+          .padding({ top: 2, bottom: 2 })
+          .onClick(() => {
+            this.privacyChecked = !this.privacyChecked;
+          })
+
+          Row({ space: 16 }) {
+            Text(this.t('privacyLink'))
+              .fontSize(14)
+              .fontFamily(FiveMinFont.medium)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.brand_strong'))
+              .padding({ top: 6, bottom: 6 })
+              .onClick(() => this.openPrivacy())
+            Text(this.t('termsLink'))
+              .fontSize(14)
+              .fontFamily(FiveMinFont.medium)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r('app.color.brand_strong'))
+              .padding({ top: 6, bottom: 6 })
+              .onClick(() => this.openTerms())
+          }
+          .width('100%')
+          .alignItems(VerticalAlign.Center)
+
+          Text(this.t('privacyAgree'))
+            .width('100%')
+            .height(FiveMinDimens.controlH)
+            .fontSize(16)
+            .fontFamily(FiveMinFont.semiBold)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.privacyChecked ? Color.White : $r('app.color.muted'))
+            .textAlign(TextAlign.Center)
+            .linearGradient(this.privacyChecked ? {
+              angle: 180,
+              colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55],
+                [$r('app.color.brand_strong'), 1]]
+            } : {
+              angle: 180,
+              colors: [[$r('app.color.brand_soft'), 0], [$r('app.color.brand_soft'), 1]]
+            })
+            .borderRadius(FiveMinDimens.radius)
+            .shadow(this.privacyChecked ? {
+              radius: 10,
+              color: 'rgba(47, 154, 104, 0.28)',
+              offsetX: 0,
+              offsetY: 5
+            } : {
+              radius: 0,
+              color: Color.Transparent,
+              offsetX: 0,
+              offsetY: 0
+            })
+            .opacity(this.privacyChecked ? 1 : 0.55)
+            .margin({ top: 4 })
+            .onClick(() => {
+              if (this.privacyChecked) {
+                this.acceptPrivacy();
+              }
+            })
+
+          Text(this.t('privacyDisagree'))
+            .width('100%')
+            .height(40)
+            .fontSize(14)
+            .fontColor($r('app.color.muted'))
+            .textAlign(TextAlign.Center)
+            .onClick(() => this.declinePrivacy())
+
+          Text(this.t('privacyFooter'))
+            .fontSize(12)
+            .fontColor($r('app.color.muted'))
+            .width('100%')
+            .lineHeight(18)
+            .textAlign(TextAlign.Center)
+        }
+        .width('100%')
+        .constraintSize({ maxWidth: 360 })
+        .padding({
+          left: FiveMinDimens.padY,
+          right: FiveMinDimens.padY,
+          top: FiveMinDimens.padY,
+          bottom: FiveMinDimens.padBody
+        })
+        .alignItems(HorizontalAlign.Start)
+        .linearGradient({
+          angle: 180,
+          colors: [['rgba(229, 245, 236, 0.55)', 0], [$r('app.color.surface'), 0.42]]
+        })
+        .borderRadius(FiveMinDimens.radiusDialog)
+        .border({ width: 1, color: FiveMinDimens.cardBorder })
+        .shadow({
+          radius: 20,
+          color: 'rgba(31, 42, 36, 0.14)',
+          offsetX: 0,
+          offsetY: 8
+        })
+      }
+      .width('100%')
+      .padding({ left: 24, right: 24, top: 32, bottom: 36 })
+      .alignItems(HorizontalAlign.Center)
+    }
+    .width('100%')
+    .height('100%')
+    .scrollBar(BarState.Off)
+    .align(Alignment.Center)
+    .linearGradient({
+      angle: 180,
+      colors: [[$r('app.color.bg'), 0], [$r('app.color.bg2'), 0.52], [$r('app.color.bg_bottom'), 1]]
+    })
   }
 
   @Builder
