@@ -76,47 +76,36 @@ struct RootTabView: View {
                         Button {
                             privacyChecked.toggle()
                         } label: {
-                            HStack(alignment: .center, spacing: 8) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .stroke(
-                                            privacyChecked ? FiveMinColor.brand : FiveMinColor.muted,
-                                            lineWidth: 1.5
-                                        )
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                .fill(privacyChecked ? FiveMinColor.brand : Color.clear)
-                                        )
-                                        .frame(width: 22, height: 22)
-                                    if privacyChecked {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 12, weight: .bold))
-                                            .foregroundStyle(.white)
-                                    }
-                                }
-                                .frame(width: 44, height: 44)
-
+                            Label {
                                 Text(model.t("privacyCheckLabel"))
                                     .font(FiveMinFont.ui(14))
                                     .foregroundStyle(FiveMinColor.ink)
                                     .multilineTextAlignment(.leading)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                            } icon: {
+                                Image(systemName: privacyChecked ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 22))
+                                    .foregroundStyle(privacyChecked ? FiveMinColor.brand : FiveMinColor.muted)
+                                    .symbolRenderingMode(.hierarchical)
                             }
-                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .padding(.vertical, 2)
                         .accessibilityAddTraits(.isButton)
+                        .accessibilityValue(privacyChecked ? Text("1") : Text("0"))
 
-                        HStack(spacing: 16) {
+                        HStack(spacing: 8) {
                             Button(model.t("privacyLink")) {
                                 openTrusted("https://5min.chat/privacy.html")
                             }
+                            .buttonStyle(.borderless)
                             .font(FiveMinFont.ui(14, weight: .medium))
                             .foregroundStyle(FiveMinColor.brandStrong)
 
                             Button(model.t("termsLink")) {
                                 openTrusted("https://5min.chat/terms.html")
                             }
+                            .buttonStyle(.borderless)
                             .font(FiveMinFont.ui(14, weight: .medium))
                             .foregroundStyle(FiveMinColor.brandStrong)
                         }
@@ -128,43 +117,13 @@ struct RootTabView: View {
                         } label: {
                             Text(model.t("privacyAgree"))
                                 .font(FiveMinFont.ui(16, weight: .semibold))
-                                .frame(
-                                    maxWidth: .infinity,
-                                    minHeight: FiveMinDimens.controlH,
-                                    maxHeight: FiveMinDimens.controlH
-                                )
-                                .foregroundStyle(privacyChecked ? Color.white : FiveMinColor.muted)
-                                .background(
-                                    Group {
-                                        if privacyChecked {
-                                            LinearGradient(
-                                                colors: [
-                                                    FiveMinColor.brandLift,
-                                                    FiveMinColor.brand,
-                                                    FiveMinColor.brandStrong,
-                                                ],
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                        } else {
-                                            FiveMinColor.brandSoft
-                                        }
-                                    }
-                                )
-                                .clipShape(
-                                    RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                                )
-                                .shadow(
-                                    color: privacyChecked
-                                        ? FiveMinColor.brand.opacity(0.28)
-                                        : .clear,
-                                    radius: privacyChecked ? 10 : 0,
-                                    y: privacyChecked ? 5 : 0
-                                )
+                                .frame(maxWidth: .infinity)
+                                .frame(height: FiveMinDimens.controlH)
                         }
-                        .buttonStyle(.plain)
-                        .opacity(privacyChecked ? 1 : 0.55)
+                        .buttonStyle(.borderedProminent)
+                        .tint(FiveMinColor.brand)
                         .disabled(!privacyChecked)
+                        .opacity(privacyChecked ? 1 : 0.55)
                         .padding(.top, 4)
                         .accessibilityHint(privacyChecked ? "" : model.t("privacyCheckLabel"))
 
@@ -178,16 +137,7 @@ struct RootTabView: View {
                     .padding(.horizontal, FiveMinDimens.padY)
                     .padding(.vertical, FiveMinDimens.padBody)
                     .frame(maxWidth: 360)
-                    .background(
-                        LinearGradient(
-                            colors: [
-                                FiveMinColor.brandSoft.opacity(0.55),
-                                FiveMinColor.surface,
-                            ],
-                            startPoint: .top,
-                            endPoint: .center
-                        )
-                    )
+                    .background(FiveMinColor.surface)
                     .clipShape(
                         RoundedRectangle(cornerRadius: FiveMinDimens.radiusDialog, style: .continuous)
                     )
@@ -195,7 +145,7 @@ struct RootTabView: View {
                         RoundedRectangle(cornerRadius: FiveMinDimens.radiusDialog, style: .continuous)
                             .stroke(FiveMinColor.line.opacity(0.9), lineWidth: 1)
                     )
-                    .shadow(color: FiveMinColor.ink.opacity(0.14), radius: 20, y: 8)
+                    .shadow(color: FiveMinColor.ink.opacity(0.12), radius: 24, y: 10)
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 32)

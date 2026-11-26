@@ -32,20 +32,21 @@ struct RecordsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: FiveMinDimens.listSectionGap) {
-                    Text(model.t("weekStatsLabel"))
-                        .font(FiveMinFont.ui(13, weight: .medium))
-                        .foregroundStyle(FiveMinColor.muted)
-                        .padding(.leading, 4)
-
-                    HStack(spacing: 10) {
-                        statCard(title: model.t("weekStatsCountLabel"), value: "\(periodCount)", unit: nil)
-                        statCard(title: model.t("weekStatsMinsLabel"), value: "\(periodMins)", unit: model.t("customUnit"))
+        NavigationStack {
+            List {
+                Section {
+                    HStack(spacing: 0) {
+                        statMetric(title: model.t("weekStatsCountLabel"), value: "\(periodCount)", unit: nil)
+                        Divider()
+                            .padding(.vertical, 12)
+                        statMetric(title: model.t("weekStatsMinsLabel"), value: "\(periodMins)", unit: model.t("customUnit"))
                     }
-
+                    .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                    .listRowBackground(FiveMinColor.brandSoft.opacity(0.55))
+                    .listRowSeparator(.hidden)
+                } header: {
+                    sectionHeader(model.t("weekStatsLabel"))
+                } footer: {
                     Text(
                         streakDays > 0
                             ? model.t("streakDays", ["n": "\(streakDays)"])
@@ -53,66 +54,85 @@ struct RecordsView: View {
                     )
                     .font(FiveMinFont.ui(13, weight: .medium))
                     .foregroundStyle(FiveMinColor.muted)
-                    .padding(.leading, 4)
-
-                    if P0Features.getShowOvertimeInsight() {
-                        overtimeInsightCard
-                    }
-
-                    HStack {
-                        Text(model.t("historyLabel"))
-                            .font(FiveMinFont.ui(13, weight: .medium))
-                            .foregroundStyle(FiveMinColor.muted)
-                        Spacer()
-                        if !rows.isEmpty {
-                            Button(model.t("historyClear")) {
-                                showClearConfirm = true
-                            }
-                            .font(FiveMinFont.ui(13, weight: .semibold))
-                            .foregroundStyle(FiveMinColor.danger)
-                            .frame(minHeight: 44)
-                            .contentShape(Rectangle())
-                        }
-                    }
-                    .padding(.leading, 4)
-                    .padding(.top, 4)
-
-                    // Always show filter (aligned with Harmony / Android / MP)
-                    sceneFilterPicker
-
-                    VStack(spacing: 0) {
-                        if rows.isEmpty {
-                            Text(model.t("historyEmpty"))
-                                .font(FiveMinFont.ui(14))
-                                .foregroundStyle(FiveMinColor.muted)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 28)
-                                .padding(.horizontal, 20)
-                        } else {
-                            ForEach(rows) { item in
-                                historyRow(item)
-                                Divider().padding(.leading, 16)
-                            }
-                        }
-                    }
-                    .background(FiveMinColor.surface.opacity(0.88))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
-                            .strokeBorder(FiveMinColor.line.opacity(0.9), lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
-                    .shadow(color: FiveMinColor.ink.opacity(0.04), radius: 8, y: 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.horizontal, FiveMinDimens.padBody)
-                .padding(.vertical, FiveMinDimens.padBody)
+
+                if P0Features.getShowOvertimeInsight() {
+                    Section {
+                        overtimeInsightContent
+                    } header: {
+                        sectionHeader(model.t("overtimeInsightTitle"))
+                    }
+                }
+
+                Section {
+                    Picker(model.t("historyFilterLabel"), selection: $filterSceneId) {
+                        Text(model.t("historyFilterAll")).tag(historyFilterAll)
+                        ForEach(sceneFilterOptions, id: \.id) { opt in
+                            Text(opt.label).tag(opt.id)
+                        }
+                    }
+                    .tint(FiveMinColor.brandStrong)
+
+                    if rows.isEmpty {
+                        Text(model.t("historyEmpty"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.muted)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, 16)
+                    } else {
+                        ForEach(rows) { item in
+                            historyRow(item)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        pendingDeleteId = item.id
+                                    } label: {
+                                        Label(model.t("historyDelete"), systemImage: "trash")
+                                    }
+                                    .tint(FiveMinColor.danger)
+                                }
+                        }
+
+                        Button(role: .destructive) {
+                            showClearConfirm = true
+                        } label: {
+                            Text(model.t("historyClear"))
+                                .font(FiveMinFont.ui(16, weight: .medium))
+                                .foregroundStyle(FiveMinColor.danger)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .tint(FiveMinColor.danger)
+                    }
+                } header: {
+                    sectionHeader(model.t("historyLabel"))
+                }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .background(
                 LinearGradient(
                     colors: [FiveMinColor.bg, FiveMinColor.bg2, FiveMinColor.bgBottom],
                     startPoint: .top,
                     endPoint: .bottom
                 )
+                .ignoresSafeArea()
             )
+            .navigationTitle(model.t("tabRecords"))
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: shareText) {
+                        Label(model.t("shareLabel"), systemImage: "square.and.arrow.up")
+                    }
+                    .tint(FiveMinColor.brandStrong)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: exportCsvURL) {
+                        Label(model.t("exportLabel"), systemImage: "square.and.arrow.down")
+                    }
+                    .tint(FiveMinColor.brandStrong)
+                }
+            }
         }
         .task(id: model.recordsEpoch) { reload() }
         .onChange(of: model.locale) { _, _ in reload() }
@@ -139,6 +159,13 @@ struct RecordsView: View {
         }
     }
 
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(FiveMinFont.ui(13, weight: .medium))
+            .foregroundStyle(FiveMinColor.muted)
+            .textCase(nil)
+    }
+
     private var deleteConfirmBinding: Binding<Bool> {
         Binding(
             get: { pendingDeleteId != nil },
@@ -146,53 +173,7 @@ struct RecordsView: View {
         )
     }
 
-    private var sceneFilterPicker: some View {
-        HStack(spacing: 8) {
-            Text(model.t("historyFilterLabel"))
-                .font(FiveMinFont.ui(13, weight: .medium))
-                .foregroundStyle(FiveMinColor.muted)
-            Picker("", selection: $filterSceneId) {
-                Text(model.t("historyFilterAll")).tag(historyFilterAll)
-                ForEach(sceneFilterOptions, id: \.id) { opt in
-                    Text(opt.label).tag(opt.id)
-                }
-            }
-            .pickerStyle(.menu)
-            .tint(FiveMinColor.brandStrong)
-        }
-        .padding(.leading, 4)
-    }
-
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text(model.t("tabRecords"))
-                .font(FiveMinFont.ui(20, weight: .semibold))
-                .foregroundStyle(FiveMinColor.ink)
-            Spacer()
-            ShareLink(item: shareText) {
-                Text(model.t("shareLabel"))
-                    .font(FiveMinFont.ui(14, weight: .semibold))
-                    .foregroundStyle(FiveMinColor.brandStrong)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            ShareLink(item: exportCsvURL) {
-                Text(model.t("exportLabel"))
-                    .font(FiveMinFont.ui(14, weight: .semibold))
-                    .foregroundStyle(FiveMinColor.brandStrong)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-        }
-        .padding(.horizontal, 20)
-        .frame(height: 52)
-        .background(FiveMinColor.surface.opacity(0.72))
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(FiveMinColor.line.opacity(0.85)).frame(height: 1)
-        }
-    }
-
-    private func statCard(title: String, value: String, unit: String?) -> some View {
+    private func statMetric(title: String, value: String, unit: String?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(FiveMinFont.ui(12, weight: .medium))
@@ -210,16 +191,10 @@ struct RecordsView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(FiveMinColor.brandSoft.opacity(0.55))
-        .overlay(
-            RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
-                .strokeBorder(FiveMinColor.brand.opacity(0.12), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
+        .padding(.horizontal, 4)
     }
 
-    private var overtimeInsightCard: some View {
+    private var overtimeInsightContent: some View {
         let stats = P0Features.readOvertimeStats()
         let line: String
         if stats.count > 0 {
@@ -231,58 +206,43 @@ struct RecordsView: View {
             line = model.t("overtimeInsightEmpty")
         }
         return VStack(alignment: .leading, spacing: 8) {
-            Text(model.t("overtimeInsightTitle"))
-                .font(FiveMinFont.ui(15, weight: .semibold))
-                .foregroundStyle(FiveMinColor.ink)
             Text(line)
-                .font(FiveMinFont.ui(14))
+                .font(FiveMinFont.ui(15))
                 .foregroundStyle(FiveMinColor.ink)
             Text(model.t("overtimeInsightHint"))
-                .font(FiveMinFont.ui(12))
+                .font(FiveMinFont.ui(13))
                 .foregroundStyle(FiveMinColor.muted)
             Text(model.t("overtimeInsightTip"))
-                .font(FiveMinFont.ui(12))
+                .font(FiveMinFont.ui(13))
                 .foregroundStyle(FiveMinColor.muted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(FiveMinColor.warnSoft.opacity(0.72))
-        .overlay(
-            RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
-                .strokeBorder(FiveMinColor.warn.opacity(0.16), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
+        .padding(.vertical, 4)
     }
 
     private func historyRow(_ item: HistoryItem) -> some View {
         let scene = sceneName(item.sceneId)
-        return HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(model.t("historySceneLine", ["scene": scene]))
-                    .font(FiveMinFont.ui(15))
-                    .foregroundStyle(FiveMinColor.ink)
-                Text(model.t("historyDurationLine", ["n": "\(item.minutes)"]))
-                    .font(FiveMinFont.ui(15))
-                    .foregroundStyle(FiveMinColor.ink)
-                Text(model.t("historyTimeLine", ["time": formatDateTime(item.at)]))
-                    .font(FiveMinFont.ui(15))
-                    .foregroundStyle(FiveMinColor.ink)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Button {
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(scene)
+                .font(FiveMinFont.ui(16, weight: .medium))
+                .foregroundStyle(FiveMinColor.ink)
+            Text("\(model.t("historyDurationLine", ["n": "\(item.minutes)"])) · \(formatDateTime(item.at))")
+                .font(FiveMinFont.ui(13, weight: .medium))
+                .foregroundStyle(FiveMinColor.muted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(model.t("historySceneLine", ["scene": scene])), \(model.t("historyDurationLine", ["n": "\(item.minutes)"])), \(model.t("historyTimeLine", ["time": formatDateTime(item.at)]))"
+        )
+        .contextMenu {
+            Button(role: .destructive) {
                 pendingDeleteId = item.id
             } label: {
-                Text(model.t("historyDelete"))
-                    .font(FiveMinFont.ui(13, weight: .semibold))
-                    .foregroundStyle(FiveMinColor.danger)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
+                Label(model.t("historyDelete"), systemImage: "trash")
             }
-            .buttonStyle(.plain)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
     }
 
     private func sceneName(_ sceneId: String) -> String {

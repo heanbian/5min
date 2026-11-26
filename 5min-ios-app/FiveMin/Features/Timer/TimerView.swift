@@ -78,10 +78,6 @@ struct TimerView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                if model.showRitual {
-                    ritualOverlay
-                }
             }
         }
         .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
@@ -89,102 +85,27 @@ struct TimerView: View {
             ScenePickerView()
                 .environment(model)
                 .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(FiveMinDimens.radiusSheet)
+        }
+        .sheet(isPresented: ritualPresented) {
+            ritualSheet
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(FiveMinDimens.radiusSheet)
         }
     }
 
-    private var ritualOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.42)
-                .ignoresSafeArea()
-                .allowsHitTesting(true)
-
-            VStack(alignment: .leading, spacing: 16) {
-                let pack = model.ritualPackForActiveScene()
-                let steps = pack.stepKeys
-                Text(model.t(pack.titleKey))
-                    .font(FiveMinFont.ui(18, weight: .semibold))
-                    .foregroundStyle(FiveMinColor.ink)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                VStack(alignment: .leading, spacing: 12) {
-                    ritualStep(
-                        label: model.t(steps.count > 0 ? steps[0] : "standRitualStepUp"),
-                        isOn: model.ritualUp
-                    ) {
-                        model.ritualUp.toggle()
-                    }
-                    ritualStep(
-                        label: model.t(steps.count > 1 ? steps[1] : "standRitualStepStretch"),
-                        isOn: model.ritualStretch
-                    ) {
-                        model.ritualStretch.toggle()
-                    }
-                    ritualStep(
-                        label: model.t(steps.count > 2 ? steps[2] : "standRitualStepLeave"),
-                        isOn: model.ritualLeave
-                    ) {
-                        model.ritualLeave.toggle()
-                    }
-                }
-
-                HStack(spacing: 10) {
-                    Button(model.t("standRitualSkip")) {
-                        model.dismissRitual()
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
-                    Button(model.t("standRitualDone")) {
-                        model.dismissRitual()
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                }
-                .padding(.top, 4)
-            }
-            .padding(20)
-            .frame(maxWidth: 360)
-            .background(
-                LinearGradient(
-                    colors: [FiveMinColor.brandSoft.opacity(0.45), FiveMinColor.surface],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusDialog, style: .continuous))
-            .shadow(color: FiveMinColor.ink.opacity(0.16), radius: 20, y: 8)
-            .padding(.horizontal, 28)
-        }
+    private var ritualPresented: Binding<Bool> {
+        Binding(
+            get: { model.showRitual },
+            set: { if !$0 { model.dismissRitual() } }
+        )
     }
 
-    private func ritualStep(label: String, isOn: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isOn ? FiveMinColor.brandSoft : FiveMinColor.surface)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .stroke(
-                                    isOn ? FiveMinColor.brandStrong : FiveMinColor.muted.opacity(0.72),
-                                    lineWidth: 1.75
-                                )
-                        )
-                        .frame(width: 24, height: 24)
-                    if isOn {
-                        Image(systemName: "checkmark")
-                            .font(FiveMinFont.ui(12, weight: .bold))
-                            .foregroundStyle(FiveMinColor.brandStrong)
-                    }
-                }
-                Text(label)
-                    .font(FiveMinFont.ui(15))
-                    .foregroundStyle(FiveMinColor.ink)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+    private var ritualSheet: some View {
+        RitualSheetView()
+            .environment(model)
     }
 
     /// Prefer scene / window bounds over device idiom — required for iPhone Duo resize.
@@ -359,61 +280,68 @@ struct TimerView: View {
     }
 
     // MARK: - Actions
+    // Hierarchy: primary Start/Reset (52) → secondary scene menu (40) → tertiary chips (28)
 
     private var actions: some View {
-        VStack(spacing: FiveMinDimens.controlGap) {
-            HStack(spacing: FiveMinDimens.controlGap) {
-                Button(model.startLabel) { model.toggleStart() }
-                    .buttonStyle(PrimaryButtonStyle())
-                Button(model.t("reset")) { model.reset() }
-                    .buttonStyle(SecondaryButtonStyle(enabled: resetEnabled))
-                    .disabled(!resetEnabled)
-            }
-
-            if model.canIgnoreFinish {
-                Button(model.t("finishIgnore")) { model.ignoreLastSession() }
-                    .buttonStyle(IgnoreButtonStyle())
-                    .frame(maxWidth: .infinity)
-            }
-
-            Button {
-                showScenes = true
-            } label: {
-                HStack {
-                    Text(sceneLabel)
-                        .font(FiveMinFont.ui(14, weight: .semibold))
-                        .foregroundStyle(
-                            !setupEnabled
-                            ? FiveMinColor.muted.opacity(0.4)
-                            : (scenePlaceholder ? FiveMinColor.muted : FiveMinColor.ink)
-                        )
-                        .lineLimit(1)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(FiveMinFont.ui(12, weight: .semibold))
-                        .foregroundStyle(FiveMinColor.muted)
+        VStack(spacing: FiveMinDimens.sectionGap) {
+            VStack(spacing: FiveMinDimens.controlGap) {
+                HStack(spacing: FiveMinDimens.controlGap) {
+                    Button(model.startLabel) { model.toggleStart() }
+                        .buttonStyle(PrimaryButtonStyle())
+                    Button(model.t("reset")) { model.reset() }
+                        .buttonStyle(SecondaryButtonStyle(enabled: resetEnabled))
+                        .disabled(!resetEnabled)
                 }
-                .padding(.horizontal, 14)
-                .frame(maxWidth: .infinity, minHeight: FiveMinDimens.rowH)
-                .background(FiveMinColor.surface)
-                .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                        .stroke(FiveMinColor.line, lineWidth: 1)
-                )
-            }
-            .disabled(!setupEnabled)
-            .opacity(setupEnabled ? 1 : 0.55)
 
-            if !model.chipSceneIds.isEmpty {
-                suggestedChips
+                if model.canIgnoreFinish {
+                    Button(model.t("finishIgnore")) { model.ignoreLastSession() }
+                        .buttonStyle(IgnoreButtonStyle())
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            VStack(spacing: 8) {
+                sceneMenuButton
+                if !model.chipSceneIds.isEmpty {
+                    suggestedChips
+                }
             }
         }
     }
 
+    private var sceneMenuButton: some View {
+        Button {
+            showScenes = true
+        } label: {
+            HStack(spacing: 8) {
+                Text(sceneLabel)
+                    .font(FiveMinFont.ui(13, weight: .medium))
+                    .foregroundStyle(
+                        !setupEnabled
+                        ? FiveMinColor.muted.opacity(0.4)
+                        : (scenePlaceholder ? FiveMinColor.muted : FiveMinColor.ink)
+                    )
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.muted.opacity(0.7))
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: FiveMinDimens.secondaryControlH)
+            .background(FiveMinColor.ghostBg.opacity(0.85))
+            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusSm, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!setupEnabled)
+        .opacity(setupEnabled ? 1 : 0.55)
+        .accessibilityHint(model.t("scenesLabel"))
+    }
+
     private var suggestedChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 ForEach(model.chipSceneIds, id: \.self) { id in
                     let active = id == model.activeSceneId
                     Button {
@@ -421,60 +349,93 @@ struct TimerView: View {
                         model.selectScene(id)
                     } label: {
                         Text(model.sceneTitle(for: id) ?? id)
-                            .font(FiveMinFont.ui(13, weight: .semibold))
-                            .foregroundStyle(active ? Color.white : FiveMinColor.brandStrong)
+                            .font(FiveMinFont.ui(12, weight: .medium))
+                            .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
                             .lineLimit(1)
-                            .padding(.horizontal, 14)
+                            .padding(.horizontal, 11)
                             .frame(height: FiveMinDimens.suggestedChipH)
-                            .background(
-                                Group {
-                                    if active {
-                                        LinearGradient(
-                                            colors: [
-                                                FiveMinColor.brandLift,
-                                                FiveMinColor.brand,
-                                            ],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    } else {
-                                        FiveMinColor.surface.opacity(0.55)
-                                    }
-                                }
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
+                            .background(active ? FiveMinColor.brandSoft : FiveMinColor.surface.opacity(0.72))
+                            .clipShape(Capsule())
                             .overlay(
-                                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                                    .stroke(
-                                        active ? Color.clear : FiveMinColor.brand.opacity(0.18),
+                                Capsule()
+                                    .strokeBorder(
+                                        active ? FiveMinColor.brand.opacity(0.28) : FiveMinColor.line.opacity(0.9),
                                         lineWidth: 1
                                     )
-                            )
-                            .shadow(
-                                color: active ? FiveMinColor.brand.opacity(0.28) : .clear,
-                                radius: active ? 6 : 0,
-                                y: active ? 3 : 0
                             )
                     }
                     .buttonStyle(.plain)
                     .disabled(!setupEnabled)
                     .opacity(setupEnabled ? 1 : 0.55)
                 }
-                Spacer(minLength: 0)
             }
-            .padding(6)
+            .padding(.vertical, 2)
         }
-        .background(FiveMinColor.brandSoft.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                .stroke(FiveMinColor.brand.opacity(0.12), lineWidth: 1)
-        )
         .accessibilityLabel(model.t(SceneRanker.labelKey))
     }
 
     private var sceneLabel: String {
         model.sceneLabel(for: model.activeSceneId) ?? model.t("scenePlaceholder")
+    }
+}
+
+// MARK: - Ritual sheet
+
+private struct RitualSheetView: View {
+    @Environment(TimerViewModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        let pack = model.ritualPackForActiveScene()
+        let steps = pack.stepKeys
+        return NavigationStack {
+            List {
+                Section {
+                    Toggle(isOn: $model.ritualUp) {
+                        Text(model.t(steps.count > 0 ? steps[0] : "standRitualStepUp"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.ink)
+                    }
+                    .tint(FiveMinColor.brand)
+                    Toggle(isOn: $model.ritualStretch) {
+                        Text(model.t(steps.count > 1 ? steps[1] : "standRitualStepStretch"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.ink)
+                    }
+                    .tint(FiveMinColor.brand)
+                    Toggle(isOn: $model.ritualLeave) {
+                        Text(model.t(steps.count > 2 ? steps[2] : "standRitualStepLeave"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.ink)
+                    }
+                    .tint(FiveMinColor.brand)
+                } header: {
+                    Text(model.t(pack.titleKey))
+                        .font(FiveMinFont.ui(13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .textCase(nil)
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(FiveMinColor.bg2)
+            .navigationTitle(model.t("standRitualLabel"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(model.t("standRitualSkip")) {
+                        model.dismissRitual()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(model.t("standRitualDone")) {
+                        model.dismissRitual()
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(FiveMinColor.brandStrong)
+                }
+            }
+        }
     }
 }
 
@@ -497,13 +458,11 @@ struct ScenePickerView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: FiveMinDimens.controlGap, pinnedViews: []) {
-                    ForEach(model.pickerGroups) { group in
-                        let items = model.scenes(inGroup: group.id)
-                        if !items.isEmpty {
-                            groupHeader(model.t(group.labelKey))
-                                .id("hdr:\(group.id)")
+            List {
+                ForEach(model.pickerGroups) { group in
+                    let items = model.scenes(inGroup: group.id)
+                    if !items.isEmpty {
+                        Section {
                             ForEach(items.map { ScenePickerRow(groupId: group.id, scene: $0) }) { row in
                                 let scene = row.scene
                                 let active = scene.id == model.activeSceneId
@@ -511,25 +470,35 @@ struct ScenePickerView: View {
                                     model.selectScene(scene.id)
                                     dismiss()
                                 } label: {
-                                    Text(model.sceneLabel(for: scene.id) ?? scene.id)
-                                        .font(FiveMinFont.ui(14, weight: .semibold))
-                                        .foregroundStyle(active ? FiveMinColor.brandStrong : FiveMinColor.muted)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 12)
-                                        .frame(minHeight: FiveMinDimens.rowH)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: FiveMinDimens.radiusSm, style: .continuous)
-                                                .fill(active ? FiveMinColor.brandSoft : .clear)
-                                        )
+                                    HStack {
+                                        Text(model.sceneLabel(for: scene.id) ?? scene.id)
+                                            .font(FiveMinFont.ui(15))
+                                            .foregroundStyle(FiveMinColor.ink)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        if active {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 15, weight: .semibold))
+                                                .foregroundStyle(FiveMinColor.brandStrong)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
                                 }
+                                .buttonStyle(.plain)
+                                .listRowBackground(active ? FiveMinColor.brandSoft.opacity(0.65) : FiveMinColor.surface)
                             }
+                        } header: {
+                            Text(model.t(group.labelKey))
+                                .font(FiveMinFont.ui(13, weight: .medium))
+                                .foregroundStyle(FiveMinColor.muted)
+                                .textCase(nil)
                         }
                     }
                 }
-                .padding(FiveMinDimens.padX)
-                .task { model.refreshSuggested() }
             }
-            .background(FiveMinColor.surface)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(FiveMinColor.bg2)
+            .task { model.refreshSuggested() }
             .navigationTitle(model.t("scenesLabel"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -540,29 +509,6 @@ struct ScenePickerView: View {
                 }
             }
         }
-    }
-
-    private func groupHeader(_ title: String) -> some View {
-        HStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(FiveMinColor.brand)
-                .frame(width: 3, height: 12)
-            Text(title)
-                .font(FiveMinFont.ui(11, weight: .bold))
-                .tracking(0.8)
-                .foregroundStyle(FiveMinColor.brandStrong)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(FiveMinColor.brandSoft.opacity(0.72))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(FiveMinColor.brand.opacity(0.14), lineWidth: 1)
-        )
     }
 }
 
@@ -587,11 +533,13 @@ struct PrimaryButtonStyle: ButtonStyle {
             )
             .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
             .shadow(
-                color: FiveMinColor.brand.opacity(configuration.isPressed ? 0.18 : 0.32),
-                radius: configuration.isPressed ? 4 : 10,
-                y: configuration.isPressed ? 2 : 6
+                color: FiveMinColor.brand.opacity(configuration.isPressed ? 0.12 : 0.22),
+                radius: configuration.isPressed ? 3 : 8,
+                y: configuration.isPressed ? 1 : 4
             )
             .opacity(configuration.isPressed ? 0.92 : 1)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
@@ -611,10 +559,12 @@ struct SecondaryButtonStyle: ButtonStyle {
                         configuration.isPressed
                             ? FiveMinColor.brand.opacity(0.35)
                             : FiveMinColor.line,
-                        lineWidth: 1.5
+                        lineWidth: 1
                     )
             )
-            .shadow(color: Color.black.opacity(0.04), radius: 4, y: 2)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 

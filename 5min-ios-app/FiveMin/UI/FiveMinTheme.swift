@@ -54,22 +54,26 @@ enum FiveMinColor {
 
 enum FiveMinDimens {
     static let radiusSm: CGFloat = 12
-    /// 首页操作按钮 / 场景选择 / 芯片统一大圆角
-    static let radius: CGFloat = 22
+    /// 首页操作按钮 / 场景选择 — continuous rounded rect
+    static let radius: CGFloat = 20
     /// 列表卡片 / 统计卡
-    static let radiusCard: CGFloat = 14
-    /// 弹层卡片（仪式等）
-    static let radiusDialog: CGFloat = 16
-    /// 底部 sheet 顶角
-    static let radiusSheet: CGFloat = 18
+    static let radiusCard: CGFloat = 16
+    /// Sheet / dialog corner (iOS system ≈ 28)
+    static let radiusDialog: CGFloat = 28
+    /// Bottom sheet presentation chrome
+    static let radiusSheet: CGFloat = 28
+    /// Primary CTA height (Start / Reset)
     static let controlH: CGFloat = 52
     static let fieldH: CGFloat = 52
+    /// Secondary control (scene menu) — clearly below primary
+    static let secondaryControlH: CGFloat = 40
     static let rowH: CGFloat = 40
     /// 筛选胶囊 / 快捷分钟芯片高度
-    static let chipH: CGFloat = 40
-    static let filterChipH: CGFloat = 40
-    /// 首页推荐场景胶囊
-    static let suggestedChipH: CGFloat = 32
+    static let chipH: CGFloat = 36
+    static let filterChipH: CGFloat = 36
+    /// Tertiary suggested scene chips
+    static let suggestedChipH: CGFloat = 28
+    static let chipRadius: CGFloat = 14
     static let padX: CGFloat = 20
     static let padY: CGFloat = 18
     static let padBody: CGFloat = 16

@@ -37,233 +37,192 @@ struct MineView: View {
     private let quickMins = [3, 5, 10, 15, 25]
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: FiveMinDimens.listSectionGap) {
-                    sectionTitle(model.t("mineSectionPrefs"))
-                    card {
-                        prefRow(model.t("langLabel"), value: model.catalog.t(model.locale, "nativeName")) {
-                            sheet = .lang
-                        }
-                        Divider().padding(.leading, 16)
-                        prefRow(model.t("ambientLabel"), value: ambientLabel(model.ambient)) {
-                            sheet = .sound
-                        }
-                        Divider().padding(.leading, 16)
-                        prefRow(model.t("customScenesLabel"), value: customScenesValue) {
-                            sheet = .customScenes
-                        }
+        NavigationStack {
+            List {
+                Section {
+                    prefRow(model.t("langLabel"), value: model.catalog.t(model.locale, "nativeName")) {
+                        sheet = .lang
                     }
+                    prefRow(model.t("ambientLabel"), value: ambientLabel(model.ambient)) {
+                        sheet = .sound
+                    }
+                    prefRow(model.t("customScenesLabel"), value: customScenesValue) {
+                        sheet = .customScenes
+                    }
+                } header: {
+                    Text(model.t("mineSectionPrefs"))
+                        .font(FiveMinFont.ui(13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .textCase(nil)
+                }
 
-                    sectionTitle(model.t("prefAlertsSection"))
-                    card {
-                        // Order aligned with Harmony / Android / MP:
-                        // tone → vibrate → notify → overtime insight → alert profile
-                        alertToggleRow(model.t("prefFinishTone"), isOn: alertBinding(
-                            get: { model.finishTone },
-                            set: { model.setFinishTone($0) }
-                        ))
-                        Divider().padding(.leading, 16)
-                        alertToggleRow(model.t("prefFinishVibrate"), isOn: alertBinding(
-                            get: { model.finishVibrate },
-                            set: { model.setFinishVibrate($0) }
-                        ))
-                        Divider().padding(.leading, 16)
-                        alertToggleRow(model.t("prefFinishNotify"), isOn: alertBinding(
-                            get: { model.finishNotify },
-                            set: { model.setFinishNotify($0) }
-                        ))
-                        Divider().padding(.leading, 16)
-                        alertToggleRow(model.t("prefOvertimeInsight"), isOn: $overtimeInsight)
-                        Divider().padding(.leading, 16)
-                        prefRow(model.t("alertProfileLabel"), value: alertProfileValue) {
-                            sheet = .alertProfile
-                        }
+                Section {
+                    // Order aligned with Harmony / Android / MP:
+                    // tone → vibrate → notify → overtime insight → alert profile
+                    alertToggleRow(model.t("prefFinishTone"), isOn: alertBinding(
+                        get: { model.finishTone },
+                        set: { model.setFinishTone($0) }
+                    ))
+                    alertToggleRow(model.t("prefFinishVibrate"), isOn: alertBinding(
+                        get: { model.finishVibrate },
+                        set: { model.setFinishVibrate($0) }
+                    ))
+                    alertToggleRow(model.t("prefFinishNotify"), isOn: alertBinding(
+                        get: { model.finishNotify },
+                        set: { model.setFinishNotify($0) }
+                    ))
+                    alertToggleRow(model.t("prefOvertimeInsight"), isOn: $overtimeInsight)
+                    prefRow(model.t("alertProfileLabel"), value: alertProfileValue) {
+                        sheet = .alertProfile
                     }
+                } header: {
+                    Text(model.t("prefAlertsSection"))
+                        .font(FiveMinFont.ui(13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .textCase(nil)
+                } footer: {
                     Text(model.t("alertProfileHint"))
                         .font(FiveMinFont.ui(12))
                         .foregroundStyle(FiveMinColor.muted)
-                        .padding(.horizontal, 4)
+                }
 
-                    sectionTitle(model.t("standRitualSection"))
-                    card {
-                        prefRow(model.t("standRitualLabel"), value: standRitualValue) {
-                            sheet = .standRitual
-                        }
+                Section {
+                    prefRow(model.t("standRitualLabel"), value: standRitualValue) {
+                        sheet = .standRitual
                     }
-
-                    sectionTitle(model.t("storageSection"))
-                    card {
-                        prefRow(
-                            model.t("storageModeLabel"),
-                            value: model.storageMode == PrefsStore.modeCloud
-                                ? model.t("storageModeCloud")
-                                : model.t("storageModeLocal")
-                        ) {
-                            sheet = .storage
-                        }
-                    }
-                    Text(model.t("storageModeHint"))
-                        .font(FiveMinFont.ui(12))
+                } header: {
+                    Text(model.t("standRitualSection"))
+                        .font(FiveMinFont.ui(13, weight: .medium))
                         .foregroundStyle(FiveMinColor.muted)
-                        .padding(.horizontal, 4)
-                    if !model.storageSyncStatus.isEmpty {
-                        Text(model.storageSyncStatus)
-                            .font(FiveMinFont.ui(12))
-                            .foregroundStyle(FiveMinColor.muted)
-                            .padding(.horizontal, 4)
+                        .textCase(nil)
+                }
+
+                Section {
+                    prefRow(
+                        model.t("storageModeLabel"),
+                        value: model.storageMode == PrefsStore.modeCloud
+                            ? model.t("storageModeCloud")
+                            : model.t("storageModeLocal")
+                    ) {
+                        sheet = .storage
                     }
+
                     if model.storageMode == PrefsStore.modeCloud, !model.recoveryCode().isEmpty {
-                        card {
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.18)) {
-                                    backupRevealed.toggle()
-                                }
-                            } label: {
-                                HStack {
-                                    Text(model.t("storageBackupShow"))
-                                        .font(FiveMinFont.ui(15))
-                                        .foregroundStyle(FiveMinColor.ink)
-                                    Spacer(minLength: 0)
-                                    Text("›")
-                                        .font(FiveMinFont.ui(18))
-                                        .foregroundStyle(FiveMinColor.muted)
-                                        .rotationEffect(.degrees(backupRevealed ? 90 : 0))
-                                }
-                                .padding(.horizontal, 16)
-                                .frame(minHeight: 48)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            if backupRevealed {
-                                Divider().padding(.leading, 16)
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text(model.recoveryCode())
-                                        .font(FiveMinFont.ui(12))
-                                        .monospaced()
-                                        .foregroundStyle(FiveMinColor.ink)
-                                        .textSelection(.enabled)
-                                        .lineSpacing(4)
-                                    Text(model.t("storageBackupHint"))
-                                        .font(FiveMinFont.ui(12))
-                                        .foregroundStyle(FiveMinColor.muted)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                    Button {
-                                        UIPasteboard.general.string = model.recoveryCode()
-                                    } label: {
-                                        Text(model.t("storageBackupCopy"))
-                                            .font(FiveMinFont.ui(15, weight: .semibold))
-                                            .foregroundStyle(.white)
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 44)
-                                            .background(FiveMinColor.brand)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 14)
-                            }
-                        }
-                    }
-                    card {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.18)) {
-                                restoreRevealed.toggle()
-                            }
-                        } label: {
-                            HStack {
-                                Text(model.t("storageRestoreLabel"))
-                                    .font(FiveMinFont.ui(15))
-                                    .foregroundStyle(FiveMinColor.ink)
-                                Spacer(minLength: 0)
-                                Text("›")
-                                    .font(FiveMinFont.ui(18))
-                                    .foregroundStyle(FiveMinColor.muted)
-                                    .rotationEffect(.degrees(restoreRevealed ? 90 : 0))
-                            }
-                            .padding(.horizontal, 16)
-                            .frame(minHeight: 48)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        if restoreRevealed {
-                            Divider().padding(.leading, 16)
+                        DisclosureGroup(isExpanded: $backupRevealed) {
                             VStack(alignment: .leading, spacing: 12) {
-                                TextField(model.t("storageRestorePlaceholder"), text: $restoreCode)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-                                    .font(FiveMinFont.ui(13))
-                                    .padding(.horizontal, 12)
-                                    .frame(height: 44)
-                                    .background(FiveMinColor.bg2)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                Text(model.t("storageRestoreHint"))
+                                Text(model.recoveryCode())
+                                    .font(FiveMinFont.ui(12))
+                                    .monospaced()
+                                    .foregroundStyle(FiveMinColor.ink)
+                                    .textSelection(.enabled)
+                                    .lineSpacing(4)
+                                Text(model.t("storageBackupHint"))
                                     .font(FiveMinFont.ui(12))
                                     .foregroundStyle(FiveMinColor.muted)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Button {
-                                    Task {
-                                        let (ok, _) = await model.restoreWithCode(restoreCode)
-                                        if ok {
-                                            restoreCode = ""
-                                            backupRevealed = false
-                                            restoreRevealed = false
-                                        }
-                                    }
+                                    UIPasteboard.general.string = model.recoveryCode()
                                 } label: {
-                                    Text(model.t("storageRestoreAction"))
-                                        .font(FiveMinFont.ui(15, weight: .semibold))
-                                        .foregroundStyle(.white)
+                                    Text(model.t("storageBackupCopy"))
                                         .frame(maxWidth: .infinity)
-                                        .frame(height: 44)
-                                        .background(FiveMinColor.brand)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.large)
+                                .tint(FiveMinColor.brand)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 14)
+                            .padding(.vertical, 4)
+                        } label: {
+                            Text(model.t("storageBackupShow"))
+                                .font(FiveMinFont.ui(15))
+                                .foregroundStyle(FiveMinColor.ink)
                         }
                     }
 
-                    sectionTitle(model.t("mineSectionSupport"))
-                    card {
-                        linkRow(model.t("privacyLink")) {
-                            openTrusted("https://5min.chat/privacy.html")
+                    DisclosureGroup(isExpanded: $restoreRevealed) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            TextField(model.t("storageRestorePlaceholder"), text: $restoreCode)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .font(FiveMinFont.ui(13))
+                            Text(model.t("storageRestoreHint"))
+                                .font(FiveMinFont.ui(12))
+                                .foregroundStyle(FiveMinColor.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button {
+                                Task {
+                                    let (ok, _) = await model.restoreWithCode(restoreCode)
+                                    if ok {
+                                        restoreCode = ""
+                                        backupRevealed = false
+                                        restoreRevealed = false
+                                    }
+                                }
+                            } label: {
+                                Text(model.t("storageRestoreAction"))
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                            .tint(FiveMinColor.brand)
                         }
-                        Divider().padding(.leading, 16)
-                        linkRow(model.t("termsLink")) {
-                            openTrusted("https://5min.chat/terms.html")
-                        }
-                        Divider().padding(.leading, 16)
-                        linkRow(model.t("aboutLabel")) {
-                            openTrusted("https://5min.chat/about.html")
-                        }
-                        Divider().padding(.leading, 16)
-                        linkRow(model.t("feedbackLabel")) {
-                            sheet = .feedback
-                        }
-                        Divider().padding(.leading, 16)
-                        linkRow(model.t("beianEntry")) {
-                            showBeianAlert = true
-                        }
-                        Divider().padding(.leading, 16)
-                        versionRow
+                        .padding(.vertical, 4)
+                    } label: {
+                        Text(model.t("storageRestoreLabel"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.ink)
                     }
-
+                } header: {
+                    Text(model.t("storageSection"))
+                        .font(FiveMinFont.ui(13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .textCase(nil)
+                } footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(model.t("storageModeHint"))
+                        if !model.storageSyncStatus.isEmpty {
+                            Text(model.storageSyncStatus)
+                        }
+                    }
+                    .font(FiveMinFont.ui(12))
+                    .foregroundStyle(FiveMinColor.muted)
                 }
-                .padding(.horizontal, FiveMinDimens.padBody)
-                .padding(.vertical, FiveMinDimens.padBody)
+
+                Section {
+                    linkRow(model.t("privacyLink")) {
+                        openTrusted("https://5min.chat/privacy.html")
+                    }
+                    linkRow(model.t("termsLink")) {
+                        openTrusted("https://5min.chat/terms.html")
+                    }
+                    linkRow(model.t("aboutLabel")) {
+                        openTrusted("https://5min.chat/about.html")
+                    }
+                    linkRow(model.t("feedbackLabel")) {
+                        sheet = .feedback
+                    }
+                    linkRow(model.t("beianEntry")) {
+                        showBeianAlert = true
+                    }
+                    versionRow
+                } header: {
+                    Text(model.t("mineSectionSupport"))
+                        .font(FiveMinFont.ui(13, weight: .medium))
+                        .foregroundStyle(FiveMinColor.muted)
+                        .textCase(nil)
+                }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
             .background(
                 LinearGradient(
                     colors: [FiveMinColor.bg, FiveMinColor.bg2, FiveMinColor.bgBottom],
                     startPoint: .top,
                     endPoint: .bottom
                 )
+                .ignoresSafeArea()
             )
+            .navigationTitle(model.t("tabMine"))
+            .navigationBarTitleDisplayMode(.large)
         }
         .onChange(of: overtimeInsight) { _, on in
             model.setShowOvertimeInsight(on)
@@ -271,6 +230,8 @@ struct MineView: View {
         .sheet(item: $sheet, onDismiss: { sceneEditor = nil }) { kind in
             sheetContent(kind)
                 .presentationDetents(kind == .customScenes ? [.medium, .large] : [.medium])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(FiveMinDimens.radiusSheet)
         }
         .alert(model.t("beianTitle"), isPresented: $showBeianAlert) {
             Button(model.t("confirmLabel"), role: .cancel) {}
@@ -333,8 +294,6 @@ struct MineView: View {
                 .foregroundStyle(FiveMinColor.muted)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 52)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(model.t("aboutVersion", ["n": appVersion]))
     }
@@ -347,39 +306,6 @@ struct MineView: View {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var header: some View {
-        HStack {
-            Text(model.t("tabMine"))
-                .font(FiveMinFont.ui(20, weight: .semibold))
-                .foregroundStyle(FiveMinColor.ink)
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .frame(height: 52)
-        .background(FiveMinColor.surface.opacity(0.72))
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(FiveMinColor.line.opacity(0.85)).frame(height: 1)
-        }
-    }
-
-    private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .font(FiveMinFont.ui(13, weight: .medium))
-            .foregroundStyle(FiveMinColor.muted)
-            .padding(.leading, 4)
-    }
-
-    private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(spacing: 0) { content() }
-            .background(FiveMinColor.surface.opacity(0.88))
-            .overlay(
-                RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous)
-                    .strokeBorder(FiveMinColor.line.opacity(0.9), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusCard, style: .continuous))
-            .shadow(color: FiveMinColor.ink.opacity(0.04), radius: 8, y: 2)
-    }
-
     private func alertBinding(get: @escaping () -> Bool, set: @escaping (Bool) -> Void) -> Binding<Bool> {
         Binding(get: get, set: set)
     }
@@ -390,9 +316,7 @@ struct MineView: View {
                 .font(FiveMinFont.ui(15))
                 .foregroundStyle(FiveMinColor.ink)
         }
-        .tint(FiveMinColor.brandStrong)
-        .padding(.horizontal, 16)
-        .frame(minHeight: 52)
+        .tint(FiveMinColor.brand)
     }
 
     private func prefRow(_ title: String, value: String, action: @escaping () -> Void) -> some View {
@@ -408,14 +332,11 @@ struct MineView: View {
                     .foregroundStyle(FiveMinColor.muted)
                     .lineLimit(1)
                     .multilineTextAlignment(.trailing)
-                    .frame(width: 160, alignment: .trailing)
-                Text("›")
-                    .font(FiveMinFont.ui(18))
-                    .foregroundStyle(FiveMinColor.muted)
-                    .frame(width: 16, alignment: .trailing)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.muted.opacity(0.55))
             }
-            .padding(.horizontal, 16)
-            .frame(height: 52)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -427,12 +348,11 @@ struct MineView: View {
                     .font(FiveMinFont.ui(15))
                     .foregroundStyle(FiveMinColor.ink)
                 Spacer()
-                Text("›")
-                    .font(FiveMinFont.ui(18))
-                    .foregroundStyle(FiveMinColor.muted)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(FiveMinColor.muted.opacity(0.55))
             }
-            .padding(.horizontal, 16)
-            .frame(height: 52)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -598,29 +518,27 @@ struct MineView: View {
             case .customScenes:
                 customScenesList
             case .feedback:
-                VStack(alignment: .leading, spacing: FiveMinDimens.listSectionGap) {
-                    Text(model.t("feedbackBody"))
-                        .font(FiveMinFont.ui(15))
-                        .foregroundStyle(FiveMinColor.ink)
-                    Text(model.t("feedbackEmail"))
-                        .font(FiveMinFont.ui(15, weight: .medium))
-                        .foregroundStyle(FiveMinColor.ink)
-                        .textSelection(.enabled)
-                    Button(model.t("copyEmailLabel")) { copyFeedbackEmail() }
-                        .buttonStyle(PrimaryButtonStyle())
-                    Spacer()
+                List {
+                    Section {
+                        Text(model.t("feedbackBody"))
+                            .font(FiveMinFont.ui(15))
+                            .foregroundStyle(FiveMinColor.ink)
+                        Text(model.t("feedbackEmail"))
+                            .font(FiveMinFont.ui(15, weight: .medium))
+                            .foregroundStyle(FiveMinColor.ink)
+                            .textSelection(.enabled)
+                    }
                 }
-                .padding(20)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .listStyle(.insetGrouped)
                 .navigationTitle(model.t("feedbackLabel"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button { sheet = nil } label: {
-                            Image(systemName: "xmark")
-                                .font(FiveMinFont.ui(14, weight: .semibold))
-                        }
-                        .accessibilityLabel(model.t("cancelLabel"))
+                        Button(model.t("cancelLabel")) { sheet = nil }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(model.t("copyEmailLabel")) { copyFeedbackEmail() }
+                            .fontWeight(.semibold)
                     }
                 }
             }
@@ -630,18 +548,15 @@ struct MineView: View {
     private var customScenesList: some View {
         Group {
             if model.customScenes.isEmpty {
-                VStack(spacing: 12) {
+                ContentUnavailableView {
+                    Label(model.t("customScenesEmpty"), systemImage: "square.stack.3d.up")
+                } description: {
                     Text(model.t("customScenesEmptyHint"))
-                        .font(FiveMinFont.ui(14))
-                        .foregroundStyle(FiveMinColor.muted)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
+                } actions: {
                     Button(model.t("customSceneAdd")) { openSceneEditor(.add) }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .padding(.horizontal, 20)
-                    Spacer()
+                        .buttonStyle(.borderedProminent)
+                        .tint(FiveMinColor.brand)
                 }
-                .padding(.top, 28)
             } else {
                 List {
                     ForEach(model.customScenes) { scene in
@@ -669,15 +584,11 @@ struct MineView: View {
                             } label: {
                                 Text(model.t("customSceneUse"))
                                     .font(FiveMinFont.ui(13, weight: .semibold))
-                                    .foregroundStyle(FiveMinColor.brandStrong)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(FiveMinColor.brandSoft)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.bordered)
+                            .tint(FiveMinColor.brand)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                     .onDelete { indexSet in
                         let ids = indexSet.map { model.customScenes[$0].id }
@@ -686,7 +597,7 @@ struct MineView: View {
                         }
                     }
                 }
-                .listStyle(.plain)
+                .listStyle(.insetGrouped)
             }
         }
         .navigationTitle(model.t("customScenesLabel"))
@@ -708,83 +619,69 @@ struct MineView: View {
         .sheet(item: $sceneEditor) { editor in
             sceneEditorSheet(editor)
                 .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(FiveMinDimens.radiusSheet)
         }
     }
 
     private func sceneEditorSheet(_ editor: SceneEditor) -> some View {
         NavigationStack {
-            VStack(spacing: FiveMinDimens.sectionGap) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(model.t("customSceneNameLabel"))
-                        .font(FiveMinFont.ui(13, weight: .medium))
-                        .foregroundStyle(FiveMinColor.muted)
+            Form {
+                Section {
                     TextField(model.t("customSceneNamePlaceholder"), text: $editorName)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
-                        .padding(.horizontal, 14)
-                        .frame(height: FiveMinDimens.fieldH)
-                        .background(FiveMinColor.ghostBg)
-                        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                                .stroke(FiveMinColor.line, lineWidth: 1)
-                        )
+                } header: {
+                    Text(model.t("customSceneNameLabel"))
+                        .textCase(nil)
                 }
-                .padding(.horizontal, FiveMinDimens.padX)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(model.t("customMinutesLabel"))
-                        .font(FiveMinFont.ui(13, weight: .medium))
-                        .foregroundStyle(FiveMinColor.muted)
+                Section {
                     HStack(spacing: FiveMinDimens.controlGap) {
-                        Button("-") { nudgeEditor(-1) }
-                            .buttonStyle(SecondaryButtonStyle())
-                            .frame(width: FiveMinDimens.controlH)
-                            .accessibilityLabel("-")
+                        Button {
+                            nudgeEditor(-1)
+                        } label: {
+                            Image(systemName: "minus")
+                                .frame(width: 36, height: 36)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(FiveMinColor.brand)
+                        .accessibilityLabel("-")
+
                         TextField("", text: $editorMinutes)
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.center)
                             .font(FiveMinFont.ui(24, weight: .medium))
                             .frame(maxWidth: .infinity)
-                            .frame(height: FiveMinDimens.fieldH)
-                            .background(FiveMinColor.ghostBg)
-                            .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: FiveMinDimens.radius, style: .continuous)
-                                    .stroke(FiveMinColor.line, lineWidth: 1)
-                            )
-                        Button("+") { nudgeEditor(1) }
-                            .buttonStyle(SecondaryButtonStyle())
-                            .frame(width: FiveMinDimens.controlH)
-                            .accessibilityLabel("+")
-                    }
-                }
-                .padding(.horizontal, FiveMinDimens.padX)
 
-                HStack(spacing: 8) {
-                    ForEach(quickMins, id: \.self) { m in
-                        Button("\(m)") {
-                            editorMinutes = "\(m)"
+                        Button {
+                            nudgeEditor(1)
+                        } label: {
+                            Image(systemName: "plus")
+                                .frame(width: 36, height: 36)
                         }
-                        .font(FiveMinFont.ui(14, weight: .semibold))
-                        .foregroundStyle(FiveMinColor.brandStrong)
-                        .frame(height: FiveMinDimens.chipH)
-                        .padding(.horizontal, 12)
-                        .background(FiveMinColor.brandSoft)
-                        .clipShape(RoundedRectangle(cornerRadius: FiveMinDimens.radiusSm, style: .continuous))
+                        .buttonStyle(.bordered)
+                        .tint(FiveMinColor.brand)
+                        .accessibilityLabel("+")
                     }
+
+                    HStack(spacing: 8) {
+                        ForEach(quickMins, id: \.self) { m in
+                            let selected = (Int(editorMinutes) ?? -1) == m
+                            Button("\(m)") {
+                                editorMinutes = "\(m)"
+                            }
+                            .font(FiveMinFont.ui(14, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .buttonStyle(.bordered)
+                            .tint(selected ? FiveMinColor.brand : FiveMinColor.muted)
+                        }
+                    }
+                } header: {
+                    Text(model.t("customMinutesLabel"))
+                        .textCase(nil)
                 }
-                .padding(.horizontal, FiveMinDimens.padX)
-
-                Button(model.t("confirmLabel")) { saveSceneEditor(editor) }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .padding(.horizontal, FiveMinDimens.padX)
-                    .disabled(CustomScene.normalizedName(editorName).isEmpty)
-                    .opacity(CustomScene.normalizedName(editorName).isEmpty ? 0.55 : 1)
-
-                Spacer()
             }
-            .padding(.top, FiveMinDimens.padY)
             .navigationTitle(editorTitle(editor))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
