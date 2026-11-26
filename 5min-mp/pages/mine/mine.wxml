@@ -49,15 +49,15 @@
         <switch checked="{{finishNotify}}" color="#2f9a68" bindchange="onToggleFinishNotify" />
       </view>
       <view class="row-line"></view>
+      <view class="row row-switch">
+        <text class="row-title">{{prefOvertimeInsight}}</text>
+        <switch checked="{{overtimeInsight}}" color="#2f9a68" bindchange="onToggleOvertimeInsight" />
+      </view>
+      <view class="row-line"></view>
       <view class="row" catchtap="onOpenAlertProfile">
         <text class="row-title">{{alertProfileLabel}}</text>
         <text class="row-value">{{alertProfileName}}</text>
         <text class="chev">›</text>
-      </view>
-      <view class="row-line"></view>
-      <view class="row row-switch">
-        <text class="row-title">{{prefOvertimeInsight}}</text>
-        <switch checked="{{overtimeInsight}}" color="#2f9a68" bindchange="onToggleOvertimeInsight" />
       </view>
     </view>
     <view class="hint" wx:if="{{alertProfileHint}}">{{alertProfileHint}}</view>

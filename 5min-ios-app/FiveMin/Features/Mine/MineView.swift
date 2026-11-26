@@ -14,6 +14,7 @@ struct MineView: View {
     @State private var restoreRevealed = false
     @State private var restoreCode = ""
     @State private var promptRecoveryOnce = false
+    @State private var overtimeInsight = P0Features.getShowOvertimeInsight()
 
     private enum MineSheet: String, Identifiable {
         case lang, sound, storage, customScenes, feedback, standRitual, alertProfile
@@ -57,10 +58,8 @@ struct MineView: View {
 
                     sectionTitle(model.t("prefAlertsSection"))
                     card {
-                        prefRow(model.t("alertProfileLabel"), value: alertProfileValue) {
-                            sheet = .alertProfile
-                        }
-                        Divider().padding(.leading, 16)
+                        // Order aligned with Harmony / Android / MP:
+                        // tone → vibrate → notify → overtime insight → alert profile
                         alertToggleRow(model.t("prefFinishTone"), isOn: alertBinding(
                             get: { model.finishTone },
                             set: { model.setFinishTone($0) }
@@ -75,6 +74,12 @@ struct MineView: View {
                             get: { model.finishNotify },
                             set: { model.setFinishNotify($0) }
                         ))
+                        Divider().padding(.leading, 16)
+                        alertToggleRow(model.t("prefOvertimeInsight"), isOn: $overtimeInsight)
+                        Divider().padding(.leading, 16)
+                        prefRow(model.t("alertProfileLabel"), value: alertProfileValue) {
+                            sheet = .alertProfile
+                        }
                     }
                     Text(model.t("alertProfileHint"))
                         .font(FiveMinFont.ui(12))
@@ -259,6 +264,9 @@ struct MineView: View {
                     endPoint: .bottom
                 )
             )
+        }
+        .onChange(of: overtimeInsight) { _, on in
+            model.setShowOvertimeInsight(on)
         }
         .sheet(item: $sheet, onDismiss: { sceneEditor = nil }) { kind in
             sheetContent(kind)

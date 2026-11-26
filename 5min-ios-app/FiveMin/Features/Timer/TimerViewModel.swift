@@ -361,6 +361,12 @@ final class TimerViewModel {
         cloud.schedulePushPrefs()
     }
 
+    func setShowOvertimeInsight(_ on: Bool) {
+        P0Features.setShowOvertimeInsight(on)
+        recordsEpoch += 1
+        cloud.schedulePushPrefs()
+    }
+
     func setStandRitual(_ mode: String) {
         P0Features.setStandRitual(mode)
         standRitual = P0Features.getStandRitual()

@@ -20,6 +20,7 @@ Page({
     privacyLink: '',
     termsLink: '',
     privacyAgree: '',
+    privacyFooter: '',
   },
 
   onLoad() {
@@ -34,6 +35,7 @@ Page({
       privacyLink: t('privacyLink'),
       termsLink: t('termsLink'),
       privacyAgree: t('privacyAgree'),
+      privacyFooter: t('privacyFooter'),
     });
   },
 

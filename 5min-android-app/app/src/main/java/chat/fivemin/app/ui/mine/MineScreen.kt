@@ -91,6 +91,9 @@ fun MineScreen(vm: TimerViewModel) {
     var restoreRevealed by remember { mutableStateOf(false) }
     var restoreCode by remember { mutableStateOf("") }
     var promptRecoveryOnce by remember { mutableStateOf(false) }
+    var overtimeInsight by remember {
+        mutableStateOf(FiveMinApp.instance.prefs.p0.showOvertimeInsight)
+    }
     val appVersion = remember(context) { AppUpdate.localVersionName(context) }
     val soundIds = listOf("off", "rain", "waves", "clock")
     val quickMins = listOf(3, 5, 10, 15, 25)
@@ -230,6 +233,15 @@ fun MineScreen(vm: TimerViewModel) {
                     title = vm.t("prefFinishNotify"),
                     checked = state.finishNotify,
                     onCheckedChange = { vm.setFinishNotify(it) },
+                )
+                HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
+                PrefSwitchRow(
+                    title = vm.t("prefOvertimeInsight"),
+                    checked = overtimeInsight,
+                    onCheckedChange = {
+                        overtimeInsight = it
+                        vm.setShowOvertimeInsight(it)
+                    },
                 )
                 HorizontalDivider(color = FiveMinColors.line, modifier = Modifier.padding(start = 16.dp))
                 PrefRow(vm.t("alertProfileLabel"), alertProfileLabel(state.alertProfile)) {

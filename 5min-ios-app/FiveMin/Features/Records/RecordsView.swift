@@ -77,9 +77,8 @@ struct RecordsView: View {
                     .padding(.leading, 4)
                     .padding(.top, 4)
 
-                    if sceneFilterOptions.count > 1 {
-                        sceneFilterPicker
-                    }
+                    // Always show filter (aligned with Harmony / Android / MP)
+                    sceneFilterPicker
 
                     VStack(spacing: 0) {
                         if rows.isEmpty {

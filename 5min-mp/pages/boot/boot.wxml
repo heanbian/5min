@@ -37,5 +37,7 @@
       hover-stay-time="80"
       bindtap="onAccept"
     >{{privacyAgree}}</view>
+
+    <text class="boot-footer">{{privacyFooter}}</text>
   </view>
 </view>

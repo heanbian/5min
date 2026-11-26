@@ -399,6 +399,12 @@ class TimerViewModel(app: Application) : AndroidViewModel(app) {
         cloud.schedulePushPrefs()
     }
 
+    fun setShowOvertimeInsight(on: Boolean) {
+        prefs.p0.showOvertimeInsight = on
+        bumpRecordsEpoch()
+        cloud.schedulePushPrefs()
+    }
+
     fun setStandRitual(mode: String) {
         prefs.p0.standRitual = mode
         _state.update { it.copy(standRitual = prefs.p0.standRitual) }

@@ -150,3 +150,12 @@
   background: #e5f5ec;
   color: #5f6f66;
 }
+
+.boot-footer {
+  display: block;
+  margin-top: 24rpx;
+  font-size: 24rpx;
+  color: #5f6f66;
+  line-height: 1.5;
+  text-align: center;
+}
