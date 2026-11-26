@@ -56,8 +56,8 @@ keytool -genkeypair -v \
 ```bash
 # 推荐：自动选用 JDK 21 / Android Studio JBR
 chmod +x scripts/release.sh
-./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.16.apk
-./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.16.aab
+./scripts/release.sh apk # → app/build/outputs/apk/release/5min-android-app-1.0.17.apk
+./scripts/release.sh bundle # → app/build/outputs/bundle/release/5min-android-app-1.0.17.aab
 
 # 或手动：
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home

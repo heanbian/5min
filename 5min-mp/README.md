@@ -21,7 +21,7 @@
 | 到期提醒 | 振动 + Toast；计时中尝试保持屏幕常亮 |
 | 备案 | 「我的 › 备案」弹窗展示备案号 |
 
-版本号：`1.0.11`（见 `app.js` → `globalData.appVersion`）。
+版本号：`1.0.13`（见 `app.js` → `globalData.appVersion`）。
 
 ## 技术栈
 
