@@ -67,6 +67,8 @@ object FiveMinDimens {
     val controlH = 52.dp
     val fieldH = 52.dp
     val rowH = 40.dp
+    /** Records / Mine sticky title bar (matches Harmony headerH) */
+    val headerH = 52.dp
     /** 筛选胶囊 / 快捷分钟芯片高度 */
     val chipH = 40.dp
     val filterChipH = 40.dp
@@ -81,6 +83,8 @@ object FiveMinDimens {
     val controlGap = 10.dp
     val chipGap = 8.dp
     val dialSize = 260.dp
+    /** Records scene-filter bottom sheet max height */
+    val sheetMaxH = 360.dp
 }
 
 private val LightColors = lightColorScheme(

@@ -71,6 +71,7 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
 
 > `keystore/` 与 `keystore.properties` 已忽略，勿提交到 Git。密钥丢失将无法更新同一应用。
 > 商店截图放 `store/artwork/screenshots/`（已 gitignore）；可用 `scripts/capture_store_screenshots.sh` 本地生成。
+> 启动图标 / 页眉 logo 与 iOS、鸿蒙共用 `store/artwork` 官方稿；改稿后运行 `python3 scripts/generate_launcher_icons.py` 同步到 `mipmap*` 与自适应前景（勿再用系统字体重绘）。
 
 ## 隐私
 

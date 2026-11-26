@@ -1,5 +1,7 @@
 package chat.fivemin.app.ui.records
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,26 +12,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import chat.fivemin.app.ui.DialogActionButton
-import chat.fivemin.app.ui.DialogBtnStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,20 +31,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.content.Intent
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import chat.fivemin.app.FiveMinApp
 import chat.fivemin.app.data.HistoryItem
 import chat.fivemin.app.timer.TimerViewModel
+import chat.fivemin.app.ui.DialogActionButton
+import chat.fivemin.app.ui.DialogBtnStyle
 import chat.fivemin.app.ui.theme.FiveMinColors
 import chat.fivemin.app.ui.theme.FiveMinDimens
 import java.time.Instant
@@ -63,7 +56,6 @@ import java.util.Locale
 
 private enum class RecordsDialog { None, ClearAll, DeleteOne }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordsScreen(vm: TimerViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -72,7 +64,7 @@ fun RecordsScreen(vm: TimerViewModel) {
     var periodMins by remember { mutableIntStateOf(0) }
     var streakDays by remember { mutableIntStateOf(0) }
     var filterSceneId by remember { mutableStateOf<String?>(null) }
-    var filterExpanded by remember { mutableStateOf(false) }
+    var showFilter by remember { mutableStateOf(false) }
     var dialog by remember { mutableStateOf(RecordsDialog.None) }
     var pendingDeleteId by remember { mutableStateOf<Long?>(null) }
     val context = LocalContext.current
@@ -80,7 +72,6 @@ fun RecordsScreen(vm: TimerViewModel) {
     fun reload() {
         val history = FiveMinApp.instance.history
         rows = history.getHistory(filterSceneId)
-        // One history pass for period + streak (avoid 2–3 full reloads).
         val (count, mins, streak) = history.shareSummaryValues()
         periodCount = count
         periodMins = mins
@@ -132,7 +123,17 @@ fun RecordsScreen(vm: TimerViewModel) {
 
     LaunchedEffect(state.recordsEpoch, state.locale, filterSceneId) { reload() }
 
-    Column(
+    val selectedFilterLabel = filterSceneId
+        ?.let { id -> vm.sceneTitle(id) ?: id }
+        ?: vm.t("historyFilterAll")
+    val filterRadius = RoundedCornerShape(FiveMinDimens.radius)
+    val listRadius = RoundedCornerShape(FiveMinDimens.radiusCard)
+    val sheetRadius = RoundedCornerShape(
+        topStart = FiveMinDimens.radiusSheet,
+        topEnd = FiveMinDimens.radiusSheet,
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -141,303 +142,326 @@ fun RecordsScreen(vm: TimerViewModel) {
                 ),
             ),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .background(FiveMinColors.surface.copy(alpha = 0.72f))
-                .padding(horizontal = 20.dp)
-                .padding(vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = vm.t("tabRecords"),
-                color = FiveMinColors.ink,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = vm.t("shareLabel"),
-                color = FiveMinColors.brandStrong,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Sticky header — title + share + export (Clear lives under historyLabel, like Harmony/iOS)
+            Row(
                 modifier = Modifier
-                    .padding(start = 8.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
-                    .clickable { shareSummary() },
-            )
-            Text(
-                text = vm.t("exportLabel"),
-                color = FiveMinColors.brandStrong,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .padding(end = 14.dp, top = 8.dp, bottom = 8.dp)
-                    .clickable { exportCsv() },
-            )
-            if (rows.isNotEmpty() || filterOptions.isNotEmpty()) {
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(FiveMinDimens.headerH)
+                    .background(FiveMinColors.surface.copy(alpha = 0.72f))
+                    .padding(horizontal = FiveMinDimens.padX),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    text = vm.t("historyClear"),
-                    color = FiveMinColors.danger,
+                    text = vm.t("tabRecords"),
+                    color = FiveMinColors.ink,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = vm.t("shareLabel"),
+                    color = FiveMinColors.brandStrong,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .clickable { dialog = RecordsDialog.ClearAll },
+                        .padding(start = 8.dp, end = 4.dp, top = 10.dp, bottom = 10.dp)
+                        .clickable { shareSummary() },
+                )
+                Text(
+                    text = vm.t("exportLabel"),
+                    color = FiveMinColors.brandStrong,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .padding(start = 4.dp, end = 4.dp, top = 10.dp, bottom = 10.dp)
+                        .clickable { exportCsv() },
                 )
             }
-        }
-        HorizontalDivider(color = FiveMinColors.line, thickness = 1.dp)
+            HorizontalDivider(color = FiveMinColors.line.copy(alpha = 0.85f), thickness = 1.dp)
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(FiveMinDimens.padBody),
-            verticalArrangement = Arrangement.spacedBy(FiveMinDimens.listSectionGap),
-        ) {
-            Text(
-                text = vm.t("weekStatsLabel"),
-                color = FiveMinColors.muted,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 4.dp),
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                StatCard(
-                    title = vm.t("weekStatsCountLabel"),
-                    value = "$periodCount",
-                    unit = null,
-                    modifier = Modifier.weight(1f),
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = FiveMinDimens.padBody,
+                        end = FiveMinDimens.padBody,
+                        top = FiveMinDimens.padBody,
+                        bottom = 24.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(FiveMinDimens.listSectionGap),
+            ) {
+                Text(
+                    text = vm.t("weekStatsLabel"),
+                    color = FiveMinColors.muted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(start = 4.dp),
                 )
-                StatCard(
-                    title = vm.t("weekStatsMinsLabel"),
-                    value = "$periodMins",
-                    unit = vm.t("customUnit"),
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Text(
-                text = if (streakDays > 0) {
-                    vm.t("streakDays", mapOf("n" to streakDays.toString()))
-                } else {
-                    vm.t("streakNone")
-                },
-                color = FiveMinColors.muted,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 4.dp),
-            )
-            val p0 = FiveMinApp.instance.prefs.p0
-            val overtimeStats = remember(state.recordsEpoch) { p0.readOvertimeStats() }
-            if (p0.showOvertimeInsight) {
-                val insightLine = if (overtimeStats.count > 0) {
-                    vm.t(
-                        "overtimeInsightLine",
-                        mapOf(
-                            "count" to overtimeStats.count.toString(),
-                            "mins" to p0.insightMinutes(overtimeStats.ms).toString(),
-                        ),
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    StatCard(
+                        title = vm.t("weekStatsCountLabel"),
+                        value = "$periodCount",
+                        unit = null,
+                        modifier = Modifier.weight(1f),
                     )
-                } else {
-                    vm.t("overtimeInsightEmpty")
+                    StatCard(
+                        title = vm.t("weekStatsMinsLabel"),
+                        value = "$periodMins",
+                        unit = vm.t("customUnit"),
+                        modifier = Modifier.weight(1f),
+                    )
                 }
+                Text(
+                    text = if (streakDays > 0) {
+                        vm.t("streakDays", mapOf("n" to streakDays.toString()))
+                    } else {
+                        vm.t("streakNone")
+                    },
+                    color = FiveMinColors.muted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+
+                val p0 = FiveMinApp.instance.prefs.p0
+                val overtimeStats = remember(state.recordsEpoch) { p0.readOvertimeStats() }
+                if (p0.showOvertimeInsight) {
+                    val insightLine = if (overtimeStats.count > 0) {
+                        vm.t(
+                            "overtimeInsightLine",
+                            mapOf(
+                                "count" to overtimeStats.count.toString(),
+                                "mins" to p0.insightMinutes(overtimeStats.ms).toString(),
+                            ),
+                        )
+                    } else {
+                        vm.t("overtimeInsightEmpty")
+                    }
+                    // Harmony/MP: one note — tip when overtime exists, else hint
+                    val insightNote = if (overtimeStats.count > 0) {
+                        vm.t("overtimeInsightTip")
+                    } else {
+                        vm.t("overtimeInsightHint")
+                    }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                FiveMinColors.warnSoft.copy(alpha = 0.72f),
+                                RoundedCornerShape(FiveMinDimens.radiusCard),
+                            )
+                            .border(
+                                1.dp,
+                                FiveMinColors.warn.copy(alpha = 0.16f),
+                                RoundedCornerShape(FiveMinDimens.radiusCard),
+                            )
+                            .padding(FiveMinDimens.padBody),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = vm.t("overtimeInsightTitle"),
+                            color = FiveMinColors.ink,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = insightLine,
+                            color = FiveMinColors.ink,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Text(
+                            text = insightNote,
+                            color = FiveMinColors.muted,
+                            fontSize = 13.sp,
+                            lineHeight = 19.sp,
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, end = 4.dp, top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = vm.t("historyLabel"),
+                        color = FiveMinColors.muted,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = vm.t("historyClear"),
+                        color = FiveMinColors.danger,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(start = 10.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
+                            .clickable { dialog = RecordsDialog.ClearAll },
+                    )
+                }
+
+                // Labeled filter trigger → bottom sheet (matches Harmony RecordsTab)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(FiveMinDimens.rowH)
+                        .clip(filterRadius)
+                        .border(
+                            1.dp,
+                            if (showFilter) {
+                                FiveMinColors.brand.copy(alpha = 0.45f)
+                            } else {
+                                FiveMinColors.line
+                            },
+                            filterRadius,
+                        )
+                        .background(FiveMinColors.surface)
+                        .clickable { showFilter = true }
+                        .padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = vm.t("historyFilterLabel"),
+                        color = FiveMinColors.muted,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text(
+                        text = selectedFilterLabel,
+                        color = FiveMinColors.ink,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "▾",
+                        color = if (showFilter) FiveMinColors.brandStrong else FiveMinColors.muted,
+                        fontSize = 12.sp,
+                        modifier = Modifier.rotate(if (showFilter) 180f else 0f),
+                    )
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            FiveMinColors.warnSoft.copy(alpha = 0.72f),
-                            RoundedCornerShape(FiveMinDimens.radiusCard),
+                        .shadow(
+                            elevation = 2.dp,
+                            shape = listRadius,
+                            ambientColor = Color(0x0A1F2A24),
+                            spotColor = Color(0x0A1F2A24),
                         )
-                        .border(
-                            1.dp,
-                            FiveMinColors.warn.copy(alpha = 0.16f),
-                            RoundedCornerShape(FiveMinDimens.radiusCard),
-                        )
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                        .clip(listRadius)
+                        .background(FiveMinColors.surface.copy(alpha = 0.88f))
+                        .border(1.dp, FiveMinColors.line.copy(alpha = 0.9f), listRadius),
                 ) {
-                    Text(
-                        text = vm.t("overtimeInsightTitle"),
-                        color = FiveMinColors.ink,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = insightLine,
-                        color = FiveMinColors.ink,
-                        fontSize = 14.sp,
-                    )
-                    Text(
-                        text = vm.t("overtimeInsightHint"),
-                        color = FiveMinColors.muted,
-                        fontSize = 12.sp,
-                    )
-                    Text(
-                        text = vm.t("overtimeInsightTip"),
-                        color = FiveMinColors.muted,
-                        fontSize = 12.sp,
-                    )
-                }
-            }
-            Text(
-                text = vm.t("historyLabel"),
-                color = FiveMinColors.muted,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-            )
-            if (filterOptions.isNotEmpty()) {
-                val selectedLabel = filterSceneId
-                    ?.let { id -> vm.sceneTitle(id) ?: id }
-                    ?: vm.t("historyFilterAll")
-                // 与主页场景选择触发器同尺寸：rowH 40 / radius 22
-                val filterRadius = RoundedCornerShape(FiveMinDimens.radius)
-                ExposedDropdownMenuBox(
-                    expanded = filterExpanded,
-                    onExpandedChange = { filterExpanded = it },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                            .fillMaxWidth()
-                            .height(FiveMinDimens.rowH)
-                            .shadow(elevation = 2.dp, shape = filterRadius, clip = false)
-                            .clip(filterRadius)
-                            .border(
-                                1.dp,
-                                if (filterExpanded) {
-                                    FiveMinColors.brand.copy(alpha = 0.45f)
-                                } else {
-                                    FiveMinColors.line
-                                },
-                                filterRadius,
-                            )
-                            .background(FiveMinColors.surface)
-                            .padding(horizontal = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+                    if (rows.isEmpty()) {
                         Text(
-                            text = selectedLabel,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = if (filterSceneId == null) {
-                                FiveMinColors.muted
-                            } else {
-                                FiveMinColors.ink
-                            },
-                            fontWeight = FontWeight.SemiBold,
+                            text = vm.t("historyEmpty"),
+                            color = FiveMinColors.muted,
                             fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
                         )
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = vm.t("historyFilterLabel"),
-                            tint = if (filterExpanded) {
-                                FiveMinColors.brandStrong
-                            } else {
-                                FiveMinColors.muted
-                            },
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                    // Material3 1.5 hid ExposedDropdownMenuBoxScope.ExposedDropdownMenu;
-                    // DropdownMenu + exposedDropdownSize is the supported equivalent.
-                    DropdownMenu(
-                        expanded = filterExpanded,
-                        onDismissRequest = { filterExpanded = false },
-                        modifier = Modifier.exposedDropdownSize(matchAnchorWidth = true),
-                        containerColor = FiveMinColors.surface,
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = vm.t("historyFilterAll"),
-                                    color = if (filterSceneId == null) {
-                                        FiveMinColors.brandStrong
-                                    } else {
-                                        FiveMinColors.ink
-                                    },
-                                    fontWeight = if (filterSceneId == null) {
-                                        FontWeight.SemiBold
-                                    } else {
-                                        FontWeight.Normal
-                                    },
-                                    fontSize = 14.sp,
-                                )
-                            },
-                            onClick = {
-                                filterSceneId = null
-                                filterExpanded = false
-                            },
-                        )
-                        filterOptions.forEach { sceneId ->
-                            val label = vm.sceneTitle(sceneId) ?: sceneId
-                            val active = filterSceneId == sceneId
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = label,
-                                        color = if (active) {
-                                            FiveMinColors.brandStrong
-                                        } else {
-                                            FiveMinColors.ink
-                                        },
-                                        fontWeight = if (active) {
-                                            FontWeight.SemiBold
-                                        } else {
-                                            FontWeight.Normal
-                                        },
-                                        fontSize = 14.sp,
-                                    )
-                                },
-                                onClick = {
-                                    filterSceneId = sceneId
-                                    filterExpanded = false
+                    } else {
+                        rows.forEachIndexed { index, item ->
+                            HistoryRow(
+                                vm = vm,
+                                item = item,
+                                onDelete = {
+                                    pendingDeleteId = item.id
+                                    dialog = RecordsDialog.DeleteOne
                                 },
                             )
+                            if (index < rows.lastIndex) {
+                                HorizontalDivider(
+                                    color = FiveMinColors.line,
+                                    modifier = Modifier.padding(start = FiveMinDimens.padBody),
+                                )
+                            }
                         }
                     }
                 }
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        FiveMinColors.surface.copy(alpha = 0.88f),
-                        RoundedCornerShape(FiveMinDimens.radiusCard),
-                    )
-                    .border(
-                        1.dp,
-                        FiveMinColors.line.copy(alpha = 0.9f),
-                        RoundedCornerShape(FiveMinDimens.radiusCard),
-                    ),
-            ) {
-                if (rows.isEmpty()) {
-                    Text(
-                        text = vm.t("historyEmpty"),
-                        color = FiveMinColors.muted,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
+        }
+
+        if (showFilter) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .background(Color(0x66000000))
+                        .clickable { showFilter = false },
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(sheetRadius)
+                        .background(FiveMinColors.surface),
+                ) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 28.dp, horizontal = 20.dp),
-                    )
-                } else {
-                    rows.forEachIndexed { index, item ->
-                        HistoryRow(
-                            vm = vm,
-                            item = item,
-                            onDelete = {
-                                pendingDeleteId = item.id
-                                dialog = RecordsDialog.DeleteOne
+                            .padding(
+                                start = FiveMinDimens.padX,
+                                end = 12.dp,
+                                top = FiveMinDimens.padBody,
+                                bottom = 8.dp,
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = vm.t("historyFilterLabel"),
+                            color = FiveMinColors.ink,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = "✕",
+                            color = FiveMinColors.muted,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .height(FiveMinDimens.rowH)
+                                .padding(horizontal = 12.dp)
+                                .clickable { showFilter = false },
+                        )
+                    }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = FiveMinDimens.sheetMaxH)
+                            .verticalScroll(rememberScrollState())
+                            .padding(bottom = 28.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        FilterOptionRow(
+                            label = vm.t("historyFilterAll"),
+                            selected = filterSceneId == null,
+                            onClick = {
+                                filterSceneId = null
+                                showFilter = false
                             },
                         )
-                        if (index < rows.lastIndex) {
-                            HorizontalDivider(
-                                color = FiveMinColors.line,
-                                modifier = Modifier.padding(start = 16.dp),
+                        filterOptions.forEach { sceneId ->
+                            val label = vm.sceneTitle(sceneId) ?: sceneId
+                            FilterOptionRow(
+                                label = label,
+                                selected = filterSceneId == sceneId,
+                                onClick = {
+                                    filterSceneId = sceneId
+                                    showFilter = false
+                                },
                             )
                         }
                     }
@@ -506,6 +530,38 @@ fun RecordsScreen(vm: TimerViewModel) {
 }
 
 @Composable
+private fun FilterOptionRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(FiveMinDimens.controlH)
+            .clickable(onClick = onClick)
+            .padding(horizontal = FiveMinDimens.padBody),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = if (selected) FiveMinColors.brandStrong else FiveMinColors.ink,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) {
+            Text(
+                text = "✓",
+                color = FiveMinColors.brandStrong,
+                fontSize = 16.sp,
+            )
+        }
+    }
+}
+
+@Composable
 private fun StatCard(
     title: String,
     value: String,
@@ -523,7 +579,7 @@ private fun StatCard(
                 FiveMinColors.brand.copy(alpha = 0.12f),
                 RoundedCornerShape(FiveMinDimens.radiusCard),
             )
-            .padding(16.dp),
+            .padding(FiveMinDimens.padBody),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(title, color = FiveMinColors.muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
@@ -554,30 +610,50 @@ private fun HistoryRow(vm: TimerViewModel, item: HistoryItem, onDelete: () -> Un
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(
+                start = FiveMinDimens.padBody,
+                end = FiveMinDimens.padBody,
+                top = 14.dp,
+                bottom = 14.dp,
+            ),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(vm.t("historySceneLine", mapOf("scene" to scene)), color = FiveMinColors.ink, fontSize = 14.sp)
-            Text(vm.t("historyDurationLine", mapOf("n" to item.minutes.toString())), color = FiveMinColors.ink, fontSize = 14.sp)
-            Text(vm.t("historyTimeLine", mapOf("time" to time)), color = FiveMinColors.ink, fontSize = 14.sp)
-        }
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clickable(onClick = onDelete),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = vm.t("historyDelete"),
-                tint = FiveMinColors.danger,
-                modifier = Modifier.size(22.dp),
+            Text(
+                text = vm.t("historySceneLine", mapOf("scene" to scene)),
+                color = FiveMinColors.ink,
+                fontSize = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = vm.t("historyDurationLine", mapOf("n" to item.minutes.toString())),
+                color = FiveMinColors.ink,
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = vm.t("historyTimeLine", mapOf("time" to time)),
+                color = FiveMinColors.ink,
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
+        Text(
+            text = vm.t("historyDelete"),
+            color = FiveMinColors.danger,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .padding(start = 12.dp, end = 8.dp, top = 12.dp, bottom = 12.dp)
+                .clickable(onClick = onDelete),
+        )
     }
 }
 
