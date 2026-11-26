@@ -1,18 +1,18 @@
 /**
- * Design tokens mirrored from Android FiveMinDimens / 5min-web.
- * Values are vp numbers for ArkUI.
+ * Design tokens for 5min Harmony UI.
+ * Brand palette mirrors Android / web; radii follow HarmonyOS NEXT sheet / dialog language.
  */
 export class FiveMinDimens {
   /** Small controls / inner chips */
   static readonly radiusSm: number = 12;
   /** Home actions / scene trigger / suggested chips */
-  static readonly radius: number = 22;
+  static readonly radius: number = 20;
   /** List cards / stats cards */
-  static readonly radiusCard: number = 14;
-  /** Centered dialogs (ritual / scene picker) */
-  static readonly radiusDialog: number = 16;
-  /** Bottom sheets */
-  static readonly radiusSheet: number = 18;
+  static readonly radiusCard: number = 16;
+  /** Centered dialogs (ritual) — Harmony dialog ≈ 24–28 */
+  static readonly radiusDialog: number = 28;
+  /** Bottom sheets — HarmonyOS NEXT sheet top corners */
+  static readonly radiusSheet: number = 28;
 
   static readonly controlH: number = 52;
   static readonly fieldH: number = 52;
@@ -47,14 +47,14 @@ export class FiveMinDimens {
 
   /** Soft card border used on Records / Mine list cards */
   static readonly cardBorder: string = 'rgba(215, 229, 220, 0.9)';
-  static readonly cardSurface: string = 'rgba(255, 255, 255, 0.88)';
+  static readonly cardSurface: string = 'rgba(255, 255, 255, 0.96)';
   static readonly brandSoftRail: string = 'rgba(229, 245, 236, 0.72)';
   static readonly brandSoftStat: string = 'rgba(229, 245, 236, 0.55)';
   static readonly brandBorderSoft: string = 'rgba(47, 154, 104, 0.12)';
   static readonly brandBorderOpen: string = 'rgba(47, 154, 104, 0.45)';
   static readonly chipIdleBorder: string = 'rgba(47, 154, 104, 0.18)';
   static readonly chipIdleFill: string = 'rgba(255, 255, 255, 0.55)';
-  static readonly headerBg: string = 'rgba(255, 255, 255, 0.72)';
+  static readonly headerBg: string = 'rgba(255, 255, 255, 0.92)';
   static readonly headerLine: string = 'rgba(215, 229, 220, 0.85)';
   static readonly overlayDim: string = '#00000066';
   static readonly warnCardBg: string = 'rgba(255, 246, 232, 0.72)';

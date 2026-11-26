@@ -17,6 +17,7 @@ import { APP_LOCALES, normalizeAppLocale } from '../common/AppLocales';
 import { openExternalUrl } from '../common/OpenUrl';
 import { AppUpdate } from '../common/AppUpdate';
 import { FiveMinDimens, FiveMinFont } from '../common/FiveMinDimens';
+import { HarmonyChrome, HarmonySheetHandle } from '../common/HarmonyChrome';
 import { AmbientPlayer } from '../alert/AmbientPlayer';
 import { i18n } from '@kit.LocalizationKit';
 
@@ -565,8 +566,8 @@ export struct MineTab {
       const result = await this.getUIContext().getPromptAction().showDialog({
         message: this.t('customSceneDeleteConfirm'),
         buttons: [
-          { text: this.t('cancelLabel'), color: '#6B7280' },
-          { text: this.t('historyDelete'), color: '#C2410C' }
+          { text: this.t('cancelLabel'), color: '#5F6F66' },
+          { text: this.t('historyDelete'), color: '#D2554A' }
         ]
       });
       if (result.index !== 1) {
@@ -755,9 +756,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -780,9 +781,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -805,9 +806,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -816,7 +817,7 @@ export struct MineTab {
                   .onClick(() => this.openDialog('customScenes'))
                 }
                 .width('100%')
-                .backgroundColor(FiveMinDimens.cardSurface)
+                .backgroundColor(HarmonyChrome.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
@@ -911,9 +912,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -922,7 +923,7 @@ export struct MineTab {
                   .onClick(() => this.openDialog('alertProfile'))
                 }
                 .width('100%')
-                .backgroundColor(FiveMinDimens.cardSurface)
+                .backgroundColor(HarmonyChrome.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
@@ -964,9 +965,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -975,7 +976,7 @@ export struct MineTab {
                   .onClick(() => this.openDialog('ritual'))
                 }
                 .width('100%')
-                .backgroundColor(FiveMinDimens.cardSurface)
+                .backgroundColor(HarmonyChrome.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
@@ -1010,9 +1011,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -1021,7 +1022,7 @@ export struct MineTab {
                   .onClick(() => this.openDialog('storage'))
                 }
                 .width('100%')
-                .backgroundColor(FiveMinDimens.cardSurface)
+                .backgroundColor(HarmonyChrome.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
@@ -1054,13 +1055,11 @@ export struct MineTab {
                         .fontSize(15)
                         .fontColor($r('app.color.ink'))
                         .layoutWeight(1)
-                      Text('›')
-                        .fontSize(18)
-                        .fontColor($r('app.color.muted'))
+                      SymbolGlyph($r('sys.symbol.chevron_right'))
+                        .fontSize(16)
+                        .fontColor([$r('app.color.muted')])
                         .rotate({
                           angle: this.backupRevealed ? 90 : 0,
-                          centerX: '50%',
-                          centerY: '50%'
                         })
                         .animation({ duration: 180, curve: Curve.EaseInOut })
                     }
@@ -1082,22 +1081,16 @@ export struct MineTab {
                           .fontColor($r('app.color.muted'))
                           .width('100%')
                           .lineHeight(18)
-                        Text(this.t('storageBackupCopy'))
+                        Button(this.t('storageBackupCopy'))
+                          .type(ButtonType.Normal)
                           .width('100%')
-                          .height(44)
+                          .height(48)
                           .fontSize(15)
-                          .fontFamily(FiveMinFont.semiBold)
                           .fontWeight(FontWeight.Medium)
                           .fontColor(Color.White)
-                          .textAlign(TextAlign.Center)
                           .backgroundColor($r('app.color.brand'))
                           .borderRadius(FiveMinDimens.radiusSm)
-                          .shadow({
-                            radius: 8,
-                            color: 'rgba(47, 154, 104, 0.22)',
-                            offsetX: 0,
-                            offsetY: 3
-                          })
+                          .stateEffect(true)
                           .onClick(() => this.copyRecoveryCode())
                       }
                       .width('100%')
@@ -1111,7 +1104,7 @@ export struct MineTab {
                     }
                   }
                   .width('100%')
-                  .backgroundColor(FiveMinDimens.cardSurface)
+                  .backgroundColor(HarmonyChrome.cardSurface)
                   .border({ width: 1, color: FiveMinDimens.cardBorder })
                   .borderRadius(FiveMinDimens.radiusCard)
                   .margin({ top: 8 })
@@ -1124,13 +1117,11 @@ export struct MineTab {
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .rotate({
                         angle: this.restoreRevealed ? 90 : 0,
-                        centerX: '50%',
-                        centerY: '50%'
                       })
                       .animation({ duration: 180, curve: Curve.EaseInOut })
                   }
@@ -1162,22 +1153,16 @@ export struct MineTab {
                         .fontColor($r('app.color.muted'))
                         .width('100%')
                         .lineHeight(18)
-                      Text(this.t('storageRestoreAction'))
+                      Button(this.t('storageRestoreAction'))
+                        .type(ButtonType.Normal)
                         .width('100%')
-                        .height(44)
+                        .height(48)
                         .fontSize(15)
-                        .fontFamily(FiveMinFont.semiBold)
                         .fontWeight(FontWeight.Medium)
                         .fontColor(Color.White)
-                        .textAlign(TextAlign.Center)
                         .backgroundColor($r('app.color.brand'))
                         .borderRadius(FiveMinDimens.radiusSm)
-                        .shadow({
-                          radius: 8,
-                          color: 'rgba(47, 154, 104, 0.22)',
-                          offsetX: 0,
-                          offsetY: 3
-                        })
+                        .stateEffect(true)
                         .onClick(() => this.restoreWithCode())
                     }
                     .width('100%')
@@ -1191,7 +1176,7 @@ export struct MineTab {
                   }
                 }
                 .width('100%')
-                .backgroundColor(FiveMinDimens.cardSurface)
+                .backgroundColor(HarmonyChrome.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .margin({ top: 8 })
@@ -1213,9 +1198,9 @@ export struct MineTab {
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                   }
                   .width('100%')
                   .height(FiveMinDimens.controlH)
@@ -1229,9 +1214,9 @@ export struct MineTab {
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                   }
                   .width('100%')
                   .height(FiveMinDimens.controlH)
@@ -1245,9 +1230,9 @@ export struct MineTab {
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                   }
                   .width('100%')
                   .height(FiveMinDimens.controlH)
@@ -1261,9 +1246,9 @@ export struct MineTab {
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                   }
                   .width('100%')
                   .height(FiveMinDimens.controlH)
@@ -1277,9 +1262,9 @@ export struct MineTab {
                       .fontSize(15)
                       .fontColor($r('app.color.ink'))
                       .layoutWeight(1)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                   }
                   .width('100%')
                   .height(FiveMinDimens.controlH)
@@ -1301,9 +1286,9 @@ export struct MineTab {
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .textAlign(TextAlign.End)
-                    Text('›')
-                      .fontSize(18)
-                      .fontColor($r('app.color.muted'))
+                    SymbolGlyph($r('sys.symbol.chevron_right'))
+                      .fontSize(16)
+                      .fontColor([$r('app.color.muted')])
                       .flexShrink(0)
                   }
                   .width('100%')
@@ -1313,7 +1298,7 @@ export struct MineTab {
                   .onClick(() => this.checkSoftwareUpdate())
                 }
                 .width('100%')
-                .backgroundColor(FiveMinDimens.cardSurface)
+                .backgroundColor(HarmonyChrome.cardSurface)
                 .border({ width: 1, color: FiveMinDimens.cardBorder })
                 .borderRadius(FiveMinDimens.radiusCard)
                 .clip(true)
@@ -1349,7 +1334,7 @@ export struct MineTab {
       .alignItems(HorizontalAlign.Start)
       .linearGradient({
         angle: 180,
-        colors: [['#EEF6F1', 0], ['#F2F5F3', 0.48], ['#F4F8F5', 1]]
+        colors: [[$r('app.color.bg'), 0], [$r('app.color.bg2'), 0.48], [$r('app.color.bg_bottom'), 1]]
       })
 
       if (this.dialog !== '') {
@@ -1377,30 +1362,37 @@ export struct MineTab {
         })
 
       Column({ space: 0 }) {
+        HarmonySheetHandle()
+
         Row() {
           Text(this.dialogTitle())
-            .fontSize(16)
+            .fontSize(18)
+            .fontFamily(FiveMinFont.semiBold)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .layoutWeight(1)
           if (this.dialog === 'customScenes') {
-            Text('+')
-              .fontSize(22)
+            Button('+')
+              .type(ButtonType.Circle)
+              .fontSize(20)
               .fontWeight(FontWeight.Medium)
               .fontColor(this.customScenes.length >= CustomScene.MAX_COUNT ?
                 $r('app.color.muted') : $r('app.color.brand_strong'))
-              .width(36)
-              .height(36)
-              .textAlign(TextAlign.Center)
+              .backgroundColor($r('app.color.brand_soft'))
+              .width(32)
+              .height(32)
+              .enabled(this.customScenes.length < CustomScene.MAX_COUNT)
               .opacity(this.customScenes.length >= CustomScene.MAX_COUNT ? 0.4 : 1)
               .onClick(() => this.openSceneEditor(''))
           }
-          Text('✕')
-            .fontSize(18)
+          Button('✕')
+            .type(ButtonType.Circle)
+            .fontSize(16)
             .fontColor($r('app.color.muted'))
-            .width(36)
-            .height(36)
-            .textAlign(TextAlign.Center)
+            .backgroundColor($r('app.color.ghost_bg'))
+            .width(32)
+            .height(32)
+            .margin({ left: 8 })
             .onClick(() => {
               if (this.dialog === 'sceneEditor') {
                 this.backToScenesList();
@@ -1410,30 +1402,29 @@ export struct MineTab {
             })
         }
         .width('100%')
-        .padding({ left: FiveMinDimens.padX, right: 12, top: FiveMinDimens.padBody, bottom: 8 })
+        .padding({ left: FiveMinDimens.padX, right: 16, top: 4, bottom: 8 })
 
         if (this.dialog === 'lang') {
           Scroll() {
             Column({ space: 4 }) {
               ForEach(this.localeCodes, (code: string) => {
-                Stack({ alignContent: Alignment.Center }) {
+                Row({ space: 12 }) {
+                  Radio({ value: code, group: 'mine-lang' })
+                    .checked(code === this.locale)
+                    .radioStyle({
+                      checkedBackgroundColor: $r('app.color.brand')
+                    })
+                    .onClick(() => this.setLocale(code))
                   Text(this.catalog.t(code, 'nativeName'))
-                    .width('100%')
-                    .fontSize(15)
-                    .fontWeight(FontWeight.Medium)
+                    .layoutWeight(1)
+                    .fontSize(16)
+                    .fontWeight(code === this.locale ? FontWeight.Medium : FontWeight.Regular)
                     .fontColor(code === this.locale ? $r('app.color.brand_strong') : $r('app.color.ink'))
-                    .textAlign(TextAlign.Center)
+                    .textAlign(TextAlign.Start)
                     .direction(Direction.Ltr)
-                  if (code === this.locale) {
-                    Text('✓')
-                      .fontSize(16)
-                      .fontWeight(FontWeight.Medium)
-                      .fontColor($r('app.color.brand_strong'))
-                      .position({ right: 14 })
-                  }
                 }
                 .width('100%')
-                .height(FiveMinDimens.controlH)
+                .height(56)
                 .padding({ left: 14, right: 14 })
                 .backgroundColor(code === this.locale ? $r('app.color.brand_soft') : Color.Transparent)
                 .borderRadius(FiveMinDimens.radiusSm)
@@ -1454,24 +1445,23 @@ export struct MineTab {
         } else if (this.dialog === 'sound') {
           Column({ space: 4 }) {
             ForEach(SOUND_IDS, (id: string) => {
-              Stack({ alignContent: Alignment.Center }) {
+              Row({ space: 12 }) {
+                Radio({ value: id, group: 'mine-sound' })
+                  .checked(id === this.ambient)
+                  .radioStyle({
+                    checkedBackgroundColor: $r('app.color.brand')
+                  })
+                  .onClick(() => this.setAmbient(id))
                 Text(this.ambientLabelOf(id))
-                  .width('100%')
-                  .fontSize(15)
-                  .fontWeight(FontWeight.Medium)
+                  .layoutWeight(1)
+                  .fontSize(16)
+                  .fontWeight(id === this.ambient ? FontWeight.Medium : FontWeight.Regular)
                   .fontColor(id === this.ambient ? $r('app.color.brand_strong') : $r('app.color.ink'))
-                  .textAlign(TextAlign.Center)
+                  .textAlign(TextAlign.Start)
                   .direction(Direction.Ltr)
-                if (id === this.ambient) {
-                  Text('✓')
-                    .fontSize(16)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.brand_strong'))
-                    .position({ right: 14 })
-                }
               }
               .width('100%')
-              .height(FiveMinDimens.controlH)
+              .height(56)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.ambient ? $r('app.color.brand_soft') : Color.Transparent)
               .borderRadius(FiveMinDimens.radiusSm)
@@ -1486,24 +1476,23 @@ export struct MineTab {
         } else if (this.dialog === 'storage') {
           Column({ space: 4 }) {
             ForEach(STORAGE_IDS, (id: string) => {
-              Stack({ alignContent: Alignment.Center }) {
+              Row({ space: 12 }) {
+                Radio({ value: id, group: 'mine-storage' })
+                  .checked(id === this.storageMode)
+                  .radioStyle({
+                    checkedBackgroundColor: $r('app.color.brand')
+                  })
+                  .onClick(() => this.pickStorageMode(id))
                 Text(this.storageLabelOf(id))
-                  .width('100%')
-                  .fontSize(15)
-                  .fontWeight(FontWeight.Medium)
+                  .layoutWeight(1)
+                  .fontSize(16)
+                  .fontWeight(id === this.storageMode ? FontWeight.Medium : FontWeight.Regular)
                   .fontColor(id === this.storageMode ? $r('app.color.brand_strong') : $r('app.color.ink'))
-                  .textAlign(TextAlign.Center)
+                  .textAlign(TextAlign.Start)
                   .direction(Direction.Ltr)
-                if (id === this.storageMode) {
-                  Text('✓')
-                    .fontSize(16)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.brand_strong'))
-                    .position({ right: 14 })
-                }
               }
               .width('100%')
-              .height(FiveMinDimens.controlH)
+              .height(56)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.storageMode ? $r('app.color.brand_soft') : Color.Transparent)
               .borderRadius(FiveMinDimens.radiusSm)
@@ -1518,24 +1507,23 @@ export struct MineTab {
         } else if (this.dialog === 'ritual') {
           Column({ space: 4 }) {
             ForEach(RITUAL_IDS, (id: string) => {
-              Stack({ alignContent: Alignment.Center }) {
+              Row({ space: 12 }) {
+                Radio({ value: id, group: 'mine-ritual' })
+                  .checked(id === this.standRitual)
+                  .radioStyle({
+                    checkedBackgroundColor: $r('app.color.brand')
+                  })
+                  .onClick(() => this.setStandRitual(id))
                 Text(this.ritualLabelOf(id))
-                  .width('100%')
-                  .fontSize(15)
-                  .fontWeight(FontWeight.Medium)
+                  .layoutWeight(1)
+                  .fontSize(16)
+                  .fontWeight(id === this.standRitual ? FontWeight.Medium : FontWeight.Regular)
                   .fontColor(id === this.standRitual ? $r('app.color.brand_strong') : $r('app.color.ink'))
-                  .textAlign(TextAlign.Center)
+                  .textAlign(TextAlign.Start)
                   .direction(Direction.Ltr)
-                if (id === this.standRitual) {
-                  Text('✓')
-                    .fontSize(16)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.brand_strong'))
-                    .position({ right: 14 })
-                }
               }
               .width('100%')
-              .height(FiveMinDimens.controlH)
+              .height(56)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.standRitual ? $r('app.color.brand_soft') : Color.Transparent)
               .borderRadius(FiveMinDimens.radiusSm)
@@ -1550,24 +1538,23 @@ export struct MineTab {
         } else if (this.dialog === 'alertProfile') {
           Column({ space: 4 }) {
             ForEach(ALERT_PROFILE_IDS, (id: string) => {
-              Stack({ alignContent: Alignment.Center }) {
+              Row({ space: 12 }) {
+                Radio({ value: id, group: 'mine-alert' })
+                  .checked(id === this.alertProfile)
+                  .radioStyle({
+                    checkedBackgroundColor: $r('app.color.brand')
+                  })
+                  .onClick(() => this.setAlertProfile(id))
                 Text(this.alertProfileLabelOf(id))
-                  .width('100%')
-                  .fontSize(15)
-                  .fontWeight(FontWeight.Medium)
+                  .layoutWeight(1)
+                  .fontSize(16)
+                  .fontWeight(id === this.alertProfile ? FontWeight.Medium : FontWeight.Regular)
                   .fontColor(id === this.alertProfile ? $r('app.color.brand_strong') : $r('app.color.ink'))
-                  .textAlign(TextAlign.Center)
+                  .textAlign(TextAlign.Start)
                   .direction(Direction.Ltr)
-                if (id === this.alertProfile) {
-                  Text('✓')
-                    .fontSize(16)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor($r('app.color.brand_strong'))
-                    .position({ right: 14 })
-                }
               }
               .width('100%')
-              .height(FiveMinDimens.controlH)
+              .height(56)
               .padding({ left: 14, right: 14 })
               .backgroundColor(id === this.alertProfile ? $r('app.color.brand_soft') : Color.Transparent)
               .borderRadius(FiveMinDimens.radiusSm)
@@ -1595,15 +1582,16 @@ export struct MineTab {
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.ink'))
               .width('100%')
-            Text(this.t('copyEmailLabel'))
+            Button(this.t('copyEmailLabel'))
+              .type(ButtonType.Normal)
               .width('100%')
-              .height(50)
+              .height(48)
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
               .fontColor(Color.White)
-              .textAlign(TextAlign.Center)
               .backgroundColor($r('app.color.brand'))
-              .borderRadius(FiveMinDimens.radiusCard)
+              .borderRadius(FiveMinDimens.radiusSm)
+              .stateEffect(true)
               .onClick(() => this.copyFeedbackEmail())
           }
           .width('100%')
@@ -1618,25 +1606,27 @@ export struct MineTab {
               .textAlign(TextAlign.Center)
               .lineHeight(22)
             Row({ space: 10 }) {
-              Text(this.t('cancelLabel'))
+              Button(this.t('cancelLabel'))
+                .type(ButtonType.Normal)
                 .layoutWeight(1)
                 .height(48)
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r('app.color.muted'))
-                .textAlign(TextAlign.Center)
                 .backgroundColor($r('app.color.ghost_bg'))
-                .borderRadius(FiveMinDimens.radiusCard)
+                .borderRadius(FiveMinDimens.radiusSm)
+                .stateEffect(true)
                 .onClick(() => this.closeUpdateDialog())
-              Text(this.t('softwareUpdateAction'))
+              Button(this.t('softwareUpdateAction'))
+                .type(ButtonType.Normal)
                 .layoutWeight(1)
                 .height(48)
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(Color.White)
-                .textAlign(TextAlign.Center)
                 .backgroundColor($r('app.color.brand'))
-                .borderRadius(FiveMinDimens.radiusCard)
+                .borderRadius(FiveMinDimens.radiusSm)
+                .stateEffect(true)
                 .onClick(() => this.confirmSoftwareUpdate())
             }
             .width('100%')
@@ -1648,6 +1638,12 @@ export struct MineTab {
       .width('100%')
       .backgroundColor($r('app.color.surface'))
       .borderRadius({ topLeft: FiveMinDimens.radiusSheet, topRight: FiveMinDimens.radiusSheet })
+      .shadow({
+        radius: 24,
+        color: 'rgba(31, 42, 36, 0.12)',
+        offsetX: 0,
+        offsetY: -4
+      })
     }
     .width('100%')
     .height('100%')
@@ -1663,15 +1659,16 @@ export struct MineTab {
           .textAlign(TextAlign.Center)
           .width('100%')
           .padding({ left: 8, right: 8 })
-        Text(this.t('customSceneAdd'))
+        Button(this.t('customSceneAdd'))
+          .type(ButtonType.Normal)
           .width('100%')
-          .height(50)
+          .height(48)
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
           .fontColor(Color.White)
-          .textAlign(TextAlign.Center)
           .backgroundColor($r('app.color.brand'))
-          .borderRadius(FiveMinDimens.radiusCard)
+          .borderRadius(FiveMinDimens.radiusSm)
+          .stateEffect(true)
           .onClick(() => this.openSceneEditor(''))
       }
       .width('100%')
@@ -1698,21 +1695,24 @@ export struct MineTab {
               .alignItems(HorizontalAlign.Start)
               .onClick(() => this.openSceneEditor(scene.id))
 
-              Text(this.t('customSceneUse'))
+              Button(this.t('customSceneUse'))
+                .type(ButtonType.Normal)
                 .fontSize(13)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r('app.color.brand_strong'))
-                .padding({ left: 10, right: 10, top: 6, bottom: 6 })
                 .backgroundColor($r('app.color.brand_soft'))
                 .borderRadius(8)
+                .height(32)
+                .padding({ left: 10, right: 10 })
                 .onClick(() => this.useCustomScene(scene.id))
 
-              Text('✕')
+              Button('✕')
+                .type(ButtonType.Circle)
                 .fontSize(14)
                 .fontColor($r('app.color.muted'))
-                .width(FiveMinDimens.rowH)
-                .height(FiveMinDimens.rowH)
-                .textAlign(TextAlign.Center)
+                .backgroundColor($r('app.color.ghost_bg'))
+                .width(32)
+                .height(32)
                 .onClick(() => this.deleteCustomScene(scene.id))
             }
             .width('100%')
@@ -1749,9 +1749,9 @@ export struct MineTab {
           .fontSize(15)
           .fontColor($r('app.color.ink'))
           .padding({ left: 14, right: 14 })
-          .backgroundColor($r('app.color.ghost_bg'))
+          .backgroundColor($r('app.color.surface'))
           .border({ width: 1, color: $r('app.color.line') })
-          .borderRadius(FiveMinDimens.radius)
+          .borderRadius(FiveMinDimens.radiusSm)
           .maxLength(CustomScene.MAX_NAME_LENGTH)
           .onChange((v: string) => {
             this.editorName = v;
@@ -1767,16 +1767,17 @@ export struct MineTab {
           .width('100%')
 
         Row({ space: 10 }) {
-          Text('−')
-            .width(FiveMinDimens.controlH)
-            .height(FiveMinDimens.controlH)
+          Button('−')
+            .type(ButtonType.Normal)
+            .width(48)
+            .height(48)
             .fontSize(22)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
-            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(FiveMinDimens.radius)
+            .borderRadius(FiveMinDimens.radiusSm)
+            .stateEffect(true)
             .onClick(() => this.nudgeEditor(-1))
 
           TextInput({ text: this.editorMinutes })
@@ -1787,23 +1788,24 @@ export struct MineTab {
             .fontColor($r('app.color.ink'))
             .textAlign(TextAlign.Center)
             .type(InputType.Number)
-            .backgroundColor($r('app.color.ghost_bg'))
+            .backgroundColor($r('app.color.surface'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(FiveMinDimens.radius)
+            .borderRadius(FiveMinDimens.radiusSm)
             .onChange((v: string) => {
               this.editorMinutes = v;
             })
 
-          Text('+')
-            .width(FiveMinDimens.controlH)
-            .height(FiveMinDimens.controlH)
+          Button('+')
+            .type(ButtonType.Normal)
+            .width(48)
+            .height(48)
             .fontSize(22)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
-            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
             .border({ width: 1, color: $r('app.color.line') })
-            .borderRadius(FiveMinDimens.radius)
+            .borderRadius(FiveMinDimens.radiusSm)
+            .stateEffect(true)
             .onClick(() => this.nudgeEditor(1))
         }
         .width('100%')
@@ -1813,15 +1815,16 @@ export struct MineTab {
 
       Row({ space: 8 }) {
         ForEach(QUICK_MINS, (min: number) => {
-          Text(`${min}`)
+          Button(`${min}`)
+            .type(ButtonType.Normal)
             .layoutWeight(1)
             .height(FiveMinDimens.rowH)
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.brand_strong'))
-            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.brand_soft'))
             .borderRadius(FiveMinDimens.radiusSm)
+            .stateEffect(true)
             .onClick(() => {
               this.editorMinutes = `${min}`;
             })
@@ -1829,16 +1832,18 @@ export struct MineTab {
       }
       .width('100%')
 
-      Text(this.t('confirmLabel'))
+      Button(this.t('confirmLabel'))
+        .type(ButtonType.Normal)
         .width('100%')
         .height(FiveMinDimens.controlH)
         .fontSize(16)
         .fontWeight(FontWeight.Medium)
         .fontColor(Color.White)
-        .textAlign(TextAlign.Center)
         .backgroundColor($r('app.color.brand'))
         .borderRadius(FiveMinDimens.radius)
+        .enabled(this.canSaveEditor())
         .opacity(this.canSaveEditor() ? 1 : 0.55)
+        .stateEffect(true)
         .onClick(() => {
           if (this.canSaveEditor()) {
             this.saveSceneEditor();

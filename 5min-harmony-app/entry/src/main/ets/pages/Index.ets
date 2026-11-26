@@ -29,6 +29,7 @@ import { DigitalWatchTime } from '../ui/DigitalWatch';
 import { RecordsTab } from '../ui/RecordsTab';
 import { MineTab } from '../ui/MineTab';
 import { FiveMinDimens, FiveMinFont } from '../common/FiveMinDimens';
+import { HarmonyChrome, HarmonySheetHandle } from '../common/HarmonyChrome';
 import { WidgetGlance } from '../common/WidgetGlance';
 import { i18n } from '@kit.LocalizationKit';
 import BuildProfile from 'BuildProfile';
@@ -1185,6 +1186,7 @@ struct Index {
         .height('100%')
         .barHeight(FiveMinDimens.tabBarH)
         .barBackgroundColor($r('app.color.surface'))
+        .divider({ strokeWidth: 1, color: FiveMinDimens.headerLine })
         // Match Android: tab switch by tap only — swipe fights chip horizontal scroll.
         .scrollable(false)
         .onChange((i: number) => this.onTabChange(i))
@@ -1242,102 +1244,81 @@ struct Index {
             .lineHeight(22)
             .width('100%')
 
-          Row({ space: 8 }) {
-            Stack({ alignContent: Alignment.Center }) {
-              Column()
-                .width(FiveMinDimens.checkBox)
-                .height(FiveMinDimens.checkBox)
-                .borderRadius(6)
-                .backgroundColor(this.privacyChecked ? $r('app.color.brand') : Color.Transparent)
-                .border({
-                  width: 1.5,
-                  color: this.privacyChecked ? $r('app.color.brand') : $r('app.color.muted')
-                })
-              if (this.privacyChecked) {
-                Text('✓')
-                  .fontSize(13)
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor(Color.White)
-              }
-            }
-            .width(FiveMinDimens.checkHit)
-            .height(FiveMinDimens.checkHit)
-            .flexShrink(0)
+          Row({ space: 10 }) {
+            Toggle({ type: ToggleType.Checkbox, isOn: this.privacyChecked })
+              .selectedColor($r('app.color.brand'))
+              .width(FiveMinDimens.checkBox)
+              .height(FiveMinDimens.checkBox)
+              .flexShrink(0)
+              .onChange((on: boolean) => {
+                this.privacyChecked = on;
+              })
 
             Text(this.t('privacyCheckLabel'))
               .fontSize(14)
               .fontColor($r('app.color.ink'))
               .lineHeight(20)
               .layoutWeight(1)
+              .onClick(() => {
+                this.privacyChecked = !this.privacyChecked;
+              })
           }
           .width('100%')
           .alignItems(VerticalAlign.Center)
           .padding({ top: 2, bottom: 2 })
-          .onClick(() => {
-            this.privacyChecked = !this.privacyChecked;
-          })
 
-          Row({ space: 16 }) {
-            Text(this.t('privacyLink'))
+          Row({ space: 8 }) {
+            Button(this.t('privacyLink'))
+              .type(ButtonType.Normal)
               .fontSize(14)
               .fontFamily(FiveMinFont.medium)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.brand_strong'))
-              .padding({ top: 6, bottom: 6 })
+              .backgroundColor(Color.Transparent)
+              .padding({ left: 4, right: 4 })
+              .height(36)
               .onClick(() => this.openPrivacy())
-            Text(this.t('termsLink'))
+            Button(this.t('termsLink'))
+              .type(ButtonType.Normal)
               .fontSize(14)
               .fontFamily(FiveMinFont.medium)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.brand_strong'))
-              .padding({ top: 6, bottom: 6 })
+              .backgroundColor(Color.Transparent)
+              .padding({ left: 4, right: 4 })
+              .height(36)
               .onClick(() => this.openTerms())
           }
           .width('100%')
           .alignItems(VerticalAlign.Center)
 
-          Text(this.t('privacyAgree'))
+          Button(this.t('privacyAgree'))
+            .type(ButtonType.Normal)
             .width('100%')
             .height(FiveMinDimens.controlH)
             .fontSize(16)
             .fontFamily(FiveMinFont.semiBold)
             .fontWeight(FontWeight.Medium)
             .fontColor(this.privacyChecked ? Color.White : $r('app.color.muted'))
-            .textAlign(TextAlign.Center)
-            .linearGradient(this.privacyChecked ? {
-              angle: 180,
-              colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55],
-                [$r('app.color.brand_strong'), 1]]
-            } : {
-              angle: 180,
-              colors: [[$r('app.color.brand_soft'), 0], [$r('app.color.brand_soft'), 1]]
-            })
+            .backgroundColor(this.privacyChecked ? $r('app.color.brand') : $r('app.color.brand_soft'))
             .borderRadius(FiveMinDimens.radius)
-            .shadow(this.privacyChecked ? {
-              radius: 10,
-              color: 'rgba(47, 154, 104, 0.28)',
-              offsetX: 0,
-              offsetY: 5
-            } : {
-              radius: 0,
-              color: Color.Transparent,
-              offsetX: 0,
-              offsetY: 0
-            })
+            .enabled(this.privacyChecked)
             .opacity(this.privacyChecked ? 1 : 0.55)
             .margin({ top: 4 })
+            .stateEffect(true)
             .onClick(() => {
               if (this.privacyChecked) {
                 this.acceptPrivacy();
               }
             })
 
-          Text(this.t('privacyDisagree'))
+          Button(this.t('privacyDisagree'))
+            .type(ButtonType.Normal)
             .width('100%')
             .height(40)
             .fontSize(14)
             .fontColor($r('app.color.muted'))
-            .textAlign(TextAlign.Center)
+            .backgroundColor(Color.Transparent)
             .onClick(() => this.declinePrivacy())
 
           Text(this.t('privacyFooter'))
@@ -1362,11 +1343,12 @@ struct Index {
         })
         .borderRadius(FiveMinDimens.radiusDialog)
         .border({ width: 1, color: FiveMinDimens.cardBorder })
+        .backgroundColor($r('app.color.surface'))
         .shadow({
-          radius: 20,
-          color: 'rgba(31, 42, 36, 0.14)',
+          radius: 24,
+          color: 'rgba(31, 42, 36, 0.12)',
           offsetX: 0,
-          offsetY: 8
+          offsetY: 10
         })
       }
       .width('100%')
@@ -1386,7 +1368,17 @@ struct Index {
   @Builder
   ScenePickerOverlay() {
     Column() {
-      Column({ space: 12 }) {
+      Column()
+        .width('100%')
+        .layoutWeight(1)
+        .backgroundColor(FiveMinDimens.overlayDim)
+        .onClick(() => {
+          this.showScenes = false;
+        })
+
+      Column({ space: 8 }) {
+        HarmonySheetHandle()
+
         Row() {
           Text(this.t('scenesLabel'))
             .fontSize(18)
@@ -1394,20 +1386,23 @@ struct Index {
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
             .layoutWeight(1)
-          Text(this.t('confirmLabel'))
+          Button(this.t('confirmLabel'))
+            .type(ButtonType.Normal)
             .fontSize(15)
             .fontFamily(FiveMinFont.semiBold)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.brand_strong'))
-            .padding({ left: 8, right: 4, top: 6, bottom: 6 })
+            .backgroundColor(Color.Transparent)
+            .height(36)
             .onClick(() => {
               this.showScenes = false;
             })
         }
         .width('100%')
+        .padding({ left: FiveMinDimens.padBody, right: 8 })
         .alignItems(VerticalAlign.Center)
 
-        // Standalone scroll (not nested under HomePane Scroll) so every group is reachable.
+        // Standalone scroll so every group is reachable.
         Scroll() {
           Column({ space: 10 }) {
             ForEach(this.groups, (group: SceneGroup) => {
@@ -1427,25 +1422,23 @@ struct Index {
                 .width('100%')
                 .padding({ left: 10, right: 10, top: 7, bottom: 7 })
                 .backgroundColor($r('app.color.brand_soft'))
-                .border({ width: 1, color: $r('app.color.brand') })
+                .border({ width: 1, color: 'rgba(47, 154, 104, 0.14)' })
                 .borderRadius(8)
-                .opacity(0.85)
+                .opacity(0.9)
 
                 ForEach(this.scenesInGroup(group.id), (scene: SceneItem) => {
-                  Text(this.sceneLabelText(scene.id) || scene.id)
+                  Button(this.sceneLabelText(scene.id) || scene.id)
+                    .type(ButtonType.Normal)
                     .width('100%')
-                    .height(40)
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Medium)
+                    .height(48)
+                    .fontSize(16)
+                    .fontWeight(scene.id === this.activeSceneId ? FontWeight.Medium : FontWeight.Regular)
                     .fontColor(scene.id === this.activeSceneId ?
-                      $r('app.color.brand_strong') : $r('app.color.muted'))
-                    .padding({ left: 12, right: 12 })
-                    .maxLines(1)
-                    .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    .textAlign(TextAlign.Start)
-                    .borderRadius(12)
+                      $r('app.color.brand_strong') : $r('app.color.ink'))
                     .backgroundColor(scene.id === this.activeSceneId ?
                       $r('app.color.brand_soft') : Color.Transparent)
+                    .borderRadius(FiveMinDimens.radiusSm)
+                    .stateEffect(true)
                     .onClick(() => this.selectScene(scene.id))
                 }, (scene: SceneItem) => `${group.id}:${scene.id}`)
               }
@@ -1453,155 +1446,122 @@ struct Index {
             }, (group: SceneGroup) => group.id)
           }
           .width('100%')
-          .padding({ left: 4, right: 4, bottom: 8 })
+          .padding({ left: 12, right: 12, bottom: 28 })
         }
-        .layoutWeight(1)
         .width('100%')
+        .constraintSize({ maxHeight: '62%' })
         .scrollBar(BarState.Auto)
         .edgeEffect(EdgeEffect.Spring)
         .align(Alignment.TopStart)
       }
-      .width(FiveMinDimens.overlayWPct)
-      .constraintSize({ maxHeight: FiveMinDimens.overlayMaxPct })
-      .height('72%')
-      .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody, top: FiveMinDimens.padY, bottom: 14 })
-      .linearGradient({
-        angle: 180,
-        colors: [['rgba(229, 245, 236, 0.55)', 0], [$r('app.color.surface'), 0.42]]
-      })
-      .borderRadius(FiveMinDimens.radiusDialog)
+      .width('100%')
+      .backgroundColor($r('app.color.surface'))
+      .borderRadius({ topLeft: FiveMinDimens.radiusSheet, topRight: FiveMinDimens.radiusSheet })
       .shadow({
-        radius: 20,
-        color: 'rgba(31, 42, 36, 0.16)',
+        radius: 24,
+        color: 'rgba(31, 42, 36, 0.14)',
         offsetX: 0,
-        offsetY: 8
+        offsetY: -4
       })
     }
     .width('100%')
     .height('100%')
-    .justifyContent(FlexAlign.Center)
-    .alignItems(HorizontalAlign.Center)
-    .backgroundColor(FiveMinDimens.overlayDim)
+    .justifyContent(FlexAlign.End)
   }
 
   @Builder
   RitualOverlay() {
     Column() {
+      Column()
+        .width('100%')
+        .layoutWeight(1)
+        .backgroundColor(FiveMinDimens.overlayDim)
+        .onClick(() => this.dismissRitual())
+
       Column({ space: 12 }) {
+        HarmonySheetHandle()
+
         Text(this.t(this.ritualTitleKey))
           .fontSize(18)
+          .fontFamily(FiveMinFont.semiBold)
           .fontWeight(FontWeight.Medium)
           .fontColor($r('app.color.ink'))
           .width('100%')
-          .textAlign(TextAlign.Center)
+          .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX })
+          .textAlign(TextAlign.Start)
           .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
         Scroll() {
           Column({ space: 0 }) {
             Row({ space: 12 }) {
-              Stack({ alignContent: Alignment.Center }) {
-                Column()
-                  .width(22)
-                  .height(22)
-                  .borderRadius(6)
-                  .backgroundColor(this.ritualUp ? $r('app.color.brand') : Color.Transparent)
-                  .border({
-                    width: 1.5,
-                    color: this.ritualUp ? $r('app.color.brand') : $r('app.color.muted')
-                  })
-                if (this.ritualUp) {
-                  Text('✓')
-                    .fontSize(13)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(Color.White)
-                }
-              }
-              .width(22)
-              .height(22)
-              .flexShrink(0)
+              Toggle({ type: ToggleType.Checkbox, isOn: this.ritualUp })
+                .selectedColor($r('app.color.brand'))
+                .width(22)
+                .height(22)
+                .flexShrink(0)
+                .onChange((on: boolean) => {
+                  this.ritualUp = on;
+                })
               Text(this.t(this.ritualStep1Key))
                 .fontSize(15)
                 .fontColor($r('app.color.ink'))
                 .layoutWeight(1)
                 .maxLines(3)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .onClick(() => {
+                  this.ritualUp = !this.ritualUp;
+                })
             }
             .width('100%')
             .padding({ top: 10, bottom: 10 })
-            .onClick(() => {
-              this.ritualUp = !this.ritualUp;
-            })
 
             Row({ space: 12 }) {
-              Stack({ alignContent: Alignment.Center }) {
-                Column()
-                  .width(22)
-                  .height(22)
-                  .borderRadius(6)
-                  .backgroundColor(this.ritualStretch ? $r('app.color.brand') : Color.Transparent)
-                  .border({
-                    width: 1.5,
-                    color: this.ritualStretch ? $r('app.color.brand') : $r('app.color.muted')
-                  })
-                if (this.ritualStretch) {
-                  Text('✓')
-                    .fontSize(13)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(Color.White)
-                }
-              }
-              .width(22)
-              .height(22)
-              .flexShrink(0)
+              Toggle({ type: ToggleType.Checkbox, isOn: this.ritualStretch })
+                .selectedColor($r('app.color.brand'))
+                .width(22)
+                .height(22)
+                .flexShrink(0)
+                .onChange((on: boolean) => {
+                  this.ritualStretch = on;
+                })
               Text(this.t(this.ritualStep2Key))
                 .fontSize(15)
                 .fontColor($r('app.color.ink'))
                 .layoutWeight(1)
                 .maxLines(3)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .onClick(() => {
+                  this.ritualStretch = !this.ritualStretch;
+                })
             }
             .width('100%')
             .padding({ top: 10, bottom: 10 })
-            .onClick(() => {
-              this.ritualStretch = !this.ritualStretch;
-            })
 
             Row({ space: 12 }) {
-              Stack({ alignContent: Alignment.Center }) {
-                Column()
-                  .width(22)
-                  .height(22)
-                  .borderRadius(6)
-                  .backgroundColor(this.ritualLeave ? $r('app.color.brand') : Color.Transparent)
-                  .border({
-                    width: 1.5,
-                    color: this.ritualLeave ? $r('app.color.brand') : $r('app.color.muted')
-                  })
-                if (this.ritualLeave) {
-                  Text('✓')
-                    .fontSize(13)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor(Color.White)
-                }
-              }
-              .width(22)
-              .height(22)
-              .flexShrink(0)
+              Toggle({ type: ToggleType.Checkbox, isOn: this.ritualLeave })
+                .selectedColor($r('app.color.brand'))
+                .width(22)
+                .height(22)
+                .flexShrink(0)
+                .onChange((on: boolean) => {
+                  this.ritualLeave = on;
+                })
               Text(this.t(this.ritualStep3Key))
                 .fontSize(15)
                 .fontColor($r('app.color.ink'))
                 .layoutWeight(1)
                 .maxLines(3)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .onClick(() => {
+                  this.ritualLeave = !this.ritualLeave;
+                })
             }
             .width('100%')
             .padding({ top: 10, bottom: 10 })
-            .onClick(() => {
-              this.ritualLeave = !this.ritualLeave;
-            })
           }
           .width('100%')
+          .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX })
         }
         .constraintSize({ maxHeight: 280 })
         .scrollBar(BarState.Off)
@@ -1609,51 +1569,46 @@ struct Index {
         .width('100%')
 
         Row({ space: 10 }) {
-          Text(this.t('standRitualSkip'))
+          Button(this.t('standRitualSkip'))
+            .type(ButtonType.Normal)
             .layoutWeight(1)
-            .height(52)
+            .height(FiveMinDimens.controlH)
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
             .fontColor($r('app.color.ink'))
-            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.ghost_bg'))
-            .borderRadius(22)
+            .borderRadius(FiveMinDimens.radius)
+            .stateEffect(true)
             .onClick(() => this.dismissRitual())
 
-          Text(this.t('standRitualDone'))
+          Button(this.t('standRitualDone'))
+            .type(ButtonType.Normal)
             .layoutWeight(1)
-            .height(52)
+            .height(FiveMinDimens.controlH)
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
             .fontColor(Color.White)
-            .textAlign(TextAlign.Center)
             .backgroundColor($r('app.color.brand'))
-            .borderRadius(22)
+            .borderRadius(FiveMinDimens.radius)
+            .stateEffect(true)
             .onClick(() => this.dismissRitual())
         }
         .width('100%')
-        .margin({ top: 4 })
+        .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, bottom: 28, top: 4 })
       }
-      .width(FiveMinDimens.ritualWPct)
-      .constraintSize({ maxHeight: FiveMinDimens.overlayMaxPct })
-      .padding({ left: FiveMinDimens.padX, right: FiveMinDimens.padX, top: 22, bottom: FiveMinDimens.padX })
-      .linearGradient({
-        angle: 180,
-        colors: [['rgba(229, 245, 236, 0.55)', 0], [$r('app.color.surface'), 0.42]]
-      })
-      .borderRadius(FiveMinDimens.radiusDialog)
+      .width('100%')
+      .backgroundColor($r('app.color.surface'))
+      .borderRadius({ topLeft: FiveMinDimens.radiusSheet, topRight: FiveMinDimens.radiusSheet })
       .shadow({
-        radius: 20,
-        color: 'rgba(31, 42, 36, 0.16)',
+        radius: 24,
+        color: 'rgba(31, 42, 36, 0.12)',
         offsetX: 0,
-        offsetY: 8
+        offsetY: -4
       })
     }
     .width('100%')
     .height('100%')
-    .justifyContent(FlexAlign.Center)
-    .alignItems(HorizontalAlign.Center)
-    .backgroundColor(FiveMinDimens.overlayDim)
+    .justifyContent(FlexAlign.End)
   }
 
   @Builder
@@ -1663,9 +1618,10 @@ struct Index {
         .width(FiveMinDimens.iconSm)
         .height(FiveMinDimens.iconSm)
         .objectFit(ImageFit.Contain)
-        .fillColor(this.currentTab === index ? '#248556' : '#5F6F66')
+        .fillColor(this.currentTab === index ? $r('app.color.brand_strong') : $r('app.color.muted'))
       Text(this.t(labelKey))
         .fontSize(11)
+        .fontFamily(FiveMinFont.medium)
         .fontWeight(this.currentTab === index ? FontWeight.Medium : FontWeight.Regular)
         .fontColor(this.currentTab === index ? $r('app.color.brand_strong') : $r('app.color.muted'))
         .key(`tab-label-${labelKey}-${this.localeTick}`)
@@ -1697,18 +1653,19 @@ struct Index {
           .height(36)
           .alignItems(VerticalAlign.Center)
 
-          Row() {
+          Button() {
             Image(this.ambient === 'off' ? $r('app.media.ic_volume_mute') : $r('app.media.ic_volume'))
               .width(FiveMinDimens.iconSm)
               .height(FiveMinDimens.iconSm)
               .objectFit(ImageFit.Contain)
-              .fillColor(this.ambient === 'off' ? '#9AA89F' : '#5F6F66')
+              .fillColor(this.ambient === 'off' ?
+                $r('app.color.muted') : $r('app.color.muted'))
               .opacity(this.ambient === 'off' ? 0.45 : 1)
           }
+          .type(ButtonType.Circle)
           .width(FiveMinDimens.iconTap)
           .height(FiveMinDimens.iconTap)
-          .justifyContent(FlexAlign.Center)
-          .alignItems(VerticalAlign.Center)
+          .backgroundColor(Color.Transparent)
           .accessibilityText(this.t('tabMine'))
           .onClick(() => {
             this.onTabChange(2);
@@ -1799,50 +1756,39 @@ struct Index {
 
         Column({ space: FiveMinDimens.controlGap }) {
           Row({ space: FiveMinDimens.controlGap }) {
-            Text(this.startLabel)
+            Button(this.startLabel)
+              .type(ButtonType.Normal)
               .layoutWeight(1)
               .height(FiveMinDimens.controlH)
               .fontSize(16)
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor(Color.White)
-              .textAlign(TextAlign.Center)
-              .linearGradient({
-                angle: 180,
-                colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 0.55], [$r('app.color.brand_strong'), 1]]
-              })
+              .backgroundColor($r('app.color.brand'))
               .borderRadius(FiveMinDimens.radius)
               .shadow({
-                radius: 12,
-                color: 'rgba(47, 154, 104, 0.32)',
+                radius: 8,
+                color: 'rgba(47, 154, 104, 0.28)',
                 offsetX: 0,
-                offsetY: 6
+                offsetY: 4
               })
+              .stateEffect(true)
               .accessibilityText(this.startLabel)
-              .stateStyles({
-                pressed: {
-                  .opacity(0.88)
-                }
-              })
               .onClick(() => this.toggleStart())
-            Text(this.t('reset'))
+            Button(this.t('reset'))
+              .type(ButtonType.Normal)
               .layoutWeight(1)
               .height(FiveMinDimens.controlH)
               .fontSize(16)
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.muted'))
-              .textAlign(TextAlign.Center)
               .backgroundColor($r('app.color.surface'))
-              .border({ width: 1.5, color: $r('app.color.line') })
+              .border({ width: 1, color: $r('app.color.line') })
               .borderRadius(FiveMinDimens.radius)
-              .shadow({
-                radius: 4,
-                color: 'rgba(31, 42, 36, 0.06)',
-                offsetX: 0,
-                offsetY: 2
-              })
+              .enabled(this.resetEnabled)
               .opacity(this.resetEnabled ? 1 : 0.4)
+              .stateEffect(true)
               .onClick(() => {
                 if (this.resetEnabled) {
                   this.reset();
@@ -1852,55 +1798,57 @@ struct Index {
           .width('100%')
 
           if (this.showIgnore) {
-            Text(this.t('finishIgnore'))
+            Button(this.t('finishIgnore'))
+              .type(ButtonType.Normal)
               .width('100%')
               .height(FiveMinDimens.controlH)
               .fontSize(15)
               .fontFamily(FiveMinFont.medium)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.danger'))
-              .textAlign(TextAlign.Center)
-              .backgroundColor('rgba(255, 255, 255, 0.82)')
+              .backgroundColor($r('app.color.surface'))
               .border({
                 width: 1,
-                color: 'rgba(210, 85, 74, 0.35)',
+                color: 'rgba(210, 85, 74, 0.4)',
                 style: BorderStyle.Solid
               })
               .borderRadius(FiveMinDimens.radius)
+              .stateEffect(true)
               .onClick(() => this.ignoreLastSession())
           }
 
-          Row() {
-            Text(this.sceneLabel)
-              .layoutWeight(1)
-              .fontSize(14)
-              .fontFamily(FiveMinFont.semiBold)
-              .fontWeight(FontWeight.Medium)
-              .fontColor(this.scenePlaceholder ? $r('app.color.muted') : $r('app.color.ink'))
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-            Text('▾')
-              .fontSize(12)
-              .fontFamily(FiveMinFont.medium)
-              .fontColor(this.showScenes ? $r('app.color.brand_strong') : $r('app.color.muted'))
-              .rotate({ angle: this.showScenes ? 180 : 0 })
+          Button() {
+            Row() {
+              Text(this.sceneLabel)
+                .layoutWeight(1)
+                .fontSize(14)
+                .fontFamily(FiveMinFont.semiBold)
+                .fontWeight(FontWeight.Medium)
+                .fontColor(this.scenePlaceholder ? $r('app.color.muted') : $r('app.color.ink'))
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .textAlign(TextAlign.Start)
+              Text('▾')
+                .fontSize(12)
+                .fontFamily(FiveMinFont.medium)
+                .fontColor(this.showScenes ? $r('app.color.brand_strong') : $r('app.color.muted'))
+                .rotate({ angle: this.showScenes ? 180 : 0 })
+            }
+            .width('100%')
+            .padding({ left: 2, right: 2 })
           }
+          .type(ButtonType.Normal)
           .width('100%')
-          .height(FiveMinDimens.rowH)
-          .padding({ left: 14, right: 14 })
+          .height(HarmonyChrome.triggerH)
           .backgroundColor($r('app.color.surface'))
           .border({
             width: 1,
             color: this.showScenes ? FiveMinDimens.brandBorderOpen : $r('app.color.line')
           })
-          .shadow({
-            radius: 6,
-            color: 'rgba(31, 42, 36, 0.05)',
-            offsetX: 0,
-            offsetY: 2
-          })
-          .borderRadius(FiveMinDimens.radius)
+          .borderRadius(FiveMinDimens.radiusSm)
+          .enabled(this.setupEnabled)
           .opacity(this.setupEnabled ? 1 : 0.4)
+          .stateEffect(true)
           .onClick(() => {
             if (this.setupEnabled) {
               if (!this.showScenes) {
@@ -1915,42 +1863,25 @@ struct Index {
             Scroll() {
               Row({ space: FiveMinDimens.chipGap }) {
                 ForEach(this.chipSceneIds, (id: string) => {
-                  Text(this.sceneTitle(id) || id)
+                  Button(this.sceneTitle(id) || id)
+                    .type(ButtonType.Normal)
                     .fontSize(13)
                     .fontWeight(FontWeight.Medium)
                     .fontColor(id === this.activeSceneId ? Color.White : $r('app.color.brand_strong'))
                     .height(FiveMinDimens.suggestedChipH)
                     .padding({ left: 14, right: 14 })
-                    .textAlign(TextAlign.Center)
-                    .maxLines(1)
-                    .textOverflow({ overflow: TextOverflow.Ellipsis })
                     .constraintSize({ minHeight: FiveMinDimens.suggestedChipH, maxWidth: 160 })
                     .flexShrink(0)
-                    .clip(true)
-                    .linearGradient(id === this.activeSceneId ? {
-                      angle: 180,
-                      colors: [[$r('app.color.brand_lift'), 0], [$r('app.color.brand'), 1]]
-                    } : {
-                      angle: 180,
-                      colors: [[FiveMinDimens.chipIdleFill, 0], [FiveMinDimens.chipIdleFill, 1]]
-                    })
+                    .backgroundColor(id === this.activeSceneId ?
+                      $r('app.color.brand') : FiveMinDimens.chipIdleFill)
                     .border(id === this.activeSceneId ? { width: 0, color: Color.Transparent } : {
                       width: 1,
                       color: FiveMinDimens.chipIdleBorder
                     })
-                    .borderRadius(FiveMinDimens.radius)
-                    .shadow(id === this.activeSceneId ? {
-                      radius: 8,
-                      color: 'rgba(47, 154, 104, 0.28)',
-                      offsetX: 0,
-                      offsetY: 3
-                    } : {
-                      radius: 0,
-                      color: Color.Transparent,
-                      offsetX: 0,
-                      offsetY: 0
-                    })
+                    .borderRadius(FiveMinDimens.radiusSm)
+                    .enabled(this.setupEnabled)
                     .opacity(this.setupEnabled ? 1 : 0.4)
+                    .stateEffect(true)
                     .onClick(() => {
                       if (this.setupEnabled) {
                         this.selectScene(id);
@@ -1973,7 +1904,7 @@ struct Index {
             .width('100%')
             .backgroundColor(FiveMinDimens.brandSoftRail)
             .border({ width: 1, color: FiveMinDimens.brandBorderSoft })
-            .borderRadius(FiveMinDimens.radius)
+            .borderRadius(FiveMinDimens.radiusSm)
             .clip(true)
           }
         }

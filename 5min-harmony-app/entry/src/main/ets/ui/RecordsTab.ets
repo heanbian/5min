@@ -8,6 +8,7 @@ import { CloudSync } from '../common/CloudSync';
 import { insightMinutes } from '../common/P0Features';
 import { resolveLocale } from '../common/I18n';
 import { FiveMinDimens, FiveMinFont } from '../common/FiveMinDimens';
+import { HarmonyChrome, HarmonySheetHandle } from '../common/HarmonyChrome';
 import { i18n } from '@kit.LocalizationKit';
 
 /** One list row: scene / duration / time on separate lines. */
@@ -357,19 +358,23 @@ export struct RecordsTab {
             .layoutWeight(1)
             .key(`records-title-${this.uiTick}`)
           if (this.ready) {
-            Text(this.t('shareLabel'))
+            Button(this.t('shareLabel'))
+              .type(ButtonType.Normal)
               .fontSize(14)
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.brand_strong'))
-              .padding({ left: 8, right: 4, top: 10, bottom: 10 })
+              .backgroundColor(Color.Transparent)
+              .height(36)
               .onClick(() => this.shareSummary())
-            Text(this.t('exportLabel'))
+            Button(this.t('exportLabel'))
+              .type(ButtonType.Normal)
               .fontSize(14)
               .fontFamily(FiveMinFont.semiBold)
               .fontWeight(FontWeight.Medium)
               .fontColor($r('app.color.brand_strong'))
-              .padding({ left: 4, right: 4, top: 10, bottom: 10 })
+              .backgroundColor(Color.Transparent)
+              .height(36)
               .onClick(() => this.exportCsv())
           }
         }
@@ -485,41 +490,49 @@ export struct RecordsTab {
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.muted'))
                   .layoutWeight(1)
-                Text(this.t('historyClear'))
+                Button(this.t('historyClear'))
+                  .type(ButtonType.Normal)
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
                   .fontColor($r('app.color.danger'))
-                  .padding({ left: 10, right: 4, top: 8, bottom: 8 })
+                  .backgroundColor(Color.Transparent)
+                  .height(32)
                   .onClick(() => this.clearAll())
               }
               .width('100%')
               .padding({ left: 4, right: 4, top: 4 })
 
-              Row() {
-                Text(this.t('historyFilterLabel'))
-                  .fontSize(13)
-                  .fontColor($r('app.color.muted'))
-                  .margin({ right: 8 })
-                Text(this.filterLabel)
-                  .fontSize(14)
-                  .fontColor($r('app.color.ink'))
-                  .layoutWeight(1)
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                Text('▾')
-                  .fontSize(12)
-                  .fontColor(this.showFilter ? $r('app.color.brand_strong') : $r('app.color.muted'))
-                  .rotate({ angle: this.showFilter ? 180 : 0 })
+              Button() {
+                Row() {
+                  Text(this.t('historyFilterLabel'))
+                    .fontSize(13)
+                    .fontColor($r('app.color.muted'))
+                    .margin({ right: 8 })
+                  Text(this.filterLabel)
+                    .fontSize(14)
+                    .fontColor($r('app.color.ink'))
+                    .layoutWeight(1)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .textAlign(TextAlign.Start)
+                  Text('▾')
+                    .fontSize(12)
+                    .fontColor(this.showFilter ? $r('app.color.brand_strong') : $r('app.color.muted'))
+                    .rotate({ angle: this.showFilter ? 180 : 0 })
+                }
+                .width('100%')
               }
+              .type(ButtonType.Normal)
               .width('100%')
-              .height(FiveMinDimens.rowH)
-              .padding({ left: 14, right: 14 })
+              .height(HarmonyChrome.triggerH)
+              .padding({ left: 12, right: 12 })
               .backgroundColor($r('app.color.surface'))
               .border({
                 width: 1,
                 color: this.showFilter ? FiveMinDimens.brandBorderOpen : $r('app.color.line')
               })
-              .borderRadius(FiveMinDimens.radius)
+              .borderRadius(FiveMinDimens.radiusSm)
+              .stateEffect(true)
               .onClick(() => {
                 this.showFilter = true;
               })
@@ -559,11 +572,13 @@ export struct RecordsTab {
                         .layoutWeight(1)
                         .alignItems(HorizontalAlign.Start)
 
-                        Text(this.t('historyDelete'))
+                        Button(this.t('historyDelete'))
+                          .type(ButtonType.Normal)
                           .fontSize(13)
                           .fontWeight(FontWeight.Medium)
                           .fontColor($r('app.color.danger'))
-                          .padding({ left: 12, right: 8, top: 12, bottom: 12 })
+                          .backgroundColor(Color.Transparent)
+                          .height(36)
                           .onClick(() => this.deleteRow(row.id))
                       }
                       .width('100%')
@@ -575,13 +590,13 @@ export struct RecordsTab {
                 }
               }
               .width('100%')
-              .backgroundColor(FiveMinDimens.cardSurface)
+              .backgroundColor(HarmonyChrome.cardSurface)
               .border({ width: 1, color: FiveMinDimens.cardBorder })
               .borderRadius(FiveMinDimens.radiusCard)
               .clip(true)
               .shadow({
-                radius: 8,
-                color: 'rgba(31, 42, 36, 0.04)',
+                radius: 6,
+                color: 'rgba(31, 42, 36, 0.06)',
                 offsetX: 0,
                 offsetY: 2
               })
@@ -607,7 +622,7 @@ export struct RecordsTab {
       .alignItems(HorizontalAlign.Start)
       .linearGradient({
         angle: 180,
-        colors: [['#EEF6F1', 0], ['#F2F5F3', 0.48], ['#F4F8F5', 1]]
+        colors: [[$r('app.color.bg'), 0], [$r('app.color.bg2'), 0.48], [$r('app.color.bg_bottom'), 1]]
       })
 
       if (this.showFilter) {
@@ -621,50 +636,59 @@ export struct RecordsTab {
             })
 
           Column({ space: 0 }) {
+            HarmonySheetHandle()
+
             Row() {
               Text(this.t('historyFilterLabel'))
-                .fontSize(16)
+                .fontSize(18)
+                .fontFamily(FiveMinFont.semiBold)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r('app.color.ink'))
                 .layoutWeight(1)
-              Text('✕')
-                .fontSize(18)
+              Button('✕')
+                .type(ButtonType.Circle)
+                .fontSize(16)
                 .fontColor($r('app.color.muted'))
-                .width(FiveMinDimens.rowH)
-                .height(FiveMinDimens.rowH)
-                .textAlign(TextAlign.Center)
+                .backgroundColor($r('app.color.ghost_bg'))
+                .width(32)
+                .height(32)
                 .onClick(() => {
                   this.showFilter = false;
                 })
             }
             .width('100%')
-            .padding({ left: FiveMinDimens.padX, right: 12, top: FiveMinDimens.padBody, bottom: 8 })
+            .padding({ left: FiveMinDimens.padX, right: 16, top: 4, bottom: 8 })
 
             Scroll() {
               Column({ space: 4 }) {
                 ForEach(this.filterOptions, (opt: FilterOption) => {
-                  Row() {
+                  Row({ space: 12 }) {
+                    Radio({ value: opt.id.length > 0 ? opt.id : '__all__', group: 'records-filter' })
+                      .checked(opt.id === this.filterSceneId)
+                      .radioStyle({
+                        checkedBackgroundColor: $r('app.color.brand')
+                      })
+                      .onClick(() => this.setFilter(opt.id))
                     Text(opt.label)
-                      .fontSize(15)
+                      .fontSize(16)
                       .fontColor(opt.id === this.filterSceneId ?
                         $r('app.color.brand_strong') : $r('app.color.ink'))
+                      .fontWeight(opt.id === this.filterSceneId ? FontWeight.Medium : FontWeight.Regular)
                       .layoutWeight(1)
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    if (opt.id === this.filterSceneId) {
-                      Text('✓')
-                        .fontSize(16)
-                        .fontColor($r('app.color.brand_strong'))
-                    }
                   }
                   .width('100%')
-                  .height(FiveMinDimens.controlH)
+                  .height(56)
                   .padding({ left: FiveMinDimens.padBody, right: FiveMinDimens.padBody })
+                  .borderRadius(FiveMinDimens.radiusSm)
+                  .backgroundColor(opt.id === this.filterSceneId ?
+                    $r('app.color.brand_soft') : Color.Transparent)
                   .onClick(() => this.setFilter(opt.id))
                 }, (opt: FilterOption) => `filt-${opt.id}`)
               }
               .width('100%')
-              .padding({ bottom: 28 })
+              .padding({ left: 8, right: 8, bottom: 28 })
             }
             .width('100%')
             .constraintSize({ maxHeight: FiveMinDimens.sheetMaxH })
@@ -674,6 +698,12 @@ export struct RecordsTab {
           .width('100%')
           .backgroundColor($r('app.color.surface'))
           .borderRadius({ topLeft: FiveMinDimens.radiusSheet, topRight: FiveMinDimens.radiusSheet })
+          .shadow({
+            radius: 24,
+            color: 'rgba(31, 42, 36, 0.12)',
+            offsetX: 0,
+            offsetY: -4
+          })
         }
         .width('100%')
         .height('100%')
