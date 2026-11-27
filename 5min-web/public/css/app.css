@@ -453,6 +453,8 @@
 
   .actions{
     width:100%;
+    max-width:20rem;
+    align-self:center;
     display:flex;
     flex-direction:column;
     gap:10px;
@@ -708,6 +710,7 @@
     .time{width:min(58%, 220px)}
     .status{font-size:var(--fs-base)}
     .cue{max-width:20rem}
+    .actions{max-width:22rem}
   }
 
   @media (min-width: 900px){
@@ -735,6 +738,7 @@
     .time{width:min(56%, 240px)}
     .status{font-size:var(--fs-base)}
     .cue{max-width:22rem}
+    .actions{max-width:22rem}
     .footnote{font-size:0.8125rem}
     .app{--row-h:38px}
 
