@@ -2,13 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
  <url>
  <loc>https://5min.chat/</loc>
- <lastmod>2026-11-26</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>1.0</priority>
  </url>
  <url>
  <loc>https://5min.chat/knowledge.html</loc>
- <lastmod>2026-11-26</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.8</priority>
  </url>
@@ -26,19 +26,19 @@
  </url>
  <url>
  <loc>https://5min.chat/knowledge/stand-up-habit.html</loc>
- <lastmod>2026-11-26</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.7</priority>
  </url>
  <url>
  <loc>https://5min.chat/knowledge/scene-beyond-toilet.html</loc>
- <lastmod>2026-11-26</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.7</priority>
  </url>
  <url>
  <loc>https://5min.chat/knowledge/myths.html</loc>
- <lastmod>2026-11-26</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.7</priority>
  </url>
@@ -50,31 +50,31 @@
  </url>
  <url>
  <loc>https://5min.chat/download.html</loc>
- <lastmod>2026-11-20</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>weekly</changefreq>
  <priority>0.8</priority>
  </url>
  <url>
  <loc>https://5min.chat/about.html</loc>
- <lastmod>2026-11-20</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.7</priority>
  </url>
  <url>
  <loc>https://5min.chat/faq.html</loc>
- <lastmod>2026-11-26</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>monthly</changefreq>
  <priority>0.7</priority>
  </url>
  <url>
  <loc>https://5min.chat/privacy.html</loc>
- <lastmod>2026-11-20</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>yearly</changefreq>
  <priority>0.5</priority>
  </url>
  <url>
  <loc>https://5min.chat/terms.html</loc>
- <lastmod>2026-11-20</lastmod>
+ <lastmod>2026-11-28</lastmod>
  <changefreq>yearly</changefreq>
  <priority>0.5</priority>
  </url>
